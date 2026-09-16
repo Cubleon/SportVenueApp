@@ -260,7 +260,7 @@ class _SportCard extends StatelessWidget {
                 Positioned(
                   top: 12,
                   left: 12,
-                  child: Text(sport.icon, style: const TextStyle(fontSize: 26)),
+                  child: SportGlyph(sport: sport, size: 34),
                 ),
                 if (selected)
                   Positioned(

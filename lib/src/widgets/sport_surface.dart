@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/sport_venue_models.dart';
+
 /// Scale drawings of real playing surfaces.
 ///
 /// Every measurement below is the regulation one in metres. A single
@@ -657,140 +659,168 @@ final _SurfaceSpec _padel = _SurfaceSpec(
             radius: 0.22);
       }
     }
-
-    _padelRacket(b);
   },
 );
 
-/// A racket resting on the padel court.
+/// The glyph that marks a sport.
 ///
-/// Padel and tennis carry the same ball emoji in the data, so the racket is
-/// what separates the two at a glance: a padel one has a solid perforated
-/// head and a short handle, never strings. Drawn at icon scale rather than
-/// its real 45 cm, which on a 20 m court would be a speck.
-void _padelRacket(_Board b) {
-  final length = b.pitch.width * 0.82;
-  // Clear of the net band above and of the label in the bottom-left corner.
-  final centre = Offset(
-    b.pitch.center.dx + b.pitch.width * 0.12,
-    b.pitch.center.dy + b.pitch.height * 0.22,
-  );
+/// Most sports are recognisable from their ball, which the data supplies as
+/// an emoji. Padel is not: it carries the tennis ball, so it gets a drawn
+/// racket — the one piece of kit the two sports do not share.
+class SportGlyph extends StatelessWidget {
+  const SportGlyph({super.key, required this.sport, this.size = 28});
 
-  b.canvas.save();
-  b.canvas.translate(centre.dx, centre.dy);
-  b.canvas.rotate(-0.5);
+  final Sport sport;
+  final double size;
 
-  final headHeight = length * 0.54;
-  final headWidth = length * 0.44;
-  final headCentre = Offset(0, -length / 2 + headHeight / 2);
-  final head = Rect.fromCenter(
-    center: headCentre,
-    width: headWidth,
-    height: headHeight,
-  );
-  final handleWidth = length * 0.115;
+  @override
+  Widget build(BuildContext context) {
+    if (sport.id == 'padel') {
+      return PadelRacket(size: size);
+    }
+    return Text(sport.icon, style: TextStyle(fontSize: size * 0.92));
+  }
+}
 
-  // Cast shadow, so the racket sits on the surface instead of floating.
-  b.canvas.save();
-  b.canvas.translate(length * 0.035, length * 0.045);
-  b.canvas.drawOval(head, b.fill(Colors.black.withValues(alpha: 0.22)));
-  b.canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(0, length * 0.26),
-        width: handleWidth,
-        height: length * 0.44,
-      ),
-      Radius.circular(handleWidth / 2),
-    ),
-    b.fill(Colors.black.withValues(alpha: 0.22)),
-  );
-  b.canvas.restore();
+/// A padel racket: a solid perforated head on a short wrapped handle, never
+/// strings. Drawn rather than lettered so it stays sharp at any size, and
+/// tuned so the perforations still read at glyph sizes.
+class PadelRacket extends StatelessWidget {
+  const PadelRacket({super.key, this.size = 28});
 
-  // Throat and handle first, so the head overlaps them cleanly.
-  final throat = Path()
-    ..moveTo(-headWidth * 0.34, headCentre.dy + headHeight * 0.32)
-    ..quadraticBezierTo(
-      -handleWidth * 0.75,
-      length * 0.06,
-      -handleWidth / 2,
-      length * 0.12,
-    )
-    ..lineTo(handleWidth / 2, length * 0.12)
-    ..quadraticBezierTo(
-      handleWidth * 0.75,
-      length * 0.06,
-      headWidth * 0.34,
-      headCentre.dy + headHeight * 0.32,
-    )
-    ..close();
-  b.canvas.drawPath(throat, b.fill(const Color(0xFFF2F6FA)));
+  final double size;
 
-  b.canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(0, length * 0.26),
-        width: handleWidth,
-        height: length * 0.44,
-      ),
-      Radius.circular(handleWidth / 2),
-    ),
-    b.fill(const Color(0xFF16233A)),
-  );
-  // Grip wrap.
-  final wrap = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = math.max(0.8, length * 0.012)
-    ..color = Colors.white.withValues(alpha: 0.18);
-  for (var i = 0; i < 5; i++) {
-    final y = length * 0.14 + length * 0.055 * i;
-    b.canvas.drawLine(
-      Offset(-handleWidth / 2, y),
-      Offset(handleWidth / 2, y + length * 0.02),
-      wrap,
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(painter: _PadelRacketPainter()),
     );
   }
+}
 
-  b.canvas.drawOval(head, b.fill(const Color(0xFFF2F6FA)));
+class _PadelRacketPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
 
-  // Perforations: the court shows through them.
-  b.canvas.save();
-  final clip = Path()..addOval(head.deflate(headWidth * 0.11));
-  b.canvas.clipPath(clip);
-  final hole = b.fill(const Color(0xFF14496C));
-  final step = headWidth * 0.155;
-  for (var row = -4; row <= 4; row++) {
-    for (var col = -4; col <= 4; col++) {
-      final offset = row.isEven ? 0.0 : step / 2;
-      b.canvas.drawCircle(
-        Offset(headCentre.dx + col * step + offset, headCentre.dy + row * step),
-        step * 0.20,
-        hole,
+    // The racket is drawn upright around the origin, then tilted, so the
+    // tilted shape still fits the box.
+    const tilt = -0.32;
+    final length = size.shortestSide * 0.94;
+    final headHeight = length * 0.54;
+    final headWidth = length * 0.46;
+    final handleWidth = length * 0.13;
+
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.rotate(tilt);
+
+    final headCentre = Offset(0, -length / 2 + headHeight / 2);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: headCentre.translate(length * 0.03, length * 0.05),
+        width: headWidth * 1.06,
+        height: headHeight * 1.06,
+      ),
+      Paint()..color = Colors.black.withValues(alpha: 0.28),
+    );
+    final head = Rect.fromCenter(
+      center: headCentre,
+      width: headWidth,
+      height: headHeight,
+    );
+    final handle = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(0, length * 0.24),
+        width: handleWidth,
+        height: length * 0.46,
+      ),
+      Radius.circular(handleWidth / 2),
+    );
+
+    Paint fill(Color color) => Paint()..color = color;
+
+    // Throat, drawn first so the head and handle overlap it.
+    final throat = Path()
+      ..moveTo(-headWidth * 0.32, headCentre.dy + headHeight * 0.30)
+      ..quadraticBezierTo(
+        -handleWidth * 0.8,
+        length * 0.04,
+        -handleWidth / 2,
+        length * 0.10,
+      )
+      ..lineTo(handleWidth / 2, length * 0.10)
+      ..quadraticBezierTo(
+        handleWidth * 0.8,
+        length * 0.04,
+        headWidth * 0.32,
+        headCentre.dy + headHeight * 0.30,
+      )
+      ..close();
+    canvas.drawPath(throat, fill(const Color(0xFFF2F6FA)));
+
+    canvas.drawRRect(handle, fill(const Color(0xFF16233A)));
+    // Grip wrap.
+    final wrap = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(0.7, length * 0.014)
+      ..color = Colors.white.withValues(alpha: 0.22);
+    for (var i = 0; i < 4; i++) {
+      final y = length * 0.12 + length * 0.065 * i;
+      canvas.drawLine(
+        Offset(-handleWidth / 2, y),
+        Offset(handleWidth / 2, y + length * 0.022),
+        wrap,
       );
     }
+
+    canvas.drawOval(head, fill(const Color(0xFFF2F6FA)));
+
+    // Perforations: few and large, so they survive at 28 px.
+    canvas.save();
+    canvas.clipPath(Path()..addOval(head.deflate(headWidth * 0.14)));
+    final hole = fill(const Color(0xFF16233A).withValues(alpha: 0.55));
+    final step = headWidth * 0.32;
+    final radius = math.max(0.9, step * 0.30);
+    for (var row = -1; row <= 1; row++) {
+      for (var col = -1; col <= 1; col++) {
+        canvas.drawCircle(
+          Offset(
+            headCentre.dx + col * step + (row.isEven ? 0 : step / 2),
+            headCentre.dy + row * step,
+          ),
+          radius,
+          hole,
+        );
+      }
+    }
+    canvas.restore();
+
+    // Accent band across the face, then the rim.
+    canvas.save();
+    canvas.clipPath(Path()..addOval(head));
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(0, headCentre.dy - headHeight * 0.31),
+        width: headWidth * 1.2,
+        height: headHeight * 0.22,
+      ),
+      fill(const Color(0xFF2979FF)),
+    );
+    canvas.restore();
+
+    canvas.drawOval(
+      head,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.2, length * 0.05)
+        ..color = const Color(0xFF16233A),
+    );
+
+    canvas.restore();
   }
-  b.canvas.restore();
 
-  // Blue face band and rim, the accent the rest of the app uses.
-  b.canvas.save();
-  b.canvas.clipPath(Path()..addOval(head));
-  b.canvas.drawRect(
-    Rect.fromCenter(
-      center: Offset(0, headCentre.dy - headHeight * 0.30),
-      width: headWidth * 1.2,
-      height: headHeight * 0.20,
-    ),
-    b.fill(const Color(0xFF2979FF)),
-  );
-  b.canvas.restore();
-
-  b.canvas.drawOval(
-    head,
-    Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.0, length * 0.028)
-      ..color = const Color(0xFF16233A),
-  );
-
-  b.canvas.restore();
+  @override
+  bool shouldRepaint(covariant _PadelRacketPainter oldDelegate) => false;
 }
