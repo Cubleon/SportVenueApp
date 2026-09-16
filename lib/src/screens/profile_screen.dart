@@ -38,16 +38,14 @@ class ProfileScreen extends StatelessWidget {
                     height: 62,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [AppColors.accentPressed, AppColors.accent],
-                      ),
+                      color: AppColors.accent,
                     ),
                     child: Center(
                       child: Text(
                         _profileInitial(controller),
                         style: context.text.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w900,
-                          color: AppColors.white,
+                          color: AppColors.onAccent,
                         ),
                       ),
                     ),
@@ -91,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
             Text(
               'Спортивные предпочтения',
               style: context.text.labelLarge?.copyWith(
-                color: AppColors.faint,
+                color: AppColors.muted,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.2,
               ),
@@ -105,7 +103,6 @@ class ProfileScreen extends StatelessWidget {
                     (sport) => SelectableChip(
                       label: sport.name.capitalized,
                       icon: sport.icon,
-                      color: sport.color,
                       selected: true,
                       onTap: () => controller.togglePreferredSport(sport.id),
                     ),

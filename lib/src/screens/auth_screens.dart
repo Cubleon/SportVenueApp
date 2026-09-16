@@ -96,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
                       );
                       return LinearProgressIndicator(
                         value: value,
-                        backgroundColor: AppColors.white.withValues(
+                        backgroundColor: AppColors.ink.withValues(
                           alpha: 0.08,
                         ),
                         valueColor: const AlwaysStoppedAnimation(
@@ -180,7 +180,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         Container(
                           width: 1,
                           height: 24,
-                          color: AppColors.white.withValues(alpha: 0.12),
+                          color: AppColors.ink.withValues(alpha: 0.12),
                         ),
                       ],
                     ),
@@ -224,7 +224,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             ? const Icon(
                                 Icons.check_rounded,
                                 size: 16,
-                                color: AppColors.white,
+                                color: AppColors.ink,
                               )
                             : null,
                       ),
@@ -269,7 +269,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   Expanded(
                     child: Divider(
-                      color: AppColors.white.withValues(alpha: 0.08),
+                      color: AppColors.ink.withValues(alpha: 0.08),
                     ),
                   ),
                   Padding(
@@ -277,13 +277,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     child: Text(
                       'или',
                       style: context.text.bodySmall?.copyWith(
-                        color: AppColors.faint,
+                        color: AppColors.muted,
                       ),
                     ),
                   ),
                   Expanded(
                     child: Divider(
-                      color: AppColors.white.withValues(alpha: 0.08),
+                      color: AppColors.ink.withValues(alpha: 0.08),
                     ),
                   ),
                 ],
@@ -310,7 +310,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Expanded(
                     child: _SocialButton(
                       label: '',
-                      color: AppColors.white,
+                      color: AppColors.ink,
                       onTap: _stubSocial,
                     ),
                   ),
@@ -321,7 +321,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности',
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(
-                  color: AppColors.white.withValues(alpha: 0.28),
+                  color: AppColors.ink.withValues(alpha: 0.28),
                   height: 1.4,
                 ),
               ),
@@ -538,7 +538,7 @@ class _OtpScreenState extends State<OtpScreen>
               Text(
                 'Не отвечайте на звонок — нужны только последние 4 цифры номера',
                 textAlign: TextAlign.center,
-                style: context.text.bodySmall?.copyWith(color: AppColors.faint),
+                style: context.text.bodySmall?.copyWith(color: AppColors.muted),
               ),
             ],
           ),
@@ -699,7 +699,7 @@ class _SocialButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         fixedSize: const Size.fromHeight(54),
         side: BorderSide(
-          color: AppColors.white.withValues(alpha: 0.12),
+          color: AppColors.ink.withValues(alpha: 0.12),
           width: 1.5,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -732,7 +732,7 @@ class _IconBox extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(icon, color: AppColors.white),
+          child: Icon(icon, color: AppColors.ink),
         ),
       ),
     );

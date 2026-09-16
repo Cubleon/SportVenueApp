@@ -69,7 +69,6 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: SelectableChip(
                         label: sport.name.capitalized,
                         icon: sport.icon,
-                        color: sport.color,
                         selected: _sportId == sport.id,
                         onTap: () => setState(() => _sportId = sport.id),
                       ),
@@ -268,7 +267,7 @@ class _MapMarker extends StatelessWidget {
                     color: color,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.white.withValues(alpha: 0.32),
+                      color: AppColors.ink.withValues(alpha: 0.32),
                       width: 2,
                     ),
                     boxShadow: [
@@ -295,11 +294,11 @@ class _MapMarker extends StatelessWidget {
                       color: color,
                       border: Border(
                         right: BorderSide(
-                          color: AppColors.white.withValues(alpha: 0.22),
+                          color: AppColors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                         bottom: BorderSide(
-                          color: AppColors.white.withValues(alpha: 0.22),
+                          color: AppColors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                       ),
@@ -389,7 +388,7 @@ class _VenueBottomSheet extends StatelessWidget {
               const Icon(
                 Icons.star_rounded,
                 size: 17,
-                color: AppColors.warning,
+                color: AppColors.ink,
               ),
               const SizedBox(width: 4),
               Text(

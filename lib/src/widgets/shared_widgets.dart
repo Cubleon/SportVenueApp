@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import 'sport_surface.dart';
 
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 72, this.showWordmark = false});
@@ -133,13 +134,15 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !isLoading;
     final background = secondary
-        ? Colors.transparent
+        ? AppColors.surface
         : enabled
         ? AppColors.accent
-        : AppColors.white.withValues(alpha: 0.08);
-    final foreground = enabled
-        ? AppColors.white
-        : AppColors.white.withValues(alpha: 0.28);
+        : AppColors.surfaceRaised;
+    final foreground = secondary
+        ? AppColors.ink
+        : enabled
+        ? AppColors.onAccent
+        : AppColors.dim;
 
     return SizedBox(
       width: double.infinity,
@@ -152,13 +155,7 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: foreground,
           disabledForegroundColor: foreground,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: secondary
-                ? BorderSide(
-                    color: AppColors.white.withValues(alpha: 0.16),
-                    width: 1.5,
-                  )
-                : BorderSide.none,
+            borderRadius: BorderRadius.circular(AppTheme.radius),
           ),
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -172,7 +169,7 @@ class PrimaryButton extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
-                    color: AppColors.white,
+                    color: AppColors.onAccent,
                   ),
                 )
               : Row(
@@ -190,6 +187,7 @@ class PrimaryButton extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
+                          color: foreground,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.05,
                         ),
@@ -222,16 +220,8 @@ class AppCard extends StatelessWidget {
     final content = Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor ?? AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.04),
-            offset: const Offset(0, 1),
-            blurRadius: 0,
-            spreadRadius: -0.2,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        border: borderColor == null ? null : Border.all(color: borderColor!),
       ),
       padding: padding,
       child: child,
@@ -245,7 +235,7 @@ class AppCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTheme.radius),
         child: content,
       ),
     );
@@ -299,9 +289,8 @@ class SportBadge extends StatelessWidget {
       height: compact ? 26 : 30,
       padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
       decoration: BoxDecoration(
-        color: sport.color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: sport.color.withValues(alpha: 0.32)),
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(9),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -311,7 +300,7 @@ class SportBadge extends StatelessWidget {
           Text(
             sport.name.toUpperCase(),
             style: context.text.labelSmall?.copyWith(
-              color: sport.color,
+              color: AppColors.muted,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.8,
             ),
@@ -340,24 +329,17 @@ class SelectableChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = color ?? AppColors.accent;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: selected
-                ? activeColor.withValues(alpha: 0.15)
-                : AppColors.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected ? activeColor : AppColors.border,
-              width: 1.3,
-            ),
+            color: selected ? AppColors.accentSoft : AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: FittedBox(
             fit: BoxFit.scaleDown,
@@ -372,7 +354,7 @@ class SelectableChip extends StatelessWidget {
                   label,
                   maxLines: 1,
                   style: context.text.labelLarge?.copyWith(
-                    color: selected ? activeColor : AppColors.muted,
+                    color: selected ? AppColors.accent : AppColors.muted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -385,6 +367,11 @@ class SelectableChip extends StatelessWidget {
   }
 }
 
+/// The venue's surface, as a picture.
+///
+/// Nothing is written on top of it: white text over pitch markings never
+/// reads cleanly, so the name and address sit under the image in ink where
+/// the card owns them.
 class VenueHero extends StatelessWidget {
   const VenueHero({super.key, required this.venue, this.height = 116});
 
@@ -395,92 +382,14 @@ class VenueHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: venue.gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _CourtPainter(
-                color: Colors.white.withValues(alpha: 0.25),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 14,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  venue.name.capitalized,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: SportSurface(sportId: venue.sportIds.first),
     );
   }
-}
-
-class _CourtPainter extends CustomPainter {
-  const _CourtPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = color;
-    final rect = Rect.fromLTWH(18, 12, size.width - 36, size.height - 24);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(rect.left, rect.center.dy),
-      Offset(rect.right, rect.center.dy),
-      paint,
-    );
-    canvas.drawCircle(
-      rect.center,
-      math.min(size.width, size.height) * 0.15,
-      paint,
-    );
-    canvas.drawLine(
-      Offset(rect.center.dx, rect.top),
-      Offset(rect.center.dx, rect.bottom),
-      paint..color = color.withValues(alpha: 0.5),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _CourtPainter oldDelegate) => false;
 }
 
 class BookingSummaryRows extends StatelessWidget {
@@ -547,7 +456,7 @@ class SummaryRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: context.text.bodyMedium?.copyWith(
-                color: accent ? AppColors.accent : AppColors.white,
+                color: accent ? AppColors.accent : AppColors.ink,
                 fontWeight: highlight || accent
                     ? FontWeight.w900
                     : FontWeight.w700,

@@ -139,7 +139,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
               Text(
                 AppFormatters.money(game.pricePerPerson),
                 style: context.text.titleMedium?.copyWith(
-                  color: sport.color,
+                  color: AppColors.ink,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -178,10 +178,8 @@ class _MiniGameCardState extends State<MiniGameCard> {
                   key: ValueKey('join-${game.id}'),
                   onPressed: game.isFull || _joining ? null : _join,
                   style: FilledButton.styleFrom(
-                    backgroundColor: sport.color,
-                    disabledBackgroundColor: AppColors.white.withValues(
-                      alpha: 0.08,
-                    ),
+                    backgroundColor: AppColors.accent,
+                    disabledBackgroundColor: AppColors.surfaceRaised,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -193,13 +191,13 @@ class _MiniGameCardState extends State<MiniGameCard> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.white,
+                            color: AppColors.onAccent,
                           ),
                         )
                       : Text(
                           'Вступить',
                           style: context.text.labelLarge?.copyWith(
-                            color: AppColors.white,
+                            color: AppColors.onAccent,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -454,7 +452,6 @@ class _SportFilter extends StatelessWidget {
               child: SelectableChip(
                 label: sport.name.capitalized,
                 icon: sport.icon,
-                color: sport.color,
                 selected: value == sport.id,
                 onTap: () => onChanged(sport.id),
               ),
@@ -531,18 +528,18 @@ class _Avatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: participant.isCurrentUser
-              ? const [AppColors.accentPressed, AppColors.accent]
-              : const [Color(0xFF4A148C), Color(0xFFB388FF)],
-        ),
+        color: participant.isCurrentUser
+            ? AppColors.accent
+            : AppColors.surfaceRaised,
         border: Border.all(color: AppColors.bg, width: 2),
       ),
       child: Center(
         child: Text(
           participant.initial,
           style: context.text.labelLarge?.copyWith(
-            color: AppColors.white,
+            color: participant.isCurrentUser
+                ? AppColors.onAccent
+                : AppColors.muted,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -596,7 +593,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: context.text.labelSmall?.copyWith(
-          color: AppColors.faint,
+          color: AppColors.muted,
           fontWeight: FontWeight.w900,
           letterSpacing: 1.4,
         ),
@@ -665,7 +662,7 @@ class _PlayerSlot extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.white.withValues(alpha: 0.36),
+                      color: AppColors.ink.withValues(alpha: 0.36),
                       width: 1.5,
                       style: BorderStyle.solid,
                     ),
@@ -678,7 +675,7 @@ class _PlayerSlot extends StatelessWidget {
                 child: Text(
                   empty ? 'свободно' : participant!.name,
                   style: context.text.bodyMedium?.copyWith(
-                    color: empty ? AppColors.dim : AppColors.white,
+                    color: empty ? AppColors.dim : AppColors.ink,
                     fontStyle: empty ? FontStyle.italic : FontStyle.normal,
                     fontWeight: FontWeight.w700,
                   ),

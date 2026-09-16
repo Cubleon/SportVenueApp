@@ -77,7 +77,7 @@ class _MainShellState extends State<MainShell> {
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.18),
+                      color: AppColors.ink.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
@@ -152,18 +152,9 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bg.withValues(alpha: 0.94),
-        border: Border(
-          top: BorderSide(color: AppColors.white.withValues(alpha: 0.06)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 28,
-            offset: const Offset(0, -12),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: AppColors.bg,
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 18),
       child: SafeArea(
@@ -195,25 +186,13 @@ class _BottomNav extends StatelessWidget {
                       width: 58,
                       height: 58,
                       margin: const EdgeInsets.only(top: 0, bottom: 2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [AppColors.accent, AppColors.accentPressed],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(color: AppColors.bg, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.48),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        color: AppColors.accent,
                       ),
                       child: const Icon(
                         Icons.add_rounded,
-                        color: AppColors.white,
+                        color: AppColors.onAccent,
                         size: 30,
                       ),
                     ),
@@ -263,7 +242,7 @@ class _NavItem extends StatelessWidget {
     final selected = index == selectedIndex;
     final color = selected
         ? AppColors.accent
-        : AppColors.white.withValues(alpha: 0.48);
+        : AppColors.ink.withValues(alpha: 0.48);
     return Expanded(
       child: InkWell(
         key: ValueKey('nav-$label'),

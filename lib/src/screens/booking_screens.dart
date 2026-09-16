@@ -450,7 +450,7 @@ class _BookingDetailsCard extends StatelessWidget {
           Text(
             'Детали бронирования',
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.faint,
+              color: AppColors.muted,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
             ),
@@ -485,7 +485,7 @@ class _CancellationTermsCard extends StatelessWidget {
           Text(
             'Условия отмены',
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.faint,
+              color: AppColors.muted,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
             ),
@@ -608,7 +608,7 @@ class _StepBlock extends StatelessWidget {
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.white,
+                      color: AppColors.ink,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -671,7 +671,7 @@ class _DatePickerRow extends StatelessWidget {
                     AppFormatters.weekdayShort(date).toUpperCase(),
                     style: context.text.labelSmall?.copyWith(
                       color: isSelected
-                          ? AppColors.white.withValues(alpha: 0.82)
+                          ? AppColors.onAccent.withValues(alpha: 0.85)
                           : AppColors.dim,
                       fontWeight: FontWeight.w900,
                     ),
@@ -680,6 +680,7 @@ class _DatePickerRow extends StatelessWidget {
                   Text(
                     '${date.day}',
                     style: context.text.titleMedium?.copyWith(
+                      color: isSelected ? AppColors.onAccent : AppColors.ink,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -790,14 +791,14 @@ class _TimeGrid extends StatelessWidget {
                   ? AppColors.accent
                   : slot.isAvailable
                   ? Colors.transparent
-                  : AppColors.white.withValues(alpha: 0.03),
+                  : AppColors.ink.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selected
                     ? AppColors.accent
                     : slot.isAvailable
-                    ? AppColors.white.withValues(alpha: 0.12)
-                    : AppColors.white.withValues(alpha: 0.05),
+                    ? AppColors.ink.withValues(alpha: 0.12)
+                    : AppColors.ink.withValues(alpha: 0.05),
                 width: 1.5,
               ),
             ),
@@ -805,9 +806,11 @@ class _TimeGrid extends StatelessWidget {
               child: Text(
                 slot.label,
                 style: context.text.titleSmall?.copyWith(
-                  color: slot.isAvailable
-                      ? AppColors.white
-                      : AppColors.white.withValues(alpha: 0.3),
+                  color: selected
+                      ? AppColors.onAccent
+                      : slot.isAvailable
+                      ? AppColors.ink
+                      : AppColors.dim,
                   decoration: slot.isAvailable
                       ? null
                       : TextDecoration.lineThrough,
@@ -889,8 +892,8 @@ class _CounterButton extends StatelessWidget {
       style: IconButton.styleFrom(
         backgroundColor: enabled
             ? AppColors.accent
-            : AppColors.white.withValues(alpha: 0.08),
-        disabledBackgroundColor: AppColors.white.withValues(alpha: 0.08),
+            : AppColors.ink.withValues(alpha: 0.08),
+        disabledBackgroundColor: AppColors.ink.withValues(alpha: 0.08),
       ),
     );
   }

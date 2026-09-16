@@ -50,7 +50,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   Text(
                     'Шаг 1 из 2',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.faint,
+                      color: AppColors.muted,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.1,
                     ),
@@ -233,9 +233,10 @@ class _SportCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
+                      stops: const [0.45, 1],
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.78),
+                        Colors.black.withValues(alpha: 0.62),
                       ],
                     ),
                   ),
@@ -248,7 +249,9 @@ class _SportCard extends StatelessWidget {
                     sport.name.capitalized,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    // Sits on the pitch drawing, not on the page.
                     style: context.text.titleSmall?.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.1,
                     ),
@@ -272,7 +275,7 @@ class _SportCard extends StatelessWidget {
                       ),
                       child: const Icon(
                         Icons.check_rounded,
-                        color: AppColors.white,
+                        color: AppColors.ink,
                         size: 18,
                       ),
                     ),

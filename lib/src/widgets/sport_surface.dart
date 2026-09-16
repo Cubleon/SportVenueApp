@@ -31,16 +31,29 @@ class SportSurfacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
     final spec = _SurfaceSpec.of(sportId);
-    final pitch = _fit(size, spec);
-    final scale = pitch.width / spec.width;
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = spec.surround,
     );
 
-    final board = _Board(canvas: canvas, pitch: pitch, scale: scale);
-    spec.paint(board);
+    // Every pitch is longer than it is wide, so it follows the shape of the
+    // box: upright in a tall tile, turned on its side in a wide card. The
+    // markings are drawn once, in upright coordinates, and the canvas is
+    // rotated under them.
+    final sideways = size.width > size.height;
+    final box = sideways ? Size(size.height, size.width) : size;
+    final pitch = _fit(box, spec);
+    final scale = pitch.width / spec.width;
+
+    canvas.save();
+    if (sideways) {
+      canvas.translate(size.width / 2, size.height / 2);
+      canvas.rotate(math.pi / 2);
+      canvas.translate(-box.width / 2, -box.height / 2);
+    }
+    spec.paint(_Board(canvas: canvas, pitch: pitch, scale: scale));
+    canvas.restore();
   }
 
   /// Centres the pitch in the box, portrait, leaving run-off room around it.

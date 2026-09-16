@@ -179,7 +179,6 @@ class _Sports extends StatelessWidget {
             label: sport.name.capitalized,
             icon: sport.icon,
             selected: true,
-            color: sport.color,
             onTap: () => controller.togglePreferredSport(sport.id),
           );
         },
@@ -291,7 +290,7 @@ class _Venues extends StatelessWidget {
   Widget build(BuildContext context) {
     final venues = controller.preferredVenues;
     return SizedBox(
-      height: 232,
+      height: 292,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -318,12 +317,32 @@ class _Venues extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          venue.name.capitalized,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.15,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.text.bodySmall?.copyWith(
+                            color: AppColors.dim,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             const Icon(
                               Icons.star_rounded,
                               size: 16,
-                              color: AppColors.warning,
+                              color: AppColors.ink,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -336,7 +355,6 @@ class _Venues extends StatelessWidget {
                             Text(
                               '${AppFormatters.money(venue.pricePerHour)}/час',
                               style: context.text.labelLarge?.copyWith(
-                                color: AppColors.accent,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -381,7 +399,7 @@ class _RoundIcon extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(icon, color: AppColors.white),
+          child: Icon(icon, color: AppColors.ink),
         ),
       ),
     );

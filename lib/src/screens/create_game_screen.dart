@@ -142,7 +142,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             return SelectableChip(
                               label: sport.name.capitalized,
                               icon: sport.icon,
-                              color: sport.color,
                               selected: _sportId == sport.id,
                               onTap: () => _selectSport(sport),
                             );
@@ -379,7 +378,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             ? '—'
                             : AppFormatters.money(pricePerPerson),
                         style: context.text.titleLarge?.copyWith(
-                          color: sport?.color ?? AppColors.accent,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -534,7 +532,7 @@ class _Block extends StatelessWidget {
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.white,
+                      color: AppColors.ink,
                       fontWeight: FontWeight.w900,
                     ),
                   ),

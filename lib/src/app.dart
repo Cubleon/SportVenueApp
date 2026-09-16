@@ -36,7 +36,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
     return MaterialApp(
       title: 'SportVenue',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
+      theme: AppTheme.light(),
       home: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
