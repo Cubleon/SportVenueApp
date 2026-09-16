@@ -86,7 +86,7 @@ class _MainShellState extends State<MainShell> {
                 Text(
                   'Создать',
                   style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -152,10 +152,7 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bg,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
+      decoration: const BoxDecoration(color: AppColors.surface),
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 18),
       child: SafeArea(
         top: false,
@@ -260,7 +257,7 @@ class _NavItem extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: context.text.labelSmall?.copyWith(
                   color: color,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -308,13 +305,13 @@ class _SheetAction extends StatelessWidget {
                 Text(
                   title,
                   style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),

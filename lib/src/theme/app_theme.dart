@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A light palette built on one accent.
+/// A light palette in the shape of a menu app: a cool tinted page with pure
+/// white cards floating on it, one indigo accent for actions, and neutrals
+/// with a blue bias so nothing reads as dirty grey.
 ///
-/// Blue carries every action and nothing else, so a blue element on screen is
-/// always something you can press. Everything structural is a neutral with a
-/// slight blue bias, which keeps greys from reading as dirty next to the
-/// accent. Status colours exist but are reserved for actual status — never for
-/// decoration.
+/// The tint matters more than it looks: white cards on a white page need
+/// borders or shadows to separate, and those are exactly what this design
+/// does without. Tinting the page does the same job with no ink at all.
 class AppColors {
   const AppColors._();
 
-  static const bg = Color(0xFFFFFFFF);
-  static const bgAlt = Color(0xFFF7F9FC);
+  /// The page itself.
+  static const bg = Color(0xFFEBF2F7);
+  static const bgAlt = Color(0xFFF5F9FB);
 
-  /// Flat fill for cards, inputs and chips. Carries its own weight, so
-  /// surfaces need neither a border nor a shadow to separate.
-  static const surface = Color(0xFFF2F5F9);
-  static const surfaceRaised = Color(0xFFE6EBF3);
+  /// Cards, sheets and anything that floats on the page.
+  static const surface = Color(0xFFFFFFFF);
 
-  static const accent = Color(0xFF2979FF);
-  static const accentPressed = Color(0xFF1B5FD9);
+  /// A step up from white, for controls that sit *on* a white card —
+  /// icon buttons, steppers, inputs — where white on white would vanish.
+  static const surfaceRaised = Color(0xFFF1F5F9);
 
-  /// Tinted accent fill, for a selected state that should not shout.
-  static const accentSoft = Color(0xFFEAF1FF);
+  static const accent = Color(0xFF3D48F5);
+  static const accentPressed = Color(0xFF2E38D4);
+  static const accentSoft = Color(0xFFE8EAFE);
 
   /// Text and icons on top of [accent].
   static const onAccent = Color(0xFFFFFFFF);
 
-  static const ink = Color(0xFF0D1421);
-  static const muted = Color(0xFF5B6B85);
-  static const dim = Color(0xFF8C9AB0);
-  static const faint = Color(0xFFC6D0DE);
-  static const border = Color(0xFFE4E9F1);
+  // Contrast is measured against both grounds this palette uses, white cards
+  // and the tinted page: ink 17.9:1 / 15.9:1, muted 5.3:1 / 4.7:1 — both
+  // clear AA for body text. dim clears 3:1 only, so it is for icons, hints
+  // and disabled marks, never for a sentence.
+  static const ink = Color(0xFF15171C);
+  static const muted = Color(0xFF616C7A);
+  static const dim = Color(0xFF7E8A99);
+
+  /// Hairlines and disabled marks only — it fails as text.
+  static const faint = Color(0xFFD5DDE5);
+  static const border = Color(0xFFE3EAF0);
 
   static const success = Color(0xFF12A150);
   static const error = Color(0xFFE5484D);
@@ -54,9 +61,15 @@ class AppTheme {
   /// and unlike DM Sans it actually carries Cyrillic.
   static const fontFamily = 'Rubik';
 
-  /// Corner radius shared by cards, buttons and fields, so nothing looks
-  /// cut from a different sheet.
-  static const radius = 18.0;
+  /// Cards and sheets. Generous, because a card here is a soft tile rather
+  /// than a boxed panel.
+  static const radius = 22.0;
+
+  /// Controls inside a card: a little tighter than the card holding them.
+  static const radiusInner = 14.0;
+
+  /// Buttons and chips are pills, so their radius follows their height.
+  static const pill = StadiumBorder();
 
   static ThemeData light() {
     final base = ThemeData.light(useMaterial3: true);
@@ -87,7 +100,7 @@ class AppTheme {
         backgroundColor: AppColors.bg,
         foregroundColor: AppColors.ink,
         titleTextStyle: textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
           letterSpacing: -0.1,
           color: AppColors.ink,
         ),
@@ -95,8 +108,11 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.accent,
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
+      ),
+      filledButtonTheme: const FilledButtonThemeData(
+        style: ButtonStyle(shape: WidgetStatePropertyAll(pill)),
       ),
       // Fields are a flat fill with no outline; focus is shown by the accent
       // alone, so an idle form has no boxes competing with the content.

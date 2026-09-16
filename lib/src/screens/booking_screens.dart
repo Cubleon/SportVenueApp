@@ -282,7 +282,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                             child: Text(
                               'Нажимая «Перейти к оплате», вы соглашаетесь с условиями сервиса и политикой конфиденциальности',
                               style: context.text.bodySmall?.copyWith(
-                                color: AppColors.dim,
+                                color: AppColors.muted,
                                 height: 1.42,
                               ),
                             ),
@@ -389,7 +389,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     child: Text(
                       'Отменить бронь может только организатор',
                       style: context.text.bodyMedium?.copyWith(
-                        color: AppColors.dim,
+                        color: AppColors.muted,
                       ),
                     ),
                   ),
@@ -451,7 +451,7 @@ class _BookingDetailsCard extends StatelessWidget {
             'Детали бронирования',
             style: context.text.labelLarge?.copyWith(
               color: AppColors.muted,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
           ),
@@ -463,7 +463,7 @@ class _BookingDetailsCard extends StatelessWidget {
               'Статус · $status',
               style: context.text.bodySmall?.copyWith(
                 color: AppColors.accent,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -486,7 +486,7 @@ class _CancellationTermsCard extends StatelessWidget {
             'Условия отмены',
             style: context.text.labelLarge?.copyWith(
               color: AppColors.muted,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
           ),
@@ -528,14 +528,14 @@ class _BookingHeader extends StatelessWidget {
                 Text(
                   'Бронирование',
                   style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   venue.name.capitalized,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),
@@ -567,7 +567,7 @@ class _BookingNav extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -609,7 +609,7 @@ class _StepBlock extends StatelessWidget {
                     '$step',
                     style: context.text.labelSmall?.copyWith(
                       color: AppColors.ink,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -618,7 +618,7 @@ class _StepBlock extends StatelessWidget {
               Text(
                 title,
                 style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -673,7 +673,7 @@ class _DatePickerRow extends StatelessWidget {
                       color: isSelected
                           ? AppColors.onAccent.withValues(alpha: 0.85)
                           : AppColors.dim,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -681,7 +681,7 @@ class _DatePickerRow extends StatelessWidget {
                     '${date.day}',
                     style: context.text.titleMedium?.copyWith(
                       color: isSelected ? AppColors.onAccent : AppColors.ink,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -755,7 +755,7 @@ class _TimeGrid extends StatelessWidget {
             Expanded(
               child: Text(
                 error!,
-                style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                style: context.text.bodySmall?.copyWith(color: AppColors.muted),
               ),
             ),
             TextButton(onPressed: onRetry, child: const Text('Повторить')),
@@ -766,7 +766,7 @@ class _TimeGrid extends StatelessWidget {
     if (slots.isEmpty) {
       return Text(
         'На эту дату свободных слотов нет',
-        style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+        style: context.text.bodySmall?.copyWith(color: AppColors.muted),
       );
     }
     return GridView.builder(
@@ -814,7 +814,7 @@ class _TimeGrid extends StatelessWidget {
                   decoration: slot.isAvailable
                       ? null
                       : TextDecoration.lineThrough,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -857,7 +857,7 @@ class _CounterRow extends StatelessWidget {
                 : 'игроков'}',
             textAlign: TextAlign.center,
             style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -925,7 +925,7 @@ class _Bullet extends StatelessWidget {
             child: Text(
               text,
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.dim,
+                color: AppColors.muted,
                 height: 1.4,
               ),
             ),

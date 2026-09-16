@@ -44,7 +44,7 @@ class ProfileScreen extends StatelessWidget {
                       child: Text(
                         _profileInitial(controller),
                         style: context.text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.onAccent,
                         ),
                       ),
@@ -60,7 +60,7 @@ class ProfileScreen extends StatelessWidget {
                               ? controller.userName!
                               : 'Пользователь SportVenue',
                           style: context.text.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -69,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
                               ? 'Номер не указан'
                               : controller.phone,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                       ],
@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
               'Спортивные предпочтения',
               style: context.text.labelLarge?.copyWith(
                 color: AppColors.muted,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
               ),
             ),
@@ -166,30 +166,26 @@ class _Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            value: '${controller.bookings.length}',
-            label: 'Броней',
+    final games = controller.games
+        .where((game) => game.participants.any((p) => p.isCurrentUser))
+        .length;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _Stat(value: '${controller.bookings.length}', label: 'Броней'),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            value:
-                '${controller.games.where((game) => game.participants.any((p) => p.isCurrentUser)).length}',
-            label: 'Моих игр',
+          Expanded(child: _Stat(value: '$games', label: 'Моих игр')),
+          Expanded(
+            child: _Stat(
+              value: '${controller.selectedSports.length}',
+              label: 'Видов спорта',
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            value: '${controller.selectedSports.length}',
-            label: 'Видов спорта',
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -201,37 +197,37 @@ String _profileInitial(AppController controller) {
   return source.isEmpty ? 'С' : source.characters.first.toUpperCase();
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.value, required this.label});
+class _Stat extends StatelessWidget {
+  const _Stat({required this.value, required this.label});
 
   final String value;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      child: Column(
-        children: [
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.text.titleMedium?.copyWith(
-              color: AppColors.accent,
-              fontWeight: FontWeight.w900,
-            ),
+    return Column(
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.4,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: context.text.labelSmall?.copyWith(color: AppColors.dim),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+        ),
+      ],
     );
   }
 }
+
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({
@@ -256,7 +252,7 @@ class _MenuItem extends StatelessWidget {
           children: [
             Container(
               width: 42,
-              height: 42,
+              height: 46,
               decoration: BoxDecoration(
                 color: AppColors.accent.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(13),
@@ -271,14 +267,14 @@ class _MenuItem extends StatelessWidget {
                   Text(
                     title,
                     style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.dim,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],

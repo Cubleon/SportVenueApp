@@ -51,7 +51,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                     'Шаг 1 из 2',
                     style: context.text.labelSmall?.copyWith(
                       color: AppColors.muted,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 1.1,
                     ),
                   ),
@@ -69,7 +69,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   Text(
                     'Какой спорт?',
                     style: context.text.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -77,7 +77,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   Text(
                     'Можно выбрать несколько',
                     style: context.text.bodyMedium?.copyWith(
-                      color: AppColors.dim,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],
@@ -92,7 +92,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                           'Виды спорта пока недоступны',
                           textAlign: TextAlign.center,
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                       ),
@@ -252,7 +252,7 @@ class _SportCard extends StatelessWidget {
                     // Sits on the pitch drawing, not on the page.
                     style: context.text.titleSmall?.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -0.1,
                     ),
                   ),

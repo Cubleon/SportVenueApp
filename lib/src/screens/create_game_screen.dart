@@ -132,7 +132,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       ? Text(
                           'Виды спорта пока недоступны',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         )
                       : Wrap(
@@ -155,7 +155,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       ? Text(
                           'Для выбранного спорта площадок пока нет',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         )
                       : Column(
@@ -180,7 +180,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                                 style: context.text.titleSmall
                                                     ?.copyWith(
                                                       fontWeight:
-                                                          FontWeight.w900,
+                                                          FontWeight.w700,
                                                     ),
                                               ),
                                               const SizedBox(height: 4),
@@ -188,7 +188,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                                 '${venue.address} · ${AppFormatters.money(venue.pricePerHour)}/час',
                                                 style: context.text.bodySmall
                                                     ?.copyWith(
-                                                      color: AppColors.dim,
+                                                      color: AppColors.muted,
                                                     ),
                                               ),
                                             ],
@@ -264,7 +264,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           '$_capacity места',
                           textAlign: TextAlign.center,
                           style: context.text.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -309,13 +309,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         title: Text(
                           'Одобрять вручную',
                           style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         subtitle: Text(
                           'Вы будете подтверждать каждого игрока',
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                         value: _type == GameType.approval,
@@ -369,7 +369,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         child: Text(
                           'Стоимость с человека',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                       ),
@@ -378,7 +378,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             ? '—'
                             : AppFormatters.money(pricePerPerson),
                         style: context.text.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -495,7 +495,7 @@ class _CreateHeader extends StatelessWidget {
             'Создать игру',
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -533,7 +533,7 @@ class _Block extends StatelessWidget {
                     '$step',
                     style: context.text.labelSmall?.copyWith(
                       color: AppColors.ink,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -542,7 +542,7 @@ class _Block extends StatelessWidget {
               Text(
                 title,
                 style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -571,7 +571,7 @@ class _SmallSelector extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+          style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -612,12 +612,12 @@ class _OptionTile extends StatelessWidget {
                 Text(
                   title,
                   style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),

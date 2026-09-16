@@ -29,7 +29,7 @@ class AppLogo extends StatelessWidget {
         RichText(
           text: TextSpan(
             style: context.text.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               letterSpacing: -0.3,
             ),
             children: const [
@@ -154,9 +154,7 @@ class PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: background,
           foregroundColor: foreground,
           disabledForegroundColor: foreground,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radius),
-          ),
+          shape: AppTheme.pill,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
@@ -188,7 +186,7 @@ class PrimaryButton extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
                           color: foreground,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: -0.05,
                         ),
                       ),
@@ -264,7 +262,7 @@ class SectionHeader extends StatelessWidget {
             child: Text(
               title,
               style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 letterSpacing: -0.15,
               ),
             ),
@@ -290,7 +288,7 @@ class SportBadge extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
       decoration: BoxDecoration(
         color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -301,7 +299,7 @@ class SportBadge extends StatelessWidget {
             sport.name.toUpperCase(),
             style: context.text.labelSmall?.copyWith(
               color: AppColors.muted,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
           ),
@@ -333,13 +331,13 @@ class SelectableChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(99),
         child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: selected ? AppColors.accentSoft : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            color: selected ? AppColors.accent : AppColors.surface,
+            borderRadius: BorderRadius.circular(99),
           ),
           child: FittedBox(
             fit: BoxFit.scaleDown,
@@ -354,8 +352,8 @@ class SelectableChip extends StatelessWidget {
                   label,
                   maxLines: 1,
                   style: context.text.labelLarge?.copyWith(
-                    color: selected ? AppColors.accent : AppColors.muted,
-                    fontWeight: FontWeight.w700,
+                    color: selected ? AppColors.onAccent : AppColors.muted,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -458,7 +456,7 @@ class SummaryRow extends StatelessWidget {
               style: context.text.bodyMedium?.copyWith(
                 color: accent ? AppColors.accent : AppColors.ink,
                 fontWeight: highlight || accent
-                    ? FontWeight.w900
+                    ? FontWeight.w700
                     : FontWeight.w700,
               ),
             ),
@@ -505,7 +503,7 @@ class ScreenTitleBar extends StatelessWidget {
                 Text(
                   title,
                   style: context.text.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.25,
                   ),
                 ),
@@ -514,7 +512,7 @@ class ScreenTitleBar extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.dim,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],

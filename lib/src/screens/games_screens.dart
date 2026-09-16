@@ -140,7 +140,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
                 AppFormatters.money(game.pricePerPerson),
                 style: context.text.titleMedium?.copyWith(
                   color: AppColors.ink,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -151,13 +151,13 @@ class _MiniGameCardState extends State<MiniGameCard> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             '${AppFormatters.dateShort(game.date)} · ${game.timeRange}',
-            style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
           ),
           const SizedBox(height: 12),
           Row(
@@ -198,7 +198,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
                           'Вступить',
                           style: context.text.labelLarge?.copyWith(
                             color: AppColors.onAccent,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                 ),
@@ -285,7 +285,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               Text(
                                 current.venue.name.capitalized,
                                 style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   letterSpacing: -0.2,
                                 ),
                               ),
@@ -293,7 +293,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               Text(
                                 current.venue.address,
                                 style: context.text.bodySmall?.copyWith(
-                                  color: AppColors.dim,
+                                  color: AppColors.muted,
                                 ),
                               ),
                               const Divider(
@@ -435,7 +435,7 @@ class _SportFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: 46,
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -540,7 +540,7 @@ class _Avatar extends StatelessWidget {
             color: participant.isCurrentUser
                 ? AppColors.onAccent
                 : AppColors.muted,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -570,7 +570,7 @@ class _DetailHeader extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -594,7 +594,7 @@ class _SectionLabel extends StatelessWidget {
         text.toUpperCase(),
         style: context.text.labelSmall?.copyWith(
           color: AppColors.muted,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
           letterSpacing: 1.4,
         ),
       ),
@@ -622,13 +622,13 @@ class _ParticipantTile extends StatelessWidget {
                 Text(
                   participant.name,
                   style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Рейтинг ${participant.rating.toStringAsFixed(1)}',
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
                 ),
               ],
             ),
@@ -684,7 +684,7 @@ class _PlayerSlot extends StatelessWidget {
               if (!empty)
                 Text(
                   participant!.rating.toStringAsFixed(1),
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
                 ),
             ],
           ),

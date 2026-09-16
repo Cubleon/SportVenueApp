@@ -97,7 +97,7 @@ class _TopBar extends StatelessWidget {
                 Text(
                   'Привет, ${controller.greetingName.capitalized}',
                   style: context.text.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -113,7 +113,7 @@ class _TopBar extends StatelessWidget {
                     Text(
                       'Москва',
                       style: context.text.bodySmall?.copyWith(
-                        color: AppColors.dim,
+                        color: AppColors.muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -151,7 +151,7 @@ class _SearchBar extends StatelessWidget {
             Expanded(
               child: Text(
                 'Найти площадку или игру',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
               ),
             ),
           ],
@@ -169,7 +169,7 @@ class _Sports extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: 46,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -203,7 +203,7 @@ class _Bookings extends StatelessWidget {
         child: AppCard(
           child: Text(
             'У вас пока нет предстоящих броней',
-            style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+            style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
           ),
         ),
       );
@@ -238,13 +238,13 @@ class _Bookings extends StatelessWidget {
                     ).toUpperCase(),
                     style: context.text.labelSmall?.copyWith(
                       color: AppColors.accent,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     '${booking.draft.date.day}',
                     style: context.text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -260,14 +260,14 @@ class _Bookings extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${booking.draft.timeRange} · ${booking.status}',
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.dim,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],
@@ -311,9 +311,12 @@ class _Venues extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  VenueHero(venue: venue, height: 120),
                   Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                    child: VenueHero(venue: venue, height: 116),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -322,7 +325,7 @@ class _Venues extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -0.15,
                             height: 1.2,
                           ),
@@ -333,7 +336,7 @@ class _Venues extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -348,14 +351,14 @@ class _Venues extends StatelessWidget {
                             Text(
                               venue.rating.toStringAsFixed(1),
                               style: context.text.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const Spacer(),
                             Text(
                               '${AppFormatters.money(venue.pricePerHour)}/час',
                               style: context.text.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -366,7 +369,7 @@ class _Venues extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                           ),
                         ),
                       ],
@@ -392,14 +395,14 @@ class _RoundIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(14),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(icon, color: AppColors.ink),
+          child: Icon(icon, color: AppColors.ink, size: 22),
         ),
       ),
     );

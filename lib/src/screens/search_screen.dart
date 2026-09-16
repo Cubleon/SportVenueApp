@@ -52,7 +52,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             _SearchField(),
             SizedBox(
-              height: 42,
+              height: 46,
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
@@ -216,7 +216,7 @@ class _SearchField extends StatelessWidget {
             Expanded(
               child: Text(
                 'Клуб, площадка или район',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
               ),
             ),
             const Icon(Icons.tune_rounded, color: AppColors.accent),
@@ -337,7 +337,7 @@ class _MapPill extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+        style: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -368,7 +368,7 @@ class _VenueBottomSheet extends StatelessWidget {
                 child: Text(
                   venue.name.capitalized,
                   style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -380,7 +380,7 @@ class _VenueBottomSheet extends StatelessWidget {
           ),
           Text(
             venue.address,
-            style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
           ),
           const SizedBox(height: 10),
           Row(
@@ -394,7 +394,7 @@ class _VenueBottomSheet extends StatelessWidget {
               Text(
                 '${venue.rating}',
                 style: context.text.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
@@ -402,7 +402,7 @@ class _VenueBottomSheet extends StatelessWidget {
                 '${AppFormatters.money(venue.pricePerHour)}/час',
                 style: context.text.labelLarge?.copyWith(
                   color: AppColors.accent,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

@@ -153,7 +153,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               Text(
                 'Войти или\nзарегистрироваться',
                 style: context.text.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   height: 1.12,
                   letterSpacing: -0.3,
                 ),
@@ -233,7 +233,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: Text(
                           'Согласен с обработкой персональных данных и условиями сервиса',
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: AppColors.muted,
                             height: 1.35,
                           ),
                         ),
@@ -432,14 +432,14 @@ class _OtpScreenState extends State<OtpScreen>
               Text(
                 'Введите код',
                 style: context.text.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
               ),
               const SizedBox(height: 34),
               AnimatedBuilder(
@@ -468,7 +468,7 @@ class _OtpScreenState extends State<OtpScreen>
                           maxLength: 1,
                           enabled: !_submitting,
                           style: context.text.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -708,7 +708,7 @@ class _SocialButton extends StatelessWidget {
         label,
         style: context.text.titleMedium?.copyWith(
           color: color,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
