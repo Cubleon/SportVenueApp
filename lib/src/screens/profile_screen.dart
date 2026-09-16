@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import 'history_screen.dart';
+import 'sport_selection_screen.dart';
 import '../widgets/shared_widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -86,15 +88,26 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
-              'Спортивные предпочтения',
-              style: context.text.labelLarge?.copyWith(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Спортивные предпочтения',
+                    style: context.text.labelLarge?.copyWith(
+                      color: AppColors.muted,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  key: const ValueKey('edit-sports'),
+                  onPressed: () => _editSports(context, controller),
+                  child: const Text('Изменить'),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -104,7 +117,6 @@ class ProfileScreen extends StatelessWidget {
                       label: sport.name.capitalized,
                       icon: sport.icon,
                       selected: true,
-                      onTap: () => controller.togglePreferredSport(sport.id),
                     ),
                   )
                   .toList(),
@@ -117,9 +129,10 @@ class ProfileScreen extends StatelessWidget {
               title: 'История',
               subtitle:
                   '${controller.bookings.length} броней · ${controller.games.length} игр',
-              onTap: () => showAppSnack(
-                context,
-                'Полная история появится в следующей версии',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => HistoryScreen(controller: controller),
+                ),
               ),
             ),
             _MenuItem(
@@ -188,6 +201,26 @@ class _Stats extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _editSports(
+  BuildContext context,
+  AppController controller,
+) async {
+  await Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => SportSelectionScreen(
+        sports: controller.sports,
+        initialSelection: controller.selectedSportIds,
+        onContinue: (ids) async {
+          await controller.completeSports(ids);
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+    ),
+  );
 }
 
 String _profileInitial(AppController controller) {

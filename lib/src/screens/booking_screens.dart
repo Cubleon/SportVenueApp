@@ -135,7 +135,7 @@ class _BookingScreenState extends State<BookingScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: _ActionBar(
+              child: PinnedActionBar(
                 child: Column(
                   children: [
                     PrimaryButton(
@@ -301,7 +301,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: _ActionBar(
+              child: PinnedActionBar(
                 child: Column(
                   children: [
                     PrimaryButton(
@@ -407,7 +407,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: _ActionBar(
+                child: PinnedActionBar(
                   child: PrimaryButton(
                     key: const ValueKey('cancel-booking'),
                     label: 'Отменить бронь',
@@ -957,36 +957,3 @@ class _Bullet extends StatelessWidget {
 /// Without a ground of its own, content scrolls up through a floating button
 /// and both become unreadable; the fade above it keeps the join from looking
 /// like a hard edge.
-class _ActionBar extends StatelessWidget {
-  const _ActionBar({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // A short fade, so the join is soft…
-        Container(
-          height: 28,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.bg.withValues(alpha: 0), AppColors.bg],
-            ),
-          ),
-        ),
-        // …and a solid ground under the buttons themselves, so scrolling
-        // content never shows through them.
-        Container(
-          width: double.infinity,
-          color: AppColors.bg,
-          padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
-          child: child,
-        ),
-      ],
-    );
-  }
-}

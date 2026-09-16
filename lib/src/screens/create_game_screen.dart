@@ -122,7 +122,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 128),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 150),
               children: [
                 _CreateHeader(onBack: () => Navigator.of(context).pop()),
                 _Block(
@@ -361,40 +361,48 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                     ],
                   ),
                 ),
-                AppCard(
-                  borderColor: AppColors.accent.withValues(alpha: 0.22),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Стоимость с человека',
-                          style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.muted,
+                // The running total, set apart by a tinted fill rather than a
+                // border, and given the same top gap as a numbered block so it
+                // does not touch the filter chips above it.
+                Padding(
+                  padding: const EdgeInsets.only(top: 18),
+                  child: AppCard(
+                    color: AppColors.accentSoft,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Стоимость с человека',
+                            style: context.text.bodyMedium?.copyWith(
+                              color: AppColors.muted,
+                            ),
                           ),
                         ),
-                      ),
-                      Text(
-                        pricePerPerson == null
-                            ? '—'
-                            : AppFormatters.money(pricePerPerson),
-                        style: context.text.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                        Text(
+                          pricePerPerson == null
+                              ? '—'
+                              : AppFormatters.money(pricePerPerson),
+                          style: context.text.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 28,
-              child: PrimaryButton(
-                key: const ValueKey('create-game-submit'),
-                label: 'Создать игру',
-                isLoading: _loading,
-                onPressed: canCreate ? _create : null,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: PinnedActionBar(
+                child: PrimaryButton(
+                  key: const ValueKey('create-game-submit'),
+                  label: 'Создать игру',
+                  isLoading: _loading,
+                  onPressed: canCreate ? _create : null,
+                ),
               ),
             ),
           ],
@@ -620,7 +628,9 @@ class _OptionTile extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),

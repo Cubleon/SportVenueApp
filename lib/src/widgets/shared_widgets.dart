@@ -222,6 +222,7 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.onTap,
     this.borderColor,
+    this.color,
   });
 
   final Widget child;
@@ -229,11 +230,14 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? borderColor;
 
+  /// Overrides the white fill, for a card that summarises rather than lists.
+  final Color? color;
+
   @override
   Widget build(BuildContext context) {
     final content = Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: color ?? AppColors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
         border: borderColor == null ? null : Border.all(color: borderColor!),
       ),
@@ -330,14 +334,17 @@ class SelectableChip extends StatelessWidget {
     super.key,
     required this.label,
     required this.selected,
-    required this.onTap,
+    this.onTap,
     this.icon,
     this.color,
   });
 
   final String label;
   final bool selected;
-  final VoidCallback onTap;
+
+  /// Omit it for a chip that only reports a state and cannot be changed by
+  /// tapping — a preference is not something to lose by accident.
+  final VoidCallback? onTap;
   final String? icon;
   final Color? color;
 
@@ -348,6 +355,9 @@ class SelectableChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(99),
+        // A chip with no handler takes no touches, so it cannot ripple or
+        // look pressable.
+        excludeFromSemantics: onTap == null,
         child: Container(
           height: 44,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -547,6 +557,135 @@ class ScreenTitleBar extends StatelessWidget {
           ),
           ?trailing,
         ],
+      ),
+    );
+  }
+}
+
+/// Holds the actions pinned to the bottom of a flow.
+///
+/// A bar positioned over a scroll view needs a ground of its own: without
+/// one the content slides up through the buttons and both become
+/// unreadable. The short fade above it keeps the join from reading as a
+/// hard edge.
+class PinnedActionBar extends StatelessWidget {
+  const PinnedActionBar({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 28,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.bg.withValues(alpha: 0), AppColors.bg],
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          color: AppColors.bg,
+          padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
+          child: child,
+        ),
+      ],
+    );
+  }
+}
+
+/// One booking as a row: the date as a block, the venue, and its status.
+class BookingRow extends StatelessWidget {
+  const BookingRow({super.key, required this.booking, this.onTap});
+
+  final Booking booking;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      key: ValueKey('booking-row-${booking.id}'),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 62,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppFormatters.weekdayShort(booking.draft.date).toUpperCase(),
+                  style: context.text.labelSmall?.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '${booking.draft.date.day}',
+                  style: context.text.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  booking.draft.venue.name.capitalized,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${booking.draft.timeRange} · ${booking.status}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+        ],
+      ),
+    );
+  }
+}
+
+/// The round back button used at the top of a pushed screen.
+class BackCircleButton extends StatelessWidget {
+  const BackCircleButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filled(
+      onPressed: onTap,
+      icon: const Icon(Icons.chevron_left_rounded),
+      style: IconButton.styleFrom(
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.ink,
       ),
     );
   }

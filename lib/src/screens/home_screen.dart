@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
+import 'history_screen.dart';
 import 'games_screens.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -34,8 +35,11 @@ class HomeScreen extends StatelessWidget {
               child: SectionHeader(
                 title: 'Предстоящая бронь',
                 action: 'Все',
-                onAction: () =>
-                    showAppSnack(context, 'История броней откроется в профиле'),
+                onAction: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => HistoryScreen(controller: controller),
+                  ),
+                ),
               ),
             ),
             SliverToBoxAdapter(child: _Bookings(controller: controller)),
@@ -212,69 +216,13 @@ class _Bookings extends StatelessWidget {
     final booking = upcomingBookings.first;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: AppCard(
-        key: ValueKey('upcoming-booking-${booking.id}'),
+      child: BookingRow(
+        booking: booking,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
                 BookingDetailsScreen(controller: controller, booking: booking),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 62,
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppFormatters.weekdayShort(
-                      booking.draft.date,
-                    ).toUpperCase(),
-                    style: context.text.labelSmall?.copyWith(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    '${booking.draft.date.day}',
-                    style: context.text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    booking.draft.venue.name.capitalized,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${booking.draft.timeRange} · ${booking.status}',
-                    style: context.text.bodySmall?.copyWith(
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
-          ],
         ),
       ),
     );
