@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sport_surface.dart';
 
 class SportSelectionScreen extends StatefulWidget {
   const SportSelectionScreen({
@@ -225,8 +226,7 @@ class _SportCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: sport.color.withValues(alpha: 0.7)),
-                CustomPaint(painter: _SportSurfacePainter(sport: sport)),
+                SportSurface(sportId: sport.id),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -283,79 +283,4 @@ class _SportCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SportSurfacePainter extends CustomPainter {
-  const _SportSurfacePainter({required this.sport});
-
-  final Sport sport;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..color = Colors.white.withValues(alpha: 0.45);
-    final rect = Rect.fromLTWH(10, 16, size.width - 20, size.height - 32);
-
-    canvas.drawRect(rect, paint);
-    canvas.drawLine(
-      Offset(rect.left, rect.center.dy),
-      Offset(rect.right, rect.center.dy),
-      paint,
-    );
-
-    if (sport.id == 'football' || sport.id == 'basketball') {
-      canvas.drawCircle(rect.center, size.width * 0.17, paint);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(rect.center.dx, rect.top + 24),
-          width: 70,
-          height: 34,
-        ),
-        paint,
-      );
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(rect.center.dx, rect.bottom - 24),
-          width: 70,
-          height: 34,
-        ),
-        paint,
-      );
-    } else if (sport.id == 'tennis' || sport.id == 'padel') {
-      canvas.drawLine(
-        Offset(rect.center.dx, rect.top),
-        Offset(rect.center.dx, rect.bottom),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.top + rect.height * 0.28),
-        Offset(rect.right, rect.top + rect.height * 0.28),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.bottom - rect.height * 0.28),
-        Offset(rect.right, rect.bottom - rect.height * 0.28),
-        paint,
-      );
-    } else {
-      canvas.drawLine(
-        Offset(rect.left, rect.center.dy - 5),
-        Offset(rect.right, rect.center.dy - 5),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.center.dy + 5),
-        Offset(rect.right, rect.center.dy + 5),
-        paint,
-      );
-      canvas.drawCircle(Offset(rect.center.dx, rect.top + 38), 16, paint);
-      canvas.drawCircle(Offset(rect.center.dx, rect.bottom - 38), 16, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SportSurfacePainter oldDelegate) =>
-      oldDelegate.sport != sport;
 }
