@@ -128,34 +128,37 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 156)),
+                const SliverToBoxAdapter(child: SizedBox(height: 200)),
               ],
             ),
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 28,
-              child: Column(
-                children: [
-                  PrimaryButton(
-                    key: const ValueKey('pay-share'),
-                    label:
-                        'Оплатить свою часть · ${AppFormatters.money(_draft.sharePrice)}',
-                    onPressed: _canContinue
-                        ? () => _goToConfirm(PaymentMode.split)
-                        : null,
-                  ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    key: const ValueKey('pay-full'),
-                    label:
-                        'Забронировать целиком · ${AppFormatters.money(_draft.totalPrice)}',
-                    secondary: true,
-                    onPressed: _canContinue
-                        ? () => _goToConfirm(PaymentMode.full)
-                        : null,
-                  ),
-                ],
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _ActionBar(
+                child: Column(
+                  children: [
+                    PrimaryButton(
+                      key: const ValueKey('pay-share'),
+                      label:
+                          'Оплатить свою часть · ${AppFormatters.money(_draft.sharePrice)}',
+                      tone: ButtonTone.commit,
+                      onPressed: _canContinue
+                          ? () => _goToConfirm(PaymentMode.split)
+                          : null,
+                    ),
+                    const SizedBox(height: 10),
+                    PrimaryButton(
+                      key: const ValueKey('pay-full'),
+                      label:
+                          'Забронировать целиком · ${AppFormatters.money(_draft.totalPrice)}',
+                      tone: ButtonTone.neutral,
+                      onPressed: _canContinue
+                          ? () => _goToConfirm(PaymentMode.full)
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -295,28 +298,31 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               ],
             ),
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 28,
-              child: Column(
-                children: [
-                  PrimaryButton(
-                    key: const ValueKey('confirm-payment'),
-                    label:
-                        'Перейти к оплате · ${AppFormatters.money(_paymentAmount)}',
-                    isLoading: _loading,
-                    onPressed: _accepted ? _pay : null,
-                  ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    key: const ValueKey('close-booking-checkout'),
-                    label: 'Вернуться назад',
-                    secondary: true,
-                    onPressed: _loading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                  ),
-                ],
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _ActionBar(
+                child: Column(
+                  children: [
+                    PrimaryButton(
+                      key: const ValueKey('confirm-payment'),
+                      label:
+                          'Перейти к оплате · ${AppFormatters.money(_paymentAmount)}',
+                      tone: ButtonTone.commit,
+                      isLoading: _loading,
+                      onPressed: _accepted ? _pay : null,
+                    ),
+                    const SizedBox(height: 10),
+                    PrimaryButton(
+                      key: const ValueKey('close-booking-checkout'),
+                      label: 'Вернуться назад',
+                      tone: ButtonTone.neutral,
+                      onPressed: _loading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -398,15 +404,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             ),
             if (canCancel)
               Positioned(
-                left: 20,
-                right: 20,
-                bottom: 28,
-                child: PrimaryButton(
-                  key: const ValueKey('cancel-booking'),
-                  label: 'Отменить бронь',
-                  secondary: true,
-                  isLoading: _loading,
-                  onPressed: _loading ? null : _cancel,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _ActionBar(
+                  child: PrimaryButton(
+                    key: const ValueKey('cancel-booking'),
+                    label: 'Отменить бронь',
+                    tone: ButtonTone.neutral,
+                    isLoading: _loading,
+                    onPressed: _loading ? null : _cancel,
+                  ),
                 ),
               ),
           ],
@@ -520,7 +528,10 @@ class _BookingHeader extends StatelessWidget {
           IconButton.filled(
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
-            style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+            style: IconButton.styleFrom(
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.ink,
+          ),
           ),
           Expanded(
             child: Column(
@@ -535,7 +546,9 @@ class _BookingHeader extends StatelessWidget {
                   venue.name.capitalized,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),
@@ -560,7 +573,10 @@ class _BookingNav extends StatelessWidget {
         IconButton.filled(
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.ink,
+          ),
         ),
         Expanded(
           child: Text(
@@ -890,10 +906,10 @@ class _CounterButton extends StatelessWidget {
       onPressed: enabled ? onTap : null,
       icon: Icon(icon),
       style: IconButton.styleFrom(
-        backgroundColor: enabled
-            ? AppColors.accent
-            : AppColors.ink.withValues(alpha: 0.08),
-        disabledBackgroundColor: AppColors.ink.withValues(alpha: 0.08),
+        backgroundColor: enabled ? AppColors.accent : AppColors.surfaceRaised,
+        disabledBackgroundColor: AppColors.surfaceRaised,
+        foregroundColor: AppColors.onAccent,
+        disabledForegroundColor: AppColors.dim,
       ),
     );
   }
@@ -932,6 +948,45 @@ class _Bullet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Holds the actions pinned to the bottom of a flow.
+///
+/// Without a ground of its own, content scrolls up through a floating button
+/// and both become unreadable; the fade above it keeps the join from looking
+/// like a hard edge.
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // A short fade, so the join is soft…
+        Container(
+          height: 28,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.bg.withValues(alpha: 0), AppColors.bg],
+            ),
+          ),
+        ),
+        // …and a solid ground under the buttons themselves, so scrolling
+        // content never shows through them.
+        Container(
+          width: double.infinity,
+          color: AppColors.bg,
+          padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
+          child: child,
+        ),
+      ],
     );
   }
 }

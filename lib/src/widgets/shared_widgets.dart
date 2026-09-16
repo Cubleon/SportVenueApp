@@ -114,6 +114,19 @@ class _LogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// How much weight a button carries.
+enum ButtonTone {
+  /// Ordinary actions: continue, join, create.
+  accent,
+
+  /// The quieter of two choices, or a way out. A flat neutral fill.
+  neutral,
+
+  /// Spends money or takes a slot. Dark, and used sparingly — if two of
+  /// these sit together, neither reads as final.
+  commit,
+}
+
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -121,32 +134,35 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.isLoading = false,
-    this.secondary = false,
+    this.tone = ButtonTone.accent,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
   final bool isLoading;
-  final bool secondary;
+  final ButtonTone tone;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !isLoading;
-    final background = secondary
-        ? AppColors.surface
-        : enabled
-        ? AppColors.accent
-        : AppColors.surfaceRaised;
-    final foreground = secondary
+    final neutral = tone == ButtonTone.neutral;
+    final background = !enabled
+        ? AppColors.surfaceRaised
+        : switch (tone) {
+            ButtonTone.accent => AppColors.accent,
+            ButtonTone.neutral => AppColors.surface,
+            ButtonTone.commit => AppColors.commit,
+          };
+    final foreground = !enabled
+        ? AppColors.dim
+        : neutral
         ? AppColors.ink
-        : enabled
-        ? AppColors.onAccent
-        : AppColors.dim;
+        : AppColors.onAccent;
 
     return SizedBox(
       width: double.infinity,
-      height: secondary ? 50 : 56,
+      height: neutral ? 50 : 56,
       child: FilledButton(
         onPressed: enabled ? onPressed : null,
         style: FilledButton.styleFrom(
@@ -470,10 +486,20 @@ class SummaryRow extends StatelessWidget {
 void showAppSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
+      // The text colour is named here on purpose: Material's own snack style
+      // is written for a dark plate, so on a light one it turns invisible.
+      content: Text(
+        message,
+        style: context.text.bodyMedium?.copyWith(
+          color: AppColors.onAccent,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: AppColors.surfaceRaised,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      backgroundColor: AppColors.commit,
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      shape: const StadiumBorder(),
     ),
   );
 }

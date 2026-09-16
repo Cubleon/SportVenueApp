@@ -488,7 +488,10 @@ class _CreateHeader extends StatelessWidget {
         IconButton.filled(
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surface,
+            foregroundColor: AppColors.ink,
+          ),
         ),
         Expanded(
           child: Text(

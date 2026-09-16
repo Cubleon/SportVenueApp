@@ -149,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
             PrimaryButton(
               key: const ValueKey('logout-button'),
               label: 'Выйти из аккаунта',
-              secondary: true,
+              tone: ButtonTone.neutral,
               onPressed: onLogout,
             ),
           ],

@@ -26,7 +26,12 @@ class AppColors {
   static const accentPressed = Color(0xFF2E38D4);
   static const accentSoft = Color(0xFFE8EAFE);
 
-  /// Text and icons on top of [accent].
+  /// The step you cannot take back: paying, or holding a slot. Dark rather
+  /// than brighter, so it outranks the accent without competing with it —
+  /// and so an accent button never sits next to it looking equally final.
+  static const commit = Color(0xFF1E1A4D);
+
+  /// Text and icons on top of [accent] or [commit].
   static const onAccent = Color(0xFFFFFFFF);
 
   // Contrast is measured against both grounds this palette uses, white cards
