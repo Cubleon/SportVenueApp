@@ -644,5 +644,140 @@ final _SurfaceSpec _padel = _SurfaceSpec(
             radius: 0.22);
       }
     }
+
+    _padelRacket(b);
   },
 );
+
+/// A racket resting on the padel court.
+///
+/// Padel and tennis carry the same ball emoji in the data, so the racket is
+/// what separates the two at a glance: a padel one has a solid perforated
+/// head and a short handle, never strings. Drawn at icon scale rather than
+/// its real 45 cm, which on a 20 m court would be a speck.
+void _padelRacket(_Board b) {
+  final length = b.pitch.width * 0.82;
+  // Clear of the net band above and of the label in the bottom-left corner.
+  final centre = Offset(
+    b.pitch.center.dx + b.pitch.width * 0.12,
+    b.pitch.center.dy + b.pitch.height * 0.22,
+  );
+
+  b.canvas.save();
+  b.canvas.translate(centre.dx, centre.dy);
+  b.canvas.rotate(-0.5);
+
+  final headHeight = length * 0.54;
+  final headWidth = length * 0.44;
+  final headCentre = Offset(0, -length / 2 + headHeight / 2);
+  final head = Rect.fromCenter(
+    center: headCentre,
+    width: headWidth,
+    height: headHeight,
+  );
+  final handleWidth = length * 0.115;
+
+  // Cast shadow, so the racket sits on the surface instead of floating.
+  b.canvas.save();
+  b.canvas.translate(length * 0.035, length * 0.045);
+  b.canvas.drawOval(head, b.fill(Colors.black.withValues(alpha: 0.22)));
+  b.canvas.drawRRect(
+    RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(0, length * 0.26),
+        width: handleWidth,
+        height: length * 0.44,
+      ),
+      Radius.circular(handleWidth / 2),
+    ),
+    b.fill(Colors.black.withValues(alpha: 0.22)),
+  );
+  b.canvas.restore();
+
+  // Throat and handle first, so the head overlaps them cleanly.
+  final throat = Path()
+    ..moveTo(-headWidth * 0.34, headCentre.dy + headHeight * 0.32)
+    ..quadraticBezierTo(
+      -handleWidth * 0.75,
+      length * 0.06,
+      -handleWidth / 2,
+      length * 0.12,
+    )
+    ..lineTo(handleWidth / 2, length * 0.12)
+    ..quadraticBezierTo(
+      handleWidth * 0.75,
+      length * 0.06,
+      headWidth * 0.34,
+      headCentre.dy + headHeight * 0.32,
+    )
+    ..close();
+  b.canvas.drawPath(throat, b.fill(const Color(0xFFF2F6FA)));
+
+  b.canvas.drawRRect(
+    RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(0, length * 0.26),
+        width: handleWidth,
+        height: length * 0.44,
+      ),
+      Radius.circular(handleWidth / 2),
+    ),
+    b.fill(const Color(0xFF16233A)),
+  );
+  // Grip wrap.
+  final wrap = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = math.max(0.8, length * 0.012)
+    ..color = Colors.white.withValues(alpha: 0.18);
+  for (var i = 0; i < 5; i++) {
+    final y = length * 0.14 + length * 0.055 * i;
+    b.canvas.drawLine(
+      Offset(-handleWidth / 2, y),
+      Offset(handleWidth / 2, y + length * 0.02),
+      wrap,
+    );
+  }
+
+  b.canvas.drawOval(head, b.fill(const Color(0xFFF2F6FA)));
+
+  // Perforations: the court shows through them.
+  b.canvas.save();
+  final clip = Path()..addOval(head.deflate(headWidth * 0.11));
+  b.canvas.clipPath(clip);
+  final hole = b.fill(const Color(0xFF14496C));
+  final step = headWidth * 0.155;
+  for (var row = -4; row <= 4; row++) {
+    for (var col = -4; col <= 4; col++) {
+      final offset = row.isEven ? 0.0 : step / 2;
+      b.canvas.drawCircle(
+        Offset(headCentre.dx + col * step + offset, headCentre.dy + row * step),
+        step * 0.20,
+        hole,
+      );
+    }
+  }
+  b.canvas.restore();
+
+  // Blue face band and rim, the accent the rest of the app uses.
+  b.canvas.save();
+  b.canvas.clipPath(Path()..addOval(head));
+  b.canvas.drawRect(
+    Rect.fromCenter(
+      center: Offset(0, headCentre.dy - headHeight * 0.30),
+      width: headWidth * 1.2,
+      height: headHeight * 0.20,
+    ),
+    b.fill(const Color(0xFF2979FF)),
+  );
+  b.canvas.restore();
+
+  b.canvas.drawOval(
+    head,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.0, length * 0.028)
+      ..color = const Color(0xFF16233A),
+  );
+
+  b.canvas.restore();
+}
