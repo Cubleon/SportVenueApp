@@ -58,3 +58,9 @@ class AppFormatters {
     return '+7 (${padded.substring(0, 3)}) ${padded.substring(3, 6)}-${padded.substring(6, 8)}-${padded.substring(8, 10)}';
   }
 }
+
+/// Sentence case for names that arrive from the API already lower-cased.
+extension StringCase on String {
+  String get capitalized =>
+      isEmpty ? this : this[0].toUpperCase() + substring(1);
+}

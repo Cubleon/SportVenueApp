@@ -84,7 +84,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'создать',
+                  'Создать',
                   style: context.text.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -92,8 +92,8 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 14),
                 _SheetAction(
                   icon: Icons.sports_soccer_rounded,
-                  title: 'создать игру',
-                  subtitle: 'соберите участников и оплатите долю',
+                  title: 'Создать игру',
+                  subtitle: 'Соберите участников и оплатите долю',
                   onTap: () {
                     Navigator.pop(sheetContext);
                     Navigator.of(context).push(
@@ -107,15 +107,15 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 10),
                 _SheetAction(
                   icon: Icons.calendar_month_rounded,
-                  title: 'забронировать площадку',
-                  subtitle: 'быстрый выбор слота в первом клубе',
+                  title: 'Забронировать площадку',
+                  subtitle: 'Быстрый выбор слота в первом клубе',
                   onTap: () {
                     final venues = widget.controller.preferredVenues.isNotEmpty
                         ? widget.controller.preferredVenues
                         : widget.controller.venues;
                     Navigator.pop(sheetContext);
                     if (venues.isEmpty) {
-                      showAppSnack(context, 'доступных площадок пока нет');
+                      showAppSnack(context, 'Доступных площадок пока нет');
                       return;
                     }
                     final venue = venues[0];
@@ -173,14 +173,14 @@ class _BottomNav extends StatelessWidget {
             _NavItem(
               index: 0,
               selectedIndex: selectedIndex,
-              label: 'главная',
+              label: 'Главная',
               icon: Icons.home_rounded,
               onTab: onTab,
             ),
             _NavItem(
               index: 1,
               selectedIndex: selectedIndex,
-              label: 'поиск',
+              label: 'Поиск',
               icon: Icons.search_rounded,
               onTab: onTab,
             ),
@@ -225,14 +225,14 @@ class _BottomNav extends StatelessWidget {
             _NavItem(
               index: 2,
               selectedIndex: selectedIndex,
-              label: 'игры',
+              label: 'Игры',
               icon: Icons.sports_soccer_rounded,
               onTab: onTab,
             ),
             _NavItem(
               index: 3,
               selectedIndex: selectedIndex,
-              label: 'профиль',
+              label: 'Профиль',
               icon: Icons.person_rounded,
               onTab: onTab,
             ),

@@ -32,21 +32,21 @@ class HomeScreen extends StatelessWidget {
             SliverToBoxAdapter(child: _Sports(controller: controller)),
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: 'предстоящая бронь',
-                action: 'все',
+                title: 'Предстоящая бронь',
+                action: 'Все',
                 onAction: () =>
-                    showAppSnack(context, 'история броней откроется в профиле'),
+                    showAppSnack(context, 'История броней откроется в профиле'),
               ),
             ),
             SliverToBoxAdapter(child: _Bookings(controller: controller)),
             SliverToBoxAdapter(
-              child: SectionHeader(title: 'рекомендованные площадки'),
+              child: SectionHeader(title: 'Рекомендованные площадки'),
             ),
             SliverToBoxAdapter(child: _Venues(controller: controller)),
             SliverToBoxAdapter(
               child: SectionHeader(
-                title: 'открытые игры',
-                action: 'все',
+                title: 'Открытые игры',
+                action: 'Все',
                 onAction: onOpenGames,
               ),
             ),
@@ -95,10 +95,10 @@ class _TopBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'привет, ${controller.greetingName.toLowerCase()}',
+                  'Привет, ${controller.greetingName.capitalized}',
                   style: context.text.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.9,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -111,7 +111,7 @@ class _TopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'москва',
+                      'Москва',
                       style: context.text.bodySmall?.copyWith(
                         color: AppColors.dim,
                         fontWeight: FontWeight.w700,
@@ -124,7 +124,7 @@ class _TopBar extends StatelessWidget {
           ),
           _RoundIcon(
             icon: Icons.notifications_none_rounded,
-            onTap: () => showAppSnack(context, 'уведомлений пока нет'),
+            onTap: () => showAppSnack(context, 'Уведомлений пока нет'),
           ),
         ],
       ),
@@ -150,7 +150,7 @@ class _SearchBar extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'найти площадку или игру',
+                'Найти площадку или игру',
                 style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
               ),
             ),
@@ -176,7 +176,7 @@ class _Sports extends StatelessWidget {
         itemBuilder: (context, index) {
           final sport = controller.selectedSports[index];
           return SelectableChip(
-            label: sport.name,
+            label: sport.name.capitalized,
             icon: sport.icon,
             selected: true,
             color: sport.color,
@@ -203,7 +203,7 @@ class _Bookings extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: AppCard(
           child: Text(
-            'у вас пока нет предстоящих броней',
+            'У вас пока нет предстоящих броней',
             style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
           ),
         ),
@@ -257,7 +257,7 @@ class _Bookings extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    booking.draft.venue.name,
+                    booking.draft.venue.name.capitalized,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.titleSmall?.copyWith(
@@ -344,7 +344,7 @@ class _Venues extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          venue.description,
+                          venue.description.capitalized,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(

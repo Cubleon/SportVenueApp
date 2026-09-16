@@ -43,8 +43,8 @@ class _SearchScreenState extends State<SearchScreen> {
         Column(
           children: [
             ScreenTitleBar(
-              title: 'поиск',
-              subtitle: 'москва · openfreemap',
+              title: 'Поиск',
+              subtitle: 'Москва · openfreemap',
               trailing: IconButton(
                 onPressed: _focusMoscow,
                 icon: const Icon(Icons.my_location_rounded),
@@ -58,7 +58,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   SelectableChip(
-                    label: 'все',
+                    label: 'Все',
                     selected: _sportId == 'all',
                     onTap: () => setState(() => _sportId = 'all'),
                   ),
@@ -67,7 +67,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     (sport) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: SelectableChip(
-                        label: sport.name,
+                        label: sport.name.capitalized,
                         icon: sport.icon,
                         color: sport.color,
                         selected: _sportId == sport.id,
@@ -189,7 +189,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _selectedVenue = null);
     final controller = _mapController;
     if (controller == null) {
-      showAppSnack(context, 'карта загружается');
+      showAppSnack(context, 'Карта загружается');
       return;
     }
     await controller.animateCamera(
@@ -216,7 +216,7 @@ class _SearchField extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'клуб, площадка или район',
+                'Клуб, площадка или район',
                 style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
               ),
             ),
@@ -248,7 +248,7 @@ class _MapMarker extends StatelessWidget {
         : AppColors.accent;
     return Semantics(
       button: true,
-      label: venue.name,
+      label: venue.name.capitalized,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -337,7 +337,7 @@ class _MapPill extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
-        text.toLowerCase(),
+        text,
         style: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w800),
       ),
     );
@@ -367,7 +367,7 @@ class _VenueBottomSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  venue.name,
+                  venue.name.capitalized,
                   style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -410,7 +410,7 @@ class _VenueBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           PrimaryButton(
-            label: 'подробнее и бронь',
+            label: 'Подробнее и бронь',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) =>

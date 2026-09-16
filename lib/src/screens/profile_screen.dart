@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/app_controller.dart';
+import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -24,10 +25,10 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 118),
           children: [
             ScreenTitleBar(
-              title: 'профиль',
+              title: 'Профиль',
               subtitle: controller.isConnected
-                  ? 'аккаунт sportvenue'
-                  : 'демо-аккаунт sportvenue',
+                  ? 'Аккаунт SportVenue'
+                  : 'Демо-аккаунт SportVenue',
             ),
             AppCard(
               child: Row(
@@ -67,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           controller.phone.isEmpty
-                              ? 'номер не указан'
+                              ? 'Номер не указан'
                               : controller.phone,
                           style: context.text.bodySmall?.copyWith(
                             color: AppColors.dim,
@@ -79,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
                   IconButton(
                     onPressed: () => showAppSnack(
                       context,
-                      'редактирование профиля подключится позже',
+                      'Редактирование профиля подключится позже',
                     ),
                     icon: const Icon(Icons.edit_rounded),
                   ),
@@ -88,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'спортивные предпочтения',
+              'Спортивные предпочтения',
               style: context.text.labelLarge?.copyWith(
                 color: AppColors.faint,
                 fontWeight: FontWeight.w900,
@@ -102,7 +103,7 @@ class ProfileScreen extends StatelessWidget {
               children: controller.selectedSports
                   .map(
                     (sport) => SelectableChip(
-                      label: sport.name,
+                      label: sport.name.capitalized,
                       icon: sport.icon,
                       color: sport.color,
                       selected: true,
@@ -116,41 +117,41 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 18),
             _MenuItem(
               icon: Icons.history_rounded,
-              title: 'история',
+              title: 'История',
               subtitle:
                   '${controller.bookings.length} броней · ${controller.games.length} игр',
               onTap: () => showAppSnack(
                 context,
-                'полная история появится в следующей версии',
+                'Полная история появится в следующей версии',
               ),
             ),
             _MenuItem(
               icon: Icons.credit_card_rounded,
-              title: 'платежи',
-              subtitle: 'карты и транзакции',
+              title: 'Платежи',
+              subtitle: 'Карты и транзакции',
               onTap: () => showAppSnack(
                 context,
-                'платёжные методы будут через эквайринг',
+                'Платёжные методы будут через эквайринг',
               ),
             ),
             _MenuItem(
               icon: Icons.notifications_active_rounded,
-              title: 'уведомления',
+              title: 'Уведомления',
               subtitle: 'push, бронь, игры и чат',
               onTap: () =>
                   showAppSnack(context, 'push-уведомления появятся позже'),
             ),
             _MenuItem(
               icon: Icons.support_agent_rounded,
-              title: 'поддержка',
+              title: 'Поддержка',
               subtitle: 'faq и форма обращения',
               onTap: () =>
-                  showAppSnack(context, 'заявка в поддержку создана локально'),
+                  showAppSnack(context, 'Заявка в поддержку создана локально'),
             ),
             const SizedBox(height: 16),
             PrimaryButton(
               key: const ValueKey('logout-button'),
-              label: 'выйти из аккаунта',
+              label: 'Выйти из аккаунта',
               secondary: true,
               onPressed: onLogout,
             ),
@@ -173,7 +174,7 @@ class _Stats extends StatelessWidget {
         Expanded(
           child: _StatCard(
             value: '${controller.bookings.length}',
-            label: 'броней',
+            label: 'Броней',
           ),
         ),
         const SizedBox(width: 10),
@@ -181,14 +182,14 @@ class _Stats extends StatelessWidget {
           child: _StatCard(
             value:
                 '${controller.games.where((game) => game.participants.any((p) => p.isCurrentUser)).length}',
-            label: 'моих игр',
+            label: 'Моих игр',
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _StatCard(
             value: '${controller.selectedSports.length}',
-            label: 'видов спорта',
+            label: 'Видов спорта',
           ),
         ),
       ],

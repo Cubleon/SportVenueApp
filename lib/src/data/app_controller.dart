@@ -482,7 +482,7 @@ class AppController extends ChangeNotifier {
         return 'проверьте номер телефона';
       }
       if (message.contains('invalid call code')) {
-        return 'неверный код, попробуйте ещё раз';
+        return 'Неверный код, попробуйте ещё раз';
       }
       if (message.contains('challenge has expired')) {
         return 'время проверки истекло — запросите новый звонок';

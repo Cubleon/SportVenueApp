@@ -127,10 +127,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 _CreateHeader(onBack: () => Navigator.of(context).pop()),
                 _Block(
                   step: 1,
-                  title: 'вид спорта',
+                  title: 'Вид спорта',
                   child: widget.controller.sports.isEmpty
                       ? Text(
-                          'виды спорта пока недоступны',
+                          'Виды спорта пока недоступны',
                           style: context.text.bodyMedium?.copyWith(
                             color: AppColors.dim,
                           ),
@@ -140,7 +140,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           runSpacing: 8,
                           children: widget.controller.sports.map((sport) {
                             return SelectableChip(
-                              label: sport.name,
+                              label: sport.name.capitalized,
                               icon: sport.icon,
                               color: sport.color,
                               selected: _sportId == sport.id,
@@ -151,10 +151,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 2,
-                  title: 'площадка',
+                  title: 'Площадка',
                   child: availableVenues.isEmpty
                       ? Text(
-                          'для выбранного спорта площадок пока нет',
+                          'Для выбранного спорта площадок пока нет',
                           style: context.text.bodyMedium?.copyWith(
                             color: AppColors.dim,
                           ),
@@ -177,7 +177,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                venue.name,
+                                                venue.name.capitalized,
                                                 style: context.text.titleSmall
                                                     ?.copyWith(
                                                       fontWeight:
@@ -210,7 +210,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 3,
-                  title: 'дата и время',
+                  title: 'Дата и время',
                   child: Row(
                     children: [
                       Expanded(
@@ -249,7 +249,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 4,
-                  title: 'количество мест',
+                  title: 'Количество мест',
                   child: Row(
                     children: [
                       IconButton.filled(
@@ -282,19 +282,19 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 5,
-                  title: 'тип игры',
+                  title: 'Тип игры',
                   child: Column(
                     children: [
                       _OptionTile(
-                        title: 'открытая',
-                        subtitle: 'любой может вступить',
+                        title: 'Открытая',
+                        subtitle: 'Любой может вступить',
                         selected: _type == GameType.open,
                         onTap: () => setState(() => _type = GameType.open),
                       ),
                       const SizedBox(height: 8),
                       _OptionTile(
-                        title: 'закрытая',
-                        subtitle: 'только по ссылке',
+                        title: 'Закрытая',
+                        subtitle: 'Только по ссылке',
                         selected: _type == GameType.closed,
                         onTap: () => setState(() => _type = GameType.closed),
                       ),
@@ -308,13 +308,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           alpha: 0.28,
                         ),
                         title: Text(
-                          'одобрять вручную',
+                          'Одобрять вручную',
                           style: context.text.titleSmall?.copyWith(
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         subtitle: Text(
-                          'вы будете подтверждать каждого игрока',
+                          'Вы будете подтверждать каждого игрока',
                           style: context.text.bodySmall?.copyWith(
                             color: AppColors.dim,
                           ),
@@ -330,12 +330,12 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 6,
-                  title: 'фильтр участников',
+                  title: 'Фильтр участников',
                   child: Row(
                     children: [
                       Expanded(
                         child: _GenderChip(
-                          label: 'любой',
+                          label: 'Любой',
                           value: GenderFilter.any,
                           selected: _gender,
                           onTap: _setGender,
@@ -344,7 +344,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _GenderChip(
-                          label: 'мужчины',
+                          label: 'Мужчины',
                           value: GenderFilter.men,
                           selected: _gender,
                           onTap: _setGender,
@@ -353,7 +353,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _GenderChip(
-                          label: 'женщины',
+                          label: 'Женщины',
                           value: GenderFilter.women,
                           selected: _gender,
                           onTap: _setGender,
@@ -368,7 +368,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'стоимость с человека',
+                          'Стоимость с человека',
                           style: context.text.bodyMedium?.copyWith(
                             color: AppColors.dim,
                           ),
@@ -394,7 +394,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
               bottom: 28,
               child: PrimaryButton(
                 key: const ValueKey('create-game-submit'),
-                label: 'создать игру',
+                label: 'Создать игру',
                 isLoading: _loading,
                 onPressed: canCreate ? _create : null,
               ),
@@ -441,7 +441,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     final sportId = _sportId;
     final venue = _selectedVenue;
     if (sportId == null || venue == null) {
-      showAppSnack(context, 'выберите вид спорта и площадку');
+      showAppSnack(context, 'Выберите вид спорта и площадку');
       return;
     }
 
@@ -461,7 +461,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'игра создана');
+      showAppSnack(context, 'Игра создана');
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
@@ -494,7 +494,7 @@ class _CreateHeader extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            'создать игру',
+            'Создать игру',
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
@@ -570,7 +570,7 @@ class _SmallSelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       child: Center(
         child: Text(
-          label.toLowerCase(),
+          label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w900),

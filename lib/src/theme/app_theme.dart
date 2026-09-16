@@ -61,7 +61,7 @@ class AppTheme {
         foregroundColor: AppColors.white,
         titleTextStyle: textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.3,
+          letterSpacing: -0.1,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

@@ -151,11 +151,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const Center(child: AppLogo(size: 52)),
               const SizedBox(height: 32),
               Text(
-                'войти или\nзарегистрироваться',
+                'Войти или\nзарегистрироваться',
                 style: context.text.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   height: 1.12,
-                  letterSpacing: -0.9,
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 28),
@@ -231,7 +231,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'согласен с обработкой персональных данных и условиями сервиса',
+                          'Согласен с обработкой персональных данных и условиями сервиса',
                           style: context.text.bodySmall?.copyWith(
                             color: AppColors.dim,
                             height: 1.35,
@@ -245,7 +245,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 8),
               PrimaryButton(
                 key: const ValueKey('registration-continue'),
-                label: 'продолжить',
+                label: 'Продолжить',
                 onPressed: _isValid && !_submitting ? _continue : null,
               ),
               if (_submitting)
@@ -318,7 +318,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const Spacer(),
               Text(
-                'продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности',
+                'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности',
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(
                   color: AppColors.white.withValues(alpha: 0.28),
@@ -333,7 +333,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _stubSocial() {
-    showAppSnack(context, 'социальный вход подключится позже');
+    showAppSnack(context, 'Социальный вход подключится позже');
   }
 
   Future<void> _continue() async {
@@ -380,7 +380,7 @@ class _OtpScreenState extends State<OtpScreen>
   int _seconds = 59;
   bool _error = false;
   bool _submitting = false;
-  String _errorText = 'неверный код, попробуйте ещё раз';
+  String _errorText = 'Неверный код, попробуйте ещё раз';
 
   @override
   void initState() {
@@ -430,15 +430,15 @@ class _OtpScreenState extends State<OtpScreen>
               ),
               const SizedBox(height: 36),
               Text(
-                'введите код',
+                'Введите код',
                 style: context.text.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
+                'Мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
                 style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
               ),
               const SizedBox(height: 34),
@@ -530,13 +530,13 @@ class _OtpScreenState extends State<OtpScreen>
                 onPressed: _seconds == 0 ? _resend : null,
                 child: Text(
                   _seconds == 0
-                      ? 'отправить повторно'
-                      : 'отправить повторно через $_seconds с',
+                      ? 'Отправить повторно'
+                      : 'Отправить повторно через $_seconds с',
                 ),
               ),
               const Spacer(),
               Text(
-                'не отвечайте на звонок — нужны только последние 4 цифры номера',
+                'Не отвечайте на звонок — нужны только последние 4 цифры номера',
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(color: AppColors.faint),
               ),
@@ -600,7 +600,7 @@ class _OtpScreenState extends State<OtpScreen>
         setState(() => _seconds--);
       }
     });
-    showAppSnack(context, 'звонок запрошен повторно');
+    showAppSnack(context, 'Звонок запрошен повторно');
   }
 
   void _showError(String message) {

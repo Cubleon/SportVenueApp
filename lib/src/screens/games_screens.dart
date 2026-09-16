@@ -8,7 +8,7 @@ import '../widgets/shared_widgets.dart';
 
 const _fallbackSport = Sport(
   id: 'unknown',
-  name: 'спорт',
+  name: 'Спорт',
   icon: '🏅',
   color: AppColors.accent,
 );
@@ -50,12 +50,12 @@ class _GamesScreenState extends State<GamesScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: ScreenTitleBar(
-                title: 'игры',
+                title: 'Игры',
                 subtitle: 'pickup-матчи рядом',
                 trailing: IconButton(
                   onPressed: () => showAppSnack(
                     context,
-                    'расширенные фильтры появятся позже',
+                    'Расширенные фильтры появятся позже',
                   ),
                   icon: const Icon(Icons.tune_rounded),
                 ),
@@ -147,7 +147,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
           ),
           const SizedBox(height: 12),
           Text(
-            game.venue.name,
+            game.venue.name.capitalized,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.text.titleMedium?.copyWith(
@@ -197,7 +197,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
                           ),
                         )
                       : Text(
-                          'вступить',
+                          'Вступить',
                           style: context.text.labelLarge?.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.w900,
@@ -221,7 +221,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
       }
       showAppSnack(
         context,
-        joined ? 'вы присоединились к игре' : 'вы уже в этой игре',
+        joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
       );
     } catch (error) {
       if (!mounted) {
@@ -285,10 +285,10 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               SportBadge(sport: sport),
                               const SizedBox(height: 12),
                               Text(
-                                current.venue.name,
+                                current.venue.name.capitalized,
                                 style: context.text.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -303,15 +303,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                 color: AppColors.border,
                               ),
                               SummaryRow(
-                                label: 'дата',
+                                label: 'Дата',
                                 value: AppFormatters.dateFull(current.date),
                               ),
                               SummaryRow(
-                                label: 'время',
+                                label: 'Время',
                                 value: current.timeRange,
                               ),
                               SummaryRow(
-                                label: 'стоимость',
+                                label: 'Стоимость',
                                 value: AppFormatters.money(
                                   current.pricePerPerson,
                                 ),
@@ -323,7 +323,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                       ),
                     ),
                     SliverToBoxAdapter(
-                      child: _SectionLabel(text: 'организатор'),
+                      child: _SectionLabel(text: 'Организатор'),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
@@ -332,8 +332,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                           participant: current.organizer,
                           trailing: OutlinedButton(
                             onPressed: () =>
-                                showAppSnack(context, 'чат подключится позже'),
-                            child: const Text('написать'),
+                                showAppSnack(context, 'Чат подключится позже'),
+                            child: const Text('Написать'),
                           ),
                         ),
                       ),
@@ -367,7 +367,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         child: AppCard(
                           borderColor: AppColors.accent.withValues(alpha: 0.2),
                           child: SummaryRow(
-                            label: 'стоимость',
+                            label: 'Стоимость',
                             value: AppFormatters.money(current.pricePerPerson),
                             accent: true,
                           ),
@@ -383,8 +383,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   child: PrimaryButton(
                     key: const ValueKey('detail-join-game'),
                     label: current.type == GameType.approval
-                        ? 'заявка и оплата после одобрения'
-                        : 'присоединиться к игре',
+                        ? 'Заявка и оплата после одобрения'
+                        : 'Присоединиться к игре',
                     isLoading: _joining,
                     onPressed: current.isFull || _joining
                         ? null
@@ -408,7 +408,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        joined ? 'вы присоединились к игре' : 'вы уже в этой игре',
+        joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
       );
     } catch (error) {
       if (!mounted) {
@@ -443,7 +443,7 @@ class _SportFilter extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: [
           SelectableChip(
-            label: 'все',
+            label: 'Все',
             selected: value == 'all',
             onTap: () => onChanged('all'),
           ),
@@ -452,7 +452,7 @@ class _SportFilter extends StatelessWidget {
             (sport) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: SelectableChip(
-                label: sport.name,
+                label: sport.name.capitalized,
                 icon: sport.icon,
                 color: sport.color,
                 selected: value == sport.id,
@@ -474,7 +474,7 @@ class _TimeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = {'evening': 'вечер', 'all': 'любой день'};
+    final options = {'evening': 'Вечер', 'all': 'Любой день'};
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Row(
@@ -570,7 +570,7 @@ class _DetailHeader extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              title.toLowerCase(),
+              title,
               textAlign: TextAlign.center,
               style: context.text.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
@@ -630,7 +630,7 @@ class _ParticipantTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'рейтинг ${participant.rating.toStringAsFixed(1)}',
+                  'Рейтинг ${participant.rating.toStringAsFixed(1)}',
                   style: context.text.bodySmall?.copyWith(color: AppColors.dim),
                 ),
               ],
@@ -700,8 +700,8 @@ class _PlayerSlot extends StatelessWidget {
 
 String _gameTypeTitle(GameType type) {
   return switch (type) {
-    GameType.open => 'открытая игра',
-    GameType.approval => 'игра по одобрению',
-    GameType.closed => 'закрытая игра',
+    GameType.open => 'Открытая игра',
+    GameType.approval => 'Игра по одобрению',
+    GameType.closed => 'Закрытая игра',
   };
 }

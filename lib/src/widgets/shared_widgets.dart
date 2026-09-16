@@ -29,7 +29,7 @@ class AppLogo extends StatelessWidget {
           text: TextSpan(
             style: context.text.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
-              letterSpacing: -1,
+              letterSpacing: -0.3,
             ),
             children: const [
               TextSpan(text: 'sport'),
@@ -186,12 +186,12 @@ class PrimaryButton extends StatelessWidget {
                     ],
                     Flexible(
                       child: Text(
-                        label.toLowerCase(),
+                        label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -0.1,
+                          letterSpacing: -0.05,
                         ),
                       ),
                     ),
@@ -272,15 +272,15 @@ class SectionHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              title.toLowerCase(),
+              title,
               style: context.text.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
+                letterSpacing: -0.15,
               ),
             ),
           ),
           if (action != null)
-            TextButton(onPressed: onAction, child: Text(action!.toLowerCase())),
+            TextButton(onPressed: onAction, child: Text(action!)),
         ],
       ),
     );
@@ -369,7 +369,7 @@ class SelectableChip extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 Text(
-                  label.toLowerCase(),
+                  label,
                   maxLines: 1,
                   style: context.text.labelLarge?.copyWith(
                     color: selected ? activeColor : AppColors.muted,
@@ -420,12 +420,12 @@ class VenueHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  venue.name,
+                  venue.name.capitalized,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.15,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -492,17 +492,17 @@ class BookingSummaryRows extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SummaryRow(label: 'дата', value: AppFormatters.dateFull(draft.date)),
-        SummaryRow(label: 'время', value: draft.timeRange),
-        SummaryRow(label: 'площадка', value: draft.venue.name),
-        SummaryRow(label: 'игроки', value: '${draft.players}'),
+        SummaryRow(label: 'Дата', value: AppFormatters.dateFull(draft.date)),
+        SummaryRow(label: 'Время', value: draft.timeRange),
+        SummaryRow(label: 'Площадка', value: draft.venue.name.capitalized),
+        SummaryRow(label: 'Игроки', value: '${draft.players}'),
         SummaryRow(
-          label: 'итого',
+          label: 'Итого',
           value: AppFormatters.money(draft.totalPrice),
           highlight: true,
         ),
         SummaryRow(
-          label: 'ваша часть',
+          label: 'Ваша часть',
           value: AppFormatters.money(draft.sharePrice),
           accent: true,
         ),
@@ -534,7 +534,7 @@ class SummaryRow extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              label.toLowerCase(),
+              label,
               style: context.text.bodySmall?.copyWith(
                 color: AppColors.muted,
                 fontWeight: FontWeight.w600,
@@ -544,7 +544,7 @@ class SummaryRow extends StatelessWidget {
           const SizedBox(width: 16),
           Flexible(
             child: Text(
-              value.toLowerCase(),
+              value,
               textAlign: TextAlign.right,
               style: context.text.bodyMedium?.copyWith(
                 color: accent ? AppColors.accent : AppColors.white,
@@ -563,7 +563,7 @@ class SummaryRow extends StatelessWidget {
 void showAppSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message.toLowerCase()),
+      content: Text(message),
       behavior: SnackBarBehavior.floating,
       backgroundColor: AppColors.surfaceRaised,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -594,16 +594,16 @@ class ScreenTitleBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title.toLowerCase(),
+                  title,
                   style: context.text.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
+                    letterSpacing: -0.25,
                   ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    subtitle!.toLowerCase(),
+                    subtitle!,
                     style: context.text.bodySmall?.copyWith(
                       color: AppColors.dim,
                     ),
