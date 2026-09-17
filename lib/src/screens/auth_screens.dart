@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import '../widgets/brand_marks.dart';
 import '../widgets/shared_widgets.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -96,9 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                       );
                       return LinearProgressIndicator(
                         value: value,
-                        backgroundColor: AppColors.ink.withValues(
-                          alpha: 0.08,
-                        ),
+                        backgroundColor: AppColors.ink.withValues(alpha: 0.08),
                         valueColor: const AlwaysStoppedAnimation(
                           AppColors.accent,
                         ),
@@ -293,24 +292,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   Expanded(
                     child: _SocialButton(
-                      label: 'G',
-                      color: const Color(0xFF4285F4),
+                      key: const ValueKey('social-google'),
+                      semanticLabel: 'Войти через Google',
+                      mark: const GoogleMark(),
                       onTap: _stubSocial,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _SocialButton(
-                      label: 'VK',
-                      color: AppColors.accent,
+                      key: const ValueKey('social-vk'),
+                      semanticLabel: 'Войти через VK',
+                      mark: const VkMark(),
                       onTap: _stubSocial,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _SocialButton(
-                      label: '',
-                      color: AppColors.ink,
+                      key: const ValueKey('social-apple'),
+                      semanticLabel: 'Войти через Apple',
+                      mark: const AppleMark(),
                       onTap: _stubSocial,
                     ),
                   ),
@@ -439,7 +441,9 @@ class _OtpScreenState extends State<OtpScreen>
               const SizedBox(height: 8),
               Text(
                 'Мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
+                style: context.text.bodyMedium?.copyWith(
+                  color: AppColors.muted,
+                ),
               ),
               const SizedBox(height: 34),
               AnimatedBuilder(
@@ -683,32 +687,30 @@ class _RussianFlag extends StatelessWidget {
 
 class _SocialButton extends StatelessWidget {
   const _SocialButton({
-    required this.label,
-    required this.color,
+    super.key,
+    required this.mark,
+    required this.semanticLabel,
     required this.onTap,
   });
 
-  final String label;
-  final Color color;
+  final Widget mark;
+
+  /// The mark carries no text, so the button says out loud what it does.
+  final String semanticLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        fixedSize: const Size.fromHeight(54),
-        side: BorderSide(
-          color: AppColors.ink.withValues(alpha: 0.12),
-          width: 1.5,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      child: Text(
-        label,
-        style: context.text.titleMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(height: 54, child: Center(child: mark)),
         ),
       ),
     );
