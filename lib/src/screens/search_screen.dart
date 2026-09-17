@@ -25,19 +25,32 @@ class _SearchScreenState extends State<SearchScreen> {
   String _sportId = 'all';
   Venue? _selectedVenue;
   maplibre.MapController? _mapController;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<Venue> get _venues {
-    if (_sportId == 'all') {
-      return widget.controller.venues;
-    }
-    return widget.controller.venues
-        .where((venue) => venue.sportIds.contains(_sportId))
-        .toList();
+    final query = _searchController.text.trim().toLowerCase();
+    return widget.controller.venues.where((venue) {
+      if (_sportId != 'all' && !venue.sportIds.contains(_sportId)) {
+        return false;
+      }
+      if (query.isEmpty) {
+        return true;
+      }
+      return venue.name.toLowerCase().contains(query) ||
+          venue.address.toLowerCase().contains(query);
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final venues = _venues;
+    final query = _searchController.text.trim();
     return Stack(
       children: [
         Column(
@@ -50,7 +63,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 icon: const Icon(Icons.my_location_rounded),
               ),
             ),
-            _SearchField(),
+            _SearchField(
+              controller: _searchController,
+              onChanged: (_) => setState(() => _selectedVenue = null),
+            ),
             SizedBox(
               height: 46,
               child: ListView(
@@ -140,8 +156,37 @@ class _SearchScreenState extends State<SearchScreen> {
                       Positioned(
                         left: 14,
                         top: 14,
-                        child: _MapPill(text: '${venues.length} клубов рядом'),
+                        child: _MapPill(
+                          text:
+                              '${venues.length} '
+                              '${plural(venues.length, 'клуб', 'клуба', 'клубов')} рядом',
+                        ),
                       ),
+                      // An empty map is indistinguishable from a broken one,
+                      // so say which filter emptied it.
+                      if (venues.isEmpty)
+                        Positioned(
+                          left: 20,
+                          right: 20,
+                          top: 64,
+                          child: EmptyState(
+                            key: const ValueKey('search-empty'),
+                            icon: query.isEmpty
+                                ? Icons.location_off_rounded
+                                : Icons.search_off_rounded,
+                            title: query.isEmpty
+                                ? 'Площадок этого вида нет'
+                                : 'Ничего не нашлось',
+                            description: query.isEmpty
+                                ? 'В Москве пока нет клубов с этим покрытием.'
+                                : 'По запросу «$query» нет ни клуба, ни адреса.',
+                            actionLabel: 'Сбросить поиск',
+                            onAction: () => setState(() {
+                              _sportId = 'all';
+                              _searchController.clear();
+                            }),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -202,24 +247,69 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
+/// The search field.
+///
+/// It used to be a Text in a card: it looked like an input and did nothing.
+/// Now it filters the venues, and the trailing button clears the query
+/// instead of standing there inert.
 class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
           children: [
             const Icon(Icons.search_rounded, color: AppColors.dim),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                'Клуб, площадка или район',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
+              child: TextField(
+                key: const ValueKey('venue-search-field'),
+                controller: controller,
+                onChanged: onChanged,
+                textInputAction: TextInputAction.search,
+                style: context.text.bodyMedium,
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  hintText: 'Клуб, площадка или район',
+                  hintStyle: context.text.bodyMedium?.copyWith(
+                    color: AppColors.muted,
+                  ),
+                ),
               ),
             ),
-            const Icon(Icons.tune_rounded, color: AppColors.accent),
+            if (controller.text.isNotEmpty)
+              Semantics(
+                button: true,
+                label: 'Очистить поиск',
+                child: InkWell(
+                  key: const ValueKey('venue-search-clear'),
+                  onTap: () {
+                    controller.clear();
+                    onChanged('');
+                  },
+                  customBorder: const CircleBorder(),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

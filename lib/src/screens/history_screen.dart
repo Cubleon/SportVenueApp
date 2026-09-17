@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/app_controller.dart';
+import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
@@ -134,22 +135,8 @@ class HistoryScreen extends StatelessWidget {
   }
 
   String _summary(int bookings, int games) {
-    final bookingWord = _plural(bookings, 'бронь', 'брони', 'броней');
-    final gameWord = _plural(games, 'игра', 'игры', 'игр');
+    final bookingWord = plural(bookings, 'бронь', 'брони', 'броней');
+    final gameWord = plural(games, 'игра', 'игры', 'игр');
     return '$bookings $bookingWord · $games $gameWord';
-  }
-
-  /// Russian needs three forms, and the choice depends on the last two
-  /// digits, not the last one.
-  String _plural(int count, String one, String few, String many) {
-    final tens = count % 100;
-    if (tens >= 11 && tens <= 14) {
-      return many;
-    }
-    return switch (count % 10) {
-      1 => one,
-      2 || 3 || 4 => few,
-      _ => many,
-    };
   }
 }

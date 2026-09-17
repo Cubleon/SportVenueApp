@@ -59,6 +59,22 @@ class AppFormatters {
   }
 }
 
+/// Picks the Russian plural form for a count.
+///
+/// The form depends on the last two digits, not the last one: 21 takes the
+/// same form as 1, but 11 does not.
+String plural(int count, String one, String few, String many) {
+  final tens = count % 100;
+  if (tens >= 11 && tens <= 14) {
+    return many;
+  }
+  return switch (count % 10) {
+    1 => one,
+    2 || 3 || 4 => few,
+    _ => many,
+  };
+}
+
 /// Sentence case for names that arrive from the API already lower-cased.
 extension StringCase on String {
   String get capitalized =>

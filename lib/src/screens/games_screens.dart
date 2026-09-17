@@ -35,6 +35,10 @@ class _GamesScreenState extends State<GamesScreen> {
   String _sportId = 'all';
   String _timeFilter = 'evening';
 
+  /// The screen opens on the evening filter, so an empty list is far more
+  /// often a filter than an empty city.
+  bool get _filtered => _sportId != 'all' || _timeFilter != 'all';
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -74,6 +78,32 @@ class _GamesScreenState extends State<GamesScreen> {
                 onChanged: (id) => setState(() => _timeFilter = id),
               ),
             ),
+            if (games.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: _filtered
+                      ? EmptyState(
+                          key: const ValueKey('games-empty-filtered'),
+                          icon: Icons.filter_alt_off_rounded,
+                          title: 'Под фильтры ничего не подошло',
+                          description:
+                              'Игры есть, но не в этом виде спорта или не в это время.',
+                          actionLabel: 'Показать все игры',
+                          onAction: () => setState(() {
+                            _sportId = 'all';
+                            _timeFilter = 'all';
+                          }),
+                        )
+                      : const EmptyState(
+                          key: ValueKey('games-empty'),
+                          icon: Icons.sports_soccer_rounded,
+                          title: 'Открытых игр пока нет',
+                          description:
+                              'Создайте свою — участники смогут вступить и оплатить долю.',
+                        ),
+                ),
+              ),
             SliverList.builder(
               itemCount: games.length,
               itemBuilder: (context, index) {

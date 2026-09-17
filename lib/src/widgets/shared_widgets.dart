@@ -690,3 +690,67 @@ class BackCircleButton extends StatelessWidget {
     );
   }
 }
+
+/// What a screen shows when a list comes back empty.
+///
+/// Always says why it is empty and, when a filter caused it, offers the way
+/// out — an empty screen with no explanation and no exit leaves the reader
+/// guessing whether the app is broken.
+class EmptyState extends StatelessWidget {
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.description,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.accentSoft,
+            ),
+            child: Icon(icon, color: AppColors.accent, size: 26),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: context.text.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 16),
+            PrimaryButton(
+              label: actionLabel!,
+              tone: ButtonTone.neutral,
+              onPressed: onAction,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
