@@ -37,6 +37,20 @@ class _SportVenueAppState extends State<SportVenueApp> {
       title: 'SportVenue',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      // The product is shaped for a phone. On a tablet or a desktop window
+      // the layout used to stretch — a phone number field a metre wide — so
+      // every route is held to a phone's width and centred, and the page
+      // colour fills what is left. Wrapping the builder rather than each
+      // screen also catches pushed routes, sheets and snack bars.
+      builder: (context, child) => ColoredBox(
+        color: AppColors.bg,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: child,
+          ),
+        ),
+      ),
       home: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
