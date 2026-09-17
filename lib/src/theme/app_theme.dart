@@ -76,6 +76,10 @@ class AppTheme {
   /// Buttons and chips are pills, so their radius follows their height.
   static const pill = StadiumBorder();
 
+  /// The floating tab bar at its unscaled height. Screens that scroll under
+  /// it read this through [ScaledMetricsX.bottomBarInset].
+  static const tabBarHeight = 64.0;
+
   static ThemeData light() {
     final base = ThemeData.light(useMaterial3: true);
     final textTheme = base.textTheme.apply(
@@ -154,4 +158,27 @@ class AppTheme {
 
 extension TextThemeX on BuildContext {
   TextTheme get text => Theme.of(this).textTheme;
+}
+
+extension ScaledMetricsX on BuildContext {
+  /// Grows a height that cannot wrap with the reader's text size.
+  ///
+  /// A row of chips, a date block or a button has to be given a height, and
+  /// a fixed one cuts the text off as soon as the system font is enlarged.
+  /// Scaling the box by the same rule as the text inside it keeps the two in
+  /// step. The result is capped, because past double the box already holds
+  /// two lines and growing it further only eats the screen.
+  double scaled(double height, {double max = 2}) =>
+      MediaQuery.textScalerOf(this).scale(height).clamp(height, height * max);
+
+  /// Room to leave at the bottom of a scrolling screen for the floating tab
+  /// bar, which sits over the content rather than beside it. It follows the
+  /// bar's own scaling, so enlarging the system font does not park the last
+  /// card underneath it.
+  double get bottomBarInset => scaled(AppTheme.tabBarHeight, max: 1.3) + 54;
+
+  /// Whether the reader has set the system font large enough that a row of
+  /// text and a button beside it can no longer share a line. Rows this
+  /// affects stack instead of breaking words.
+  bool get textIsLarge => MediaQuery.textScalerOf(this).scale(14) > 19;
 }

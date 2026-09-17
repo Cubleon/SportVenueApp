@@ -126,7 +126,7 @@ class _GamesScreenState extends State<GamesScreen> {
                 );
               },
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
+            SliverToBoxAdapter(child: SizedBox(height: context.bottomBarInset)),
           ],
         );
       },
@@ -191,50 +191,43 @@ class _MiniGameCardState extends State<MiniGameCard> {
             style: context.text.bodySmall?.copyWith(color: AppColors.muted),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _AvatarStack(participants: game.participants),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '${game.freePlaces} ${game.freePlaces == 1 ? 'место' : 'места'} свободно',
-                  style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+          _CardFooter(
+            places: Text(
+              '${game.freePlaces} ${game.freePlaces == 1 ? 'место' : 'места'} свободно',
+              style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+            ),
+            avatars: _AvatarStack(participants: game.participants),
+            action: SizedBox(
+              height: context.scaled(34),
+              child: FilledButton(
+                key: ValueKey('join-${game.id}'),
+                onPressed: game.isFull || _joining ? null : _join,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  disabledBackgroundColor: AppColors.surfaceRaised,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
-              ),
-              SizedBox(
-                height: 34,
-                child: FilledButton(
-                  key: ValueKey('join-${game.id}'),
-                  onPressed: game.isFull || _joining ? null : _join,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    disabledBackgroundColor: AppColors.surfaceRaised,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                  child: _joining
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.onAccent,
-                          ),
-                        )
-                      : Text(
-                          'Вступить',
-                          style: context.text.labelLarge?.copyWith(
-                            color: AppColors.onAccent,
-                            fontWeight: FontWeight.w700,
-                          ),
+                child: _joining
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onAccent,
                         ),
-                ),
+                      )
+                    : Text(
+                        'Вступить',
+                        style: context.text.labelLarge?.copyWith(
+                          color: AppColors.onAccent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -280,6 +273,15 @@ class GameDetailScreen extends StatefulWidget {
 }
 
 class _GameDetailScreenState extends State<GameDetailScreen> {
+  /// Measured, because the bar's button grows with the system font.
+  double _barHeight = 128;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _joining = false;
 
   @override
@@ -392,7 +394,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 128),
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, _barHeight),
                         child: AppCard(
                           borderColor: AppColors.accent.withValues(alpha: 0.2),
                           child: SummaryRow(
@@ -406,18 +408,23 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   ],
                 ),
                 Positioned(
-                  left: 20,
-                  right: 20,
-                  bottom: 28,
-                  child: PrimaryButton(
-                    key: const ValueKey('detail-join-game'),
-                    label: current.type == GameType.approval
-                        ? 'Заявка и оплата после одобрения'
-                        : 'Присоединиться к игре',
-                    isLoading: _joining,
-                    onPressed: current.isFull || _joining
-                        ? null
-                        : () => _join(current),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  // The button used to float with nothing under it, so the
+                  // cards slid through it on the way past.
+                  child: PinnedActionBar(
+                    onHeight: _onBarHeight,
+                    child: PrimaryButton(
+                      key: const ValueKey('detail-join-game'),
+                      label: current.type == GameType.approval
+                          ? 'Заявка и оплата после одобрения'
+                          : 'Присоединиться к игре',
+                      isLoading: _joining,
+                      onPressed: current.isFull || _joining
+                          ? null
+                          : () => _join(current),
+                    ),
                   ),
                 ),
               ],
@@ -466,7 +473,7 @@ class _SportFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 46,
+      height: context.scaled(46),
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -519,6 +526,50 @@ class _TimeFilter extends StatelessWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+/// The bottom line of a game card: who is in, how many places are left, and
+/// the button to take one. Side by side normally; at a large system font the
+/// three of them cannot share a line without breaking words mid-syllable, so
+/// the button drops underneath and spans the card.
+class _CardFooter extends StatelessWidget {
+  const _CardFooter({
+    required this.avatars,
+    required this.places,
+    required this.action,
+  });
+
+  final Widget avatars;
+  final Widget places;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.textIsLarge) {
+      return Row(
+        children: [
+          avatars,
+          const SizedBox(width: 10),
+          Expanded(child: places),
+          action,
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            avatars,
+            const SizedBox(width: 10),
+            Expanded(child: places),
+          ],
+        ),
+        const SizedBox(height: 12),
+        action,
+      ],
     );
   }
 }

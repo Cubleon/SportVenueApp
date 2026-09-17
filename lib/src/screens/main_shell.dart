@@ -160,10 +160,13 @@ class _BottomNav extends StatelessWidget {
   /// Slot 2 holds the create button, so the four tabs live either side of it.
   static const _slotOfTab = [0, 1, 3, 4];
   static const _slots = 5;
-  static const _height = 64.0;
 
   @override
   Widget build(BuildContext context) {
+    // The bar has to be given a height, and the labels inside it grow with
+    // the system font. Capped lower than elsewhere: it is pinned over the
+    // content, so every pixel it takes is a pixel of the screen it covers.
+    final height = context.scaled(AppTheme.tabBarHeight, max: 1.3);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -173,7 +176,7 @@ class _BottomNav extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(_height / 2),
+          borderRadius: BorderRadius.circular(height / 2),
           boxShadow: [
             BoxShadow(
               color: AppColors.ink.withValues(alpha: 0.12),
@@ -183,15 +186,15 @@ class _BottomNav extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(_height / 2),
+          borderRadius: BorderRadius.circular(height / 2),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
-              height: _height,
+              height: height,
               decoration: BoxDecoration(
                 // Translucent, so the blur has something to do.
                 color: AppColors.surface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(_height / 2),
+                borderRadius: BorderRadius.circular(height / 2),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.55),
                   width: 1,
@@ -210,12 +213,12 @@ class _BottomNav extends StatelessWidget {
                         left: slot * _slotOfTab[selectedIndex] + 6,
                         top: 6,
                         width: slot - 12,
-                        height: _height - 14,
+                        height: height - 14,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: AppColors.accentSoft,
                             borderRadius: BorderRadius.circular(
-                              (_height - 14) / 2,
+                              (height - 14) / 2,
                             ),
                           ),
                         ),
@@ -326,13 +329,21 @@ class _NavItem extends StatelessWidget {
                 children: [
                   Icon(icon, size: 22, color: color),
                   const SizedBox(height: 2),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.labelSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
+                  // Five slots share the bar's width, so a label has about
+                  // 80 logical pixels. Past a modest enlargement it would
+                  // come out as "Глав…" — less use than the smaller word,
+                  // and the icon above it carries the meaning anyway. A
+                  // screen reader is given the label in full regardless.
+                  MediaQuery.withClampedTextScaling(
+                    maxScaleFactor: 1.3,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

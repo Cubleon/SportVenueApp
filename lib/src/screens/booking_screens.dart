@@ -21,6 +21,15 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 200;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   late DateTime _date = DateTime(
     widget.controller.now.year,
     widget.controller.now.month,
@@ -128,7 +137,8 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 200)),
+                // Room for the pinned bar, which floats over the content.
+                SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
               ],
             ),
             Positioned(
@@ -136,6 +146,7 @@ class _BookingScreenState extends State<BookingScreen> {
               right: 0,
               bottom: 0,
               child: PinnedActionBar(
+                onHeight: _onBarHeight,
                 child: Column(
                   children: [
                     PrimaryButton(
@@ -239,6 +250,15 @@ class BookingConfirmationScreen extends StatefulWidget {
 }
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 136;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _accepted = true;
   bool _loading = false;
 
@@ -255,7 +275,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 136),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
               children: [
                 _BookingNav(
                   title: 'Подтверждение',
@@ -302,6 +322,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               right: 0,
               bottom: 0,
               child: PinnedActionBar(
+                onHeight: _onBarHeight,
                 child: Column(
                   children: [
                     PrimaryButton(
@@ -366,6 +387,15 @@ class BookingDetailsScreen extends StatefulWidget {
 }
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 112;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _loading = false;
 
   @override
@@ -376,7 +406,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, canCancel ? 112 : 24),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                canCancel ? _barHeight : 24,
+              ),
               children: [
                 _BookingNav(
                   title: 'Детали брони',
@@ -408,6 +443,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 right: 0,
                 bottom: 0,
                 child: PinnedActionBar(
+                  onHeight: _onBarHeight,
                   child: PrimaryButton(
                     key: const ValueKey('cancel-booking'),
                     label: 'Отменить бронь',
@@ -616,8 +652,8 @@ class _StepBlock extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
+                width: context.scaled(22),
+                height: context.scaled(22),
                 decoration: const BoxDecoration(
                   color: AppColors.accent,
                   shape: BoxShape.circle,
@@ -664,7 +700,7 @@ class _DatePickerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final start = DateTime(now.year, now.month, now.day);
     return SizedBox(
-      height: 70,
+      height: context.scaled(70),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemBuilder: (context, index) {
@@ -677,7 +713,7 @@ class _DatePickerRow extends StatelessWidget {
               onTap: () => onSelect(date),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
-                width: 54,
+                width: context.scaled(54),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.accent : AppColors.surface,
                   borderRadius: BorderRadius.circular(15),
@@ -795,11 +831,13 @@ class _TimeGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: slots.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        childAspectRatio: 2.25,
+        // A fixed aspect ratio would keep the tile the same height however
+        // large the time inside it is set to print.
+        mainAxisExtent: context.scaled(52),
       ),
       itemBuilder: (context, index) {
         final slot = slots[index];

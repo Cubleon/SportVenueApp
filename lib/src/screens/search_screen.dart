@@ -69,7 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: (_) => setState(() => _selectedVenue = null),
             ),
             SizedBox(
-              height: 46,
+              height: context.scaled(46),
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
@@ -96,7 +96,12 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  14,
+                  20,
+                  context.bottomBarInset,
+                ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Stack(

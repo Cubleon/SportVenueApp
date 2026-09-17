@@ -75,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                 );
               },
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
+            SliverToBoxAdapter(child: SizedBox(height: context.bottomBarInset)),
           ],
         );
       },
@@ -176,7 +176,7 @@ class _Sports extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 46,
+      height: context.scaled(46),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -241,7 +241,7 @@ class _Venues extends StatelessWidget {
   Widget build(BuildContext context) {
     final venues = controller.preferredVenues;
     return SizedBox(
-      height: 292,
+      height: context.scaled(292),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),

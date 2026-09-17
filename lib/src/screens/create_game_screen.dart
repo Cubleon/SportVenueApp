@@ -17,6 +17,15 @@ class CreateGameScreen extends StatefulWidget {
 }
 
 class _CreateGameScreenState extends State<CreateGameScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 150;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   String? _sportId;
   Venue? _venue;
   late DateTime _date = DateTime(
@@ -122,7 +131,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 150),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
               children: [
                 _CreateHeader(onBack: () => Navigator.of(context).pop()),
                 _Block(
@@ -399,6 +408,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
               right: 0,
               bottom: 0,
               child: PinnedActionBar(
+                onHeight: _onBarHeight,
                 child: PrimaryButton(
                   key: const ValueKey('create-game-submit'),
                   label: 'Создать игру',
@@ -536,8 +546,8 @@ class _Block extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
+                width: context.scaled(22),
+                height: context.scaled(22),
                 decoration: const BoxDecoration(
                   color: AppColors.accent,
                   shape: BoxShape.circle,

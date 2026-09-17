@@ -24,7 +24,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (context, _) {
         return ListView(
           key: const ValueKey('profile-screen'),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 118),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
           children: [
             ScreenTitleBar(
               title: 'Профиль',
@@ -36,8 +36,8 @@ class ProfileScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 62,
-                    height: 62,
+                    width: context.scaled(62),
+                    height: context.scaled(62),
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.accent,

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
@@ -162,7 +164,7 @@ class PrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: neutral ? 50 : 56,
+      height: context.scaled(neutral ? 50 : 56),
       child: FilledButton(
         onPressed: enabled ? onPressed : null,
         style: FilledButton.styleFrom(
@@ -198,12 +200,17 @@ class PrimaryButton extends StatelessWidget {
                     Flexible(
                       child: Text(
                         label,
-                        maxLines: 1,
+                        // A button says what it does; truncated to
+                        // "Оплатить свою часть ·…" it no longer does. The
+                        // box grows with the text, so a second line fits.
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
                           color: foreground,
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.05,
+                          height: 1.15,
                         ),
                       ),
                     ),
@@ -369,7 +376,7 @@ class SelectableChip extends StatelessWidget {
           // look pressable.
           excludeFromSemantics: onTap == null,
           child: Container(
-            height: 44,
+            height: context.scaled(44),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: selected ? AppColors.accent : AppColors.surface,
@@ -584,13 +591,18 @@ class ScreenTitleBar extends StatelessWidget {
 /// unreadable. The short fade above it keeps the join from reading as a
 /// hard edge.
 class PinnedActionBar extends StatelessWidget {
-  const PinnedActionBar({super.key, required this.child});
+  const PinnedActionBar({super.key, required this.child, this.onHeight});
 
   final Widget child;
 
+  /// Reports the bar's laid-out height, so the scrolling content behind it
+  /// can reserve exactly that much and no guessed constant has to be kept
+  /// in step with the buttons — which grow with the system font.
+  final ValueChanged<double>? onHeight;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final bar = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
@@ -611,6 +623,50 @@ class PinnedActionBar extends StatelessWidget {
         ),
       ],
     );
+    return onHeight == null
+        ? bar
+        : _MeasureHeight(onHeight: onHeight!, child: bar);
+  }
+}
+
+/// Reports its child's height after every layout.
+///
+/// A bar that floats over a scroll view has to tell that view how much room
+/// to leave, and only layout knows: the buttons inside it are sized by the
+/// reader's font setting.
+class _MeasureHeight extends SingleChildRenderObjectWidget {
+  const _MeasureHeight({required this.onHeight, required super.child});
+
+  final ValueChanged<double> onHeight;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _MeasureHeightBox(onHeight);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _MeasureHeightBox renderObject,
+  ) {
+    renderObject.onHeight = onHeight;
+  }
+}
+
+class _MeasureHeightBox extends RenderProxyBox {
+  _MeasureHeightBox(this.onHeight);
+
+  ValueChanged<double> onHeight;
+  double? _reported;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final height = size.height;
+    if (_reported != height) {
+      _reported = height;
+      // The listener rebuilds the screen, which cannot happen during layout.
+      SchedulerBinding.instance.addPostFrameCallback((_) => onHeight(height));
+    }
   }
 }
 
@@ -629,8 +685,8 @@ class BookingRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 62,
+            width: context.scaled(56),
+            height: context.scaled(62),
             decoration: BoxDecoration(
               color: AppColors.accentSoft,
               borderRadius: BorderRadius.circular(16),
