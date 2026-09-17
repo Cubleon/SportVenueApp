@@ -34,19 +34,19 @@ void main() {
       find.byKey(const ValueKey('phone-field')),
       '9000000000',
     );
-    await tester.tap(find.textContaining('согласен'));
+    await tester.tap(find.textContaining('Согласен'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('registration-continue')));
     await tester.pumpAndSettle();
 
-    expect(find.text('введите код'), findsOneWidget);
+    expect(find.text('Введите код'), findsOneWidget);
     for (var i = 0; i < 4; i++) {
       await tester.enterText(find.byKey(ValueKey('otp-$i')), '1');
       await tester.pump();
     }
     await tester.pumpAndSettle();
 
-    expect(find.text('какой спорт?'), findsOneWidget);
+    expect(find.text('Какой спорт?'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('sports-continue')));
     await tester.pumpAndSettle();
 
@@ -65,7 +65,7 @@ void main() {
       find.byKey(const ValueKey('phone-field')),
       '9000000000',
     );
-    await tester.tap(find.textContaining('согласен'));
+    await tester.tap(find.textContaining('Согласен'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('registration-continue')));
     await tester.pumpAndSettle();
@@ -76,7 +76,7 @@ void main() {
     }
     await tester.pump(const Duration(milliseconds: 120));
 
-    expect(find.text('неверный код, попробуйте ещё раз'), findsOneWidget);
+    expect(find.text('Неверный код, попробуйте ещё раз'), findsOneWidget);
     expect(controller.isSignedIn, isFalse);
     await tester.pump(const Duration(milliseconds: 700));
   });
@@ -101,8 +101,8 @@ void main() {
     await tester.pump();
     expect(completed, isFalse);
 
-    await tester.ensureVisible(find.text('футбол'));
-    await tester.tap(find.text('футбол'));
+    await tester.ensureVisible(find.text('Футбол'));
+    await tester.tap(find.text('Футбол'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('sports-continue')));
     await tester.pump();
@@ -164,10 +164,10 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byKey(ValueKey('upcoming-booking-${booking.id}')));
+    await tester.tap(find.byKey(ValueKey('booking-row-${booking.id}')));
     await tester.pumpAndSettle();
 
-    expect(find.text('детали брони'), findsOneWidget);
+    expect(find.text('Детали брони'), findsOneWidget);
     expect(find.byKey(const ValueKey('confirm-payment')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
@@ -176,10 +176,10 @@ void main() {
     expect(controller.bookings.single.status, 'отменена');
     expect(controller.upcomingBookings, isEmpty);
     expect(
-      find.byKey(ValueKey('upcoming-booking-${booking.id}')),
+      find.byKey(ValueKey('booking-row-${booking.id}')),
       findsNothing,
     );
-    expect(find.text('у вас пока нет предстоящих броней'), findsOneWidget);
+    expect(find.text('У вас пока нет предстоящих броней'), findsOneWidget);
   });
 
   testWidgets('game join action updates mock participants', (tester) async {
@@ -230,7 +230,7 @@ class _Harness extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: AppTheme.dark(),
+      theme: AppTheme.light(),
       home: Scaffold(body: child),
     );
   }
