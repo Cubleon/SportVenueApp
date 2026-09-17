@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../data/app_controller.dart';
@@ -138,6 +140,12 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
+/// The tab bar: a capsule floating over the page, frosted so the content
+/// shows through it, with the selection sliding between slots.
+///
+/// It sits on `extendBody`, so the page scrolls underneath — which is the
+/// whole point of the blur, and why each tab screen keeps a tail of empty
+/// space at the bottom.
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.selectedIndex,
@@ -149,70 +157,128 @@ class _BottomNav extends StatelessWidget {
   final ValueChanged<int> onTab;
   final VoidCallback onCreate;
 
+  /// Slot 2 holds the create button, so the four tabs live either side of it.
+  static const _slotOfTab = [0, 1, 3, 4];
+  static const _slots = 5;
+  static const _height = 64.0;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: AppColors.surface),
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 18),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            _NavItem(
-              index: 0,
-              selectedIndex: selectedIndex,
-              label: 'Главная',
-              icon: Icons.home_rounded,
-              onTab: onTab,
-            ),
-            _NavItem(
-              index: 1,
-              selectedIndex: selectedIndex,
-              label: 'Поиск',
-              icon: Icons.search_rounded,
-              onTab: onTab,
-            ),
-            Expanded(
-              child: GestureDetector(
-                key: const ValueKey('create-fab'),
-                onTap: onCreate,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      margin: const EdgeInsets.only(top: 0, bottom: 2),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.accent,
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: AppColors.onAccent,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-                ),
-              ),
-            ),
-            _NavItem(
-              index: 2,
-              selectedIndex: selectedIndex,
-              label: 'Игры',
-              icon: Icons.sports_soccer_rounded,
-              onTab: onTab,
-            ),
-            _NavItem(
-              index: 3,
-              selectedIndex: selectedIndex,
-              label: 'Профиль',
-              icon: Icons.person_rounded,
-              onTab: onTab,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(_height / 2),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.12),
+              blurRadius: 26,
+              offset: const Offset(0, 10),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(_height / 2),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              height: _height,
+              decoration: BoxDecoration(
+                // Translucent, so the blur has something to do.
+                color: AppColors.surface.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(_height / 2),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  width: 1,
+                ),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slot = constraints.maxWidth / _slots;
+                  return Stack(
+                    children: [
+                      // The selection flies across rather than blinking from
+                      // one tab to the next.
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOutCubic,
+                        left: slot * _slotOfTab[selectedIndex] + 6,
+                        top: 6,
+                        width: slot - 12,
+                        height: _height - 14,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSoft,
+                            borderRadius: BorderRadius.circular(
+                              (_height - 14) / 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          _NavItem(
+                            index: 0,
+                            selectedIndex: selectedIndex,
+                            label: 'Главная',
+                            icon: Icons.home_rounded,
+                            onTab: onTab,
+                          ),
+                          _NavItem(
+                            index: 1,
+                            selectedIndex: selectedIndex,
+                            label: 'Поиск',
+                            icon: Icons.search_rounded,
+                            onTab: onTab,
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: GestureDetector(
+                                key: const ValueKey('create-fab'),
+                                onTap: onCreate,
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.accent,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_rounded,
+                                    color: AppColors.onAccent,
+                                    size: 26,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          _NavItem(
+                            index: 2,
+                            selectedIndex: selectedIndex,
+                            label: 'Игры',
+                            icon: Icons.sports_soccer_rounded,
+                            onTab: onTab,
+                          ),
+                          _NavItem(
+                            index: 3,
+                            selectedIndex: selectedIndex,
+                            label: 'Профиль',
+                            icon: Icons.person_rounded,
+                            onTab: onTab,
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -237,36 +303,40 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = index == selectedIndex;
-    final color = selected
-        ? AppColors.accent
-        : AppColors.ink.withValues(alpha: 0.48);
     return Expanded(
-      child: InkWell(
+      child: GestureDetector(
         key: ValueKey('nav-$label'),
+        behavior: HitTestBehavior.opaque,
         onTap: () => onTab(index),
-        child: SizedBox(
-          height: 56,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 23, color: color),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.text.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
+        child: TweenAnimationBuilder(
+          tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          builder: (context, t, _) {
+            final color = Color.lerp(AppColors.muted, AppColors.accent, t)!;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 22, color: color),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
+
 
 class _SheetAction extends StatelessWidget {
   const _SheetAction({
