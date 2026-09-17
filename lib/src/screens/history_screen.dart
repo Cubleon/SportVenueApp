@@ -55,7 +55,7 @@ class HistoryScreen extends StatelessWidget {
                   child: ScreenTitleBar(
                     title: 'История',
                     subtitle: _summary(bookings.length, games.length),
-                    trailing: BackCircleButton(
+                    leading: BackCircleButton(
                       onTap: () => Navigator.of(context).pop(),
                     ),
                   ),

@@ -541,11 +541,18 @@ class ScreenTitleBar extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.leading,
     this.trailing,
   });
 
   final String title;
   final String? subtitle;
+
+  /// Before the title. Where a way back belongs: every other screen in the
+  /// app puts it there, and a thumb reaches the left corner.
+  final Widget? leading;
+
+  /// After the title. For what the screen does, not for leaving it.
   final Widget? trailing;
 
   @override
@@ -554,6 +561,8 @@ class ScreenTitleBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Row(
         children: [
+          ?leading,
+          if (leading != null) const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
