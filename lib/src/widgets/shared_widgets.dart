@@ -313,7 +313,12 @@ class SportBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(sport.icon, style: TextStyle(fontSize: compact ? 11 : 13)),
+          ExcludeSemantics(
+            child: Text(
+              sport.icon,
+              style: TextStyle(fontSize: compact ? 11 : 13),
+            ),
+          ),
           const SizedBox(width: 5),
           Text(
             sport.name.toUpperCase(),
@@ -350,39 +355,49 @@ class SelectableChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(99),
-        // A chip with no handler takes no touches, so it cannot ripple or
-        // look pressable.
-        excludeFromSemantics: onTap == null,
-        child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.accent : AppColors.surface,
-            borderRadius: BorderRadius.circular(99),
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Text(icon!, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 6),
-                ],
-                Text(
-                  label,
-                  maxLines: 1,
-                  style: context.text.labelLarge?.copyWith(
-                    color: selected ? AppColors.onAccent : AppColors.muted,
-                    fontWeight: FontWeight.w600,
+    return Semantics(
+      // Colour alone tells a sighted reader which chip is on; a screen
+      // reader needs to be told.
+      selected: selected,
+      button: onTap != null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(99),
+          // A chip with no handler takes no touches, so it cannot ripple or
+          // look pressable.
+          excludeFromSemantics: onTap == null,
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: selected ? AppColors.accent : AppColors.surface,
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    // An emoji is decoration here: read aloud it becomes
+                    // "soccer ball" in the middle of the label.
+                    ExcludeSemantics(
+                      child: Text(icon!, style: const TextStyle(fontSize: 13)),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    maxLines: 1,
+                    style: context.text.labelLarge?.copyWith(
+                      color: selected ? AppColors.onAccent : AppColors.muted,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -681,6 +696,7 @@ class BackCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton.filled(
+      tooltip: 'Назад',
       onPressed: onTap,
       icon: const Icon(Icons.chevron_left_rounded),
       style: IconButton.styleFrom(

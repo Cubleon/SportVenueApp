@@ -110,11 +110,7 @@ class _Board {
   );
 
   Rect centred(double x, double y, double width, double height) =>
-      Rect.fromCenter(
-        center: at(x, y),
-        width: m(width),
-        height: m(height),
-      );
+      Rect.fromCenter(center: at(x, y), width: m(width), height: m(height));
 
   Paint line(Color color, {double width = 0.12}) => Paint()
     ..style = PaintingStyle.stroke
@@ -263,10 +259,7 @@ final _SurfaceSpec _football = _SurfaceSpec(
       // The penalty arc is the part of a 9.15 m circle outside the box.
       b.canvas.save();
       b.canvas.clipRect(
-        Rect.fromPoints(
-          b.at(-halfW, goalLine - 16.5 * side),
-          b.at(halfW, 0),
-        ),
+        Rect.fromPoints(b.at(-halfW, goalLine - 16.5 * side), b.at(halfW, 0)),
       );
       b.canvas.drawCircle(b.at(0, penaltySpot), b.m(9.15), line);
       b.canvas.restore();
@@ -337,11 +330,7 @@ final _SurfaceSpec _hockey = _SurfaceSpec(
     final halfL = b.halfLength;
 
     // Centre line, blue lines, goal lines.
-    b.canvas.drawLine(
-      b.at(-halfW, 0),
-      b.at(halfW, 0),
-      b.line(red, width: 0.4),
-    );
+    b.canvas.drawLine(b.at(-halfW, 0), b.at(halfW, 0), b.line(red, width: 0.4));
     for (final side in const [-1.0, 1.0]) {
       b.canvas.drawLine(
         b.at(-halfW, 7.5 * side),
@@ -447,7 +436,9 @@ final _SurfaceSpec _basketball = _SurfaceSpec(
       }
       b.canvas.drawArc(
         Rect.fromCircle(center: b.at(0, basket), radius: b.m(6.75)),
-        side > 0 ? math.pi + math.asin(corner / 6.75) : math.asin(corner / 6.75),
+        side > 0
+            ? math.pi + math.asin(corner / 6.75)
+            : math.asin(corner / 6.75),
         math.pi - math.asin(corner / 6.75) * 2,
         false,
         line,
@@ -564,7 +555,11 @@ final _SurfaceSpec _tennis = _SurfaceSpec(
         line,
       );
       // Centre mark on each baseline.
-      b.canvas.drawLine(b.at(0, halfL * side), b.at(0, (halfL - 0.3) * side), line);
+      b.canvas.drawLine(
+        b.at(0, halfL * side),
+        b.at(0, (halfL - 0.3) * side),
+        line,
+      );
     }
     b.canvas.drawLine(b.at(0, -6.4), b.at(0, 6.4), line);
 
@@ -635,7 +630,10 @@ final _SurfaceSpec _padel = _SurfaceSpec(
     b.canvas.save();
     b.canvas.clipRect(b.pitch);
 
-    final mesh2 = b.line(const Color(0xFFBBD9EC).withValues(alpha: 0.20), width: 0.04);
+    final mesh2 = b.line(
+      const Color(0xFFBBD9EC).withValues(alpha: 0.20),
+      width: 0.04,
+    );
     for (var y = -halfL; y <= halfL; y += 0.9) {
       b.canvas.drawLine(b.at(-halfW, y), b.at(-halfW + 0.5, y), mesh2);
       b.canvas.drawLine(b.at(halfW - 0.5, y), b.at(halfW, y), mesh2);
@@ -643,7 +641,10 @@ final _SurfaceSpec _padel = _SurfaceSpec(
     for (final side in const [-1.0, 1.0]) {
       // Glass panels behind each baseline read as a brighter band.
       b.canvas.drawRect(
-        Rect.fromPoints(b.at(-halfW, halfL * side), b.at(halfW, (halfL - 0.5) * side)),
+        Rect.fromPoints(
+          b.at(-halfW, halfL * side),
+          b.at(halfW, (halfL - 0.5) * side),
+        ),
         b.fill(const Color(0xFFDCEEF9).withValues(alpha: 0.16)),
       );
     }
@@ -655,8 +656,12 @@ final _SurfaceSpec _padel = _SurfaceSpec(
     );
     for (final side in const [-1.0, 1.0]) {
       for (final x in [-halfW, halfW]) {
-        b.spot(x, halfL * side, const Color(0xFFDCEEF9).withValues(alpha: 0.7),
-            radius: 0.22);
+        b.spot(
+          x,
+          halfL * side,
+          const Color(0xFFDCEEF9).withValues(alpha: 0.7),
+          radius: 0.22,
+        );
       }
     }
   },

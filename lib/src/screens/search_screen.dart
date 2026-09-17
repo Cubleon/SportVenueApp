@@ -59,6 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
               title: 'Поиск',
               subtitle: 'Москва · openfreemap',
               trailing: IconButton(
+                tooltip: 'Центр Москвы',
                 onPressed: _focusMoscow,
                 icon: const Icon(Icons.my_location_rounded),
               ),
@@ -463,6 +464,7 @@ class _VenueBottomSheet extends StatelessWidget {
                 ),
               ),
               IconButton(
+                tooltip: 'Закрыть',
                 onPressed: onClose,
                 icon: const Icon(Icons.close_rounded),
               ),
@@ -475,11 +477,7 @@ class _VenueBottomSheet extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(
-                Icons.star_rounded,
-                size: 17,
-                color: AppColors.ink,
-              ),
+              const Icon(Icons.star_rounded, size: 17, color: AppColors.ink),
               const SizedBox(width: 4),
               Text(
                 '${venue.rating}',

@@ -252,6 +252,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   child: Row(
                     children: [
                       IconButton.filled(
+                        tooltip: 'Убрать место',
                         key: const ValueKey('create-capacity-minus'),
                         onPressed:
                             selectedVenue != null && _capacity > minCapacity
@@ -269,6 +270,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         ),
                       ),
                       IconButton.filled(
+                        tooltip: 'Добавить место',
                         key: const ValueKey('create-capacity-plus'),
                         onPressed:
                             selectedVenue != null && _capacity < maxCapacity
@@ -494,6 +496,7 @@ class _CreateHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton.filled(
+          tooltip: 'Назад',
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(

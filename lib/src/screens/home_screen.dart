@@ -128,6 +128,7 @@ class _TopBar extends StatelessWidget {
           ),
           _RoundIcon(
             icon: Icons.notifications_none_rounded,
+            label: 'Уведомления',
             onTap: () => showAppSnack(context, 'Уведомлений пока нет'),
           ),
         ],
@@ -155,7 +156,9 @@ class _SearchBar extends StatelessWidget {
             Expanded(
               child: Text(
                 'Найти площадку или игру',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
+                style: context.text.bodyMedium?.copyWith(
+                  color: AppColors.muted,
+                ),
               ),
             ),
           ],
@@ -334,23 +337,34 @@ class _Venues extends StatelessWidget {
 }
 
 class _RoundIcon extends StatelessWidget {
-  const _RoundIcon({required this.icon, required this.onTap});
+  const _RoundIcon({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
+
+  /// Spoken by a screen reader, which has no icon to look at.
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: AppColors.ink, size: 22),
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: AppColors.surface,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, color: AppColors.ink, size: 22),
+          ),
         ),
       ),
     );

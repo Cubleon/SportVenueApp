@@ -197,90 +197,96 @@ class _SportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 160),
-      scale: selected ? 0.985 : 1,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? AppColors.accent : AppColors.border,
-                width: selected ? 2.5 : 1.5,
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        scale: selected ? 0.985 : 1,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected ? AppColors.accent : AppColors.border,
+                  width: selected ? 2.5 : 1.5,
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.22),
+                          blurRadius: 18,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.22),
-                        blurRadius: 18,
-                        spreadRadius: 1,
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  SportSurface(sportId: sport.id),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.45, 1],
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.62),
+                        ],
                       ),
-                    ]
-                  : null,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                SportSurface(sportId: sport.id),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.45, 1],
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.62),
-                      ],
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 12,
-                  child: Text(
-                    sport.name.capitalized,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    // Sits on the pitch drawing, not on the page.
-                    style: context.text.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.1,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: SportGlyph(sport: sport, size: 34),
-                ),
-                if (selected)
                   Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        color: AppColors.ink,
-                        size: 18,
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: Text(
+                      sport.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      // Sits on the pitch drawing, not on the page.
+                      style: context.text.titleSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   ),
-              ],
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: ExcludeSemantics(
+                      child: SportGlyph(sport: sport, size: 34),
+                    ),
+                  ),
+                  if (selected)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.ink,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

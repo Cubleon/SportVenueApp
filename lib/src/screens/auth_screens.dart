@@ -704,6 +704,9 @@ class _SocialButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: semanticLabel,
+      // The VK mark carries its own lettering; without this it is read out
+      // a second time after the label.
+      excludeSemantics: true,
       child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),

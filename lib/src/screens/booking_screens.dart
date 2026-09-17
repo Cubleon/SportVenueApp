@@ -526,12 +526,13 @@ class _BookingHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
+            tooltip: 'Назад',
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.ink,
-          ),
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.ink,
+            ),
           ),
           Expanded(
             child: Column(
@@ -571,6 +572,7 @@ class _BookingNav extends StatelessWidget {
     return Row(
       children: [
         IconButton.filled(
+          tooltip: 'Назад',
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(
@@ -668,39 +670,43 @@ class _DatePickerRow extends StatelessWidget {
         itemBuilder: (context, index) {
           final date = start.add(Duration(days: index));
           final isSelected = DateUtils.isSameDay(date, selected);
-          return GestureDetector(
-            onTap: () => onSelect(date),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 54,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : AppColors.surface,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: isSelected ? AppColors.accent : AppColors.border,
+          return Semantics(
+            selected: isSelected,
+            button: true,
+            child: GestureDetector(
+              onTap: () => onSelect(date),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 54,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.accent : AppColors.surface,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : AppColors.border,
+                  ),
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppFormatters.weekdayShort(date).toUpperCase(),
-                    style: context.text.labelSmall?.copyWith(
-                      color: isSelected
-                          ? AppColors.onAccent.withValues(alpha: 0.85)
-                          : AppColors.dim,
-                      fontWeight: FontWeight.w700,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppFormatters.weekdayShort(date).toUpperCase(),
+                      style: context.text.labelSmall?.copyWith(
+                        color: isSelected
+                            ? AppColors.onAccent.withValues(alpha: 0.85)
+                            : AppColors.dim,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${date.day}',
-                    style: context.text.titleMedium?.copyWith(
-                      color: isSelected ? AppColors.onAccent : AppColors.ink,
-                      fontWeight: FontWeight.w700,
+                    const SizedBox(height: 4),
+                    Text(
+                      '${date.day}',
+                      style: context.text.titleMedium?.copyWith(
+                        color: isSelected ? AppColors.onAccent : AppColors.ink,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -800,37 +806,42 @@ class _TimeGrid extends StatelessWidget {
         final selected = slot.hour == selectedHour;
         return GestureDetector(
           onTap: slot.isAvailable ? () => onChanged(slot.hour) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.accent
-                  : slot.isAvailable
-                  ? Colors.transparent
-                  : AppColors.ink.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
+          child: Semantics(
+            selected: selected,
+            button: slot.isAvailable,
+            enabled: slot.isAvailable,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
                 color: selected
                     ? AppColors.accent
                     : slot.isAvailable
-                    ? AppColors.ink.withValues(alpha: 0.12)
-                    : AppColors.ink.withValues(alpha: 0.05),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                slot.label,
-                style: context.text.titleSmall?.copyWith(
+                    ? Colors.transparent
+                    : AppColors.ink.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
                   color: selected
-                      ? AppColors.onAccent
+                      ? AppColors.accent
                       : slot.isAvailable
-                      ? AppColors.ink
-                      : AppColors.dim,
-                  decoration: slot.isAvailable
-                      ? null
-                      : TextDecoration.lineThrough,
-                  fontWeight: FontWeight.w700,
+                      ? AppColors.ink.withValues(alpha: 0.12)
+                      : AppColors.ink.withValues(alpha: 0.05),
+                  width: 1.5,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  slot.label,
+                  style: context.text.titleSmall?.copyWith(
+                    color: selected
+                        ? AppColors.onAccent
+                        : slot.isAvailable
+                        ? AppColors.ink
+                        : AppColors.dim,
+                    decoration: slot.isAvailable
+                        ? null
+                        : TextDecoration.lineThrough,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -861,6 +872,7 @@ class _CounterRow extends StatelessWidget {
         _CounterButton(
           key: const ValueKey('players-minus'),
           icon: Icons.remove_rounded,
+          label: 'Убрать игрока',
           enabled: value > min,
           onTap: () => onChanged(value - 1),
         ),
@@ -880,6 +892,7 @@ class _CounterRow extends StatelessWidget {
         _CounterButton(
           key: const ValueKey('players-plus'),
           icon: Icons.add_rounded,
+          label: 'Добавить игрока',
           enabled: value < max,
           onTap: () => onChanged(value + 1),
         ),
@@ -892,17 +905,22 @@ class _CounterButton extends StatelessWidget {
   const _CounterButton({
     super.key,
     required this.icon,
+    required this.label,
     required this.enabled,
     required this.onTap,
   });
 
   final IconData icon;
+
+  /// An icon on its own says nothing out loud.
+  final String label;
   final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return IconButton.filled(
+      tooltip: label,
       onPressed: enabled ? onTap : null,
       icon: Icon(icon),
       style: IconButton.styleFrom(

@@ -238,20 +238,24 @@ class _BottomNav extends StatelessWidget {
                           ),
                           Expanded(
                             child: Center(
-                              child: GestureDetector(
-                                key: const ValueKey('create-fab'),
-                                onTap: onCreate,
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.accent,
-                                  ),
-                                  child: const Icon(
-                                    Icons.add_rounded,
-                                    color: AppColors.onAccent,
-                                    size: 26,
+                              child: Semantics(
+                                button: true,
+                                label: 'Создать игру или бронь',
+                                child: GestureDetector(
+                                  key: const ValueKey('create-fab'),
+                                  onTap: onCreate,
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.accent,
+                                    ),
+                                    child: const Icon(
+                                      Icons.add_rounded,
+                                      color: AppColors.onAccent,
+                                      size: 26,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -304,39 +308,42 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = index == selectedIndex;
     return Expanded(
-      child: GestureDetector(
-        key: ValueKey('nav-$label'),
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTab(index),
-        child: TweenAnimationBuilder(
-          tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          builder: (context, t, _) {
-            final color = Color.lerp(AppColors.muted, AppColors.accent, t)!;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 22, color: color),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
+      child: Semantics(
+        selected: selected,
+        button: true,
+        child: GestureDetector(
+          key: ValueKey('nav-$label'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onTab(index),
+          child: TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            builder: (context, t, _) {
+              final color = Color.lerp(AppColors.muted, AppColors.accent, t)!;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 22, color: color),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.labelSmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 }
-
 
 class _SheetAction extends StatelessWidget {
   const _SheetAction({
@@ -381,7 +388,9 @@ class _SheetAction extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),

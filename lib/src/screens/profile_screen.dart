@@ -78,6 +78,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Редактировать профиль',
                     onPressed: () => showAppSnack(
                       context,
                       'Редактирование профиля подключится позже',
@@ -188,9 +189,14 @@ class _Stats extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _Stat(value: '${controller.bookings.length}', label: 'Броней'),
+            child: _Stat(
+              value: '${controller.bookings.length}',
+              label: 'Броней',
+            ),
           ),
-          Expanded(child: _Stat(value: '$games', label: 'Моих игр')),
+          Expanded(
+            child: _Stat(value: '$games', label: 'Моих игр'),
+          ),
           Expanded(
             child: _Stat(
               value: '${controller.selectedSports.length}',
@@ -203,10 +209,7 @@ class _Stats extends StatelessWidget {
   }
 }
 
-Future<void> _editSports(
-  BuildContext context,
-  AppController controller,
-) async {
+Future<void> _editSports(BuildContext context, AppController controller) async {
   await Navigator.of(context).push(
     MaterialPageRoute(
       builder: (_) => SportSelectionScreen(
@@ -260,7 +263,6 @@ class _Stat extends StatelessWidget {
     );
   }
 }
-
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({

@@ -57,6 +57,7 @@ class _GamesScreenState extends State<GamesScreen> {
                 title: 'Игры',
                 subtitle: 'pickup-матчи рядом',
                 trailing: IconButton(
+                  tooltip: 'Фильтры',
                   onPressed: () => showAppSnack(
                     context,
                     'Расширенные фильтры появятся позже',
@@ -591,12 +592,13 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
+            tooltip: 'Назад',
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.ink,
-          ),
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.ink,
+            ),
           ),
           Expanded(
             child: Text(
@@ -661,7 +663,9 @@ class _ParticipantTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Рейтинг ${participant.rating.toStringAsFixed(1)}',
-                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),
@@ -717,7 +721,9 @@ class _PlayerSlot extends StatelessWidget {
               if (!empty)
                 Text(
                   participant!.rating.toStringAsFixed(1),
-                  style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                  style: context.text.bodySmall?.copyWith(
+                    color: AppColors.muted,
+                  ),
                 ),
             ],
           ),
