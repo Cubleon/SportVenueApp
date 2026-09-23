@@ -271,6 +271,41 @@ void main() {
     expect(loggedOut, isTrue);
   });
 
+  testWidgets('the club picker searches, and picking one changes the step', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+
+    await tester.pumpWidget(
+      _Harness(child: CreateGameScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+
+    // The step shows one club, not the whole catalogue.
+    final field = find.byKey(const ValueKey('create-venue-field'));
+    expect(field, findsOneWidget);
+    expect(find.text('Арена север'), findsNothing);
+
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('venue-picker-search')), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-picker-search')),
+      'север',
+    );
+    await tester.pumpAndSettle();
+    // The field underneath still names the current club, so the check is on
+    // the options inside the sheet.
+    expect(find.byKey(const ValueKey('venue-option-luzhniki')), findsNothing);
+    expect(find.byKey(const ValueKey('venue-option-north')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('venue-option-north')));
+    await tester.pumpAndSettle();
+    expect(find.text('Арена север'), findsOneWidget);
+  });
+
   // Haptics cannot be seen, and on the web preview they do nothing at all,
   // so the only way to know they fire is to listen on the channel they
   // travel down.

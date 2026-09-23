@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
 import 'games_screens.dart';
 
@@ -98,6 +99,18 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     return null;
   }
 
+  Future<void> _pickVenue(List<Venue> venues, Sport? sport) async {
+    final picked = await pickVenue(
+      context,
+      venues: venues,
+      selected: _selectedVenue,
+      sportOf: (_) => sport,
+    );
+    if (picked != null) {
+      _selectVenue(picked);
+    }
+  }
+
   Sport? get _selectedSport {
     final sportId = _sportId;
     for (final sport in widget.controller.sports) {
@@ -176,27 +189,31 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             color: context.colors.muted,
                           ),
                         )
-                      : Column(
-                          children: availableVenues
-                              .map(
-                                (venue) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: VenueRow(
-                                    key: ValueKey('create-venue-${venue.id}'),
-                                    venue: venue,
-                                    sport: sport,
-                                    selected: selectedVenue?.id == venue.id,
-                                    onTap: () => _selectVenue(venue),
-                                    trailing: selectedVenue?.id == venue.id
-                                        ? Icon(
-                                            Icons.check_circle_rounded,
-                                            color: context.colors.accent,
-                                          )
-                                        : const SizedBox(width: 24),
+                      // One line, whatever the catalogue grows to. The list
+                      // and its search live in the sheet this opens.
+                      : VenueRow(
+                          key: const ValueKey('create-venue-field'),
+                          venue: selectedVenue!,
+                          sport: sport,
+                          selected: false,
+                          onTap: () => _pickVenue(availableVenues, sport),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (availableVenues.length > 1)
+                                Text(
+                                  'ещё ${availableVenues.length - 1}',
+                                  style: context.text.labelSmall?.copyWith(
+                                    color: context.colors.muted,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              )
-                              .toList(),
+                              Icon(
+                                Icons.expand_more_rounded,
+                                color: context.colors.dim,
+                              ),
+                            ],
+                          ),
                         ),
                 ),
                 _Block(

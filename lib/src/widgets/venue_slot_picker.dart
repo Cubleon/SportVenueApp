@@ -63,12 +63,25 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
     }
   }
 
+  /// Tells the screen whether the hour on screen is takeable.
+  ///
+  /// Deferred by a frame on purpose: a reload starts from [initState] and
+  /// [didUpdateWidget], where the screen above is already building and
+  /// cannot be marked dirty again.
+  void _reportReady(bool ready) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onReadyChanged(ready);
+      }
+    });
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _error = null;
     });
-    widget.onReadyChanged(false);
+    _reportReady(false);
     try {
       final slots = await widget.controller.loadSlots(
         venue: widget.venue,
@@ -91,7 +104,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
           widget.onHourChanged(firstFree.hour);
         }
       }
-      widget.onReadyChanged(stillFree || slots.any((slot) => slot.isAvailable));
+      _reportReady(stillFree || slots.any((slot) => slot.isAvailable));
     } catch (error) {
       if (!mounted) {
         return;
@@ -101,7 +114,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
         _loading = false;
         _error = widget.controller.messageFor(error);
       });
-      widget.onReadyChanged(false);
+      _reportReady(false);
     }
   }
 
@@ -145,7 +158,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
             available: slot.isAvailable,
             onTap: () {
               widget.onHourChanged(slot.hour);
-              widget.onReadyChanged(true);
+              _reportReady(true);
             },
           ),
       ],
