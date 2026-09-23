@@ -10,6 +10,7 @@ import 'package:sport_venue_app/src/screens/booking_screens.dart';
 import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
+import 'package:sport_venue_app/src/screens/profile_screen.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 
@@ -175,6 +176,18 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
     await tester.pumpAndSettle();
 
+    // A paid booking is not thrown away on one tap: the sheet asks first,
+    // and backing out of it leaves the booking alone.
+    expect(find.text('Отменить бронь?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-no')));
+    await tester.pumpAndSettle();
+    expect(controller.upcomingBookings, isNotEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('cancel-booking')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+    await tester.pumpAndSettle();
+
     expect(controller.bookings.single.status, 'отменена');
     expect(controller.upcomingBookings, isEmpty);
     expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsNothing);
@@ -211,6 +224,47 @@ void main() {
 
     expect(controller.games.length, before + 1);
     expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
+  });
+
+  testWidgets('signing out asks first, and the avatar never shows a digit', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    controller.phone = '+7 (916) 123-45-67';
+    var loggedOut = false;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: ProfileScreen(
+          controller: controller,
+          onLogout: () => loggedOut = true,
+        ),
+      ),
+    );
+
+    // The phone number starts with a 7 for everyone, so falling back to it
+    // put the same digit in every avatar.
+    expect(find.text('7'), findsNothing);
+    expect(find.byIcon(Icons.person_rounded), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('logout-button')),
+      200,
+    );
+    await tester.tap(find.byKey(const ValueKey('logout-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Выйти из аккаунта?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-no')));
+    await tester.pumpAndSettle();
+    expect(loggedOut, isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('logout-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+    await tester.pumpAndSettle();
+    expect(loggedOut, isTrue);
   });
 
   // Haptics cannot be seen, and on the web preview they do nothing at all,

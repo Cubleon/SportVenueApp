@@ -81,7 +81,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: _StepBlock(
                     step: 1,
                     title: 'Дата',
-                    child: _DatePickerRow(
+                    child: DateStrip(
                       now: widget.controller.now,
                       selected: _date,
                       onSelect: (date) {
@@ -95,7 +95,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: _StepBlock(
                     step: 2,
                     title: 'Продолжительность',
-                    child: _DurationPicker(
+                    child: DurationPicker(
                       value: _duration,
                       onChanged: (value) {
                         setState(() => _duration = value);
@@ -468,6 +468,21 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _cancel() async {
+    final draft = widget.booking.draft;
+    final confirmed = await confirmAction(
+      context,
+      title: 'Отменить бронь?',
+      message:
+          '${draft.venue.name.capitalized}, '
+          '${AppFormatters.dateFull(draft.date)}, ${draft.timeRange}. '
+          'Вернуть её тем же нажатием не получится.',
+      confirmLabel: 'Отменить бронь',
+      cancelLabel: 'Оставить',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+
     setState(() => _loading = true);
     try {
       await widget.controller.cancelBooking(widget.booking);
@@ -697,108 +712,6 @@ class _StepBlock extends StatelessWidget {
   }
 }
 
-class _DatePickerRow extends StatelessWidget {
-  const _DatePickerRow({
-    required this.now,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final DateTime now;
-  final DateTime selected;
-  final ValueChanged<DateTime> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final start = DateTime(now.year, now.month, now.day);
-    return SizedBox(
-      height: context.scaled(70),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final date = start.add(Duration(days: index));
-          final isSelected = DateUtils.isSameDay(date, selected);
-          return Semantics(
-            selected: isSelected,
-            button: true,
-            child: GestureDetector(
-              onTap: withSelectionFeedback(() => onSelect(date)),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: context.scaled(54),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? context.colors.accent
-                      : context.colors.surface,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: isSelected
-                        ? context.colors.accent
-                        : context.colors.border,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppFormatters.weekdayShort(date).toUpperCase(),
-                      style: context.text.labelSmall?.copyWith(
-                        color: isSelected
-                            ? context.colors.onAccent.withValues(alpha: 0.85)
-                            : context.colors.dim,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${date.day}',
-                      style: context.text.titleMedium?.copyWith(
-                        color: isSelected
-                            ? context.colors.onAccent
-                            : context.colors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemCount: 14,
-      ),
-    );
-  }
-}
-
-class _DurationPicker extends StatelessWidget {
-  const _DurationPicker({required this.value, required this.onChanged});
-
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final values = {60: '1 час', 90: '1.5 часа', 120: '2 часа'};
-    return Row(
-      children: values.entries.map((entry) {
-        final selected = value == entry.key;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: entry.key == 120 ? 0 : 8),
-            child: SelectableChip(
-              label: entry.value,
-              selected: selected,
-              onTap: () => onChanged(entry.key),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
 class _TimeGrid extends StatelessWidget {
   const _TimeGrid({
     required this.slots,
@@ -847,67 +760,16 @@ class _TimeGrid extends StatelessWidget {
         style: context.text.bodySmall?.copyWith(color: context.colors.muted),
       );
     }
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: slots.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        // A fixed aspect ratio would keep the tile the same height however
-        // large the time inside it is set to print.
-        mainAxisExtent: context.scaled(52),
-      ),
-      itemBuilder: (context, index) {
-        final slot = slots[index];
-        final selected = slot.hour == selectedHour;
-        return GestureDetector(
-          onTap: slot.isAvailable
-              ? withSelectionFeedback(() => onChanged(slot.hour))
-              : null,
-          child: Semantics(
-            selected: selected,
-            button: slot.isAvailable,
-            enabled: slot.isAvailable,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              decoration: BoxDecoration(
-                color: selected
-                    ? context.colors.accent
-                    : slot.isAvailable
-                    ? Colors.transparent
-                    : context.colors.ink.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: selected
-                      ? context.colors.accent
-                      : slot.isAvailable
-                      ? context.colors.ink.withValues(alpha: 0.12)
-                      : context.colors.ink.withValues(alpha: 0.05),
-                  width: 1.5,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  slot.label,
-                  style: context.text.titleSmall?.copyWith(
-                    color: selected
-                        ? context.colors.onAccent
-                        : slot.isAvailable
-                        ? context.colors.ink
-                        : context.colors.dim,
-                    decoration: slot.isAvailable
-                        ? null
-                        : TextDecoration.lineThrough,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
+    return TimeGrid(
+      tiles: [
+        for (final slot in slots)
+          TimeTile(
+            label: slot.label,
+            selected: slot.hour == selectedHour,
+            available: slot.isAvailable,
+            onTap: () => onChanged(slot.hour),
           ),
-        );
-      },
+      ],
     );
   }
 }

@@ -153,6 +153,10 @@ enum ButtonTone {
   /// Spends money or takes a slot. Dark, and used sparingly — if two of
   /// these sit together, neither reads as final.
   commit,
+
+  /// Destroys something: cancels a paid booking, signs out. Red, and only
+  /// ever the confirming button of a question already asked.
+  danger,
 }
 
 class PrimaryButton extends StatelessWidget {
@@ -181,6 +185,7 @@ class PrimaryButton extends StatelessWidget {
             ButtonTone.accent => context.colors.accent,
             ButtonTone.neutral => context.colors.surface,
             ButtonTone.commit => context.colors.commit,
+            ButtonTone.danger => context.colors.danger,
           };
     final foreground = !enabled
         ? context.colors.dim
@@ -190,6 +195,7 @@ class PrimaryButton extends StatelessWidget {
             // The commit fill is near-black on a light page and near-white
             // on a dark one, so its label cannot follow the accent's.
             ButtonTone.commit => context.colors.onCommit,
+            ButtonTone.danger => context.colors.onDanger,
           };
 
     return SizedBox(
@@ -894,6 +900,278 @@ class EmptyState extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Asks before something irreversible happens, and answers true if the
+/// reader said yes.
+///
+/// A paid booking used to disappear on a single tap of a button sitting
+/// under the thumb, with nothing between the tap and the refund rules. This
+/// is that missing step: it names what is about to go, and puts the way out
+/// under the thumb instead.
+Future<bool> confirmAction(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+  String cancelLabel = 'Отмена',
+  ButtonTone tone = ButtonTone.danger,
+}) async {
+  final answer = await showModalBottomSheet<bool>(
+    context: context,
+    backgroundColor: context.colors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.colors.ink.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                title,
+                style: context.text.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.colors.muted,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              PrimaryButton(
+                key: const ValueKey('confirm-yes'),
+                label: confirmLabel,
+                tone: tone,
+                onPressed: () => Navigator.pop(sheetContext, true),
+              ),
+              const SizedBox(height: 10),
+              // Second, and neutral: the reader arrived here by accident far
+              // more often than on purpose.
+              PrimaryButton(
+                key: const ValueKey('confirm-no'),
+                label: cancelLabel,
+                tone: ButtonTone.neutral,
+                onPressed: () => Navigator.pop(sheetContext, false),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  return answer ?? false;
+}
+
+/// Two weeks of days as a scrolling strip, one of them chosen.
+class DateStrip extends StatelessWidget {
+  const DateStrip({
+    super.key,
+    required this.now,
+    required this.selected,
+    required this.onSelect,
+    this.days = 14,
+  });
+
+  final DateTime now;
+  final DateTime selected;
+  final ValueChanged<DateTime> onSelect;
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    final start = DateTime(now.year, now.month, now.day);
+    return SizedBox(
+      height: context.scaled(70),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final date = start.add(Duration(days: index));
+          final isSelected = DateUtils.isSameDay(date, selected);
+          return Semantics(
+            selected: isSelected,
+            button: true,
+            child: GestureDetector(
+              onTap: withSelectionFeedback(() => onSelect(date)),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: context.scaled(54),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? context.colors.accent
+                      : context.colors.surface,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: isSelected
+                        ? context.colors.accent
+                        : context.colors.border,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppFormatters.weekdayShort(date).toUpperCase(),
+                      style: context.text.labelSmall?.copyWith(
+                        color: isSelected
+                            ? context.colors.onAccent.withValues(alpha: 0.85)
+                            : context.colors.dim,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${date.day}',
+                      style: context.text.titleMedium?.copyWith(
+                        color: isSelected
+                            ? context.colors.onAccent
+                            : context.colors.ink,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemCount: days,
+      ),
+    );
+  }
+}
+
+/// How long the court is wanted for. Three values, all on screen.
+class DurationPicker extends StatelessWidget {
+  const DurationPicker({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const values = {60: '1 час', 90: '1.5 часа', 120: '2 часа'};
+    return Row(
+      children: values.entries.map((entry) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: entry.key == 120 ? 0 : 8),
+            child: SelectableChip(
+              label: entry.value,
+              selected: value == entry.key,
+              onTap: () => onChanged(entry.key),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+/// One time in a [TimeGrid].
+class TimeTile extends StatelessWidget {
+  const TimeTile({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.available = true,
+  });
+
+  final String label;
+  final bool selected;
+  final bool available;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: available ? withSelectionFeedback(onTap) : null,
+      child: Semantics(
+        selected: selected,
+        button: available,
+        enabled: available,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            color: selected
+                ? context.colors.accent
+                : available
+                ? Colors.transparent
+                : context.colors.ink.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? context.colors.accent
+                  : available
+                  ? context.colors.ink.withValues(alpha: 0.12)
+                  : context.colors.ink.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: context.text.titleSmall?.copyWith(
+                color: selected
+                    ? context.colors.onAccent
+                    : available
+                    ? context.colors.ink
+                    : context.colors.dim,
+                decoration: available ? null : TextDecoration.lineThrough,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Times, three to a row, every one of them visible.
+class TimeGrid extends StatelessWidget {
+  const TimeGrid({super.key, required this.tiles});
+
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      // A fixed aspect ratio would keep the tile the same height however
+      // large the time inside it is set to print.
+      mainAxisExtent: context.scaled(52),
+      children: tiles,
     );
   }
 }

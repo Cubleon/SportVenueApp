@@ -23,6 +23,7 @@ class ProfileScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
+        final initial = _profileInitial(controller);
         return PullToRefresh(
           controller: controller,
           child: ListView(
@@ -47,13 +48,19 @@ class ProfileScreen extends StatelessWidget {
                         color: context.colors.accent,
                       ),
                       child: Center(
-                        child: Text(
-                          _profileInitial(controller),
-                          style: context.text.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: context.colors.onAccent,
-                          ),
-                        ),
+                        child: initial == null
+                            ? Icon(
+                                Icons.person_rounded,
+                                color: context.colors.onAccent,
+                                size: context.scaled(30),
+                              )
+                            : Text(
+                                initial,
+                                style: context.text.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: context.colors.onAccent,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -170,13 +177,28 @@ class ProfileScreen extends StatelessWidget {
                 key: const ValueKey('logout-button'),
                 label: 'Выйти из аккаунта',
                 tone: ButtonTone.neutral,
-                onPressed: onLogout,
+                onPressed: () => _confirmLogout(context, onLogout),
               ),
             ],
           ),
         );
       },
     );
+  }
+}
+
+Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
+  final confirmed = await confirmAction(
+    context,
+    title: 'Выйти из аккаунта?',
+    message:
+        'Брони и игры останутся на месте — чтобы вернуться к ним, '
+        'придётся снова подтвердить номер телефона.',
+    confirmLabel: 'Выйти',
+    cancelLabel: 'Остаться',
+  );
+  if (confirmed) {
+    onLogout();
   }
 }
 
@@ -233,11 +255,19 @@ Future<void> _editSports(BuildContext context, AppController controller) async {
   );
 }
 
-String _profileInitial(AppController controller) {
-  final source = controller.userName?.trim().isNotEmpty == true
-      ? controller.userName!.trim()
-      : controller.phone.replaceAll(RegExp(r'\D'), '');
-  return source.isEmpty ? 'С' : source.characters.first.toUpperCase();
+/// The letter in the avatar, or null when there is no name to take one
+/// from.
+///
+/// It used to fall back to the phone number, which put a digit in the
+/// circle — a 7, because every number here starts with one. A digit is not
+/// an initial, and it read as a bug.
+String? _profileInitial(AppController controller) {
+  final name = controller.userName?.trim() ?? '';
+  if (name.isEmpty) {
+    return null;
+  }
+  final letter = name.characters.first.toUpperCase();
+  return RegExp(r'\p{L}', unicode: true).hasMatch(letter) ? letter : null;
 }
 
 class _Stat extends StatelessWidget {

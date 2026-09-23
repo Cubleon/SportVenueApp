@@ -35,6 +35,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.border,
     required this.success,
     required this.error,
+    required this.danger,
+    required this.onDanger,
     required this.warning,
   });
 
@@ -78,7 +80,18 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color border;
 
   final Color success;
+
+  /// Text and hairlines that report a problem: a rejected field, a message
+  /// that something failed. It has to read *on* the page.
   final Color error;
+
+  /// The fill under a button that destroys something, with [onDanger] on
+  /// top of it. A fill carries a label, which is a different job from
+  /// being legible as text, so in the light theme it is a deeper red than
+  /// [error] — the lighter one cannot hold white.
+  final Color danger;
+  final Color onDanger;
+
   final Color warning;
 
   /// Contrast, measured against both grounds this palette uses — cards and
@@ -104,6 +117,8 @@ class AppColors extends ThemeExtension<AppColors> {
     border: Color(0xFFE3EAF0),
     success: Color(0xFF12A150),
     error: Color(0xFFE5484D),
+    danger: Color(0xFFCE2C31),
+    onDanger: Color(0xFFFFFFFF),
     warning: Color(0xFFE8A317),
   );
 
@@ -131,6 +146,10 @@ class AppColors extends ThemeExtension<AppColors> {
     border: Color(0xFF262E3B),
     success: Color(0xFF2ECC71),
     error: Color(0xFFFF6B6B),
+    // On a dark page the same red carries a label at 6.5:1, so the two
+    // jobs need only one colour here.
+    danger: Color(0xFFFF6B6B),
+    onDanger: Color(0xFF121627),
     warning: Color(0xFFF0B429),
   );
 

@@ -33,6 +33,12 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     widget.controller.now.month,
     widget.controller.now.day,
   ).add(const Duration(days: 1));
+
+  /// The hours a game can start at. Every one of them is on screen, so
+  /// there is no order to tap them in and no way to overshoot.
+  static const _firstHour = 8;
+  static const _lastHour = 23;
+
   int _hour = 19;
   int _duration = 120;
   int _capacity = 4;
@@ -221,45 +227,37 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 3,
-                  title: 'Дата и время',
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _SmallSelector(
-                          label: AppFormatters.dateShort(_date),
-                          onTap: () => setState(
-                            () => _date = _date.add(const Duration(days: 1)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SmallSelector(
-                          label: '${_hour.toString().padLeft(2, '0')}:00',
-                          onTap: () => setState(
-                            () => _hour = _hour >= 22 ? 18 : _hour + 1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SmallSelector(
-                          label:
-                              '${_duration ~/ 60}${_duration == 90 ? '.5' : ''} ч',
-                          onTap: () => setState(
-                            () => _duration = switch (_duration) {
-                              60 => 90,
-                              90 => 120,
-                              _ => 60,
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                  title: 'Дата',
+                  child: DateStrip(
+                    now: widget.controller.now,
+                    selected: _date,
+                    onSelect: (date) => setState(() => _date = date),
                   ),
                 ),
                 _Block(
                   step: 4,
+                  title: 'Начало',
+                  child: TimeGrid(
+                    tiles: [
+                      for (var hour = _firstHour; hour <= _lastHour; hour++)
+                        TimeTile(
+                          label: '${hour.toString().padLeft(2, '0')}:00',
+                          selected: hour == _hour,
+                          onTap: () => setState(() => _hour = hour),
+                        ),
+                    ],
+                  ),
+                ),
+                _Block(
+                  step: 5,
+                  title: 'Продолжительность',
+                  child: DurationPicker(
+                    value: _duration,
+                    onChanged: (value) => setState(() => _duration = value),
+                  ),
+                ),
+                _Block(
+                  step: 6,
                   title: 'Количество мест',
                   child: Row(
                     children: [
@@ -298,7 +296,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   ),
                 ),
                 _Block(
-                  step: 5,
+                  step: 7,
                   title: 'Тип игры',
                   child: Column(
                     children: [
@@ -346,7 +344,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   ),
                 ),
                 _Block(
-                  step: 6,
+                  step: 8,
                   title: 'Фильтр участников',
                   child: Row(
                     children: [
@@ -585,29 +583,6 @@ class _Block extends StatelessWidget {
           const SizedBox(height: 12),
           child,
         ],
-      ),
-    );
-  }
-}
-
-class _SmallSelector extends StatelessWidget {
-  const _SmallSelector({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: withSelectionFeedback(onTap),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-      child: Center(
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: context.text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
       ),
     );
   }
