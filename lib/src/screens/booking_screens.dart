@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _BookingScreenState extends State<BookingScreen> {
     widget.controller.now.month,
     widget.controller.now.day,
   );
+  late Venue _venue = widget.venue;
   int _duration = 60;
   int _hour = 20;
   int _players = 4;
@@ -45,7 +47,7 @@ class _BookingScreenState extends State<BookingScreen> {
   bool _slotReady = false;
 
   BookingDraft get _draft => BookingDraft(
-    venue: widget.venue,
+    venue: _venue,
     date: _date,
     durationMinutes: _duration,
     startHour: _hour,
@@ -63,19 +65,38 @@ class _BookingScreenState extends State<BookingScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: _BookingHeader(
-                    venue: widget.venue,
                     onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: VenueHero(venue: widget.venue, height: 138),
+                    child: VenueHero(venue: _venue, height: 138),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 1,
+                    title: 'Площадка',
+                    // The club arrives with the screen, but it is still a
+                    // choice: comparing two clubs' free hours used to mean
+                    // going back out and starting over.
+                    child: VenueRow(
+                      key: const ValueKey('booking-venue-field'),
+                      venue: _venue,
+                      sport: _sportOf(_venue),
+                      selected: false,
+                      onTap: _pickVenue,
+                      trailing: Icon(
+                        Icons.expand_more_rounded,
+                        color: context.colors.dim,
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _StepBlock(
+                    step: 2,
                     title: 'Дата',
                     child: DateStrip(
                       now: widget.controller.now,
@@ -86,7 +107,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
-                    step: 2,
+                    step: 3,
                     title: 'Продолжительность',
                     child: DurationPicker(
                       value: _duration,
@@ -96,11 +117,11 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
-                    step: 3,
+                    step: 4,
                     title: 'Время',
                     child: VenueSlotPicker(
                       controller: widget.controller,
-                      venue: widget.venue,
+                      venue: _venue,
                       date: _date,
                       durationMinutes: _duration,
                       selectedHour: _hour,
@@ -115,14 +136,14 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
-                    step: 4,
+                    step: 5,
                     title: 'Игроки',
                     child: Column(
                       children: [
                         _CounterRow(
                           value: _players,
-                          min: widget.venue.capacityMin,
-                          max: widget.venue.capacityMax,
+                          min: _venue.capacityMin,
+                          max: _venue.capacityMax,
                           onChanged: (value) =>
                               setState(() => _players = value),
                         ),
@@ -174,6 +195,35 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   bool get _canContinue => _slotReady;
+
+  /// The club's own first sport, which is what [VenueHero] above draws. Two
+  /// pictures of the same club disagreeing reads as a mistake.
+  Sport? _sportOf(Venue venue) {
+    for (final sport in widget.controller.sports) {
+      if (sport.id == venue.sportIds.first) {
+        return sport;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _pickVenue() async {
+    final picked = await pickVenue(
+      context,
+      venues: widget.controller.venues,
+      selected: _venue,
+      sportOf: _sportOf,
+    );
+    if (picked == null || !mounted || picked.id == _venue.id) {
+      return;
+    }
+    setState(() {
+      _venue = picked;
+      // Clubs take different numbers of players; carrying a count the new
+      // one will not accept would be rejected at payment.
+      _players = _players.clamp(picked.capacityMin, picked.capacityMax);
+    });
+  }
 
   void _goToConfirm(PaymentMode mode) {
     Navigator.of(context).push(
@@ -530,9 +580,8 @@ class _CancellationTermsCard extends StatelessWidget {
 }
 
 class _BookingHeader extends StatelessWidget {
-  const _BookingHeader({required this.venue, required this.onBack});
+  const _BookingHeader({required this.onBack});
 
-  final Venue venue;
   final VoidCallback onBack;
 
   @override
@@ -553,18 +602,12 @@ class _BookingHeader extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
+                // The club is named by the step below, which is also where
+                // it can be changed.
                 Text(
                   'Бронирование',
                   style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  venue.name.capitalized,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
                   ),
                 ),
               ],

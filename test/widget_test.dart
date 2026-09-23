@@ -271,6 +271,36 @@ void main() {
     expect(loggedOut, isTrue);
   });
 
+  testWidgets('booking can change club without starting over', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+
+    await tester.pumpWidget(
+      _Harness(
+        child: BookingScreen(
+          controller: controller,
+          venue: MockData.venues.first,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('₽400'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('booking-venue-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-picker-search')),
+      'север',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('venue-option-north')));
+    await tester.pumpAndSettle();
+
+    // A different club costs differently, and the summary follows it.
+    expect(find.textContaining('₽400'), findsNothing);
+    expect(find.textContaining('₽550'), findsWidgets);
+  });
+
   testWidgets('the club picker searches, and picking one changes the step', (
     tester,
   ) async {

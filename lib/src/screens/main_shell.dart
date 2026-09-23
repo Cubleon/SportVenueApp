@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_picker.dart';
 import 'booking_screens.dart';
 import 'create_game_screen.dart';
 import 'games_screens.dart';
@@ -55,6 +56,41 @@ class _MainShellState extends State<MainShell> {
         selectedIndex: _tab,
         onTab: (index) => setState(() => _tab = index),
         onCreate: _showCreateSheet,
+      ),
+    );
+  }
+
+  /// Booking from the tab bar names no club, so it asks for one instead of
+  /// picking whichever happened to be first in the catalogue.
+  Future<void> _startBooking() async {
+    final venues = widget.controller.venues;
+    if (venues.isEmpty) {
+      showAppSnack(context, 'Доступных площадок пока нет');
+      return;
+    }
+    final venue = await pickVenue(
+      context,
+      venues: venues,
+      selected: null,
+      sportOf: (venue) {
+        for (final sport in widget.controller.sports) {
+          if (sport.id == venue.sportIds.first) {
+            return sport;
+          }
+        }
+        return null;
+      },
+    );
+    if (venue == null || !mounted) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            BookingScreen(controller: widget.controller, venue: venue),
       ),
     );
   }
@@ -110,25 +146,10 @@ class _MainShellState extends State<MainShell> {
                 _SheetAction(
                   icon: Icons.calendar_month_rounded,
                   title: 'Забронировать площадку',
-                  subtitle: 'Быстрый выбор слота в первом клубе',
+                  subtitle: 'Выберите клуб и время',
                   onTap: () {
-                    final venues = widget.controller.preferredVenues.isNotEmpty
-                        ? widget.controller.preferredVenues
-                        : widget.controller.venues;
                     Navigator.pop(sheetContext);
-                    if (venues.isEmpty) {
-                      showAppSnack(context, 'Доступных площадок пока нет');
-                      return;
-                    }
-                    final venue = venues[0];
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => BookingScreen(
-                          controller: widget.controller,
-                          venue: venue,
-                        ),
-                      ),
-                    );
+                    _startBooking();
                   },
                 ),
               ],
