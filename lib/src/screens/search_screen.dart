@@ -6,6 +6,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sport_surface.dart';
 import 'booking_screens.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -26,10 +27,18 @@ class _SearchScreenState extends State<SearchScreen> {
   Venue? _selectedVenue;
   maplibre.MapController? _mapController;
   final _searchController = TextEditingController();
+  final _sheetController = DraggableScrollableController();
+
+  /// Three rests: out of the way, showing the first couple of results, and
+  /// reading the list. Tapping a pin raises it to the middle one.
+  static const _sheetPeek = 0.18;
+  static const _sheetOpen = 0.42;
+  static const _sheetFull = 0.92;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -159,40 +168,24 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                       ),
-                      Positioned(
-                        left: 14,
-                        top: 14,
-                        child: _MapPill(
-                          text:
-                              '${venues.length} '
-                              '${plural(venues.length, 'клуб', 'клуба', 'клубов')} рядом',
-                        ),
+                      // The results, as a list, over the map they are
+                      // plotted on. A map alone answers "where is it" and
+                      // nothing else: a name typed into the field could
+                      // match a single club three screens away, and the
+                      // only sign of it was a pin nobody was looking at.
+                      _ResultsSheet(
+                        controller: widget.controller,
+                        sheetController: _sheetController,
+                        venues: venues,
+                        sportOf: _sportForVenue,
+                        selected: _selectedVenue,
+                        query: query,
+                        onPick: _openVenue,
+                        onReset: () => setState(() {
+                          _sportId = 'all';
+                          _searchController.clear();
+                        }),
                       ),
-                      // An empty map is indistinguishable from a broken one,
-                      // so say which filter emptied it.
-                      if (venues.isEmpty)
-                        Positioned(
-                          left: 20,
-                          right: 20,
-                          top: 64,
-                          child: EmptyState(
-                            key: const ValueKey('search-empty'),
-                            icon: query.isEmpty
-                                ? Icons.location_off_rounded
-                                : Icons.search_off_rounded,
-                            title: query.isEmpty
-                                ? 'Площадок этого вида нет'
-                                : 'Ничего не нашлось',
-                            description: query.isEmpty
-                                ? 'В Москве пока нет клубов с этим покрытием.'
-                                : 'По запросу «$query» нет ни клуба, ни адреса.',
-                            actionLabel: 'Сбросить поиск',
-                            onAction: () => setState(() {
-                              _sportId = 'all';
-                              _searchController.clear();
-                            }),
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -200,23 +193,31 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ],
         ),
-        if (_selectedVenue != null)
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 108,
-            child: _VenueBottomSheet(
-              venue: _selectedVenue!,
-              controller: widget.controller,
-              onClose: () => setState(() => _selectedVenue = null),
-            ),
-          ),
       ],
+    );
+  }
+
+  /// Opens a club from the list. The map keeps up, so coming back leaves
+  /// the pin where the eye last had it.
+  void _openVenue(Venue venue) {
+    _selectVenue(venue);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            BookingScreen(controller: widget.controller, venue: venue),
+      ),
     );
   }
 
   void _selectVenue(Venue venue) {
     setState(() => _selectedVenue = venue);
+    if (_sheetController.isAttached && _sheetController.size < _sheetOpen) {
+      _sheetController.animateTo(
+        _sheetOpen,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
     _mapController?.animateCamera(
       center: venue.mapPoint,
       zoom: 12.8,
@@ -226,7 +227,15 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  /// The sport a club is shown as. Under a filter it is the filtered one —
+  /// a club listed under "хоккей" drawing a football pitch reads as the
+  /// wrong club.
   Sport? _sportForVenue(Venue venue) {
+    for (final sport in widget.controller.sports) {
+      if (sport.id == _sportId && venue.sportIds.contains(sport.id)) {
+        return sport;
+      }
+    }
     for (final sport in widget.controller.sports) {
       if (venue.sportIds.contains(sport.id)) {
         return sport;
@@ -417,102 +426,211 @@ extension _VenueMapPoint on Venue {
   }
 }
 
-class _MapPill extends StatelessWidget {
-  const _MapPill({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.colors.bg.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Text(
-        text,
-        style: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-class _VenueBottomSheet extends StatelessWidget {
-  const _VenueBottomSheet({
-    required this.venue,
+/// The results, as a sheet that can be pulled up over the map.
+///
+/// It rests low enough to leave the map readable, and every club is one
+/// scroll away rather than one lucky tap on a pin.
+class _ResultsSheet extends StatelessWidget {
+  const _ResultsSheet({
     required this.controller,
-    required this.onClose,
+    required this.sheetController,
+    required this.venues,
+    required this.sportOf,
+    required this.selected,
+    required this.query,
+    required this.onPick,
+    required this.onReset,
   });
 
-  final Venue venue;
   final AppController controller;
-  final VoidCallback onClose;
+  final DraggableScrollableController sheetController;
+  final List<Venue> venues;
+  final Sport? Function(Venue) sportOf;
+  final Venue? selected;
+  final String query;
+  final ValueChanged<Venue> onPick;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      borderColor: context.colors.accent.withValues(alpha: 0.2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return DraggableScrollableSheet(
+      controller: sheetController,
+      initialChildSize: _SearchScreenState._sheetOpen,
+      minChildSize: _SearchScreenState._sheetPeek,
+      maxChildSize: _SearchScreenState._sheetFull,
+      snap: true,
+      snapSizes: const [
+        _SearchScreenState._sheetPeek,
+        _SearchScreenState._sheetOpen,
+        _SearchScreenState._sheetFull,
+      ],
+      builder: (context, scrollController) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+            boxShadow: [
+              BoxShadow(
+                color: context.colors.ink.withValues(alpha: 0.16),
+                blurRadius: 22,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
             children: [
-              Expanded(
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.colors.ink.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
-                  venue.name.capitalized,
-                  style: context.text.titleMedium?.copyWith(
+                  venues.isEmpty
+                      ? 'Ничего не найдено'
+                      : '${venues.length} '
+                            '${plural(venues.length, 'клуб', 'клуба', 'клубов')} '
+                            'рядом',
+                  style: context.text.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: 'Закрыть',
-                onPressed: onClose,
-                icon: const Icon(Icons.close_rounded),
-              ),
+              const SizedBox(height: 10),
+              if (venues.isEmpty)
+                // An empty map is indistinguishable from a broken one, so
+                // say which filter emptied it.
+                EmptyState(
+                  key: const ValueKey('search-empty'),
+                  icon: query.isEmpty
+                      ? Icons.location_off_rounded
+                      : Icons.search_off_rounded,
+                  title: query.isEmpty
+                      ? 'Площадок этого вида нет'
+                      : 'Ничего не нашлось',
+                  description: query.isEmpty
+                      ? 'В Москве пока нет клубов с этим покрытием.'
+                      : 'По запросу «$query» нет ни клуба, ни адреса.',
+                  actionLabel: 'Сбросить поиск',
+                  onAction: onReset,
+                )
+              else
+                for (final venue in venues)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _ResultRow(
+                      venue: venue,
+                      sport: sportOf(venue),
+                      isSelected: selected?.id == venue.id,
+                      onTap: () => onPick(venue),
+                    ),
+                  ),
             ],
           ),
-          Text(
-            venue.address,
-            style: context.text.bodySmall?.copyWith(
-              color: context.colors.muted,
+        );
+      },
+    );
+  }
+}
+
+/// One club in the results: everything the floating card used to say, in a
+/// row that can be compared against the one below it.
+class _ResultRow extends StatelessWidget {
+  const _ResultRow({
+    required this.venue,
+    required this.sport,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final Venue venue;
+  final Sport? sport;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      selected: isSelected,
+      button: true,
+      child: AppCard(
+        key: ValueKey('search-result-${venue.id}'),
+        onTap: onTap,
+        padding: const EdgeInsets.all(12),
+        color: context.colors.bgAlt,
+        borderColor: isSelected ? context.colors.accent : context.colors.border,
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: context.scaled(56),
+                height: context.scaled(56),
+                child: SportSurface(sportId: sport?.id ?? 'football'),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(Icons.star_rounded, size: 17, color: context.colors.ink),
-              const SizedBox(width: 4),
-              Text(
-                '${venue.rating}',
-                style: context.text.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${AppFormatters.money(venue.pricePerHour)}/час',
-                style: context.text.labelLarge?.copyWith(
-                  color: context.colors.accent,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          PrimaryButton(
-            label: 'Подробнее и бронь',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    BookingScreen(controller: controller, venue: venue),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    venue.name.capitalized,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 15,
+                        color: context.colors.ink,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        venue.rating.toStringAsFixed(1),
+                        style: context.text.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${AppFormatters.money(venue.pricePerHour)}/час',
+                        style: context.text.labelMedium?.copyWith(
+                          color: context.colors.accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+          ],
+        ),
       ),
     );
   }
