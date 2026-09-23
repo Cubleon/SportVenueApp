@@ -17,7 +17,13 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mark = CustomPaint(size: Size.square(size), painter: _LogoPainter());
+    final mark = CustomPaint(
+      size: Size.square(size),
+      painter: _LogoPainter(
+        fill: context.colors.surface,
+        line: context.colors.accent,
+      ),
+    );
 
     if (!showWordmark) {
       return mark;
@@ -34,11 +40,11 @@ class AppLogo extends StatelessWidget {
               fontWeight: FontWeight.w600,
               letterSpacing: -0.3,
             ),
-            children: const [
-              TextSpan(text: 'sport'),
+            children: [
+              const TextSpan(text: 'sport'),
               TextSpan(
                 text: 'venue',
-                style: TextStyle(color: AppColors.accent),
+                style: TextStyle(color: context.colors.accent),
               ),
             ],
           ),
@@ -49,6 +55,12 @@ class AppLogo extends StatelessWidget {
 }
 
 class _LogoPainter extends CustomPainter {
+  const _LogoPainter({required this.fill, required this.line});
+
+  /// A painter sees no context, so the theme's colours are handed to it.
+  final Color fill;
+  final Color line;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
@@ -74,20 +86,20 @@ class _LogoPainter extends CustomPainter {
         true,
       );
 
-    canvas.drawPath(path, Paint()..color = AppColors.surface);
+    canvas.drawPath(path, Paint()..color = fill);
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
-        ..color = AppColors.accent.withValues(alpha: 0.35),
+        ..color = line.withValues(alpha: 0.35),
     );
     canvas.drawPath(
       inner,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
-        ..color = AppColors.accent.withValues(alpha: 0.16),
+        ..color = line.withValues(alpha: 0.16),
     );
     canvas.drawLine(
       Offset(size.width * 0.22, center.dy),
@@ -95,7 +107,7 @@ class _LogoPainter extends CustomPainter {
       Paint()
         ..strokeWidth = 1.8
         ..strokeCap = StrokeCap.round
-        ..color = AppColors.accent,
+        ..color = line,
     );
     canvas.drawCircle(
       center,
@@ -103,17 +115,14 @@ class _LogoPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.8
-        ..color = AppColors.accent,
+        ..color = line,
     );
-    canvas.drawCircle(
-      center,
-      size.width * 0.04,
-      Paint()..color = AppColors.accent,
-    );
+    canvas.drawCircle(center, size.width * 0.04, Paint()..color = line);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LogoPainter oldDelegate) =>
+      oldDelegate.fill != fill || oldDelegate.line != line;
 }
 
 /// How much weight a button carries.
@@ -150,17 +159,21 @@ class PrimaryButton extends StatelessWidget {
     final enabled = onPressed != null && !isLoading;
     final neutral = tone == ButtonTone.neutral;
     final background = !enabled
-        ? AppColors.surfaceRaised
+        ? context.colors.surfaceRaised
         : switch (tone) {
-            ButtonTone.accent => AppColors.accent,
-            ButtonTone.neutral => AppColors.surface,
-            ButtonTone.commit => AppColors.commit,
+            ButtonTone.accent => context.colors.accent,
+            ButtonTone.neutral => context.colors.surface,
+            ButtonTone.commit => context.colors.commit,
           };
     final foreground = !enabled
-        ? AppColors.dim
-        : neutral
-        ? AppColors.ink
-        : AppColors.onAccent;
+        ? context.colors.dim
+        : switch (tone) {
+            ButtonTone.accent => context.colors.onAccent,
+            ButtonTone.neutral => context.colors.ink,
+            // The commit fill is near-black on a light page and near-white
+            // on a dark one, so its label cannot follow the accent's.
+            ButtonTone.commit => context.colors.onCommit,
+          };
 
     return SizedBox(
       width: double.infinity,
@@ -179,13 +192,13 @@ class PrimaryButton extends StatelessWidget {
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   key: ValueKey('loader'),
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
-                    color: AppColors.onAccent,
+                    color: context.colors.onAccent,
                   ),
                 )
               : Row(
@@ -244,7 +257,7 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = Container(
       decoration: BoxDecoration(
-        color: color ?? AppColors.surface,
+        color: color ?? context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
         border: borderColor == null ? null : Border.all(color: borderColor!),
       ),
@@ -314,7 +327,7 @@ class SportBadge extends StatelessWidget {
       height: compact ? 26 : 30,
       padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.colors.surfaceRaised,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
@@ -330,7 +343,7 @@ class SportBadge extends StatelessWidget {
           Text(
             sport.name.toUpperCase(),
             style: context.text.labelSmall?.copyWith(
-              color: AppColors.muted,
+              color: context.colors.muted,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
@@ -379,7 +392,7 @@ class SelectableChip extends StatelessWidget {
             height: context.scaled(44),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: selected ? AppColors.accent : AppColors.surface,
+              color: selected ? context.colors.accent : context.colors.surface,
               borderRadius: BorderRadius.circular(99),
             ),
             child: FittedBox(
@@ -399,7 +412,9 @@ class SelectableChip extends StatelessWidget {
                     label,
                     maxLines: 1,
                     style: context.text.labelLarge?.copyWith(
-                      color: selected ? AppColors.onAccent : AppColors.muted,
+                      color: selected
+                          ? context.colors.onAccent
+                          : context.colors.muted,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -430,7 +445,7 @@ class VenueHero extends StatelessWidget {
       height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
       child: SportSurface(sportId: venue.sportIds.first),
@@ -491,7 +506,7 @@ class SummaryRow extends StatelessWidget {
             child: Text(
               label,
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.muted,
+                color: context.colors.muted,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -502,7 +517,7 @@ class SummaryRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: context.text.bodyMedium?.copyWith(
-                color: accent ? AppColors.accent : AppColors.ink,
+                color: accent ? context.colors.accent : context.colors.ink,
                 fontWeight: highlight || accent
                     ? FontWeight.w700
                     : FontWeight.w700,
@@ -523,12 +538,12 @@ void showAppSnack(BuildContext context, String message) {
       content: Text(
         message,
         style: context.text.bodyMedium?.copyWith(
-          color: AppColors.onAccent,
+          color: context.colors.onCommit,
           fontWeight: FontWeight.w500,
         ),
       ),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: AppColors.commit,
+      backgroundColor: context.colors.commit,
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       shape: const StadiumBorder(),
@@ -579,7 +594,7 @@ class ScreenTitleBar extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],
@@ -620,13 +635,16 @@ class PinnedActionBar extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.bg.withValues(alpha: 0), AppColors.bg],
+              colors: [
+                context.colors.bg.withValues(alpha: 0),
+                context.colors.bg,
+              ],
             ),
           ),
         ),
         Container(
           width: double.infinity,
-          color: AppColors.bg,
+          color: context.colors.bg,
           padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
           child: child,
         ),
@@ -697,7 +715,7 @@ class BookingRow extends StatelessWidget {
             width: context.scaled(56),
             height: context.scaled(62),
             decoration: BoxDecoration(
-              color: AppColors.accentSoft,
+              color: context.colors.accentSoft,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -706,7 +724,7 @@ class BookingRow extends StatelessWidget {
                 Text(
                   AppFormatters.weekdayShort(booking.draft.date).toUpperCase(),
                   style: context.text.labelSmall?.copyWith(
-                    color: AppColors.accent,
+                    color: context.colors.accent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -738,14 +756,14 @@ class BookingRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],
             ),
           ),
           if (onTap != null)
-            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
         ],
       ),
     );
@@ -765,8 +783,8 @@ class BackCircleButton extends StatelessWidget {
       onPressed: onTap,
       icon: const Icon(Icons.chevron_left_rounded),
       style: IconButton.styleFrom(
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.ink,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.ink,
       ),
     );
   }
@@ -802,11 +820,11 @@ class EmptyState extends StatelessWidget {
           Container(
             width: 52,
             height: 52,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.accentSoft,
+              color: context.colors.accentSoft,
             ),
-            child: Icon(icon, color: AppColors.accent, size: 26),
+            child: Icon(icon, color: context.colors.accent, size: 26),
           ),
           const SizedBox(height: 14),
           Text(
@@ -820,7 +838,9 @@ class EmptyState extends StatelessWidget {
           Text(
             description,
             textAlign: TextAlign.center,
-            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+            style: context.text.bodySmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 16),

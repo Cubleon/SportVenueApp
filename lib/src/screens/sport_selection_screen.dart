@@ -50,7 +50,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   Text(
                     'Шаг 1 из 2',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.1,
                     ),
@@ -58,11 +58,11 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   const SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(99),
-                    child: const LinearProgressIndicator(
+                    child: LinearProgressIndicator(
                       value: 0.5,
                       minHeight: 3,
-                      backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                      backgroundColor: context.colors.border,
+                      valueColor: AlwaysStoppedAnimation(context.colors.accent),
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -77,7 +77,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   Text(
                     'Можно выбрать несколько',
                     style: context.text.bodyMedium?.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],
@@ -92,7 +92,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                           'Виды спорта пока недоступны',
                           textAlign: TextAlign.center,
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                       ),
@@ -124,9 +124,9 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.bg.withValues(alpha: 0),
-                    AppColors.bg,
-                    AppColors.bg,
+                    context.colors.bg.withValues(alpha: 0),
+                    context.colors.bg,
+                    context.colors.bg,
                   ],
                 ),
               ),
@@ -213,13 +213,15 @@ class _SportCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: selected ? AppColors.accent : AppColors.border,
+                  color: selected
+                      ? context.colors.accent
+                      : context.colors.border,
                   width: selected ? 2.5 : 1.5,
                 ),
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: AppColors.accent.withValues(alpha: 0.22),
+                          color: context.colors.accent.withValues(alpha: 0.22),
                           blurRadius: 18,
                           spreadRadius: 1,
                         ),
@@ -274,13 +276,13 @@ class _SportCard extends StatelessWidget {
                       child: Container(
                         width: 26,
                         height: 26,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accent,
+                        decoration: BoxDecoration(
+                          color: context.colors.accent,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.check_rounded,
-                          color: AppColors.ink,
+                          color: context.colors.ink,
                           size: 18,
                         ),
                       ),

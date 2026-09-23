@@ -108,16 +108,16 @@ class _TopBar extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_rounded,
                       size: 16,
-                      color: AppColors.accent,
+                      color: context.colors.accent,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'Москва',
                       style: context.text.bodySmall?.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -151,13 +151,13 @@ class _SearchBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, color: AppColors.dim),
+            Icon(Icons.search_rounded, color: context.colors.dim),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Найти площадку или игру',
                 style: context.text.bodyMedium?.copyWith(
-                  color: AppColors.muted,
+                  color: context.colors.muted,
                 ),
               ),
             ),
@@ -210,7 +210,9 @@ class _Bookings extends StatelessWidget {
         child: AppCard(
           child: Text(
             'У вас пока нет предстоящих броней',
-            style: context.text.bodyMedium?.copyWith(color: AppColors.muted),
+            style: context.text.bodyMedium?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
         ),
       );
@@ -287,16 +289,16 @@ class _Venues extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.star_rounded,
                               size: 16,
-                              color: AppColors.ink,
+                              color: context.colors.ink,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -320,7 +322,7 @@ class _Venues extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                       ],
@@ -355,7 +357,7 @@ class _RoundIcon extends StatelessWidget {
       button: true,
       label: label,
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -363,7 +365,7 @@ class _RoundIcon extends StatelessWidget {
           child: SizedBox(
             width: 44,
             height: 44,
-            child: Icon(icon, color: AppColors.ink, size: 22),
+            child: Icon(icon, color: context.colors.ink, size: 22),
           ),
         ),
       ),

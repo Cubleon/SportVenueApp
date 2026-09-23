@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// The marks of the sign-in providers.
 ///
 /// Drawn on canvas rather than pulled from an icon pack: these three are the
@@ -288,6 +290,8 @@ class AppleMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Icon(Icons.apple, size: size * 1.2, color: const Color(0xFF111111));
+    // Apple asks for the black mark on light backgrounds and the white one
+    // on dark, which is what the theme's ink already is.
+    return Icon(Icons.apple, size: size * 1.2, color: context.colors.ink);
   }
 }

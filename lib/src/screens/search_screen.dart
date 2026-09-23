@@ -154,7 +154,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: IgnorePointer(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: context.colors.border),
                             ),
                           ),
                         ),
@@ -272,7 +272,7 @@ class _SearchField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, color: AppColors.dim),
+            Icon(Icons.search_rounded, color: context.colors.dim),
             const SizedBox(width: 12),
             Expanded(
               child: TextField(
@@ -290,7 +290,7 @@ class _SearchField extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   hintText: 'Клуб, площадка или район',
                   hintStyle: context.text.bodyMedium?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ),
@@ -306,12 +306,12 @@ class _SearchField extends StatelessWidget {
                     onChanged('');
                   },
                   customBorder: const CircleBorder(),
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(4),
                     child: Icon(
                       Icons.close_rounded,
                       size: 20,
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                     ),
                   ),
                 ),
@@ -339,8 +339,8 @@ class _MapMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected
-        ? sport?.color ?? AppColors.accent
-        : AppColors.accent;
+        ? sport?.color ?? context.colors.accent
+        : context.colors.accent;
     return Semantics(
       button: true,
       label: venue.name.capitalized,
@@ -363,7 +363,7 @@ class _MapMarker extends StatelessWidget {
                     color: color,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.ink.withValues(alpha: 0.32),
+                      color: context.colors.ink.withValues(alpha: 0.32),
                       width: 2,
                     ),
                     boxShadow: [
@@ -390,11 +390,11 @@ class _MapMarker extends StatelessWidget {
                       color: color,
                       border: Border(
                         right: BorderSide(
-                          color: AppColors.ink.withValues(alpha: 0.22),
+                          color: context.colors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                         bottom: BorderSide(
-                          color: AppColors.ink.withValues(alpha: 0.22),
+                          color: context.colors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                       ),
@@ -427,9 +427,9 @@ class _MapPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.bg.withValues(alpha: 0.72),
+        color: context.colors.bg.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Text(
         text,
@@ -453,7 +453,7 @@ class _VenueBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      borderColor: AppColors.accent.withValues(alpha: 0.2),
+      borderColor: context.colors.accent.withValues(alpha: 0.2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,12 +477,14 @@ class _VenueBottomSheet extends StatelessWidget {
           ),
           Text(
             venue.address,
-            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+            style: context.text.bodySmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.star_rounded, size: 17, color: AppColors.ink),
+              Icon(Icons.star_rounded, size: 17, color: context.colors.ink),
               const SizedBox(width: 4),
               Text(
                 '${venue.rating}',
@@ -494,7 +496,7 @@ class _VenueBottomSheet extends StatelessWidget {
               Text(
                 '${AppFormatters.money(venue.pricePerHour)}/час',
                 style: context.text.labelLarge?.copyWith(
-                  color: AppColors.accent,
+                  color: context.colors.accent,
                   fontWeight: FontWeight.w700,
                 ),
               ),

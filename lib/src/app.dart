@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'data/app_controller.dart';
 import 'screens/auth_screens.dart';
@@ -37,17 +38,25 @@ class _SportVenueAppState extends State<SportVenueApp> {
       title: 'SportVenue',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      // The reader's own setting decides. There is nowhere to keep a choice
+      // of our own — the app stores nothing on the device yet — and a phone
+      // set to dark at night is asking every app, not just this one.
+      themeMode: ThemeMode.system,
       // The product is shaped for a phone. On a tablet or a desktop window
       // the layout used to stretch — a phone number field a metre wide — so
       // every route is held to a phone's width and centred, and the page
       // colour fills what is left. Wrapping the builder rather than each
       // screen also catches pushed routes, sheets and snack bars.
-      builder: (context, child) => ColoredBox(
-        color: AppColors.bg,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: child,
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.overlayStyle(context.colors),
+        child: ColoredBox(
+          color: context.colors.bg,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: child,
+            ),
           ),
         ),
       ),

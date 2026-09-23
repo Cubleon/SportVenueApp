@@ -62,7 +62,7 @@ class _MainShellState extends State<MainShell> {
   void _showCreateSheet() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -79,7 +79,7 @@ class _MainShellState extends State<MainShell> {
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.ink.withValues(alpha: 0.18),
+                      color: context.colors.ink.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
@@ -179,7 +179,7 @@ class _BottomNav extends StatelessWidget {
           borderRadius: BorderRadius.circular(height / 2),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withValues(alpha: 0.12),
+              color: context.colors.ink.withValues(alpha: 0.12),
               blurRadius: 26,
               offset: const Offset(0, 10),
             ),
@@ -193,10 +193,15 @@ class _BottomNav extends StatelessWidget {
               height: height,
               decoration: BoxDecoration(
                 // Translucent, so the blur has something to do.
-                color: AppColors.surface.withValues(alpha: 0.72),
+                color: context.colors.surface.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(height / 2),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.55),
+                  // The rim that makes the capsule read as glass. White at
+                  // this strength is a highlight on a light page and a glare
+                  // on a dark one, so the dark theme takes a faint one.
+                  color: context.colors.isDark
+                      ? context.colors.ink.withValues(alpha: 0.10)
+                      : Colors.white.withValues(alpha: 0.55),
                   width: 1,
                 ),
               ),
@@ -216,7 +221,7 @@ class _BottomNav extends StatelessWidget {
                         height: height - 14,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
+                            color: context.colors.accentSoft,
                             borderRadius: BorderRadius.circular(
                               (height - 14) / 2,
                             ),
@@ -250,13 +255,13 @@ class _BottomNav extends StatelessWidget {
                                   child: Container(
                                     width: 48,
                                     height: 48,
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: AppColors.accent,
+                                      color: context.colors.accent,
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.add_rounded,
-                                      color: AppColors.onAccent,
+                                      color: context.colors.onAccent,
                                       size: 26,
                                     ),
                                   ),
@@ -323,7 +328,11 @@ class _NavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
             builder: (context, t, _) {
-              final color = Color.lerp(AppColors.muted, AppColors.accent, t)!;
+              final color = Color.lerp(
+                context.colors.muted,
+                context.colors.accent,
+                t,
+              )!;
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -380,10 +389,10 @@ class _SheetAction extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.15),
+              color: context.colors.accent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: AppColors.accent),
+            child: Icon(icon, color: context.colors.accent),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -400,13 +409,13 @@ class _SheetAction extends StatelessWidget {
                 Text(
                   subtitle,
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+          Icon(Icons.chevron_right_rounded, color: context.colors.dim),
         ],
       ),
     );

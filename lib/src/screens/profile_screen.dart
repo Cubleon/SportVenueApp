@@ -38,16 +38,16 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     width: context.scaled(62),
                     height: context.scaled(62),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.accent,
+                      color: context.colors.accent,
                     ),
                     child: Center(
                       child: Text(
                         _profileInitial(controller),
                         style: context.text.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.onAccent,
+                          color: context.colors.onAccent,
                         ),
                       ),
                     ),
@@ -71,7 +71,7 @@ class ProfileScreen extends StatelessWidget {
                               ? 'Номер не указан'
                               : controller.phone,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                       ],
@@ -95,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                   child: Text(
                     'Спортивные предпочтения',
                     style: context.text.labelLarge?.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
                     ),
@@ -257,7 +257,7 @@ class _Stat extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+          style: context.text.bodySmall?.copyWith(color: context.colors.muted),
         ),
       ],
     );
@@ -289,10 +289,10 @@ class _MenuItem extends StatelessWidget {
               width: 42,
               height: 46,
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.14),
+                color: context.colors.accent.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(icon, color: AppColors.accent),
+              child: Icon(icon, color: context.colors.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -309,13 +309,13 @@ class _MenuItem extends StatelessWidget {
                   Text(
                     subtitle,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
           ],
         ),
       ),

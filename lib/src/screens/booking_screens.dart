@@ -295,7 +295,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       children: [
                         Checkbox(
                           value: _accepted,
-                          activeColor: AppColors.accent,
+                          activeColor: context.colors.accent,
                           onChanged: (value) =>
                               setState(() => _accepted = value ?? false),
                         ),
@@ -305,7 +305,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                             child: Text(
                               'Нажимая «Перейти к оплате», вы соглашаетесь с условиями сервиса и политикой конфиденциальности',
                               style: context.text.bodySmall?.copyWith(
-                                color: AppColors.muted,
+                                color: context.colors.muted,
                                 height: 1.42,
                               ),
                             ),
@@ -430,7 +430,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     child: Text(
                       'Отменить бронь может только организатор',
                       style: context.text.bodyMedium?.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
@@ -494,7 +494,7 @@ class _BookingDetailsCard extends StatelessWidget {
           Text(
             'Детали бронирования',
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.muted,
+              color: context.colors.muted,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
@@ -506,7 +506,7 @@ class _BookingDetailsCard extends StatelessWidget {
             Text(
               'Статус · $status',
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.accent,
+                color: context.colors.accent,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -529,7 +529,7 @@ class _CancellationTermsCard extends StatelessWidget {
           Text(
             'Условия отмены',
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.muted,
+              color: context.colors.muted,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
@@ -566,8 +566,8 @@ class _BookingHeader extends StatelessWidget {
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.surface,
-              foregroundColor: AppColors.ink,
+              backgroundColor: context.colors.surface,
+              foregroundColor: context.colors.ink,
             ),
           ),
           Expanded(
@@ -584,7 +584,7 @@ class _BookingHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],
@@ -612,8 +612,8 @@ class _BookingNav extends StatelessWidget {
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.ink,
+            backgroundColor: context.colors.surface,
+            foregroundColor: context.colors.ink,
           ),
         ),
         Expanded(
@@ -654,15 +654,15 @@ class _StepBlock extends StatelessWidget {
               Container(
                 width: context.scaled(22),
                 height: context.scaled(22),
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
+                decoration: BoxDecoration(
+                  color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.ink,
+                      color: context.colors.ink,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -715,10 +715,14 @@ class _DatePickerRow extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 width: context.scaled(54),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accent : AppColors.surface,
+                  color: isSelected
+                      ? context.colors.accent
+                      : context.colors.surface,
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: isSelected ? AppColors.accent : AppColors.border,
+                    color: isSelected
+                        ? context.colors.accent
+                        : context.colors.border,
                   ),
                 ),
                 child: Column(
@@ -728,8 +732,8 @@ class _DatePickerRow extends StatelessWidget {
                       AppFormatters.weekdayShort(date).toUpperCase(),
                       style: context.text.labelSmall?.copyWith(
                         color: isSelected
-                            ? AppColors.onAccent.withValues(alpha: 0.85)
-                            : AppColors.dim,
+                            ? context.colors.onAccent.withValues(alpha: 0.85)
+                            : context.colors.dim,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -737,7 +741,9 @@ class _DatePickerRow extends StatelessWidget {
                     Text(
                       '${date.day}',
                       style: context.text.titleMedium?.copyWith(
-                        color: isSelected ? AppColors.onAccent : AppColors.ink,
+                        color: isSelected
+                            ? context.colors.onAccent
+                            : context.colors.ink,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -813,7 +819,9 @@ class _TimeGrid extends StatelessWidget {
             Expanded(
               child: Text(
                 error!,
-                style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                ),
               ),
             ),
             TextButton(onPressed: onRetry, child: const Text('Повторить')),
@@ -824,7 +832,7 @@ class _TimeGrid extends StatelessWidget {
     if (slots.isEmpty) {
       return Text(
         'На эту дату свободных слотов нет',
-        style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+        style: context.text.bodySmall?.copyWith(color: context.colors.muted),
       );
     }
     return GridView.builder(
@@ -852,17 +860,17 @@ class _TimeGrid extends StatelessWidget {
               duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
                 color: selected
-                    ? AppColors.accent
+                    ? context.colors.accent
                     : slot.isAvailable
                     ? Colors.transparent
-                    : AppColors.ink.withValues(alpha: 0.03),
+                    : context.colors.ink.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: selected
-                      ? AppColors.accent
+                      ? context.colors.accent
                       : slot.isAvailable
-                      ? AppColors.ink.withValues(alpha: 0.12)
-                      : AppColors.ink.withValues(alpha: 0.05),
+                      ? context.colors.ink.withValues(alpha: 0.12)
+                      : context.colors.ink.withValues(alpha: 0.05),
                   width: 1.5,
                 ),
               ),
@@ -871,10 +879,10 @@ class _TimeGrid extends StatelessWidget {
                   slot.label,
                   style: context.text.titleSmall?.copyWith(
                     color: selected
-                        ? AppColors.onAccent
+                        ? context.colors.onAccent
                         : slot.isAvailable
-                        ? AppColors.ink
-                        : AppColors.dim,
+                        ? context.colors.ink
+                        : context.colors.dim,
                     decoration: slot.isAvailable
                         ? null
                         : TextDecoration.lineThrough,
@@ -962,10 +970,12 @@ class _CounterButton extends StatelessWidget {
       onPressed: enabled ? onTap : null,
       icon: Icon(icon),
       style: IconButton.styleFrom(
-        backgroundColor: enabled ? AppColors.accent : AppColors.surfaceRaised,
-        disabledBackgroundColor: AppColors.surfaceRaised,
-        foregroundColor: AppColors.onAccent,
-        disabledForegroundColor: AppColors.dim,
+        backgroundColor: enabled
+            ? context.colors.accent
+            : context.colors.surfaceRaised,
+        disabledBackgroundColor: context.colors.surfaceRaised,
+        foregroundColor: context.colors.onAccent,
+        disabledForegroundColor: context.colors.dim,
       ),
     );
   }
@@ -987,8 +997,8 @@ class _Bullet extends StatelessWidget {
             width: 6,
             height: 6,
             margin: const EdgeInsets.only(top: 7),
-            decoration: const BoxDecoration(
-              color: AppColors.accent,
+            decoration: BoxDecoration(
+              color: context.colors.accent,
               shape: BoxShape.circle,
             ),
           ),
@@ -997,7 +1007,7 @@ class _Bullet extends StatelessWidget {
             child: Text(
               text,
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.muted,
+                color: context.colors.muted,
                 height: 1.4,
               ),
             ),

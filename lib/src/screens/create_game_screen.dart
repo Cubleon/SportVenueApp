@@ -141,7 +141,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       ? Text(
                           'Виды спорта пока недоступны',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         )
                       : Wrap(
@@ -164,7 +164,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       ? Text(
                           'Для выбранного спорта площадок пока нет',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         )
                       : Column(
@@ -175,8 +175,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                   child: AppCard(
                                     onTap: () => _selectVenue(venue),
                                     borderColor: selectedVenue?.id == venue.id
-                                        ? AppColors.accent
-                                        : AppColors.border,
+                                        ? context.colors.accent
+                                        : context.colors.border,
                                     child: Row(
                                       children: [
                                         Expanded(
@@ -197,16 +197,17 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                                 '${venue.address} · ${AppFormatters.money(venue.pricePerHour)}/час',
                                                 style: context.text.bodySmall
                                                     ?.copyWith(
-                                                      color: AppColors.muted,
+                                                      color:
+                                                          context.colors.muted,
                                                     ),
                                               ),
                                             ],
                                           ),
                                         ),
                                         if (selectedVenue?.id == venue.id)
-                                          const Icon(
+                                          Icon(
                                             Icons.check_circle_rounded,
-                                            color: AppColors.accent,
+                                            color: context.colors.accent,
                                           ),
                                       ],
                                     ),
@@ -313,8 +314,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 4,
                         ),
-                        activeThumbColor: AppColors.accent,
-                        activeTrackColor: AppColors.accent.withValues(
+                        activeThumbColor: context.colors.accent,
+                        activeTrackColor: context.colors.accent.withValues(
                           alpha: 0.28,
                         ),
                         title: Text(
@@ -326,7 +327,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         subtitle: Text(
                           'Вы будете подтверждать каждого игрока',
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                         value: _type == GameType.approval,
@@ -378,14 +379,14 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 18),
                   child: AppCard(
-                    color: AppColors.accentSoft,
+                    color: context.colors.accentSoft,
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             'Стоимость с человека',
                             style: context.text.bodyMedium?.copyWith(
-                              color: AppColors.muted,
+                              color: context.colors.muted,
                             ),
                           ),
                         ),
@@ -510,8 +511,8 @@ class _CreateHeader extends StatelessWidget {
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.ink,
+            backgroundColor: context.colors.surface,
+            foregroundColor: context.colors.ink,
           ),
         ),
         Expanded(
@@ -548,15 +549,15 @@ class _Block extends StatelessWidget {
               Container(
                 width: context.scaled(22),
                 height: context.scaled(22),
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
+                decoration: BoxDecoration(
+                  color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.ink,
+                      color: context.colors.ink,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -619,14 +620,14 @@ class _OptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: onTap,
-      borderColor: selected ? AppColors.accent : AppColors.border,
+      borderColor: selected ? context.colors.accent : context.colors.border,
       child: Row(
         children: [
           Icon(
             selected
                 ? Icons.radio_button_checked_rounded
                 : Icons.radio_button_off_rounded,
-            color: selected ? AppColors.accent : AppColors.dim,
+            color: selected ? context.colors.accent : context.colors.dim,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -642,7 +643,7 @@ class _OptionTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],

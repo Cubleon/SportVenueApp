@@ -6,11 +6,14 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
+/// Stands in for a sport the server sent that this build does not know.
+/// Its colour is fixed rather than themed: it is a marker on a map, and a
+/// painter draws it where no theme is in reach.
 const _fallbackSport = Sport(
   id: 'unknown',
   name: 'Спорт',
   icon: '🏅',
-  color: AppColors.accent,
+  color: Color(0xFF3D48F5),
 );
 
 Sport _sportById(List<Sport> sports, String id) {
@@ -170,7 +173,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
               Text(
                 AppFormatters.money(game.pricePerPerson),
                 style: context.text.titleMedium?.copyWith(
-                  color: AppColors.ink,
+                  color: context.colors.ink,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -188,13 +191,17 @@ class _MiniGameCardState extends State<MiniGameCard> {
           const SizedBox(height: 5),
           Text(
             '${AppFormatters.dateShort(game.date)} · ${game.timeRange}',
-            style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+            style: context.text.bodySmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: 12),
           _CardFooter(
             places: Text(
               '${game.freePlaces} ${game.freePlaces == 1 ? 'место' : 'места'} свободно',
-              style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
             ),
             avatars: _AvatarStack(participants: game.participants),
             action: SizedBox(
@@ -203,26 +210,26 @@ class _MiniGameCardState extends State<MiniGameCard> {
                 key: ValueKey('join-${game.id}'),
                 onPressed: game.isFull || _joining ? null : _join,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  disabledBackgroundColor: AppColors.surfaceRaised,
+                  backgroundColor: context.colors.accent,
+                  disabledBackgroundColor: context.colors.surfaceRaised,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
                 child: _joining
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.onAccent,
+                          color: context.colors.onAccent,
                         ),
                       )
                     : Text(
                         'Вступить',
                         style: context.text.labelLarge?.copyWith(
-                          color: AppColors.onAccent,
+                          color: context.colors.onAccent,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -326,13 +333,10 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               Text(
                                 current.venue.address,
                                 style: context.text.bodySmall?.copyWith(
-                                  color: AppColors.muted,
+                                  color: context.colors.muted,
                                 ),
                               ),
-                              const Divider(
-                                height: 28,
-                                color: AppColors.border,
-                              ),
+                              Divider(height: 28, color: context.colors.border),
                               SummaryRow(
                                 label: 'Дата',
                                 value: AppFormatters.dateFull(current.date),
@@ -396,7 +400,9 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(20, 0, 20, _barHeight),
                         child: AppCard(
-                          borderColor: AppColors.accent.withValues(alpha: 0.2),
+                          borderColor: context.colors.accent.withValues(
+                            alpha: 0.2,
+                          ),
                           child: SummaryRow(
                             label: 'Стоимость',
                             value: AppFormatters.money(current.pricePerPerson),
@@ -611,17 +617,17 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: participant.isCurrentUser
-            ? AppColors.accent
-            : AppColors.surfaceRaised,
-        border: Border.all(color: AppColors.bg, width: 2),
+            ? context.colors.accent
+            : context.colors.surfaceRaised,
+        border: Border.all(color: context.colors.bg, width: 2),
       ),
       child: Center(
         child: Text(
           participant.initial,
           style: context.text.labelLarge?.copyWith(
             color: participant.isCurrentUser
-                ? AppColors.onAccent
-                : AppColors.muted,
+                ? context.colors.onAccent
+                : context.colors.muted,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -647,8 +653,8 @@ class _DetailHeader extends StatelessWidget {
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.surface,
-              foregroundColor: AppColors.ink,
+              backgroundColor: context.colors.surface,
+              foregroundColor: context.colors.ink,
             ),
           ),
           Expanded(
@@ -679,7 +685,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: context.text.labelSmall?.copyWith(
-          color: AppColors.muted,
+          color: context.colors.muted,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.4,
         ),
@@ -715,7 +721,7 @@ class _ParticipantTile extends StatelessWidget {
                 Text(
                   'Рейтинг ${participant.rating.toStringAsFixed(1)}',
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],
@@ -750,7 +756,7 @@ class _PlayerSlot extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.ink.withValues(alpha: 0.36),
+                      color: context.colors.ink.withValues(alpha: 0.36),
                       width: 1.5,
                       style: BorderStyle.solid,
                     ),
@@ -763,7 +769,7 @@ class _PlayerSlot extends StatelessWidget {
                 child: Text(
                   empty ? 'свободно' : participant!.name,
                   style: context.text.bodyMedium?.copyWith(
-                    color: empty ? AppColors.dim : AppColors.ink,
+                    color: empty ? context.colors.dim : context.colors.ink,
                     fontStyle: empty ? FontStyle.italic : FontStyle.normal,
                     fontWeight: FontWeight.w700,
                   ),
@@ -773,13 +779,13 @@ class _PlayerSlot extends StatelessWidget {
                 Text(
                   participant!.rating.toStringAsFixed(1),
                   style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
             ],
           ),
         ),
-        if (!isLast) const Divider(height: 1, color: AppColors.border),
+        if (!isLast) Divider(height: 1, color: context.colors.border),
       ],
     );
   }

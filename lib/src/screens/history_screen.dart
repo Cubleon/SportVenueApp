@@ -68,7 +68,7 @@ class HistoryScreen extends StatelessWidget {
                         child: Text(
                           'Здесь появятся ваши брони и игры',
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                       ),

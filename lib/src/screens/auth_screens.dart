@@ -99,8 +99,8 @@ class _SplashScreenState extends State<SplashScreen>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                AppColors.accent.withValues(alpha: pulse),
-                                AppColors.accent.withValues(alpha: 0.08),
+                                context.colors.accent.withValues(alpha: pulse),
+                                context.colors.accent.withValues(alpha: 0.08),
                                 Colors.transparent,
                               ],
                             ),
@@ -135,11 +135,11 @@ class _SplashScreenState extends State<SplashScreen>
                           );
                           return LinearProgressIndicator(
                             value: value,
-                            backgroundColor: AppColors.ink.withValues(
+                            backgroundColor: context.colors.ink.withValues(
                               alpha: 0.08,
                             ),
-                            valueColor: const AlwaysStoppedAnimation(
-                              AppColors.accent,
+                            valueColor: AlwaysStoppedAnimation(
+                              context.colors.accent,
                             ),
                           );
                         },
@@ -221,7 +221,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         Container(
                           width: 1,
                           height: 24,
-                          color: AppColors.ink.withValues(alpha: 0.12),
+                          color: context.colors.ink.withValues(alpha: 0.12),
                         ),
                       ],
                     ),
@@ -251,21 +251,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         height: 22,
                         decoration: BoxDecoration(
                           color: _accepted
-                              ? AppColors.accent
-                              : AppColors.surface,
+                              ? context.colors.accent
+                              : context.colors.surface,
                           borderRadius: BorderRadius.circular(7),
                           border: Border.all(
                             color: _accepted
-                                ? AppColors.accent
-                                : AppColors.border,
+                                ? context.colors.accent
+                                : context.colors.border,
                             width: 1.5,
                           ),
                         ),
                         child: _accepted
-                            ? const Icon(
+                            ? Icon(
                                 Icons.check_rounded,
                                 size: 16,
-                                color: AppColors.ink,
+                                color: context.colors.ink,
                               )
                             : null,
                       ),
@@ -274,7 +274,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: Text(
                           'Согласен с обработкой персональных данных и условиями сервиса',
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                             height: 1.35,
                           ),
                         ),
@@ -301,7 +301,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     _errorText!,
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.error,
+                      color: context.colors.error,
                     ),
                   ),
                 ),
@@ -310,7 +310,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   Expanded(
                     child: Divider(
-                      color: AppColors.ink.withValues(alpha: 0.08),
+                      color: context.colors.ink.withValues(alpha: 0.08),
                     ),
                   ),
                   Padding(
@@ -318,13 +318,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     child: Text(
                       'или',
                       style: context.text.bodySmall?.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
                   Expanded(
                     child: Divider(
-                      color: AppColors.ink.withValues(alpha: 0.08),
+                      color: context.colors.ink.withValues(alpha: 0.08),
                     ),
                   ),
                 ],
@@ -365,7 +365,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности',
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(
-                  color: AppColors.ink.withValues(alpha: 0.28),
+                  color: context.colors.ink.withValues(alpha: 0.28),
                   height: 1.4,
                 ),
               ),
@@ -484,7 +484,7 @@ class _OtpScreenState extends State<OtpScreen>
               Text(
                 'Мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
                 style: context.text.bodyMedium?.copyWith(
-                  color: AppColors.muted,
+                  color: context.colors.muted,
                 ),
               ),
               const SizedBox(height: 34),
@@ -524,21 +524,21 @@ class _OtpScreenState extends State<OtpScreen>
                             errorText: null,
                             filled: true,
                             fillColor: _error
-                                ? AppColors.error.withValues(alpha: 0.08)
-                                : AppColors.surface,
+                                ? context.colors.error.withValues(alpha: 0.08)
+                                : context.colors.surface,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
                                 color: _error
-                                    ? AppColors.error
-                                    : AppColors.border,
+                                    ? context.colors.error
+                                    : context.colors.border,
                                 width: 2,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: AppColors.accent,
+                              borderSide: BorderSide(
+                                color: context.colors.accent,
                                 width: 2,
                               ),
                             ),
@@ -559,7 +559,7 @@ class _OtpScreenState extends State<OtpScreen>
                     _errorText,
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.error,
+                      color: context.colors.error,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -584,7 +584,9 @@ class _OtpScreenState extends State<OtpScreen>
               Text(
                 'Не отвечайте на звонок — нужны только последние 4 цифры номера',
                 textAlign: TextAlign.center,
-                style: context.text.bodySmall?.copyWith(color: AppColors.muted),
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                ),
               ),
             ],
           ),
@@ -750,7 +752,7 @@ class _SocialButton extends StatelessWidget {
       // a second time after the label.
       excludeSemantics: true,
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -771,7 +773,7 @@ class _IconBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -779,7 +781,7 @@ class _IconBox extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(icon, color: AppColors.ink),
+          child: Icon(icon, color: context.colors.ink),
         ),
       ),
     );
