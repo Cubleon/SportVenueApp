@@ -4,6 +4,7 @@ import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 
 /// Stands in for a sport the server sent that this build does not know.
@@ -52,85 +53,91 @@ class _GamesScreenState extends State<GamesScreen> {
             .where((game) => _timeFilter == 'all' || game.startHour >= 18)
             .toList();
 
-        return CustomScrollView(
-          key: const ValueKey('games-screen'),
-          slivers: [
-            SliverToBoxAdapter(
-              child: ScreenTitleBar(
-                title: 'Игры',
-                subtitle: 'pickup-матчи рядом',
-                trailing: IconButton(
-                  tooltip: 'Фильтры',
-                  onPressed: () => showAppSnack(
-                    context,
-                    'Расширенные фильтры появятся позже',
-                  ),
-                  icon: const Icon(Icons.tune_rounded),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _SportFilter(
-                sports: widget.controller.sports,
-                value: _sportId,
-                onChanged: (id) => setState(() => _sportId = id),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _TimeFilter(
-                value: _timeFilter,
-                onChanged: (id) => setState(() => _timeFilter = id),
-              ),
-            ),
-            if (games.isEmpty)
+        return PullToRefresh(
+          controller: widget.controller,
+          child: CustomScrollView(
+            key: const ValueKey('games-screen'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  child: _filtered
-                      ? EmptyState(
-                          key: const ValueKey('games-empty-filtered'),
-                          icon: Icons.filter_alt_off_rounded,
-                          title: 'Под фильтры ничего не подошло',
-                          description:
-                              'Игры есть, но не в этом виде спорта или не в это время.',
-                          actionLabel: 'Показать все игры',
-                          onAction: () => setState(() {
-                            _sportId = 'all';
-                            _timeFilter = 'all';
-                          }),
-                        )
-                      : const EmptyState(
-                          key: ValueKey('games-empty'),
-                          icon: Icons.sports_soccer_rounded,
-                          title: 'Открытых игр пока нет',
-                          description:
-                              'Создайте свою — участники смогут вступить и оплатить долю.',
-                        ),
+                child: ScreenTitleBar(
+                  title: 'Игры',
+                  subtitle: 'pickup-матчи рядом',
+                  trailing: IconButton(
+                    tooltip: 'Фильтры',
+                    onPressed: () => showAppSnack(
+                      context,
+                      'Расширенные фильтры появятся позже',
+                    ),
+                    icon: const Icon(Icons.tune_rounded),
+                  ),
                 ),
               ),
-            SliverList.builder(
-              itemCount: games.length,
-              itemBuilder: (context, index) {
-                final game = games[index];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: MiniGameCard(
-                    controller: widget.controller,
-                    game: game,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GameDetailScreen(
-                          controller: widget.controller,
-                          game: game,
+              SliverToBoxAdapter(
+                child: _SportFilter(
+                  sports: widget.controller.sports,
+                  value: _sportId,
+                  onChanged: (id) => setState(() => _sportId = id),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _TimeFilter(
+                  value: _timeFilter,
+                  onChanged: (id) => setState(() => _timeFilter = id),
+                ),
+              ),
+              if (games.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: _filtered
+                        ? EmptyState(
+                            key: const ValueKey('games-empty-filtered'),
+                            icon: Icons.filter_alt_off_rounded,
+                            title: 'Под фильтры ничего не подошло',
+                            description:
+                                'Игры есть, но не в этом виде спорта или не в это время.',
+                            actionLabel: 'Показать все игры',
+                            onAction: () => setState(() {
+                              _sportId = 'all';
+                              _timeFilter = 'all';
+                            }),
+                          )
+                        : const EmptyState(
+                            key: ValueKey('games-empty'),
+                            icon: Icons.sports_soccer_rounded,
+                            title: 'Открытых игр пока нет',
+                            description:
+                                'Создайте свою — участники смогут вступить и оплатить долю.',
+                          ),
+                  ),
+                ),
+              SliverList.builder(
+                itemCount: games.length,
+                itemBuilder: (context, index) {
+                  final game = games[index];
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: MiniGameCard(
+                      controller: widget.controller,
+                      game: game,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(
+                            controller: widget.controller,
+                            game: game,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: context.bottomBarInset)),
-          ],
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.bottomBarInset),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -251,12 +258,18 @@ class _MiniGameCardState extends State<MiniGameCard> {
       showAppSnack(
         context,
         joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
+        // Only a join that took anything is worth a knock.
+        tone: joined ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -451,12 +464,18 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       showAppSnack(
         context,
         joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
+        // Only a join that took anything is worth a knock.
+        tone: joined ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
     } finally {
       if (mounted) {
         setState(() => _joining = false);

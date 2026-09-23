@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../data/formatters.dart';
@@ -123,6 +124,22 @@ class _LogoPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _LogoPainter oldDelegate) =>
       oldDelegate.fill != fill || oldDelegate.line != line;
+}
+
+/// Wraps a tap that changes a choice so the hand hears it.
+///
+/// Selection feedback is the quietest of the three — a tick rather than a
+/// knock — and it is what a picker, a chip or a stepper is meant to make.
+/// Navigation is deliberately left silent: a tab that buzzes every time
+/// stops meaning anything.
+VoidCallback? withSelectionFeedback(VoidCallback? onTap) {
+  if (onTap == null) {
+    return null;
+  }
+  return () {
+    HapticFeedback.selectionClick();
+    onTap();
+  };
 }
 
 /// How much weight a button carries.
@@ -383,7 +400,7 @@ class SelectableChip extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: withSelectionFeedback(onTap),
           borderRadius: BorderRadius.circular(99),
           // A chip with no handler takes no touches, so it cannot ripple or
           // look pressable.
@@ -530,7 +547,32 @@ class SummaryRow extends StatelessWidget {
   }
 }
 
-void showAppSnack(BuildContext context, String message) {
+/// What a snack is reporting, which decides what the hand feels.
+enum SnackTone {
+  /// A notice with no outcome attached: a stub, a hint, nothing happened.
+  plain,
+
+  /// Something went through — a booking paid, a game created. Worth a knock.
+  done,
+
+  /// Something would not go through. A heavier one, so a failed payment
+  /// never feels the same as a success the reader half-saw.
+  failed,
+}
+
+void showAppSnack(
+  BuildContext context,
+  String message, {
+  SnackTone tone = SnackTone.plain,
+}) {
+  switch (tone) {
+    case SnackTone.plain:
+      break;
+    case SnackTone.done:
+      HapticFeedback.mediumImpact();
+    case SnackTone.failed:
+      HapticFeedback.heavyImpact();
+  }
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       // The text colour is named here on purpose: Material's own snack style

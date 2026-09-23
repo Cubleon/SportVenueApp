@@ -360,14 +360,22 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'Оплата прошла, бронь создана');
+      showAppSnack(
+        context,
+        'Оплата прошла, бронь создана',
+        tone: SnackTone.done,
+      );
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
     }
   }
 }
@@ -467,14 +475,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'Бронь отменена');
+      showAppSnack(context, 'Бронь отменена', tone: SnackTone.done);
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
     }
   }
 }
@@ -710,7 +722,7 @@ class _DatePickerRow extends StatelessWidget {
             selected: isSelected,
             button: true,
             child: GestureDetector(
-              onTap: () => onSelect(date),
+              onTap: withSelectionFeedback(() => onSelect(date)),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
                 width: context.scaled(54),
@@ -851,7 +863,9 @@ class _TimeGrid extends StatelessWidget {
         final slot = slots[index];
         final selected = slot.hour == selectedHour;
         return GestureDetector(
-          onTap: slot.isAvailable ? () => onChanged(slot.hour) : null,
+          onTap: slot.isAvailable
+              ? withSelectionFeedback(() => onChanged(slot.hour))
+              : null,
           child: Semantics(
             selected: selected,
             button: slot.isAvailable,
@@ -920,7 +934,7 @@ class _CounterRow extends StatelessWidget {
           icon: Icons.remove_rounded,
           label: 'Убрать игрока',
           enabled: value > min,
-          onTap: () => onChanged(value - 1),
+          onTap: withSelectionFeedback(() => onChanged(value - 1))!,
         ),
         Expanded(
           child: Text(
@@ -940,7 +954,7 @@ class _CounterRow extends StatelessWidget {
           icon: Icons.add_rounded,
           label: 'Добавить игрока',
           enabled: value < max,
-          onTap: () => onChanged(value + 1),
+          onTap: withSelectionFeedback(() => onChanged(value + 1))!,
         ),
       ],
     );

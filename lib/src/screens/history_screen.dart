@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
 import 'games_screens.dart';
@@ -49,84 +50,90 @@ class HistoryScreen extends StatelessWidget {
 
         return Scaffold(
           body: SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: ScreenTitleBar(
-                    title: 'История',
-                    subtitle: _summary(bookings.length, games.length),
-                    leading: BackCircleButton(
-                      onTap: () => Navigator.of(context).pop(),
+            child: PullToRefresh(
+              controller: controller,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: ScreenTitleBar(
+                      title: 'История',
+                      subtitle: _summary(bookings.length, games.length),
+                      leading: BackCircleButton(
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
                     ),
                   ),
-                ),
-                if (bookings.isEmpty && games.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: AppCard(
-                        child: Text(
-                          'Здесь появятся ваши брони и игры',
-                          style: context.text.bodyMedium?.copyWith(
-                            color: context.colors.muted,
+                  if (bookings.isEmpty && games.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: AppCard(
+                          child: Text(
+                            'Здесь появятся ваши брони и игры',
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.muted,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                if (bookings.isNotEmpty) ...[
-                  const SliverToBoxAdapter(
-                    child: SectionHeader(title: 'Брони'),
-                  ),
-                  SliverList.separated(
-                    itemCount: bookings.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final booking = bookings[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: BookingRow(
-                          booking: booking,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => BookingDetailsScreen(
-                                controller: controller,
-                                booking: booking,
+                  if (bookings.isNotEmpty) ...[
+                    const SliverToBoxAdapter(
+                      child: SectionHeader(title: 'Брони'),
+                    ),
+                    SliverList.separated(
+                      itemCount: bookings.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final booking = bookings[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: BookingRow(
+                            booking: booking,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => BookingDetailsScreen(
+                                  controller: controller,
+                                  booking: booking,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-                if (games.isNotEmpty) ...[
-                  const SliverToBoxAdapter(child: SectionHeader(title: 'Игры')),
-                  SliverList.separated(
-                    itemCount: games.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final game = games[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: MiniGameCard(
-                          controller: controller,
-                          game: game,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => GameDetailScreen(
-                                controller: controller,
-                                game: game,
+                        );
+                      },
+                    ),
+                  ],
+                  if (games.isNotEmpty) ...[
+                    const SliverToBoxAdapter(
+                      child: SectionHeader(title: 'Игры'),
+                    ),
+                    SliverList.separated(
+                      itemCount: games.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final game = games[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: MiniGameCard(
+                            controller: controller,
+                            game: game,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => GameDetailScreen(
+                                  controller: controller,
+                                  game: game,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+                  ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
                 ],
-                const SliverToBoxAdapter(child: SizedBox(height: 28)),
-              ],
+              ),
             ),
           ),
         );

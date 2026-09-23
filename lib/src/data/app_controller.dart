@@ -439,6 +439,23 @@ class AppController extends ChangeNotifier {
     return game;
   }
 
+  /// Re-reads everything the screens show. Pull-to-refresh calls this.
+  ///
+  /// It throws on failure rather than swallowing: the gesture was explicit,
+  /// so a server that will not answer is worth saying out loud.
+  Future<void> refresh() async {
+    final api = _api;
+    if (api == null) {
+      // Demo mode has no server to ask, but the gesture still has to
+      // resolve — an indicator with nothing to wait for never leaves.
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+      notifyListeners();
+      return;
+    }
+    await _loadRemoteState(api);
+    notifyListeners();
+  }
+
   void logout() {
     _api?.clearTokens();
     phone = '';

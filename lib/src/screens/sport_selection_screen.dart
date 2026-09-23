@@ -174,6 +174,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
       showAppSnack(
         context,
         widget.errorMessage?.call(error) ?? 'Не удалось сохранить выбор',
+        tone: SnackTone.failed,
       );
       return;
     }
@@ -206,7 +207,7 @@ class _SportCard extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
+            onTap: withSelectionFeedback(onTap),
             borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),

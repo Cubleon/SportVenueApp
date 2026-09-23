@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import 'history_screen.dart';
 import 'sport_selection_screen.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -22,151 +23,157 @@ class ProfileScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return ListView(
-          key: const ValueKey('profile-screen'),
-          padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
-          children: [
-            ScreenTitleBar(
-              title: 'Профиль',
-              subtitle: controller.isConnected
-                  ? 'Аккаунт SportVenue'
-                  : 'Демо-аккаунт SportVenue',
-            ),
-            AppCard(
-              child: Row(
-                children: [
-                  Container(
-                    width: context.scaled(62),
-                    height: context.scaled(62),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.colors.accent,
-                    ),
-                    child: Center(
-                      child: Text(
-                        _profileInitial(controller),
-                        style: context.text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.onAccent,
+        return PullToRefresh(
+          controller: controller,
+          child: ListView(
+            key: const ValueKey('profile-screen'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
+            children: [
+              ScreenTitleBar(
+                title: 'Профиль',
+                subtitle: controller.isConnected
+                    ? 'Аккаунт SportVenue'
+                    : 'Демо-аккаунт SportVenue',
+              ),
+              AppCard(
+                child: Row(
+                  children: [
+                    Container(
+                      width: context.scaled(62),
+                      height: context.scaled(62),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.colors.accent,
+                      ),
+                      child: Center(
+                        child: Text(
+                          _profileInitial(controller),
+                          style: context.text.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.onAccent,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.userName?.trim().isNotEmpty == true
+                                ? controller.userName!
+                                : 'Пользователь SportVenue',
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            controller.phone.isEmpty
+                                ? 'Номер не указан'
+                                : controller.phone,
+                            style: context.text.bodySmall?.copyWith(
+                              color: context.colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Редактировать профиль',
+                      onPressed: () => showAppSnack(
+                        context,
+                        'Редактирование профиля подключится позже',
+                      ),
+                      icon: const Icon(Icons.edit_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controller.userName?.trim().isNotEmpty == true
-                              ? controller.userName!
-                              : 'Пользователь SportVenue',
-                          style: context.text.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          controller.phone.isEmpty
-                              ? 'Номер не указан'
-                              : controller.phone,
-                          style: context.text.bodySmall?.copyWith(
-                            color: context.colors.muted,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Спортивные предпочтения',
+                      style: context.text.labelLarge?.copyWith(
+                        color: context.colors.muted,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Редактировать профиль',
-                    onPressed: () => showAppSnack(
-                      context,
-                      'Редактирование профиля подключится позже',
-                    ),
-                    icon: const Icon(Icons.edit_rounded),
+                  TextButton(
+                    key: const ValueKey('edit-sports'),
+                    onPressed: () => _editSports(context, controller),
+                    child: const Text('Изменить'),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Спортивные предпочтения',
-                    style: context.text.labelLarge?.copyWith(
-                      color: context.colors.muted,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
-                    ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: controller.selectedSports
+                    .map(
+                      (sport) => SelectableChip(
+                        label: sport.name.capitalized,
+                        icon: sport.icon,
+                        selected: true,
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 20),
+              _Stats(controller: controller),
+              const SizedBox(height: 18),
+              _MenuItem(
+                icon: Icons.history_rounded,
+                title: 'История',
+                subtitle:
+                    '${controller.bookings.length} броней · ${controller.games.length} игр',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => HistoryScreen(controller: controller),
                   ),
                 ),
-                TextButton(
-                  key: const ValueKey('edit-sports'),
-                  onPressed: () => _editSports(context, controller),
-                  child: const Text('Изменить'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: controller.selectedSports
-                  .map(
-                    (sport) => SelectableChip(
-                      label: sport.name.capitalized,
-                      icon: sport.icon,
-                      selected: true,
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 20),
-            _Stats(controller: controller),
-            const SizedBox(height: 18),
-            _MenuItem(
-              icon: Icons.history_rounded,
-              title: 'История',
-              subtitle:
-                  '${controller.bookings.length} броней · ${controller.games.length} игр',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => HistoryScreen(controller: controller),
+              ),
+              _MenuItem(
+                icon: Icons.credit_card_rounded,
+                title: 'Платежи',
+                subtitle: 'Карты и транзакции',
+                onTap: () => showAppSnack(
+                  context,
+                  'Платёжные методы будут через эквайринг',
                 ),
               ),
-            ),
-            _MenuItem(
-              icon: Icons.credit_card_rounded,
-              title: 'Платежи',
-              subtitle: 'Карты и транзакции',
-              onTap: () => showAppSnack(
-                context,
-                'Платёжные методы будут через эквайринг',
+              _MenuItem(
+                icon: Icons.notifications_active_rounded,
+                title: 'Уведомления',
+                subtitle: 'push, бронь, игры и чат',
+                onTap: () =>
+                    showAppSnack(context, 'push-уведомления появятся позже'),
               ),
-            ),
-            _MenuItem(
-              icon: Icons.notifications_active_rounded,
-              title: 'Уведомления',
-              subtitle: 'push, бронь, игры и чат',
-              onTap: () =>
-                  showAppSnack(context, 'push-уведомления появятся позже'),
-            ),
-            _MenuItem(
-              icon: Icons.support_agent_rounded,
-              title: 'Поддержка',
-              subtitle: 'faq и форма обращения',
-              onTap: () =>
-                  showAppSnack(context, 'Заявка в поддержку создана локально'),
-            ),
-            const SizedBox(height: 16),
-            PrimaryButton(
-              key: const ValueKey('logout-button'),
-              label: 'Выйти из аккаунта',
-              tone: ButtonTone.neutral,
-              onPressed: onLogout,
-            ),
-          ],
+              _MenuItem(
+                icon: Icons.support_agent_rounded,
+                title: 'Поддержка',
+                subtitle: 'faq и форма обращения',
+                onTap: () => showAppSnack(
+                  context,
+                  'Заявка в поддержку создана локально',
+                ),
+              ),
+              const SizedBox(height: 16),
+              PrimaryButton(
+                key: const ValueKey('logout-button'),
+                label: 'Выйти из аккаунта',
+                tone: ButtonTone.neutral,
+                onPressed: onLogout,
+              ),
+            ],
+          ),
         );
       },
     );

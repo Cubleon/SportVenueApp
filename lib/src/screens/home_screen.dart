@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
 import 'history_screen.dart';
@@ -25,58 +26,66 @@ class HomeScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return CustomScrollView(
-          key: const ValueKey('home-screen'),
-          slivers: [
-            SliverToBoxAdapter(child: _TopBar(controller: controller)),
-            SliverToBoxAdapter(child: _SearchBar(onTap: onOpenSearch)),
-            SliverToBoxAdapter(child: _Sports(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                title: 'Предстоящая бронь',
-                action: 'Все',
-                onAction: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => HistoryScreen(controller: controller),
+        return PullToRefresh(
+          controller: controller,
+          child: CustomScrollView(
+            key: const ValueKey('home-screen'),
+            // A short list still has to be draggable, or there is nothing
+            // to pull.
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _TopBar(controller: controller)),
+              SliverToBoxAdapter(child: _SearchBar(onTap: onOpenSearch)),
+              SliverToBoxAdapter(child: _Sports(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'Предстоящая бронь',
+                  action: 'Все',
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => HistoryScreen(controller: controller),
+                    ),
                   ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(child: _Bookings(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(title: 'Рекомендованные площадки'),
-            ),
-            SliverToBoxAdapter(child: _Venues(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                title: 'Открытые игры',
-                action: 'Все',
-                onAction: onOpenGames,
+              SliverToBoxAdapter(child: _Bookings(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(title: 'Рекомендованные площадки'),
               ),
-            ),
-            SliverList.builder(
-              itemCount: controller.preferredGames.take(2).length,
-              itemBuilder: (context, index) {
-                final game = controller.preferredGames[index];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: MiniGameCard(
-                    controller: controller,
-                    game: game,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GameDetailScreen(
-                          controller: controller,
-                          game: game,
+              SliverToBoxAdapter(child: _Venues(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'Открытые игры',
+                  action: 'Все',
+                  onAction: onOpenGames,
+                ),
+              ),
+              SliverList.builder(
+                itemCount: controller.preferredGames.take(2).length,
+                itemBuilder: (context, index) {
+                  final game = controller.preferredGames[index];
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: MiniGameCard(
+                      controller: controller,
+                      game: game,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(
+                            controller: controller,
+                            game: game,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: context.bottomBarInset)),
-          ],
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.bottomBarInset),
+              ),
+            ],
+          ),
         );
       },
     );

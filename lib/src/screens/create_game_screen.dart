@@ -173,7 +173,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                 (venue) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: AppCard(
-                                    onTap: () => _selectVenue(venue),
+                                    onTap: withSelectionFeedback(
+                                      () => _selectVenue(venue),
+                                    ),
                                     borderColor: selectedVenue?.id == venue.id
                                         ? context.colors.accent
                                         : context.colors.border,
@@ -266,7 +268,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         key: const ValueKey('create-capacity-minus'),
                         onPressed:
                             selectedVenue != null && _capacity > minCapacity
-                            ? () => setState(() => _capacity--)
+                            ? withSelectionFeedback(
+                                () => setState(() => _capacity--),
+                              )
                             : null,
                         icon: const Icon(Icons.remove_rounded),
                       ),
@@ -284,7 +288,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         key: const ValueKey('create-capacity-plus'),
                         onPressed:
                             selectedVenue != null && _capacity < maxCapacity
-                            ? () => setState(() => _capacity++)
+                            ? withSelectionFeedback(
+                                () => setState(() => _capacity++),
+                              )
                             : null,
                         icon: const Icon(Icons.add_rounded),
                       ),
@@ -480,7 +486,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'Игра создана');
+      showAppSnack(context, 'Игра создана', tone: SnackTone.done);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
@@ -492,7 +498,11 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
     }
   }
 }
@@ -589,7 +599,7 @@ class _SmallSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      onTap: onTap,
+      onTap: withSelectionFeedback(onTap),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       child: Center(
         child: Text(
@@ -619,7 +629,7 @@ class _OptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      onTap: onTap,
+      onTap: withSelectionFeedback(onTap),
       borderColor: selected ? context.colors.accent : context.colors.border,
       child: Row(
         children: [

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sport_venue_app/src/app.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
+import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
 import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
@@ -175,10 +177,7 @@ void main() {
 
     expect(controller.bookings.single.status, 'отменена');
     expect(controller.upcomingBookings, isEmpty);
-    expect(
-      find.byKey(ValueKey('booking-row-${booking.id}')),
-      findsNothing,
-    );
+    expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsNothing);
     expect(find.text('У вас пока нет предстоящих броней'), findsOneWidget);
   });
 
@@ -213,6 +212,69 @@ void main() {
     expect(controller.games.length, before + 1);
     expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
   });
+
+  // Haptics cannot be seen, and on the web preview they do nothing at all,
+  // so the only way to know they fire is to listen on the channel they
+  // travel down.
+  testWidgets('choosing a sport ticks, and a booking knocks', (tester) async {
+    _setPhoneSize(tester);
+    final felt = _recordHaptics();
+    final controller = AppController(now: fixedNow);
+
+    await tester.pumpWidget(
+      _Harness(
+        child: SportSelectionScreen(
+          sports: MockData.sports,
+          initialSelection: const {},
+          onContinue: (_) async {},
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Футбол'));
+    await tester.tap(find.text('Футбол'));
+    await tester.pumpAndSettle();
+
+    expect(felt, ['HapticFeedbackType.selectionClick']);
+
+    felt.clear();
+    await tester.pumpWidget(
+      _Harness(
+        child: BookingConfirmationScreen(
+          controller: controller,
+          draft: BookingDraft(
+            venue: MockData.venues.first,
+            date: fixedNow.add(const Duration(days: 1)),
+            durationMinutes: 60,
+            startHour: 20,
+            players: 4,
+            mode: PaymentMode.split,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('confirm-payment')));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+
+    expect(felt, ['HapticFeedbackType.mediumImpact']);
+  });
+}
+
+/// Collects what the app asks the device to feel.
+List<String> _recordHaptics() {
+  final felt = <String>[];
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          felt.add(call.arguments as String);
+        }
+        return null;
+      });
+  addTearDown(
+    () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null),
+  );
+  return felt;
 }
 
 void _setPhoneSize(WidgetTester tester) {
