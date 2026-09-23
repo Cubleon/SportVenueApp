@@ -1175,3 +1175,112 @@ class TimeGrid extends StatelessWidget {
     );
   }
 }
+
+/// One club as a row: the pitch it offers, where it is, what it costs.
+///
+/// The same row wherever a club has to be chosen from several, because
+/// choosing between them means comparing them, and two different layouts
+/// for the same comparison make it harder than it is.
+class VenueRow extends StatelessWidget {
+  const VenueRow({
+    super.key,
+    required this.venue,
+    required this.sport,
+    required this.selected,
+    required this.onTap,
+    this.color,
+    this.trailing,
+  });
+
+  final Venue venue;
+
+  /// Which of the club's sports to draw. Under a filter it is the filtered
+  /// one — a club listed under hockey drawing a football pitch reads as the
+  /// wrong club.
+  final Sport? sport;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color? color;
+
+  /// Defaults to a chevron, for a row that opens something. A picker passes
+  /// its own mark instead.
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(12),
+        color: color,
+        borderColor: selected ? context.colors.accent : context.colors.border,
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: context.scaled(56),
+                height: context.scaled(56),
+                child: SportSurface(sportId: sport?.id ?? 'football'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    venue.name.capitalized,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 15,
+                        color: context.colors.ink,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        venue.rating.toStringAsFixed(1),
+                        style: context.text.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${AppFormatters.money(venue.pricePerHour)}/час',
+                        style: context.text.labelMedium?.copyWith(
+                          color: context.colors.accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            trailing ??
+                Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+          ],
+        ),
+      ),
+    );
+  }
+}

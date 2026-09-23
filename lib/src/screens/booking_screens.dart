@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_slot_picker.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({
@@ -38,15 +39,10 @@ class _BookingScreenState extends State<BookingScreen> {
   int _duration = 60;
   int _hour = 20;
   int _players = 4;
-  List<TimeSlot> _slots = const [];
-  bool _slotsLoading = true;
-  String? _slotsError;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSlots();
-  }
+  /// Set by the slot picker, which is the only thing that knows whether the
+  /// hour on screen is one the club will take.
+  bool _slotReady = false;
 
   BookingDraft get _draft => BookingDraft(
     venue: widget.venue,
@@ -84,10 +80,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: DateStrip(
                       now: widget.controller.now,
                       selected: _date,
-                      onSelect: (date) {
-                        setState(() => _date = date);
-                        _loadSlots();
-                      },
+                      onSelect: (date) => setState(() => _date = date),
                     ),
                   ),
                 ),
@@ -97,10 +90,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     title: 'Продолжительность',
                     child: DurationPicker(
                       value: _duration,
-                      onChanged: (value) {
-                        setState(() => _duration = value);
-                        _loadSlots();
-                      },
+                      onChanged: (value) => setState(() => _duration = value),
                     ),
                   ),
                 ),
@@ -108,13 +98,18 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: _StepBlock(
                     step: 3,
                     title: 'Время',
-                    child: _TimeGrid(
-                      slots: _slots,
-                      isLoading: _slotsLoading,
-                      error: _slotsError,
+                    child: VenueSlotPicker(
+                      controller: widget.controller,
+                      venue: widget.venue,
+                      date: _date,
+                      durationMinutes: _duration,
                       selectedHour: _hour,
-                      onChanged: (hour) => setState(() => _hour = hour),
-                      onRetry: _loadSlots,
+                      onHourChanged: (hour) => setState(() => _hour = hour),
+                      onReadyChanged: (ready) {
+                        if (ready != _slotReady) {
+                          setState(() => _slotReady = ready);
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -178,49 +173,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  bool get _canContinue =>
-      !_slotsLoading &&
-      _slotsError == null &&
-      _slots.any((slot) => slot.hour == _hour && slot.isAvailable);
-
-  Future<void> _loadSlots() async {
-    setState(() {
-      _slotsLoading = true;
-      _slotsError = null;
-    });
-    try {
-      final slots = await widget.controller.loadSlots(
-        venue: widget.venue,
-        day: _date,
-        durationMinutes: _duration,
-      );
-      if (!mounted) {
-        return;
-      }
-      final selectedStillAvailable = slots.any(
-        (slot) => slot.hour == _hour && slot.isAvailable,
-      );
-      final firstAvailable = slots
-          .where((slot) => slot.isAvailable)
-          .firstOrNull;
-      setState(() {
-        _slots = slots;
-        if (!selectedStillAvailable && firstAvailable != null) {
-          _hour = firstAvailable.hour;
-        }
-        _slotsLoading = false;
-      });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _slots = const [];
-        _slotsLoading = false;
-        _slotsError = widget.controller.messageFor(error);
-      });
-    }
-  }
+  bool get _canContinue => _slotReady;
 
   void _goToConfirm(PaymentMode mode) {
     Navigator.of(context).push(
@@ -708,68 +661,6 @@ class _StepBlock extends StatelessWidget {
           child,
         ],
       ),
-    );
-  }
-}
-
-class _TimeGrid extends StatelessWidget {
-  const _TimeGrid({
-    required this.slots,
-    required this.isLoading,
-    required this.error,
-    required this.selectedHour,
-    required this.onChanged,
-    required this.onRetry,
-  });
-
-  final List<TimeSlot> slots;
-  final bool isLoading;
-  final String? error;
-  final int selectedHour;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const SizedBox(
-        height: 52,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (error != null) {
-      return AppCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                error!,
-                style: context.text.bodySmall?.copyWith(
-                  color: context.colors.muted,
-                ),
-              ),
-            ),
-            TextButton(onPressed: onRetry, child: const Text('Повторить')),
-          ],
-        ),
-      );
-    }
-    if (slots.isEmpty) {
-      return Text(
-        'На эту дату свободных слотов нет',
-        style: context.text.bodySmall?.copyWith(color: context.colors.muted),
-      );
-    }
-    return TimeGrid(
-      tiles: [
-        for (final slot in slots)
-          TimeTile(
-            label: slot.label,
-            selected: slot.hour == selectedHour,
-            available: slot.isAvailable,
-            onTap: () => onChanged(slot.hour),
-          ),
-      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_slot_picker.dart';
 import 'games_screens.dart';
 
 class CreateGameScreen extends StatefulWidget {
@@ -34,12 +35,11 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     widget.controller.now.day,
   ).add(const Duration(days: 1));
 
-  /// The hours a game can start at. Every one of them is on screen, so
-  /// there is no order to tap them in and no way to overshoot.
-  static const _firstHour = 8;
-  static const _lastHour = 23;
-
   int _hour = 19;
+
+  /// Set by the slot picker: whether the hour on screen is one the chosen
+  /// club will actually take.
+  bool _slotReady = false;
   int _duration = 120;
   int _capacity = 4;
   GameType _type = GameType.open;
@@ -131,7 +131,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     final pricePerPerson = _pricePerPerson;
     final minCapacity = selectedVenue?.capacityMin ?? 2;
     final maxCapacity = selectedVenue?.capacityMax ?? 2;
-    final canCreate = !_loading && sport != null && selectedVenue != null;
+    // A game cannot be held at an hour the club has already let go, so the
+    // button waits for the picker to say the chosen one is free.
+    final canCreate =
+        !_loading && sport != null && selectedVenue != null && _slotReady;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -178,47 +181,18 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                               .map(
                                 (venue) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
-                                  child: AppCard(
-                                    onTap: withSelectionFeedback(
-                                      () => _selectVenue(venue),
-                                    ),
-                                    borderColor: selectedVenue?.id == venue.id
-                                        ? context.colors.accent
-                                        : context.colors.border,
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                venue.name.capitalized,
-                                                style: context.text.titleSmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${venue.address} · ${AppFormatters.money(venue.pricePerHour)}/час',
-                                                style: context.text.bodySmall
-                                                    ?.copyWith(
-                                                      color:
-                                                          context.colors.muted,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (selectedVenue?.id == venue.id)
-                                          Icon(
+                                  child: VenueRow(
+                                    key: ValueKey('create-venue-${venue.id}'),
+                                    venue: venue,
+                                    sport: sport,
+                                    selected: selectedVenue?.id == venue.id,
+                                    onTap: () => _selectVenue(venue),
+                                    trailing: selectedVenue?.id == venue.id
+                                        ? Icon(
                                             Icons.check_circle_rounded,
                                             color: context.colors.accent,
-                                          ),
-                                      ],
-                                    ),
+                                          )
+                                        : const SizedBox(width: 24),
                                   ),
                                 ),
                               )
@@ -237,16 +211,26 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 _Block(
                   step: 4,
                   title: 'Начало',
-                  child: TimeGrid(
-                    tiles: [
-                      for (var hour = _firstHour; hour <= _lastHour; hour++)
-                        TimeTile(
-                          label: '${hour.toString().padLeft(2, '0')}:00',
-                          selected: hour == _hour,
-                          onTap: () => setState(() => _hour = hour),
+                  child: selectedVenue == null
+                      ? Text(
+                          'Сначала выберите площадку',
+                          style: context.text.bodyMedium?.copyWith(
+                            color: context.colors.muted,
+                          ),
+                        )
+                      : VenueSlotPicker(
+                          controller: widget.controller,
+                          venue: selectedVenue,
+                          date: _date,
+                          durationMinutes: _duration,
+                          selectedHour: _hour,
+                          onHourChanged: (hour) => setState(() => _hour = hour),
+                          onReadyChanged: (ready) {
+                            if (ready != _slotReady) {
+                              setState(() => _slotReady = ready);
+                            }
+                          },
                         ),
-                    ],
-                  ),
                 ),
                 _Block(
                   step: 5,

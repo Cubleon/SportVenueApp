@@ -6,7 +6,6 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/sport_surface.dart';
 import 'booking_screens.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -527,10 +526,12 @@ class _ResultsSheet extends StatelessWidget {
                 for (final venue in venues)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _ResultRow(
+                    child: VenueRow(
+                      key: ValueKey('search-result-${venue.id}'),
                       venue: venue,
                       sport: sportOf(venue),
-                      isSelected: selected?.id == venue.id,
+                      selected: selected?.id == venue.id,
+                      color: context.colors.bgAlt,
                       onTap: () => onPick(venue),
                     ),
                   ),
@@ -538,100 +539,6 @@ class _ResultsSheet extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// One club in the results: everything the floating card used to say, in a
-/// row that can be compared against the one below it.
-class _ResultRow extends StatelessWidget {
-  const _ResultRow({
-    required this.venue,
-    required this.sport,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final Venue venue;
-  final Sport? sport;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      selected: isSelected,
-      button: true,
-      child: AppCard(
-        key: ValueKey('search-result-${venue.id}'),
-        onTap: onTap,
-        padding: const EdgeInsets.all(12),
-        color: context.colors.bgAlt,
-        borderColor: isSelected ? context.colors.accent : context.colors.border,
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: context.scaled(56),
-                height: context.scaled(56),
-                child: SportSurface(sportId: sport?.id ?? 'football'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    venue.name.capitalized,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.bodySmall?.copyWith(
-                      color: context.colors.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 15,
-                        color: context.colors.ink,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        venue.rating.toStringAsFixed(1),
-                        style: context.text.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${AppFormatters.money(venue.pricePerHour)}/час',
-                        style: context.text.labelMedium?.copyWith(
-                          color: context.colors.accent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -218,6 +218,10 @@ void main() {
     await tester.pumpWidget(
       _Harness(child: CreateGameScreen(controller: controller)),
     );
+    // The hours belong to the chosen club, so the button waits for them.
+    await tester.pumpAndSettle();
+    expect(find.text('20:00'), findsOneWidget);
+
     await tester.tap(find.byKey(const ValueKey('create-game-submit')));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
