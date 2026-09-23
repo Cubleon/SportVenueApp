@@ -20,19 +20,48 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  /// Long enough to read the mark, short enough not to be a toll gate.
+  /// Nothing is fetched before the first screen, so this is the entire wait,
+  /// and it is owed to the brand rather than to any work.
+  static const _duration = Duration(milliseconds: 1100);
+
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2600),
-  )..forward();
+    duration: _duration,
+  );
+  bool _left = false;
 
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 2600), () {
-      if (mounted) {
-        widget.onFinished();
-      }
-    });
+    // The wait ends with the animation rather than beside it. Two timers of
+    // the same length drift apart the moment the device is busy, and then
+    // the bar is still filling after the screen has changed under it.
+    _controller
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _finish();
+        }
+      })
+      ..forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Someone who has asked the system to stop animations is not waiting
+    // through ours.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _finish());
+    }
+  }
+
+  void _finish() {
+    if (_left || !mounted) {
+      return;
+    }
+    _left = true;
+    widget.onFinished();
   }
 
   @override
@@ -45,69 +74,82 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  final pulse =
-                      0.35 + math.sin(_controller.value * math.pi * 2) * 0.08;
-                  return Center(
-                    child: Container(
-                      width: 260,
-                      height: 260,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppColors.accent.withValues(alpha: pulse),
-                            AppColors.accent.withValues(alpha: 0.08),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Center(
-              child: FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: _controller,
-                  curve: const Interval(0.05, 0.45),
-                ),
-                child: const AppLogo(size: 82, showWordmark: true),
-              ),
-            ),
-            Positioned(
-              left: 32,
-              right: 32,
-              bottom: 46,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: SizedBox(
-                  height: 2,
+        // A splash nobody can dismiss is a wait, however short it is. A tap
+        // anywhere takes the impatient straight through.
+        child: Semantics(
+          button: true,
+          label: 'Пропустить заставку',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _finish,
+            child: Stack(
+              children: [
+                Positioned.fill(
                   child: AnimatedBuilder(
                     animation: _controller,
                     builder: (context, _) {
-                      final value = Curves.easeInOutCubic.transform(
-                        _controller.value,
-                      );
-                      return LinearProgressIndicator(
-                        value: value,
-                        backgroundColor: AppColors.ink.withValues(alpha: 0.08),
-                        valueColor: const AlwaysStoppedAnimation(
-                          AppColors.accent,
+                      final pulse =
+                          0.35 +
+                          math.sin(_controller.value * math.pi * 2) * 0.08;
+                      return Center(
+                        child: Container(
+                          width: 260,
+                          height: 260,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                AppColors.accent.withValues(alpha: pulse),
+                                AppColors.accent.withValues(alpha: 0.08),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-              ),
+                Center(
+                  child: FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.05, 0.45),
+                    ),
+                    child: const AppLogo(size: 82, showWordmark: true),
+                  ),
+                ),
+                Positioned(
+                  left: 32,
+                  right: 32,
+                  bottom: 46,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: SizedBox(
+                      height: 2,
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, _) {
+                          final value = Curves.easeInOutCubic.transform(
+                            _controller.value,
+                          );
+                          return LinearProgressIndicator(
+                            value: value,
+                            backgroundColor: AppColors.ink.withValues(
+                              alpha: 0.08,
+                            ),
+                            valueColor: const AlwaysStoppedAnimation(
+                              AppColors.accent,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
