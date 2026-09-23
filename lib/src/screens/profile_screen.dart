@@ -147,31 +147,12 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              _MenuItem(
-                icon: Icons.credit_card_rounded,
-                title: 'Платежи',
-                subtitle: 'Карты и транзакции',
-                onTap: () => showAppSnack(
-                  context,
-                  'Платёжные методы будут через эквайринг',
-                ),
-              ),
-              _MenuItem(
-                icon: Icons.notifications_active_rounded,
-                title: 'Уведомления',
-                subtitle: 'push, бронь, игры и чат',
-                onTap: () =>
-                    showAppSnack(context, 'push-уведомления появятся позже'),
-              ),
-              _MenuItem(
-                icon: Icons.support_agent_rounded,
-                title: 'Поддержка',
-                subtitle: 'faq и форма обращения',
-                onTap: () => showAppSnack(
-                  context,
-                  'Заявка в поддержку создана локально',
-                ),
-              ),
+              // Платежи, Уведомления and Поддержка stood here looking
+              // exactly like История — same card, same chevron promising a
+              // screen — and answered with "позже". A row that cannot be
+              // followed is worse than no row: it spends a tap and teaches
+              // the reader to distrust the next chevron. They come back
+              // when there is something behind them.
               const SizedBox(height: 16),
               PrimaryButton(
                 key: const ValueKey('logout-button'),
