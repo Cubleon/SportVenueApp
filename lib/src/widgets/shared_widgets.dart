@@ -1017,68 +1017,120 @@ class DateStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final start = DateTime(now.year, now.month, now.day);
-    return SizedBox(
-      height: context.scaled(70),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final date = start.add(Duration(days: index));
-          final isSelected = DateUtils.isSameDay(date, selected);
-          return Semantics(
-            selected: isSelected,
-            button: true,
-            child: GestureDetector(
-              onTap: withSelectionFeedback(() => onSelect(date)),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: context.scaled(54),
-                decoration: BoxDecoration(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Two weeks can cross a month, and a bare "1" after a "31" is a
+        // riddle. The month of the day you are on answers it.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            AppFormatters.monthGenitive(selected),
+            style: context.text.labelSmall?.copyWith(color: context.colors.dim),
+          ),
+        ),
+        SizedBox(
+          height: context.scaled(88, max: 1.45),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              final date = start.add(Duration(days: index));
+              return _DayCard(
+                date: date,
+                isSelected: DateUtils.isSameDay(date, selected),
+                isToday: index == 0,
+                onTap: withSelectionFeedback(() => onSelect(date)),
+              );
+            },
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemCount: days,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One day in [DateStrip]. The chosen one grows and fills: on a screen where
+/// every later step depends on the date, the date should be the thing your eye
+/// lands on first.
+class _DayCard extends StatelessWidget {
+  const _DayCard({
+    required this.date,
+    required this.isSelected,
+    required this.isToday,
+    required this.onTap,
+  });
+
+  final DateTime date;
+  final bool isSelected;
+  final bool isToday;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      selected: isSelected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          width: context.scaled(isSelected ? 74 : 60, max: 1.3),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.accent : colors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? colors.accent : colors.border,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                AppFormatters.weekdayShort(date),
+                style: context.text.labelSmall?.copyWith(
                   color: isSelected
-                      ? context.colors.accent
-                      : context.colors.surface,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: isSelected
-                        ? context.colors.accent
-                        : context.colors.border,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppFormatters.weekdayShort(date).toUpperCase(),
-                      style: context.text.labelSmall?.copyWith(
-                        color: isSelected
-                            ? context.colors.onAccent.withValues(alpha: 0.85)
-                            : context.colors.dim,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${date.day}',
-                      style: context.text.titleMedium?.copyWith(
-                        color: isSelected
-                            ? context.colors.onAccent
-                            : context.colors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                      ? colors.onAccent.withValues(alpha: 0.85)
+                      : colors.dim,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          );
-        },
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemCount: days,
+              const SizedBox(height: 2),
+              Text(
+                '${date.day}',
+                style:
+                    (isSelected
+                            ? context.text.headlineSmall
+                            : context.text.titleLarge)
+                        ?.copyWith(
+                          color: isSelected ? colors.onAccent : colors.ink,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.6,
+                          height: 1.1,
+                        ),
+              ),
+              if (isToday) ...[
+                const SizedBox(height: 4),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? colors.onAccent : colors.accent,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-/// How long the court is wanted for. Three values, all on screen.
 class DurationPicker extends StatelessWidget {
   const DurationPicker({
     super.key,
