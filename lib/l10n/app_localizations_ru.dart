@@ -722,4 +722,48 @@ class LRu extends L {
 
   @override
   String get bookingStatusExpired => 'истекла';
+
+  @override
+  String bookingStatusCollectingPaid(int paid, int total) {
+    return 'оплатили $paid из $total';
+  }
+
+  @override
+  String get sharesTitle => 'Оплата долей';
+
+  @override
+  String get sharePaid => 'оплачено';
+
+  @override
+  String get shareUnpaid => 'ждём оплату';
+
+  @override
+  String sharesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'осталось $count долей',
+      few: 'осталось $count доли',
+      one: 'осталась $count доля',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sharesAllPaid => 'все доли оплачены';
+
+  @override
+  String get player => 'Игрок';
+
+  @override
+  String get playerOrganizer => 'Организатор';
+
+  @override
+  String get playerGames => 'Игры этого участника';
+
+  @override
+  String get playerNoGames => 'Других игр этого участника здесь нет';
+
+  @override
+  String get playerPending => 'ждёт одобрения';
 }

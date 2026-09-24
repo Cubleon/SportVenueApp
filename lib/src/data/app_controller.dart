@@ -233,7 +233,13 @@ class AppController extends ChangeNotifier {
     phone = user['phone'] as String? ?? phone;
     selectedSportIds = nextSelectedIds;
     bookings = bookingRows
-        .map((row) => _bookingFromJson(row, venueCatalog: nextVenues))
+        .map(
+          (row) => _bookingFromJson(
+            row,
+            venueCatalog: nextVenues,
+            currentUserId: nextUserId,
+          ),
+        )
         .toList();
     games = gameRows
         .map(
@@ -339,7 +345,11 @@ class AppController extends ChangeNotifier {
       players: draft.players,
       paymentMode: draft.mode.name,
     );
-    final booking = _bookingFromJson(row, venueCatalog: venues);
+    final booking = _bookingFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
     bookings = [booking, ...bookings.where((item) => item.id != booking.id)];
     notifyListeners();
     return booking;
@@ -352,6 +362,7 @@ class AppController extends ChangeNotifier {
         : _bookingFromJson(
             await api.cancelBooking(booking.id),
             venueCatalog: venues,
+            currentUserId: userId,
           );
 
     bookings = [
@@ -662,11 +673,13 @@ Venue _venueFromJson(ApiJsonObject row, {required List<Venue> venueCatalog}) {
 Booking _bookingFromJson(
   ApiJsonObject row, {
   required List<Venue> venueCatalog,
+  String? currentUserId,
 }) {
   final venueRow = _objectField(row, 'venue');
   return Booking.fromJson(
     row,
     venue: _venueFromJson(venueRow, venueCatalog: venueCatalog),
+    currentUserId: currentUserId,
   );
 }
 

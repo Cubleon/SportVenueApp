@@ -1304,6 +1304,72 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'истекла'**
   String get bookingStatusExpired;
+
+  /// No description provided for @bookingStatusCollectingPaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'оплатили {paid} из {total}'**
+  String bookingStatusCollectingPaid(int paid, int total);
+
+  /// No description provided for @sharesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата долей'**
+  String get sharesTitle;
+
+  /// No description provided for @sharePaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'оплачено'**
+  String get sharePaid;
+
+  /// No description provided for @shareUnpaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'ждём оплату'**
+  String get shareUnpaid;
+
+  /// No description provided for @sharesLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{осталась {count} доля} few{осталось {count} доли} other{осталось {count} долей}}'**
+  String sharesLeft(int count);
+
+  /// No description provided for @sharesAllPaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'все доли оплачены'**
+  String get sharesAllPaid;
+
+  /// No description provided for @player.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игрок'**
+  String get player;
+
+  /// No description provided for @playerOrganizer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Организатор'**
+  String get playerOrganizer;
+
+  /// No description provided for @playerGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры этого участника'**
+  String get playerGames;
+
+  /// No description provided for @playerNoGames.
+  ///
+  /// In ru, this message translates to:
+  /// **'Других игр этого участника здесь нет'**
+  String get playerNoGames;
+
+  /// No description provided for @playerPending.
+  ///
+  /// In ru, this message translates to:
+  /// **'ждёт одобрения'**
+  String get playerPending;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

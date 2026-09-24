@@ -10,6 +10,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
+import 'player_screen.dart';
 
 /// Stands in for a sport the server sent that this build does not know.
 /// Its colour is fixed rather than themed: it is a marker on a map, and a
@@ -377,6 +378,12 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                         child: _ParticipantTile(
                           participant: current.organizer,
+                          onTap: () => _openPlayer(
+                            context,
+                            widget.controller,
+                            current.organizer,
+                            isOrganizer: true,
+                          ),
                           trailing: OutlinedButton(
                             onPressed: () =>
                                 showAppSnack(context, context.l10n.chatLater),
@@ -404,6 +411,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                       ? current.participants[i]
                                       : null,
                                   isLast: i == current.capacity - 1,
+                                  onTap: i < current.participants.length
+                                      ? () => _openPlayer(
+                                          context,
+                                          widget.controller,
+                                          current.participants[i],
+                                        )
+                                      : null,
                                 ),
                             ],
                           ),
@@ -766,14 +780,20 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _ParticipantTile extends StatelessWidget {
-  const _ParticipantTile({required this.participant, this.trailing});
+  const _ParticipantTile({
+    required this.participant,
+    this.trailing,
+    this.onTap,
+  });
 
   final Participant participant;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: onTap,
       child: Row(
         children: [
           _Avatar(participant: participant, size: 48),
@@ -790,7 +810,11 @@ class _ParticipantTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  context.l10n.rating(participant.rating.toStringAsFixed(1)),
+                  participant.hasRating
+                      ? context.l10n.rating(
+                          participant.rating.toStringAsFixed(1),
+                        )
+                      : context.l10n.playerOrganizer,
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                   ),
@@ -806,60 +830,88 @@ class _ParticipantTile extends StatelessWidget {
 }
 
 class _PlayerSlot extends StatelessWidget {
-  const _PlayerSlot({required this.participant, required this.isLast});
+  const _PlayerSlot({
+    required this.participant,
+    required this.isLast,
+    this.onTap,
+  });
 
   final Participant? participant;
   final bool isLast;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final empty = participant == null;
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              if (empty)
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: context.colors.ink.withValues(alpha: 0.36),
-                      width: 1.5,
-                      style: BorderStyle.solid,
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTheme.radiusInner),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                if (empty)
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: context.colors.ink.withValues(alpha: 0.36),
+                        width: 1.5,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                  )
+                else
+                  _Avatar(participant: participant!, size: 40),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    empty ? context.l10n.freeSlot : participant!.name,
+                    style: context.text.bodyMedium?.copyWith(
+                      color: empty ? context.colors.dim : context.colors.ink,
+                      fontStyle: empty ? FontStyle.italic : FontStyle.normal,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                )
-              else
-                _Avatar(participant: participant!, size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  empty ? context.l10n.freeSlot : participant!.name,
-                  style: context.text.bodyMedium?.copyWith(
-                    color: empty ? context.colors.dim : context.colors.ink,
-                    fontStyle: empty ? FontStyle.italic : FontStyle.normal,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
-              ),
-              if (!empty)
-                Text(
-                  participant!.rating.toStringAsFixed(1),
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
+                if (!empty && participant!.hasRating)
+                  Text(
+                    participant!.rating.toStringAsFixed(1),
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.muted,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         if (!isLast) Divider(height: 1, color: context.colors.border),
       ],
     );
   }
+}
+
+/// Opens a player, so a roster reads as people rather than as a list of
+/// names that does nothing when tapped.
+void _openPlayer(
+  BuildContext context,
+  AppController controller,
+  Participant player, {
+  bool isOrganizer = false,
+}) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PlayerScreen(
+        controller: controller,
+        player: player,
+        isOrganizer: isOrganizer,
+      ),
+    ),
+  );
 }
 
 String _gameTypeTitle(BuildContext context, GameType type) {

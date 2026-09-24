@@ -430,8 +430,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 const SizedBox(height: 12),
                 _BookingDetailsCard(
                   draft: widget.booking.draft,
-                  status: bookingStatusText(context, widget.booking.statusCode),
+                  status: bookingStatusText(context, widget.booking),
                 ),
+                if (widget.booking.shares.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _SharesCard(booking: widget.booking),
+                ],
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
                 if (!canCancel) ...[
@@ -541,6 +545,119 @@ class _BookingDetailsCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Who has paid their part and who has not.
+///
+/// A booking that is collecting shares raises exactly one question, and the
+/// old label answered none of it: the organiser could not tell whom to
+/// remind, and the others could not tell whether they were the ones holding
+/// it up.
+class _SharesCard extends StatelessWidget {
+  const _SharesCard({required this.booking});
+
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final unpaid = booking.shares.length - booking.paidShares;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.sharesTitle,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                unpaid == 0
+                    ? context.l10n.sharesAllPaid
+                    : context.l10n.sharesLeft(unpaid),
+                style: context.text.bodySmall?.copyWith(
+                  color: unpaid == 0
+                      ? context.colors.success
+                      : context.colors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (final share in booking.shares)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: context.scaled(34),
+                    height: context.scaled(34),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: share.isPaid
+                          ? context.colors.accentSoft
+                          : context.colors.surfaceRaised,
+                    ),
+                    child: Text(
+                      share.initial,
+                      style: context.text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: share.isPaid
+                            ? context.colors.accent
+                            : context.colors.muted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      share.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodyMedium?.copyWith(
+                        fontWeight: share.isCurrentUser
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // The mark carries the state too: paid and not paid must
+                  // not differ by colour alone.
+                  Icon(
+                    share.isPaid
+                        ? Icons.check_circle_rounded
+                        : Icons.schedule_rounded,
+                    size: 18,
+                    color: share.isPaid
+                        ? context.colors.success
+                        : context.colors.dim,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    share.isPaid
+                        ? context.l10n.sharePaid
+                        : context.l10n.shareUnpaid,
+                    style: context.text.bodySmall?.copyWith(
+                      color: share.isPaid
+                          ? context.colors.success
+                          : context.colors.muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

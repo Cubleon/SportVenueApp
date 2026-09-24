@@ -815,7 +815,7 @@ class BookingRow extends StatelessWidget {
                 Text(
                   context.l10n.bookingRowSubtitle(
                     booking.draft.timeRange,
-                    bookingStatusText(context, booking.statusCode),
+                    bookingStatusText(context, booking),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

@@ -225,5 +225,18 @@
   "bookingStatusCollecting": "ожидает участников",
   "bookingStatusConfirmed": "подтверждена",
   "bookingStatusCancelled": "отменена",
-  "bookingStatusExpired": "истекла"
+  "bookingStatusExpired": "истекла",
+  "bookingStatusCollectingPaid": "оплатили {paid} из {total}",
+  "@bookingStatusCollectingPaid": {"placeholders": {"paid": {"type": "int"}, "total": {"type": "int"}}},
+  "sharesTitle": "Оплата долей",
+  "sharePaid": "оплачено",
+  "shareUnpaid": "ждём оплату",
+  "sharesLeft": "{count, plural, one{осталась {count} доля} few{осталось {count} доли} other{осталось {count} долей}}",
+  "@sharesLeft": {"placeholders": {"count": {"type": "int"}}},
+  "sharesAllPaid": "все доли оплачены",
+  "player": "Игрок",
+  "playerOrganizer": "Организатор",
+  "playerGames": "Игры этого участника",
+  "playerNoGames": "Других игр этого участника здесь нет",
+  "playerPending": "ждёт одобрения"
 }

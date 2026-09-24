@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../l10n/l10n.dart';
 import 'data/api_client.dart';
+import 'models/sport_venue_models.dart';
 import 'data/app_controller.dart';
 
 /// Values the app holds as codes, put into the reader's language.
@@ -39,14 +40,24 @@ String errorTextFor(L l10n, Object error) {
 }
 
 /// A booking's state, which the server sends as a code.
-String bookingStatusText(BuildContext context, String statusCode) {
-  return switch (statusCode) {
+///
+/// While the money is being collected the state is a count, not a word:
+/// "оплатили 2 из 4" answers the question the reader actually has, which
+/// "сбор долей" never did.
+String bookingStatusText(BuildContext context, Booking booking) {
+  if (booking.isCollectingShares && booking.shares.isNotEmpty) {
+    return context.l10n.bookingStatusCollectingPaid(
+      booking.paidShares,
+      booking.shares.length,
+    );
+  }
+  return switch (booking.statusCode) {
     'collecting_shares' => context.l10n.bookingStatusCollecting,
     'confirmed' => context.l10n.bookingStatusConfirmed,
     'cancelled' => context.l10n.bookingStatusCancelled,
     'expired' => context.l10n.bookingStatusExpired,
     // A state this build has not heard of: better the server's own word
     // than nothing at all.
-    _ => statusCode,
+    _ => booking.statusCode,
   };
 }
