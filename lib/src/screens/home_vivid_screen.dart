@@ -10,16 +10,17 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sport_surface.dart';
 
-/// A second answer to the same screen: the loud half and the calm half of the
-/// references, in one page.
+/// A second answer to the same screen: the two references as one page rather
+/// than one stacked on the other.
 ///
-/// The top is the bright one — saturated blue running edge to edge under the
-/// status bar, one fact blown up to a third of the screen, and balls that
-/// break out of the block onto the page below. The rest is the grocery-app
-/// one — a pale page, white cards with generous corners, round category tiles,
-/// a floating bar. The search field straddles the seam between them, which is
-/// what keeps the two halves reading as one screen rather than two pasted
-/// together.
+/// There is no band and no seam. The page is a single field — saturated blue
+/// at the top of the scroll, fading into the pale page colour and staying
+/// there — and every piece of content is the same white card with the same
+/// corner radius, whether it is sitting on the blue or on the pale. What the
+/// loud reference contributes is not a zone but a set of habits repeated the
+/// whole way down: display-weight type, balls breaking out of their
+/// containers, one blue card in every row, and one warm colour that marks what
+/// is urgent.
 ///
 /// Nothing is invented: no discount that does not exist, no badge for a
 /// promotion nobody ran. The big number is the next real game's kick-off, the
@@ -51,12 +52,13 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   static const _blue = Color(0xFF2F5BFF);
   static const _blueSoft = Color(0xFFE6EBFF);
   static const _skyTop = Color(0xFF2E86FF);
-  static const _skyLow = Color(0xFF5BA6FF);
+  static const _skyLow = Color(0xFF6AACFF);
 
-  /// The one warm colour on the page. It marks where you are in the bar and
-  /// nothing else — a single hot accent is what the references do, and it only
-  /// works while it stays rare.
+  /// The one warm colour on the page. It marks what is running out — free
+  /// places — and where you are in the bar, and nothing else. A hot accent
+  /// only works while it stays rare.
   static const _hot = Color(0xFFFF4D3D);
+  static const _hotSoft = Color(0xFFFFE9E6);
 
   static const _cardShadow = [
     BoxShadow(color: Color(0x14201A4A), blurRadius: 18, offset: Offset(0, 8)),
@@ -103,6 +105,11 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
         final venues = _venues;
         final games = _games;
         final empty = venues.isEmpty && games.isEmpty;
+        final topInset = MediaQuery.viewPaddingOf(context).top;
+
+        // The blue is a wash over the page colour, not a block on top of it:
+        // it ends in exactly the page colour, so there is no edge to see.
+        final fieldHeight = topInset + context.scaled(408, max: 1.3);
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle.light.copyWith(
@@ -114,68 +121,91 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
             backgroundColor: _bg,
             body: Stack(
               children: [
-                CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: _Hero(
-                        controller: widget.controller,
-                        game: games.isNotEmpty ? games.first : null,
-                        venue: venues.isNotEmpty ? venues.first : null,
-                        search: _search,
-                        onQuery: (value) =>
-                            setState(() => _query = value.trim().toLowerCase()),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _SectionTitle(context.l10n.vividSports),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _CategoryRow(
-                        sports: widget.controller.sports,
-                        selected: _sportId,
-                        onSelect: (id) => setState(() => _sportId = id),
-                      ),
-                    ),
-                    if (venues.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _SectionTitle(context.l10n.vividFreeToday),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: context.scaled(248, max: 1.4),
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: venues.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (context, index) => _VenueCard(
-                              venue: venues[index],
-                              sportId: _sportOf(venues[index]),
+                SingleChildScrollView(
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: fieldHeight,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [_skyTop, _skyLow, _bg],
+                              stops: [0, 0.58, 1],
                             ),
                           ),
                         ),
                       ),
-                    ],
-                    if (games.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _SectionTitle(context.l10n.openGames),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _HeroTop(
+                            controller: widget.controller,
+                            game: games.isNotEmpty ? games.first : null,
+                            venue: venues.isNotEmpty ? venues.first : null,
+                            topInset: topInset,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                            child: _SearchField(
+                              controller: _search,
+                              onChanged: (value) => setState(
+                                () => _query = value.trim().toLowerCase(),
+                              ),
+                            ),
+                          ),
+                          _SectionTitle(context.l10n.vividSports),
+                          _CategoryRow(
+                            sports: widget.controller.sports,
+                            selected: _sportId,
+                            onSelect: (id) => setState(() => _sportId = id),
+                          ),
+                          if (venues.isNotEmpty) ...[
+                            _SectionTitle(context.l10n.vividFreeToday),
+                            SizedBox(
+                              height: context.scaled(248, max: 1.4),
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                itemCount: venues.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) => _VenueCard(
+                                  venue: venues[index],
+                                  sportId: _sportOf(venues[index]),
+                                  // One blue card in the row, the way the
+                                  // top of the page is blue: the accent
+                                  // travels down instead of staying up there.
+                                  accent: index == 0,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (games.isNotEmpty) ...[
+                            _SectionTitle(context.l10n.openGames),
+                            for (final game in games)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  10,
+                                ),
+                                child: _GameCard(game: game),
+                              ),
+                          ],
+                          if (empty) _NothingFound(onReset: _reset),
+                          SizedBox(height: context.scaled(110, max: 1.3)),
+                        ],
                       ),
-                      SliverList.separated(
-                        itemCount: games.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: _GameCard(game: games[index]),
-                        ),
-                      ),
                     ],
-                    if (empty)
-                      SliverToBoxAdapter(child: _NothingFound(onReset: _reset)),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: context.scaled(110, max: 1.3)),
-                    ),
-                  ],
+                  ),
                 ),
                 const Positioned(
                   left: 0,
@@ -199,22 +229,20 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   }
 }
 
-/// The loud half: blue to the very top of the glass, one fact at display size,
-/// and balls that leave the block.
-class _Hero extends StatelessWidget {
-  const _Hero({
+/// The top of the page: the same cards as everywhere else, plus the one fact
+/// worth blowing up and the balls that carry the loud reference in.
+class _HeroTop extends StatelessWidget {
+  const _HeroTop({
     required this.controller,
     required this.game,
     required this.venue,
-    required this.search,
-    required this.onQuery,
+    required this.topInset,
   });
 
   final AppController controller;
   final Game? game;
   final Venue? venue;
-  final TextEditingController search;
-  final ValueChanged<String> onQuery;
+  final double topInset;
 
   @override
   Widget build(BuildContext context) {
@@ -234,142 +262,105 @@ class _Hero extends StatelessWidget {
           AppFormatters.money(v.pricePerHour),
           '${v.name.capitalized} · ${v.distanceKm.toStringAsFixed(1)} км',
         ),
-        // Nothing matched the search: the block keeps its colour and its
+        // Nothing matched the search: the page keeps its colour and its
         // header, and says nothing rather than saying it with a dash.
         _ => null,
       },
     };
 
-    // Half the search field hangs below the blue, onto the page.
-    const overhang = 30.0;
-    final topInset = MediaQuery.viewPaddingOf(context).top;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: overhang),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, overhang + 46),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  _HomeVividScreenState._skyTop,
-                  _HomeVividScreenState._skyLow,
-                ],
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(36)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _HeaderPill(controller: controller),
-                if (headline case (final label, final display, final line)) ...[
-                  SizedBox(height: context.scaled(26, max: 1.4)),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: context.text.labelLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.88),
-                      fontWeight: FontWeight.w600,
-                    ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _HeaderPill(controller: controller),
+              if (headline case (final label, final display, final line)) ...[
+                SizedBox(height: context.scaled(26, max: 1.4)),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: context.text.labelLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontWeight: FontWeight.w600,
                   ),
-                  Text(
-                    display,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    style: context.text.displayMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -3,
-                      height: 1.12,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x452A5FA8),
-                          blurRadius: 24,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    line,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: context.scaled(16, max: 1.4)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (current != null && !current.isFull)
-                        _HeroPill(
-                          text: l10n.freePlaces(current.freePlaces),
-                          solid: true,
-                        ),
-                      if (current != null && !current.isFull)
-                        const SizedBox(width: 8),
-                      if (current != null)
-                        _HeroPill(
-                          text: AppFormatters.money(current.pricePerPerson),
-                        )
-                      else if (club != null)
-                        _HeroPill(
-                          text: l10n.rating(club.rating.toStringAsFixed(1)),
-                        ),
+                ),
+                Text(
+                  display,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: context.text.displayMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -3,
+                    height: 1.12,
+                    shadows: const [
+                      Shadow(
+                        color: Color(0x452A5FA8),
+                        blurRadius: 24,
+                        offset: Offset(0, 10),
+                      ),
                     ],
                   ),
-                ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  line,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: context.scaled(16, max: 1.4)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (current != null && !current.isFull) ...[
+                      _HeroPill(
+                        text: l10n.freePlaces(current.freePlaces),
+                        solid: true,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (current != null)
+                      _HeroPill(
+                        text: AppFormatters.money(current.pricePerPerson),
+                      )
+                    else if (club != null)
+                      _HeroPill(
+                        text: l10n.rating(club.rating.toStringAsFixed(1)),
+                      ),
+                  ],
+                ),
               ],
+            ],
+          ),
+        ),
+        if (headline != null) ...[
+          Positioned(
+            left: -34,
+            top: topInset + 88,
+            child: _Ball(
+              kind: _BallKind.soccer,
+              size: context.scaled(104, max: 1.15),
             ),
           ),
-          // The balls sit behind the type and spill past the block — the trick
-          // the bright references use to get depth out of a flat background.
-          // They go with it: over a block shrunk to its header they would just
-          // be litter on the page.
-          if (headline != null) ...[
-            Positioned(
-              left: -34,
-              top: topInset + 88,
-              child: _Ball(
-                kind: _BallKind.soccer,
-                size: context.scaled(104, max: 1.15),
-              ),
-            ),
-            Positioned(
-              right: -30,
-              top: topInset + 100,
-              child: _Ball(
-                kind: _BallKind.basket,
-                size: context.scaled(92, max: 1.15),
-                tilt: 0.2,
-              ),
-            ),
-            Positioned(
-              right: -16,
-              bottom: 56,
-              child: _Ball(
-                kind: _BallKind.tennis,
-                size: context.scaled(56, max: 1.1),
-                tilt: -0.3,
-              ),
-            ),
-          ],
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: 0,
-            child: _SearchField(controller: search, onChanged: onQuery),
+            right: -30,
+            top: topInset + 100,
+            child: _Ball(
+              kind: _BallKind.basket,
+              size: context.scaled(92, max: 1.15),
+              tilt: 0.2,
+            ),
           ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -761,27 +752,43 @@ class _CategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: context.scaled(106, max: 1.5),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: sports.length + 1,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _CategoryTile(
-              label: context.l10n.allFilter,
-              selected: selected == 'all',
-              onTap: () => onSelect('all'),
-            );
-          }
-          final sport = sports[index - 1];
-          return _CategoryTile(
-            label: sport.name.capitalized,
-            sportId: sport.id,
-            selected: selected == sport.id,
-            onTap: () => onSelect(sport.id),
-          );
-        },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Half a ball behind the last tile: the same break-out the top of
+          // the page does, repeated where the page has gone pale.
+          Positioned(
+            right: 8,
+            top: -22,
+            child: _Ball(
+              kind: _BallKind.tennis,
+              size: context.scaled(54, max: 1.15),
+              tilt: -0.3,
+            ),
+          ),
+          ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: sports.length + 1,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _CategoryTile(
+                  label: context.l10n.allFilter,
+                  selected: selected == 'all',
+                  onTap: () => onSelect('all'),
+                );
+              }
+              final sport = sports[index - 1];
+              return _CategoryTile(
+                label: sport.name.capitalized,
+                sportId: sport.id,
+                selected: selected == sport.id,
+                onTap: () => onSelect(sport.id),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -861,20 +868,42 @@ class _CategoryTile extends StatelessWidget {
 }
 
 class _VenueCard extends StatelessWidget {
-  const _VenueCard({required this.venue, required this.sportId});
+  const _VenueCard({
+    required this.venue,
+    required this.sportId,
+    this.accent = false,
+  });
 
   final Venue venue;
   final String sportId;
 
+  /// Blue instead of white. One card per row wears the page's own colour, so
+  /// the accent is something the whole page does rather than a band at the
+  /// top of it.
+  final bool accent;
+
   @override
   Widget build(BuildContext context) {
+    final ink = accent ? Colors.white : _HomeVividScreenState._ink;
+    final sub = accent
+        ? Colors.white.withValues(alpha: 0.78)
+        : _HomeVividScreenState._muted;
+
     return Container(
       width: context.scaled(176, max: 1.25),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: accent ? _HomeVividScreenState._blue : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: _HomeVividScreenState._cardShadow,
+        boxShadow: accent
+            ? const [
+                BoxShadow(
+                  color: Color(0x452F5BFF),
+                  blurRadius: 22,
+                  offset: Offset(0, 10),
+                ),
+              ]
+            : _HomeVividScreenState._cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -934,7 +963,7 @@ class _VenueCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.titleSmall?.copyWith(
-                      color: _HomeVividScreenState._ink,
+                      color: ink,
                       fontWeight: FontWeight.w800,
                       height: 1.15,
                     ),
@@ -948,9 +977,7 @@ class _VenueCard extends StatelessWidget {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.text.labelSmall?.copyWith(
-                    color: _HomeVividScreenState._muted,
-                  ),
+                  style: context.text.labelSmall?.copyWith(color: sub),
                 ),
                 const Spacer(),
                 Row(
@@ -963,7 +990,7 @@ class _VenueCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
-                          color: _HomeVividScreenState._ink,
+                          color: ink,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -972,14 +999,18 @@ class _VenueCard extends StatelessWidget {
                     Container(
                       width: 34,
                       height: 34,
-                      decoration: const BoxDecoration(
-                        color: _HomeVividScreenState._blue,
+                      decoration: BoxDecoration(
+                        color: accent
+                            ? Colors.white
+                            : _HomeVividScreenState._blue,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_outward_rounded,
                         size: 18,
-                        color: Colors.white,
+                        color: accent
+                            ? _HomeVividScreenState._blue
+                            : Colors.white,
                       ),
                     ),
                   ],
@@ -1050,13 +1081,13 @@ class _GameCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _HomeVividScreenState._blueSoft,
+                    color: _HomeVividScreenState._hotSoft,
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
                     context.l10n.freePlaces(game.freePlaces),
                     style: context.text.labelSmall?.copyWith(
-                      color: _HomeVividScreenState._blue,
+                      color: _HomeVividScreenState._hot,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1165,7 +1196,7 @@ class _BottomBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: switch (i) {
-                    0 => const Color(0xFFFFE9E6),
+                    0 => _HomeVividScreenState._hotSoft,
                     2 => _HomeVividScreenState._blue,
                     _ => Colors.transparent,
                   },
