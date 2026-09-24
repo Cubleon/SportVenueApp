@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
@@ -61,14 +65,12 @@ class _GamesScreenState extends State<GamesScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: ScreenTitleBar(
-                  title: 'Игры',
-                  subtitle: 'pickup-матчи рядом',
+                  title: context.l10n.games,
+                  subtitle: context.l10n.gamesSubtitle,
                   trailing: IconButton(
-                    tooltip: 'Фильтры',
-                    onPressed: () => showAppSnack(
-                      context,
-                      'Расширенные фильтры появятся позже',
-                    ),
+                    tooltip: context.l10n.filters,
+                    onPressed: () =>
+                        showAppSnack(context, context.l10n.filtersLater),
                     icon: const Icon(Icons.tune_rounded),
                   ),
                 ),
@@ -94,21 +96,19 @@ class _GamesScreenState extends State<GamesScreen> {
                         ? EmptyState(
                             key: const ValueKey('games-empty-filtered'),
                             icon: Icons.filter_alt_off_rounded,
-                            title: 'Под фильтры ничего не подошло',
-                            description:
-                                'Игры есть, но не в этом виде спорта или не в это время.',
-                            actionLabel: 'Показать все игры',
+                            title: context.l10n.nothingMatchesFilters,
+                            description: context.l10n.nothingMatchesFiltersHint,
+                            actionLabel: context.l10n.showAllGames,
                             onAction: () => setState(() {
                               _sportId = 'all';
                               _timeFilter = 'all';
                             }),
                           )
-                        : const EmptyState(
-                            key: ValueKey('games-empty'),
+                        : EmptyState(
+                            key: const ValueKey('games-empty'),
                             icon: Icons.sports_soccer_rounded,
-                            title: 'Открытых игр пока нет',
-                            description:
-                                'Создайте свою — участники смогут вступить и оплатить долю.',
+                            title: context.l10n.noOpenGames,
+                            description: context.l10n.noOpenGamesHint,
                           ),
                   ),
                 ),
@@ -197,7 +197,10 @@ class _MiniGameCardState extends State<MiniGameCard> {
           ),
           const SizedBox(height: 5),
           Text(
-            '${AppFormatters.dateShort(game.date)} · ${game.timeRange}',
+            context.l10n.gameWhen(
+              AppFormatters.dateShort(game.date),
+              game.timeRange,
+            ),
             style: context.text.bodySmall?.copyWith(
               color: context.colors.muted,
             ),
@@ -205,7 +208,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
           const SizedBox(height: 12),
           _CardFooter(
             places: Text(
-              '${game.freePlaces} ${game.freePlaces == 1 ? 'место' : 'места'} свободно',
+              context.l10n.freePlaces(game.freePlaces),
               style: context.text.bodySmall?.copyWith(
                 color: context.colors.muted,
               ),
@@ -234,7 +237,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
                         ),
                       )
                     : Text(
-                        'Вступить',
+                        context.l10n.join,
                         style: context.text.labelLarge?.copyWith(
                           color: context.colors.onAccent,
                           fontWeight: FontWeight.w700,
@@ -257,7 +260,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
       }
       showAppSnack(
         context,
-        joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
+        joined ? context.l10n.joined : context.l10n.alreadyJoined,
         // Only a join that took anything is worth a knock.
         tone: joined ? SnackTone.done : SnackTone.plain,
       );
@@ -265,11 +268,7 @@ class _MiniGameCardState extends State<MiniGameCard> {
       if (!mounted) {
         return;
       }
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -322,7 +321,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: _DetailHeader(
-                        title: _gameTypeTitle(current.type),
+                        title: _gameTypeTitle(context, current.type),
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
@@ -351,15 +350,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               ),
                               Divider(height: 28, color: context.colors.border),
                               SummaryRow(
-                                label: 'Дата',
+                                label: context.l10n.summaryDate,
                                 value: AppFormatters.dateFull(current.date),
                               ),
                               SummaryRow(
-                                label: 'Время',
+                                label: context.l10n.summaryTime,
                                 value: current.timeRange,
                               ),
                               SummaryRow(
-                                label: 'Стоимость',
+                                label: context.l10n.price,
                                 value: AppFormatters.money(
                                   current.pricePerPerson,
                                 ),
@@ -371,7 +370,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                       ),
                     ),
                     SliverToBoxAdapter(
-                      child: _SectionLabel(text: 'Организатор'),
+                      child: _SectionLabel(text: context.l10n.organizer),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
@@ -380,13 +379,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                           participant: current.organizer,
                           trailing: OutlinedButton(
                             onPressed: () =>
-                                showAppSnack(context, 'Чат подключится позже'),
-                            child: const Text('Написать'),
+                                showAppSnack(context, context.l10n.chatLater),
+                            child: Text(context.l10n.write),
                           ),
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: _SectionLabel(text: 'игроки')),
+                    SliverToBoxAdapter(
+                      child: _SectionLabel(text: context.l10n.players),
+                    ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
@@ -417,7 +418,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             alpha: 0.2,
                           ),
                           child: SummaryRow(
-                            label: 'Стоимость',
+                            label: context.l10n.price,
                             value: AppFormatters.money(current.pricePerPerson),
                             accent: true,
                           ),
@@ -442,7 +443,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         )
                         ? PrimaryButton(
                             key: const ValueKey('detail-leave-game'),
-                            label: 'Выйти из игры',
+                            label: context.l10n.leaveGame,
                             tone: ButtonTone.neutral,
                             isLoading: _joining,
                             onPressed: _joining ? null : () => _leave(current),
@@ -450,8 +451,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         : PrimaryButton(
                             key: const ValueKey('detail-join-game'),
                             label: current.type == GameType.approval
-                                ? 'Заявка и оплата после одобрения'
-                                : 'Присоединиться к игре',
+                                ? context.l10n.requestAfterApproval
+                                : context.l10n.joinGame,
                             isLoading: _joining,
                             onPressed: current.isFull || _joining
                                 ? null
@@ -470,13 +471,14 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   Future<void> _leave(Game game) async {
     final confirmed = await confirmAction(
       context,
-      title: 'Выйти из игры?',
-      message:
-          '${game.venue.name.capitalized}, '
-          '${AppFormatters.dateShort(game.date)} · ${game.timeRange}. '
-          'Место вернётся в игру, и его сможет занять кто-то другой.',
-      confirmLabel: 'Выйти',
-      cancelLabel: 'Остаться',
+      title: context.l10n.leaveGameQuestion,
+      message: context.l10n.leaveGameMessage(
+        game.venue.name.capitalized,
+        AppFormatters.dateShort(game.date),
+        game.timeRange,
+      ),
+      confirmLabel: context.l10n.leaveConfirm,
+      cancelLabel: context.l10n.stay,
     );
     if (!confirmed || !mounted) {
       return;
@@ -490,18 +492,14 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        left ? 'Вы вышли из игры' : 'Вас не было в этой игре',
+        left ? context.l10n.leftGame : context.l10n.wasNotInGame,
         tone: left ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -518,7 +516,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        joined ? 'Вы присоединились к игре' : 'Вы уже в этой игре',
+        joined ? context.l10n.joined : context.l10n.alreadyJoined,
         // Only a join that took anything is worth a knock.
         tone: joined ? SnackTone.done : SnackTone.plain,
       );
@@ -526,11 +524,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       if (!mounted) {
         return;
       }
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -559,7 +553,7 @@ class _SportFilter extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: [
           SelectableChip(
-            label: 'Все',
+            label: context.l10n.allFilter,
             selected: value == 'all',
             onTap: () => onChanged('all'),
           ),
@@ -589,7 +583,10 @@ class _TimeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = {'evening': 'Вечер', 'all': 'Любой день'};
+    final options = {
+      'evening': context.l10n.evening,
+      'all': context.l10n.anyDay,
+    };
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Row(
@@ -723,7 +720,7 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
-            tooltip: 'Назад',
+            tooltip: context.l10n.back,
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
@@ -793,7 +790,7 @@ class _ParticipantTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Рейтинг ${participant.rating.toStringAsFixed(1)}',
+                  context.l10n.rating(participant.rating.toStringAsFixed(1)),
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                   ),
@@ -841,7 +838,7 @@ class _PlayerSlot extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  empty ? 'свободно' : participant!.name,
+                  empty ? context.l10n.freeSlot : participant!.name,
                   style: context.text.bodyMedium?.copyWith(
                     color: empty ? context.colors.dim : context.colors.ink,
                     fontStyle: empty ? FontStyle.italic : FontStyle.normal,
@@ -865,10 +862,10 @@ class _PlayerSlot extends StatelessWidget {
   }
 }
 
-String _gameTypeTitle(GameType type) {
+String _gameTypeTitle(BuildContext context, GameType type) {
   return switch (type) {
-    GameType.open => 'Открытая игра',
-    GameType.approval => 'Игра по одобрению',
-    GameType.closed => 'Закрытая игра',
+    GameType.open => context.l10n.openGame,
+    GameType.approval => context.l10n.approvalGame,
+    GameType.closed => context.l10n.closedGame,
   };
 }

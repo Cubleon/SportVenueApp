@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
@@ -39,8 +41,8 @@ class HomeScreen extends StatelessWidget {
               SliverToBoxAdapter(child: _Sports(controller: controller)),
               SliverToBoxAdapter(
                 child: SectionHeader(
-                  title: 'Предстоящая бронь',
-                  action: 'Все',
+                  title: context.l10n.upcomingBooking,
+                  action: context.l10n.seeAll,
                   onAction: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => HistoryScreen(controller: controller),
@@ -50,13 +52,13 @@ class HomeScreen extends StatelessWidget {
               ),
               SliverToBoxAdapter(child: _Bookings(controller: controller)),
               SliverToBoxAdapter(
-                child: SectionHeader(title: 'Рекомендованные площадки'),
+                child: SectionHeader(title: context.l10n.recommendedVenues),
               ),
               SliverToBoxAdapter(child: _Venues(controller: controller)),
               SliverToBoxAdapter(
                 child: SectionHeader(
-                  title: 'Открытые игры',
-                  action: 'Все',
+                  title: context.l10n.openGames,
+                  action: context.l10n.seeAll,
                   onAction: onOpenGames,
                 ),
               ),
@@ -108,7 +110,7 @@ class _TopBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Привет, ${controller.greetingName.capitalized}',
+                  context.l10n.greeting(controller.greetingName.capitalized),
                   style: context.text.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.3,
@@ -124,7 +126,7 @@ class _TopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Москва',
+                      context.l10n.city,
                       style: context.text.bodySmall?.copyWith(
                         color: context.colors.muted,
                         fontWeight: FontWeight.w700,
@@ -137,8 +139,8 @@ class _TopBar extends StatelessWidget {
           ),
           _RoundIcon(
             icon: Icons.notifications_none_rounded,
-            label: 'Уведомления',
-            onTap: () => showAppSnack(context, 'Уведомлений пока нет'),
+            label: context.l10n.notifications,
+            onTap: () => showAppSnack(context, context.l10n.noNotifications),
           ),
         ],
       ),
@@ -164,7 +166,7 @@ class _SearchBar extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Найти площадку или игру',
+                context.l10n.searchPlaceholder,
                 style: context.text.bodyMedium?.copyWith(
                   color: context.colors.muted,
                 ),
@@ -218,7 +220,7 @@ class _Bookings extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: AppCard(
           child: Text(
-            'У вас пока нет предстоящих броней',
+            context.l10n.noUpcomingBookings,
             style: context.text.bodyMedium?.copyWith(
               color: context.colors.muted,
             ),
@@ -294,7 +296,10 @@ class _Venues extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
+                          context.l10n.venueAddressDistance(
+                            venue.address,
+                            venue.distanceKm.toStringAsFixed(1),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
@@ -318,7 +323,9 @@ class _Venues extends StatelessWidget {
                             ),
                             const Spacer(),
                             Text(
-                              '${AppFormatters.money(venue.pricePerHour)}/час',
+                              context.l10n.pricePerHour(
+                                AppFormatters.money(venue.pricePerHour),
+                              ),
                               style: context.text.labelLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),

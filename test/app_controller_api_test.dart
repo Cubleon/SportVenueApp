@@ -88,7 +88,7 @@ void main() {
 
       expect(booking.id, _booking['id']);
       expect(booking.draft.totalPrice, 1600);
-      expect(booking.status, 'подтверждена');
+      expect(booking.statusCode, 'confirmed');
       expect(controller.bookings.single.id, booking.id);
       expect(controller.upcomingBookings.single.id, booking.id);
 
@@ -116,10 +116,10 @@ void main() {
       controller.addListener(() => notifications++);
       final cancelled = await controller.cancelBooking(booking);
 
-      expect(cancelled.status, 'отменена');
+      expect(cancelled.statusCode, 'cancelled');
       expect(cancelled.statusCode, 'cancelled');
       expect(controller.bookings.single.id, booking.id);
-      expect(controller.bookings.single.status, 'отменена');
+      expect(controller.bookings.single.statusCode, 'cancelled');
       expect(controller.upcomingBookings, isEmpty);
       expect(notifications, 1);
 

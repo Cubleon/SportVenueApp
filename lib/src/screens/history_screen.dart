@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
-import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
@@ -57,8 +58,11 @@ class HistoryScreen extends StatelessWidget {
                 slivers: [
                   SliverToBoxAdapter(
                     child: ScreenTitleBar(
-                      title: 'История',
-                      subtitle: _summary(bookings.length, games.length),
+                      title: context.l10n.history,
+                      subtitle: context.l10n.historySummary(
+                        bookings.length,
+                        games.length,
+                      ),
                       leading: BackCircleButton(
                         onTap: () => Navigator.of(context).pop(),
                       ),
@@ -70,7 +74,7 @@ class HistoryScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: AppCard(
                           child: Text(
-                            'Здесь появятся ваши брони и игры',
+                            context.l10n.historyEmpty,
                             style: context.text.bodyMedium?.copyWith(
                               color: context.colors.muted,
                             ),
@@ -79,8 +83,8 @@ class HistoryScreen extends StatelessWidget {
                       ),
                     ),
                   if (bookings.isNotEmpty) ...[
-                    const SliverToBoxAdapter(
-                      child: SectionHeader(title: 'Брони'),
+                    SliverToBoxAdapter(
+                      child: SectionHeader(title: context.l10n.bookingsSection),
                     ),
                     SliverList.separated(
                       itemCount: bookings.length,
@@ -105,8 +109,8 @@ class HistoryScreen extends StatelessWidget {
                     ),
                   ],
                   if (games.isNotEmpty) ...[
-                    const SliverToBoxAdapter(
-                      child: SectionHeader(title: 'Игры'),
+                    SliverToBoxAdapter(
+                      child: SectionHeader(title: context.l10n.gamesSection),
                     ),
                     SliverList.separated(
                       itemCount: games.length,
@@ -139,11 +143,5 @@ class HistoryScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  String _summary(int bookings, int games) {
-    final bookingWord = plural(bookings, 'бронь', 'брони', 'броней');
-    final gameWord = plural(games, 'игра', 'игры', 'игр');
-    return '$bookings $bookingWord · $games $gameWord';
   }
 }

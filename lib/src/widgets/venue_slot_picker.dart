@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../models/sport_venue_models.dart';
+import '../labels.dart';
 import '../theme/app_theme.dart';
 import 'shared_widgets.dart';
 
@@ -45,7 +48,7 @@ class VenueSlotPicker extends StatefulWidget {
 class _VenueSlotPickerState extends State<VenueSlotPicker> {
   List<TimeSlot> _slots = const [];
   bool _loading = true;
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
@@ -112,7 +115,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
       setState(() {
         _slots = const [];
         _loading = false;
-        _error = widget.controller.messageFor(error);
+        _error = error;
       });
       _reportReady(false);
     }
@@ -132,20 +135,20 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
           children: [
             Expanded(
               child: Text(
-                _error!,
+                errorText(context, _error!),
                 style: context.text.bodySmall?.copyWith(
                   color: context.colors.muted,
                 ),
               ),
             ),
-            TextButton(onPressed: _load, child: const Text('Повторить')),
+            TextButton(onPressed: _load, child: Text(context.l10n.retry)),
           ],
         ),
       );
     }
     if (_slots.isEmpty) {
       return Text(
-        'На эту дату свободных слотов нет',
+        context.l10n.noFreeSlots,
         style: context.text.bodySmall?.copyWith(color: context.colors.muted),
       );
     }

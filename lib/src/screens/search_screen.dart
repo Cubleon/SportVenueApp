@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/l10n.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
 
 import '../data/app_controller.dart';
@@ -64,10 +66,10 @@ class _SearchScreenState extends State<SearchScreen> {
         Column(
           children: [
             ScreenTitleBar(
-              title: 'Поиск',
-              subtitle: 'Москва · openfreemap',
+              title: context.l10n.search,
+              subtitle: context.l10n.searchSubtitle,
               trailing: IconButton(
-                tooltip: 'Центр Москвы',
+                tooltip: context.l10n.centreOnMoscow,
                 onPressed: _focusMoscow,
                 icon: const Icon(Icons.my_location_rounded),
               ),
@@ -83,7 +85,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   SelectableChip(
-                    label: 'Все',
+                    label: context.l10n.allFilter,
                     selected: _sportId == 'all',
                     onTap: () => setState(() => _sportId = 'all'),
                   ),
@@ -247,7 +249,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _selectedVenue = null);
     final controller = _mapController;
     if (controller == null) {
-      showAppSnack(context, 'Карта загружается');
+      showAppSnack(context, context.l10n.mapLoading);
       return;
     }
     await controller.animateCamera(
@@ -296,7 +298,7 @@ class _SearchField extends StatelessWidget {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  hintText: 'Клуб, площадка или район',
+                  hintText: context.l10n.searchFieldHint,
                   hintStyle: context.text.bodyMedium?.copyWith(
                     color: context.colors.muted,
                   ),
@@ -306,7 +308,7 @@ class _SearchField extends StatelessWidget {
             if (controller.text.isNotEmpty)
               Semantics(
                 button: true,
-                label: 'Очистить поиск',
+                label: context.l10n.clearSearch,
                 child: InkWell(
                   key: const ValueKey('venue-search-clear'),
                   onTap: () {
@@ -495,10 +497,8 @@ class _ResultsSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
                   venues.isEmpty
-                      ? 'Ничего не найдено'
-                      : '${venues.length} '
-                            '${plural(venues.length, 'клуб', 'клуба', 'клубов')} '
-                            'рядом',
+                      ? context.l10n.nothingFound
+                      : context.l10n.clubsNearby(venues.length),
                   style: context.text.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -514,12 +514,12 @@ class _ResultsSheet extends StatelessWidget {
                       ? Icons.location_off_rounded
                       : Icons.search_off_rounded,
                   title: query.isEmpty
-                      ? 'Площадок этого вида нет'
-                      : 'Ничего не нашлось',
+                      ? context.l10n.noVenuesForSport
+                      : context.l10n.nothingFound,
                   description: query.isEmpty
-                      ? 'В Москве пока нет клубов с этим покрытием.'
-                      : 'По запросу «$query» нет ни клуба, ни адреса.',
-                  actionLabel: 'Сбросить поиск',
+                      ? context.l10n.noVenuesForSportHint
+                      : context.l10n.nothingFoundFor(query),
+                  actionLabel: context.l10n.resetSearch,
                   onAction: onReset,
                 )
               else

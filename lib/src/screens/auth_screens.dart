@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../../l10n/l10n.dart';
 import 'package:flutter/services.dart';
 
 import '../data/formatters.dart';
@@ -78,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
         // anywhere takes the impatient straight through.
         child: Semantics(
           button: true,
-          label: 'Пропустить заставку',
+          label: context.l10n.skipSplash,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _finish,
@@ -192,7 +194,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const Center(child: AppLogo(size: 52)),
               const SizedBox(height: 32),
               Text(
-                'Войти или\nзарегистрироваться',
+                context.l10n.signInTitle,
                 style: context.text.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   height: 1.12,
@@ -272,7 +274,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Согласен с обработкой персональных данных и условиями сервиса',
+                          context.l10n.consent,
                           style: context.text.bodySmall?.copyWith(
                             color: context.colors.muted,
                             height: 1.35,
@@ -286,7 +288,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 8),
               PrimaryButton(
                 key: const ValueKey('registration-continue'),
-                label: 'Продолжить',
+                label: context.l10n.continueLabel,
                 onPressed: _isValid && !_submitting ? _continue : null,
               ),
               if (_submitting)
@@ -316,7 +318,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Text(
-                      'или',
+                      context.l10n.or,
                       style: context.text.bodySmall?.copyWith(
                         color: context.colors.muted,
                       ),
@@ -335,7 +337,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Expanded(
                     child: _SocialButton(
                       key: const ValueKey('social-google'),
-                      semanticLabel: 'Войти через Google',
+                      semanticLabel: context.l10n.signInWithGoogle,
                       mark: const GoogleMark(),
                       onTap: _stubSocial,
                     ),
@@ -344,7 +346,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Expanded(
                     child: _SocialButton(
                       key: const ValueKey('social-vk'),
-                      semanticLabel: 'Войти через VK',
+                      semanticLabel: context.l10n.signInWithVk,
                       mark: const VkMark(),
                       onTap: _stubSocial,
                     ),
@@ -353,7 +355,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   Expanded(
                     child: _SocialButton(
                       key: const ValueKey('social-apple'),
-                      semanticLabel: 'Войти через Apple',
+                      semanticLabel: context.l10n.signInWithApple,
                       mark: const AppleMark(),
                       onTap: _stubSocial,
                     ),
@@ -362,7 +364,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const Spacer(),
               Text(
-                'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности',
+                context.l10n.termsFooter,
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(
                   color: context.colors.ink.withValues(alpha: 0.28),
@@ -377,7 +379,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _stubSocial() {
-    showAppSnack(context, 'Социальный вход подключится позже');
+    showAppSnack(context, context.l10n.socialLater);
   }
 
   Future<void> _continue() async {
@@ -424,7 +426,7 @@ class _OtpScreenState extends State<OtpScreen>
   int _seconds = 59;
   bool _error = false;
   bool _submitting = false;
-  String _errorText = 'Неверный код, попробуйте ещё раз';
+  String? _errorText;
 
   @override
   void initState() {
@@ -474,7 +476,7 @@ class _OtpScreenState extends State<OtpScreen>
               ),
               const SizedBox(height: 36),
               Text(
-                'Введите код',
+                context.l10n.enterCode,
                 style: context.text.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -482,7 +484,7 @@ class _OtpScreenState extends State<OtpScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Мы звоним на ${widget.phone}. Введите последние 4 цифры входящего номера',
+                context.l10n.codeHint(widget.phone),
                 style: context.text.bodyMedium?.copyWith(
                   color: context.colors.muted,
                 ),
@@ -556,7 +558,7 @@ class _OtpScreenState extends State<OtpScreen>
                 child: Padding(
                   padding: const EdgeInsets.only(top: 14),
                   child: Text(
-                    _errorText,
+                    _errorText ?? context.l10n.wrongCode,
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall?.copyWith(
                       color: context.colors.error,
@@ -576,13 +578,13 @@ class _OtpScreenState extends State<OtpScreen>
                 onPressed: _seconds == 0 ? _resend : null,
                 child: Text(
                   _seconds == 0
-                      ? 'Отправить повторно'
-                      : 'Отправить повторно через $_seconds с',
+                      ? context.l10n.resend
+                      : context.l10n.resendIn(_seconds),
                 ),
               ),
               const Spacer(),
               Text(
-                'Не отвечайте на звонок — нужны только последние 4 цифры номера',
+                context.l10n.doNotAnswer,
                 textAlign: TextAlign.center,
                 style: context.text.bodySmall?.copyWith(
                   color: context.colors.muted,
@@ -648,7 +650,7 @@ class _OtpScreenState extends State<OtpScreen>
         setState(() => _seconds--);
       }
     });
-    showAppSnack(context, 'Звонок запрошен повторно');
+    showAppSnack(context, context.l10n.callRequestedAgain);
   }
 
   void _showError(String message) {

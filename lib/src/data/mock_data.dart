@@ -191,7 +191,6 @@ class MockData {
         players: 4,
         mode: PaymentMode.split,
       ),
-      status: 'ожидает участников',
       statusCode: 'collecting_shares',
       createdAt: now,
     );

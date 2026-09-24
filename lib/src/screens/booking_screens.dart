@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
@@ -77,7 +81,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 1,
-                    title: 'Площадка',
+                    title: context.l10n.venueStep,
                     // The club arrives with the screen, but it is still a
                     // choice: comparing two clubs' free hours used to mean
                     // going back out and starting over.
@@ -97,7 +101,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 2,
-                    title: 'Дата',
+                    title: context.l10n.dateStep,
                     child: DateStrip(
                       now: widget.controller.now,
                       selected: _date,
@@ -108,7 +112,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 3,
-                    title: 'Продолжительность',
+                    title: context.l10n.durationStep,
                     child: DurationPicker(
                       value: _duration,
                       onChanged: (value) => setState(() => _duration = value),
@@ -118,7 +122,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 4,
-                    title: 'Время',
+                    title: context.l10n.timeStep,
                     child: VenueSlotPicker(
                       controller: widget.controller,
                       venue: _venue,
@@ -137,7 +141,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 5,
-                    title: 'Игроки',
+                    title: context.l10n.playersStep,
                     child: Column(
                       children: [
                         _CounterRow(
@@ -167,8 +171,9 @@ class _BookingScreenState extends State<BookingScreen> {
                   children: [
                     PrimaryButton(
                       key: const ValueKey('pay-share'),
-                      label:
-                          'Оплатить свою часть · ${AppFormatters.money(_draft.sharePrice)}',
+                      label: context.l10n.paySharePrice(
+                        AppFormatters.money(_draft.sharePrice),
+                      ),
                       tone: ButtonTone.commit,
                       onPressed: _canContinue
                           ? () => _goToConfirm(PaymentMode.split)
@@ -177,8 +182,9 @@ class _BookingScreenState extends State<BookingScreen> {
                     const SizedBox(height: 10),
                     PrimaryButton(
                       key: const ValueKey('pay-full'),
-                      label:
-                          'Забронировать целиком · ${AppFormatters.money(_draft.totalPrice)}',
+                      label: context.l10n.payFullPrice(
+                        AppFormatters.money(_draft.totalPrice),
+                      ),
                       tone: ButtonTone.neutral,
                       onPressed: _canContinue
                           ? () => _goToConfirm(PaymentMode.full)
@@ -281,7 +287,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
               children: [
                 _BookingNav(
-                  title: 'Подтверждение',
+                  title: context.l10n.confirmation,
                   onBack: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 12),
@@ -306,7 +312,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 10),
                             child: Text(
-                              'Нажимая «Перейти к оплате», вы соглашаетесь с условиями сервиса и политикой конфиденциальности',
+                              context.l10n.payConsent,
                               style: context.text.bodySmall?.copyWith(
                                 color: context.colors.muted,
                                 height: 1.42,
@@ -330,8 +336,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   children: [
                     PrimaryButton(
                       key: const ValueKey('confirm-payment'),
-                      label:
-                          'Перейти к оплате · ${AppFormatters.money(_paymentAmount)}',
+                      label: context.l10n.goToPayment(
+                        AppFormatters.money(_paymentAmount),
+                      ),
                       tone: ButtonTone.commit,
                       isLoading: _loading,
                       onPressed: _accepted ? _pay : null,
@@ -339,7 +346,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     const SizedBox(height: 10),
                     PrimaryButton(
                       key: const ValueKey('close-booking-checkout'),
-                      label: 'Вернуться назад',
+                      label: context.l10n.goBack,
                       tone: ButtonTone.neutral,
                       onPressed: _loading
                           ? null
@@ -363,22 +370,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(
-        context,
-        'Оплата прошла, бронь создана',
-        tone: SnackTone.done,
-      );
+      showAppSnack(context, context.l10n.paymentDone, tone: SnackTone.done);
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
   }
 }
@@ -425,13 +424,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
               children: [
                 _BookingNav(
-                  title: 'Детали брони',
+                  title: context.l10n.bookingDetails,
                   onBack: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 12),
                 _BookingDetailsCard(
                   draft: widget.booking.draft,
-                  status: widget.booking.status,
+                  status: bookingStatusText(context, widget.booking.statusCode),
                 ),
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
@@ -439,7 +438,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   const SizedBox(height: 12),
                   AppCard(
                     child: Text(
-                      'Отменить бронь может только организатор',
+                      context.l10n.onlyOrganizerCancels,
                       style: context.text.bodyMedium?.copyWith(
                         color: context.colors.muted,
                       ),
@@ -457,7 +456,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   onHeight: _onBarHeight,
                   child: PrimaryButton(
                     key: const ValueKey('cancel-booking'),
-                    label: 'Отменить бронь',
+                    label: context.l10n.cancelBooking,
                     tone: ButtonTone.neutral,
                     isLoading: _loading,
                     onPressed: _loading ? null : _cancel,
@@ -474,13 +473,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final draft = widget.booking.draft;
     final confirmed = await confirmAction(
       context,
-      title: 'Отменить бронь?',
-      message:
-          '${draft.venue.name.capitalized}, '
-          '${AppFormatters.dateFull(draft.date)}, ${draft.timeRange}. '
-          'Вернуть её тем же нажатием не получится.',
-      confirmLabel: 'Отменить бронь',
-      cancelLabel: 'Оставить',
+      title: context.l10n.cancelBookingQuestion,
+      message: context.l10n.cancelBookingMessage(
+        draft.venue.name.capitalized,
+        AppFormatters.dateFull(draft.date),
+        draft.timeRange,
+      ),
+      confirmLabel: context.l10n.cancelBooking,
+      cancelLabel: context.l10n.keepBooking,
     );
     if (!confirmed || !mounted) {
       return;
@@ -493,18 +493,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'Бронь отменена', tone: SnackTone.done);
+      showAppSnack(
+        context,
+        context.l10n.bookingCancelled,
+        tone: SnackTone.done,
+      );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
   }
 }
@@ -522,7 +522,7 @@ class _BookingDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Детали бронирования',
+            context.l10n.bookingDetailsCard,
             style: context.text.labelLarge?.copyWith(
               color: context.colors.muted,
               fontWeight: FontWeight.w700,
@@ -534,7 +534,7 @@ class _BookingDetailsCard extends StatelessWidget {
           if (status != null) ...[
             const SizedBox(height: 12),
             Text(
-              'Статус · $status',
+              context.l10n.statusLine(status!),
               style: context.text.bodySmall?.copyWith(
                 color: context.colors.accent,
                 fontWeight: FontWeight.w600,
@@ -557,7 +557,7 @@ class _CancellationTermsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Условия отмены',
+            context.l10n.cancellationTerms,
             style: context.text.labelLarge?.copyWith(
               color: context.colors.muted,
               fontWeight: FontWeight.w700,
@@ -565,14 +565,8 @@ class _CancellationTermsCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const _Bullet(
-            text:
-                'Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически',
-          ),
-          const _Bullet(
-            text:
-                'Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней',
-          ),
+          _Bullet(text: context.l10n.cancellationTermAuto),
+          _Bullet(text: context.l10n.cancellationTermRefund),
         ],
       ),
     );
@@ -591,7 +585,7 @@ class _BookingHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
-            tooltip: 'Назад',
+            tooltip: context.l10n.back,
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
             style: IconButton.styleFrom(
@@ -605,7 +599,7 @@ class _BookingHeader extends StatelessWidget {
                 // The club is named by the step below, which is also where
                 // it can be changed.
                 Text(
-                  'Бронирование',
+                  context.l10n.booking,
                   style: context.text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -631,7 +625,7 @@ class _BookingNav extends StatelessWidget {
     return Row(
       children: [
         IconButton.filled(
-          tooltip: 'Назад',
+          tooltip: context.l10n.back,
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(
@@ -728,17 +722,13 @@ class _CounterRow extends StatelessWidget {
         _CounterButton(
           key: const ValueKey('players-minus'),
           icon: Icons.remove_rounded,
-          label: 'Убрать игрока',
+          label: context.l10n.removePlayer,
           enabled: value > min,
           onTap: withSelectionFeedback(() => onChanged(value - 1))!,
         ),
         Expanded(
           child: Text(
-            '$value ${value == 1
-                ? 'игрок'
-                : value < 5
-                ? 'игрока'
-                : 'игроков'}',
+            context.l10n.playersCount(value),
             textAlign: TextAlign.center,
             style: context.text.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
@@ -748,7 +738,7 @@ class _CounterRow extends StatelessWidget {
         _CounterButton(
           key: const ValueKey('players-plus'),
           icon: Icons.add_rounded,
-          label: 'Добавить игрока',
+          label: context.l10n.addPlayer,
           enabled: value < max,
           onTap: withSelectionFeedback(() => onChanged(value + 1))!,
         ),

@@ -1,6 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
@@ -485,17 +489,26 @@ class BookingSummaryRows extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SummaryRow(label: 'Дата', value: AppFormatters.dateFull(draft.date)),
-        SummaryRow(label: 'Время', value: draft.timeRange),
-        SummaryRow(label: 'Площадка', value: draft.venue.name.capitalized),
-        SummaryRow(label: 'Игроки', value: '${draft.players}'),
         SummaryRow(
-          label: 'Итого',
+          label: context.l10n.summaryDate,
+          value: AppFormatters.dateFull(draft.date),
+        ),
+        SummaryRow(label: context.l10n.summaryTime, value: draft.timeRange),
+        SummaryRow(
+          label: context.l10n.summaryVenue,
+          value: draft.venue.name.capitalized,
+        ),
+        SummaryRow(
+          label: context.l10n.summaryPlayers,
+          value: '${draft.players}',
+        ),
+        SummaryRow(
+          label: context.l10n.summaryTotal,
           value: AppFormatters.money(draft.totalPrice),
           highlight: true,
         ),
         SummaryRow(
-          label: 'Ваша часть',
+          label: context.l10n.summaryYourShare,
           value: AppFormatters.money(draft.sharePrice),
           accent: true,
         ),
@@ -800,7 +813,10 @@ class BookingRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${booking.draft.timeRange} · ${booking.status}',
+                  context.l10n.bookingRowSubtitle(
+                    booking.draft.timeRange,
+                    bookingStatusText(context, booking.statusCode),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodySmall?.copyWith(
@@ -827,7 +843,7 @@ class BackCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton.filled(
-      tooltip: 'Назад',
+      tooltip: context.l10n.back,
       onPressed: onTap,
       icon: const Icon(Icons.chevron_left_rounded),
       style: IconButton.styleFrom(
@@ -916,7 +932,7 @@ Future<bool> confirmAction(
   required String title,
   required String message,
   required String confirmLabel,
-  String cancelLabel = 'Отмена',
+  String? cancelLabel,
   ButtonTone tone = ButtonTone.danger,
 }) async {
   final answer = await showModalBottomSheet<bool>(
@@ -970,7 +986,7 @@ Future<bool> confirmAction(
               // more often than on purpose.
               PrimaryButton(
                 key: const ValueKey('confirm-no'),
-                label: cancelLabel,
+                label: cancelLabel ?? context.l10n.cancel,
                 tone: ButtonTone.neutral,
                 onPressed: () => Navigator.pop(sheetContext, false),
               ),
@@ -1075,7 +1091,11 @@ class DurationPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const values = {60: '1 час', 90: '1.5 часа', 120: '2 часа'};
+    final values = {
+      60: context.l10n.durationHour,
+      90: context.l10n.durationHourAndHalf,
+      120: context.l10n.durationTwoHours,
+    };
     return Row(
       children: values.entries.map((entry) {
         return Expanded(
@@ -1241,7 +1261,10 @@ class VenueRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${venue.address} · ${venue.distanceKm.toStringAsFixed(1)} км',
+                    context.l10n.venueAddressDistance(
+                      venue.address,
+                      venue.distanceKm.toStringAsFixed(1),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.bodySmall?.copyWith(
@@ -1265,7 +1288,9 @@ class VenueRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '${AppFormatters.money(venue.pricePerHour)}/час',
+                        context.l10n.pricePerHour(
+                          AppFormatters.money(venue.pricePerHour),
+                        ),
                         style: context.text.labelMedium?.copyWith(
                           color: context.colors.accent,
                           fontWeight: FontWeight.w700,

@@ -36,6 +36,9 @@ dependencies:
   http: ^1.6.0
   maplibre: ^0.3.5
   flutter_secure_storage: ^11.2.0
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +63,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  generate: true
 
   fonts:
     - family: Rubik

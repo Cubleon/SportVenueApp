@@ -185,7 +185,6 @@ class Booking {
   const Booking({
     required this.id,
     required this.draft,
-    required this.status,
     required this.createdAt,
     this.statusCode = 'confirmed',
     this.organizerId,
@@ -193,8 +192,11 @@ class Booking {
 
   final String id;
   final BookingDraft draft;
-  final String status;
   final DateTime createdAt;
+
+  /// The server's own word for the state, put into the reader's language
+  /// where it is shown. It used to be stored here already translated, which
+  /// is how a data class ends up speaking one language for ever.
   final String statusCode;
   final String? organizerId;
 
@@ -210,11 +212,10 @@ class Booking {
     _ => false,
   };
 
-  Booking copyWith({String? status, String? statusCode}) {
+  Booking copyWith({String? statusCode}) {
     return Booking(
       id: id,
       draft: draft,
-      status: status ?? this.status,
       createdAt: createdAt,
       statusCode: statusCode ?? this.statusCode,
       organizerId: organizerId,
@@ -243,7 +244,6 @@ class Booking {
         quotedTotalPrice: _requiredInt(json, 'total_price'),
         quotedSharePrice: _requiredInt(json, 'share_price'),
       ),
-      status: _bookingStatusLabel(status),
       createdAt: _requiredDateTime(json, 'created_at'),
       statusCode: status,
       organizerId: _requiredString(json, 'organizer_id'),
@@ -484,14 +484,4 @@ double _distanceFromMoscow(double latitude, double longitude) {
           math.sin(deltaLng / 2) *
           math.sin(deltaLng / 2);
   return earthRadiusKm * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-}
-
-String _bookingStatusLabel(String status) {
-  return switch (status) {
-    'collecting_shares' => 'сбор долей',
-    'confirmed' => 'подтверждена',
-    'cancelled' => 'отменена',
-    'expired' => 'истекла',
-    _ => status,
-  };
 }

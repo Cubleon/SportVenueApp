@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../labels.dart';
 import 'package:flutter/services.dart';
 
 import '../data/app_controller.dart';
@@ -47,7 +49,7 @@ Future<void> refreshAndReport(
     await controller.refresh();
   } catch (error) {
     if (context.mounted) {
-      showAppSnack(context, controller.messageFor(error));
+      showAppSnack(context, errorText(context, error));
     }
   }
 }

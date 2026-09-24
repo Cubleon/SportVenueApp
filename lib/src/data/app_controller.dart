@@ -7,6 +7,23 @@ import 'api_client.dart';
 import 'session_store.dart';
 import 'mock_data.dart';
 
+/// The kinds of failure the app has words for.
+enum AppErrorKind {
+  network,
+  invalidResponse,
+  sessionExpired,
+  slotTaken,
+  gameFull,
+  cancelNotOrganizer,
+  badPhone,
+  invalidCode,
+  challengeExpired,
+  tooManyAttempts,
+  timeout,
+  serverSaidSo,
+  unknown,
+}
+
 class AppController extends ChangeNotifier {
   factory AppController({
     DateTime? now,
@@ -300,7 +317,6 @@ class AppController extends ChangeNotifier {
       final booking = Booking(
         id: 'booking-${bookings.length + 1}',
         draft: draft,
-        status: draft.mode == PaymentMode.split ? 'сбор долей' : 'подтверждена',
         statusCode: statusCode,
         organizerId: userId,
         createdAt: _now,
@@ -332,7 +348,7 @@ class AppController extends ChangeNotifier {
   Future<Booking> cancelBooking(Booking booking) async {
     final api = _api;
     final updated = api == null
-        ? booking.copyWith(status: 'отменена', statusCode: 'cancelled')
+        ? booking.copyWith(statusCode: 'cancelled')
         : _bookingFromJson(
             await api.cancelBooking(booking.id),
             venueCatalog: venues,
@@ -562,46 +578,53 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String messageFor(Object error) {
+  /// What went wrong, in terms a screen can put into words.
+  ///
+  /// The controller classifies; the wording belongs upstairs, where the
+  /// reader's language is known. It used to return Russian sentences from
+  /// the data layer, which meant the app could never speak anything else.
+  static AppErrorKind kindOf(Object error) {
     if (error is ApiException) {
       final message = error.message.toLowerCase();
       if (error.kind == ApiExceptionKind.network) {
-        return 'сервер недоступен — проверьте, что он запущен';
+        return AppErrorKind.network;
       }
       if (error.kind == ApiExceptionKind.invalidResponse) {
-        return 'сервер вернул неожиданный ответ';
+        return AppErrorKind.invalidResponse;
       }
       if (error.isUnauthorized) {
-        return 'сессия истекла — войдите снова';
+        return AppErrorKind.sessionExpired;
       }
       if (message.contains('slot is unavailable') ||
           message.contains('slot is locked')) {
-        return 'этот слот уже занят, выберите другое время';
+        return AppErrorKind.slotTaken;
       }
       if (message.contains('game is full')) {
-        return 'в игре больше нет свободных мест';
+        return AppErrorKind.gameFull;
       }
       if (message.contains('only organizer can cancel booking')) {
-        return 'отменить бронь может только организатор';
+        return AppErrorKind.cancelNotOrganizer;
       }
       if (message.contains('phone')) {
-        return 'проверьте номер телефона';
+        return AppErrorKind.badPhone;
       }
       if (message.contains('invalid call code')) {
-        return 'Неверный код, попробуйте ещё раз';
+        return AppErrorKind.invalidCode;
       }
       if (message.contains('challenge has expired')) {
-        return 'время проверки истекло — запросите новый звонок';
+        return AppErrorKind.challengeExpired;
       }
       if (message.contains('too many code attempts')) {
-        return 'слишком много попыток — запросите новый звонок';
+        return AppErrorKind.tooManyAttempts;
       }
-      return error.message;
+      // Something the server explained in its own words, which is better
+      // than a shrug even untranslated.
+      return AppErrorKind.serverSaidSo;
     }
     if (error is TimeoutException) {
-      return 'сервер не ответил вовремя';
+      return AppErrorKind.timeout;
     }
-    return 'не удалось выполнить запрос';
+    return AppErrorKind.unknown;
   }
 
   @override

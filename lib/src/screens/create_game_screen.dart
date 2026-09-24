@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
@@ -158,10 +162,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 _CreateHeader(onBack: () => Navigator.of(context).pop()),
                 _Block(
                   step: 1,
-                  title: 'Вид спорта',
+                  title: context.l10n.sportKind,
                   child: widget.controller.sports.isEmpty
                       ? Text(
-                          'Виды спорта пока недоступны',
+                          context.l10n.sportsUnavailable,
                           style: context.text.bodyMedium?.copyWith(
                             color: context.colors.muted,
                           ),
@@ -181,10 +185,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 2,
-                  title: 'Площадка',
+                  title: context.l10n.venueStep,
                   child: availableVenues.isEmpty
                       ? Text(
-                          'Для выбранного спорта площадок пока нет',
+                          context.l10n.noVenuesForChosenSport,
                           style: context.text.bodyMedium?.copyWith(
                             color: context.colors.muted,
                           ),
@@ -202,7 +206,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             children: [
                               if (availableVenues.length > 1)
                                 Text(
-                                  'ещё ${availableVenues.length - 1}',
+                                  context.l10n.moreVenues(
+                                    availableVenues.length - 1,
+                                  ),
                                   style: context.text.labelSmall?.copyWith(
                                     color: context.colors.muted,
                                     fontWeight: FontWeight.w600,
@@ -218,7 +224,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 3,
-                  title: 'Дата',
+                  title: context.l10n.dateStep,
                   child: DateStrip(
                     now: widget.controller.now,
                     selected: _date,
@@ -227,10 +233,10 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 4,
-                  title: 'Начало',
+                  title: context.l10n.startStep,
                   child: selectedVenue == null
                       ? Text(
-                          'Сначала выберите площадку',
+                          context.l10n.pickVenueFirst,
                           style: context.text.bodyMedium?.copyWith(
                             color: context.colors.muted,
                           ),
@@ -251,7 +257,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 5,
-                  title: 'Продолжительность',
+                  title: context.l10n.durationStep,
                   child: DurationPicker(
                     value: _duration,
                     onChanged: (value) => setState(() => _duration = value),
@@ -259,11 +265,11 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 6,
-                  title: 'Количество мест',
+                  title: context.l10n.placesStep,
                   child: Row(
                     children: [
                       IconButton.filled(
-                        tooltip: 'Убрать место',
+                        tooltip: context.l10n.removePlace,
                         key: const ValueKey('create-capacity-minus'),
                         onPressed:
                             selectedVenue != null && _capacity > minCapacity
@@ -275,7 +281,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          '$_capacity места',
+                          context.l10n.placesCount(_capacity),
                           textAlign: TextAlign.center,
                           style: context.text.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -283,7 +289,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         ),
                       ),
                       IconButton.filled(
-                        tooltip: 'Добавить место',
+                        tooltip: context.l10n.addPlace,
                         key: const ValueKey('create-capacity-plus'),
                         onPressed:
                             selectedVenue != null && _capacity < maxCapacity
@@ -298,7 +304,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 7,
-                  title: 'Кто может вступить',
+                  title: context.l10n.whoCanJoin,
                   // "Закрытая · только по ссылке" stood here, and there are
                   // no links: nothing in the app produces one, sends one or
                   // opens one, and nothing hides such a game from the public
@@ -316,13 +322,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           alpha: 0.28,
                         ),
                         title: Text(
-                          'Одобрять вручную',
+                          context.l10n.approveManually,
                           style: context.text.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         subtitle: Text(
-                          'Вы будете подтверждать каждого игрока',
+                          context.l10n.approveManuallyHint,
                           style: context.text.bodySmall?.copyWith(
                             color: context.colors.muted,
                           ),
@@ -338,12 +344,12 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 8,
-                  title: 'Фильтр участников',
+                  title: context.l10n.participantFilter,
                   child: Row(
                     children: [
                       Expanded(
                         child: _GenderChip(
-                          label: 'Любой',
+                          label: context.l10n.genderAny,
                           value: GenderFilter.any,
                           selected: _gender,
                           onTap: _setGender,
@@ -352,7 +358,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _GenderChip(
-                          label: 'Мужчины',
+                          label: context.l10n.genderMen,
                           value: GenderFilter.men,
                           selected: _gender,
                           onTap: _setGender,
@@ -361,7 +367,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _GenderChip(
-                          label: 'Женщины',
+                          label: context.l10n.genderWomen,
                           value: GenderFilter.women,
                           selected: _gender,
                           onTap: _setGender,
@@ -381,7 +387,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Стоимость с человека',
+                            context.l10n.pricePerPerson,
                             style: context.text.bodyMedium?.copyWith(
                               color: context.colors.muted,
                             ),
@@ -389,7 +395,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         ),
                         Text(
                           pricePerPerson == null
-                              ? '—'
+                              ? context.l10n.emptyValue
                               : AppFormatters.money(pricePerPerson),
                           style: context.text.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -409,7 +415,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 onHeight: _onBarHeight,
                 child: PrimaryButton(
                   key: const ValueKey('create-game-submit'),
-                  label: 'Создать игру',
+                  label: context.l10n.createGame,
                   isLoading: _loading,
                   onPressed: canCreate ? _create : null,
                 ),
@@ -457,7 +463,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     final sportId = _sportId;
     final venue = _selectedVenue;
     if (sportId == null || venue == null) {
-      showAppSnack(context, 'Выберите вид спорта и площадку');
+      showAppSnack(context, context.l10n.pickSportAndVenue);
       return;
     }
 
@@ -477,7 +483,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'Игра создана', tone: SnackTone.done);
+      showAppSnack(context, context.l10n.gameCreated, tone: SnackTone.done);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
@@ -489,11 +495,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(
-        context,
-        widget.controller.messageFor(error),
-        tone: SnackTone.failed,
-      );
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
   }
 }
@@ -508,7 +510,7 @@ class _CreateHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton.filled(
-          tooltip: 'Назад',
+          tooltip: context.l10n.back,
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
           style: IconButton.styleFrom(
@@ -518,7 +520,7 @@ class _CreateHeader extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            'Создать игру',
+            context.l10n.createGame,
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
@@ -32,10 +34,10 @@ class ProfileScreen extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
             children: [
               ScreenTitleBar(
-                title: 'Профиль',
+                title: context.l10n.profile,
                 subtitle: controller.isConnected
-                    ? 'Аккаунт SportVenue'
-                    : 'Демо-аккаунт SportVenue',
+                    ? context.l10n.accountSportVenue
+                    : context.l10n.demoAccountSportVenue,
               ),
               AppCard(
                 child: Row(
@@ -71,7 +73,7 @@ class ProfileScreen extends StatelessWidget {
                           Text(
                             controller.userName?.trim().isNotEmpty == true
                                 ? controller.userName!
-                                : 'Пользователь SportVenue',
+                                : context.l10n.userSportVenue,
                             style: context.text.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
@@ -79,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             controller.phone.isEmpty
-                                ? 'Номер не указан'
+                                ? context.l10n.noPhone
                                 : controller.phone,
                             style: context.text.bodySmall?.copyWith(
                               color: context.colors.muted,
@@ -89,11 +91,9 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Редактировать профиль',
-                      onPressed: () => showAppSnack(
-                        context,
-                        'Редактирование профиля подключится позже',
-                      ),
+                      tooltip: context.l10n.editProfile,
+                      onPressed: () =>
+                          showAppSnack(context, context.l10n.editProfileLater),
                       icon: const Icon(Icons.edit_rounded),
                     ),
                   ],
@@ -104,7 +104,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Спортивные предпочтения',
+                      context.l10n.sportPreferences,
                       style: context.text.labelLarge?.copyWith(
                         color: context.colors.muted,
                         fontWeight: FontWeight.w700,
@@ -115,7 +115,7 @@ class ProfileScreen extends StatelessWidget {
                   TextButton(
                     key: const ValueKey('edit-sports'),
                     onPressed: () => _editSports(context, controller),
-                    child: const Text('Изменить'),
+                    child: Text(context.l10n.change),
                   ),
                 ],
               ),
@@ -138,9 +138,11 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 18),
               _MenuItem(
                 icon: Icons.history_rounded,
-                title: 'История',
-                subtitle:
-                    '${controller.bookings.length} броней · ${controller.games.length} игр',
+                title: context.l10n.history,
+                subtitle: context.l10n.historySubtitle(
+                  controller.bookings.length,
+                  controller.games.length,
+                ),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => HistoryScreen(controller: controller),
@@ -156,7 +158,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 16),
               PrimaryButton(
                 key: const ValueKey('logout-button'),
-                label: 'Выйти из аккаунта',
+                label: context.l10n.logout,
                 tone: ButtonTone.neutral,
                 onPressed: () => _confirmLogout(context, onLogout),
               ),
@@ -171,12 +173,10 @@ class ProfileScreen extends StatelessWidget {
 Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
   final confirmed = await confirmAction(
     context,
-    title: 'Выйти из аккаунта?',
-    message:
-        'Брони и игры останутся на месте — чтобы вернуться к ним, '
-        'придётся снова подтвердить номер телефона.',
-    confirmLabel: 'Выйти',
-    cancelLabel: 'Остаться',
+    title: context.l10n.logoutQuestion,
+    message: context.l10n.logoutMessage,
+    confirmLabel: context.l10n.logoutConfirm,
+    cancelLabel: context.l10n.logoutCancel,
   );
   if (confirmed) {
     onLogout();
@@ -201,16 +201,16 @@ class _Stats extends StatelessWidget {
           Expanded(
             child: _Stat(
               value: '${controller.bookings.length}',
-              label: 'Броней',
+              label: context.l10n.statBookings,
             ),
           ),
           Expanded(
-            child: _Stat(value: '$games', label: 'Моих игр'),
+            child: _Stat(value: '$games', label: context.l10n.statMyGames),
           ),
           Expanded(
             child: _Stat(
               value: '${controller.selectedSports.length}',
-              label: 'Видов спорта',
+              label: context.l10n.statSports,
             ),
           ),
         ],

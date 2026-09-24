@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import 'data/app_controller.dart';
+import 'labels.dart';
 import 'screens/auth_screens.dart';
 import 'screens/main_shell.dart';
 import 'screens/sport_selection_screen.dart';
@@ -45,8 +47,10 @@ class _SportVenueAppState extends State<SportVenueApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SportVenue',
+      onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       // The reader's own setting decides. There is nowhere to keep a choice
@@ -73,6 +77,9 @@ class _SportVenueAppState extends State<SportVenueApp> {
       home: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
+          // Taken before any await: the callbacks below report failures
+          // long after this context stopped being theirs to use.
+          final l10n = context.l10n;
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 320),
             child: switch (_stage) {
@@ -110,7 +117,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
                     });
                     return null;
                   } catch (error) {
-                    return _controller.messageFor(error);
+                    return errorTextFor(l10n, error);
                   }
                 },
               ),
@@ -127,7 +134,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
                     setState(() => _stage = _RootStage.sports);
                     return null;
                   } catch (error) {
-                    return _controller.messageFor(error);
+                    return errorTextFor(l10n, error);
                   }
                 },
                 onResend: () async {
@@ -135,7 +142,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
                     await _controller.startPhoneVerification(_pendingPhone);
                     return null;
                   } catch (error) {
-                    return _controller.messageFor(error);
+                    return errorTextFor(l10n, error);
                   }
                 },
               ),
@@ -143,7 +150,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
                 key: const ValueKey('sports'),
                 sports: _controller.sports,
                 initialSelection: _controller.selectedSportIds,
-                errorMessage: _controller.messageFor,
+                errorMessage: (error) => errorTextFor(l10n, error),
                 onContinue: (ids) async {
                   await _controller.completeSports(ids);
                   if (!mounted) {

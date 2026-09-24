@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
@@ -48,7 +50,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Шаг 1 из 2',
+                    context.l10n.sportStep,
                     style: context.text.labelSmall?.copyWith(
                       color: context.colors.muted,
                       fontWeight: FontWeight.w600,
@@ -67,7 +69,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   ),
                   const SizedBox(height: 22),
                   Text(
-                    'Какой спорт?',
+                    context.l10n.sportQuestion,
                     style: context.text.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.3,
@@ -75,7 +77,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Можно выбрать несколько',
+                    context.l10n.sportHint,
                     style: context.text.bodyMedium?.copyWith(
                       color: context.colors.muted,
                     ),
@@ -89,7 +91,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          'Виды спорта пока недоступны',
+                          context.l10n.sportsUnavailable,
                           textAlign: TextAlign.center,
                           style: context.text.bodyMedium?.copyWith(
                             color: context.colors.muted,
@@ -135,12 +137,8 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                 child: PrimaryButton(
                   key: const ValueKey('sports-continue'),
                   label: _selected.isEmpty
-                      ? 'Продолжить'
-                      : 'Продолжить · ${_selected.length} ${_selected.length == 1
-                            ? 'вид'
-                            : _selected.length < 5
-                            ? 'вида'
-                            : 'видов'}',
+                      ? context.l10n.continueLabel
+                      : context.l10n.continueWithSports(_selected.length),
                   isLoading: _saving,
                   onPressed: _canContinue ? _save : null,
                 ),
@@ -173,7 +171,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
       setState(() => _saving = false);
       showAppSnack(
         context,
-        widget.errorMessage?.call(error) ?? 'Не удалось сохранить выбор',
+        widget.errorMessage?.call(error) ?? context.l10n.sportsSaveFailed,
         tone: SnackTone.failed,
       );
       return;

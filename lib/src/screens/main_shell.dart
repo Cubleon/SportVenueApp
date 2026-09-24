@@ -2,6 +2,8 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
@@ -65,7 +67,7 @@ class _MainShellState extends State<MainShell> {
   Future<void> _startBooking() async {
     final venues = widget.controller.venues;
     if (venues.isEmpty) {
-      showAppSnack(context, 'Доступных площадок пока нет');
+      showAppSnack(context, context.l10n.noVenuesAvailable);
       return;
     }
     final venue = await pickVenue(
@@ -122,7 +124,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Создать',
+                  context.l10n.createSheetTitle,
                   style: context.text.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -130,8 +132,8 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 14),
                 _SheetAction(
                   icon: Icons.sports_soccer_rounded,
-                  title: 'Создать игру',
-                  subtitle: 'Соберите участников и оплатите долю',
+                  title: context.l10n.createGameAction,
+                  subtitle: context.l10n.createGameActionSubtitle,
                   onTap: () {
                     Navigator.pop(sheetContext);
                     Navigator.of(context).push(
@@ -145,8 +147,8 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 10),
                 _SheetAction(
                   icon: Icons.calendar_month_rounded,
-                  title: 'Забронировать площадку',
-                  subtitle: 'Выберите клуб и время',
+                  title: context.l10n.bookVenueAction,
+                  subtitle: context.l10n.bookVenueActionSubtitle,
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _startBooking();
@@ -254,14 +256,14 @@ class _BottomNav extends StatelessWidget {
                           _NavItem(
                             index: 0,
                             selectedIndex: selectedIndex,
-                            label: 'Главная',
+                            label: context.l10n.navHome,
                             icon: Icons.home_rounded,
                             onTab: onTab,
                           ),
                           _NavItem(
                             index: 1,
                             selectedIndex: selectedIndex,
-                            label: 'Поиск',
+                            label: context.l10n.navSearch,
                             icon: Icons.search_rounded,
                             onTab: onTab,
                           ),
@@ -269,7 +271,7 @@ class _BottomNav extends StatelessWidget {
                             child: Center(
                               child: Semantics(
                                 button: true,
-                                label: 'Создать игру или бронь',
+                                label: context.l10n.navCreate,
                                 child: GestureDetector(
                                   key: const ValueKey('create-fab'),
                                   onTap: onCreate,
@@ -293,14 +295,14 @@ class _BottomNav extends StatelessWidget {
                           _NavItem(
                             index: 2,
                             selectedIndex: selectedIndex,
-                            label: 'Игры',
+                            label: context.l10n.navGames,
                             icon: Icons.sports_soccer_rounded,
                             onTab: onTab,
                           ),
                           _NavItem(
                             index: 3,
                             selectedIndex: selectedIndex,
-                            label: 'Профиль',
+                            label: context.l10n.navProfile,
                             icon: Icons.person_rounded,
                             onTab: onTab,
                           ),

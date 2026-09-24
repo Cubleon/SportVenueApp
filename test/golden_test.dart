@@ -17,6 +17,7 @@ import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/main_shell.dart';
 import 'package:sport_venue_app/src/screens/profile_screen.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
+import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 
 /// Pictures of the screens, in both themes, checked pixel for pixel.
@@ -141,6 +142,8 @@ void _golden(
       MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: theme.data(),
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: build(controller),
       ),
     );

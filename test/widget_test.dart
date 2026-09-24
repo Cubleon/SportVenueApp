@@ -12,6 +12,7 @@ import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
 import 'package:sport_venue_app/src/screens/profile_screen.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
+import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 
 void main() {
@@ -188,7 +189,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('confirm-yes')));
     await tester.pumpAndSettle();
 
-    expect(controller.bookings.single.status, 'отменена');
+    expect(controller.bookings.single.statusCode, 'cancelled');
     expect(controller.upcomingBookings, isEmpty);
     expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsNothing);
     expect(find.text('У вас пока нет предстоящих броней'), findsOneWidget);
@@ -465,6 +466,9 @@ class _Harness extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: AppTheme.light(),
+      // The screens read their words from the same place the app does.
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       home: Scaffold(body: child),
     );
   }

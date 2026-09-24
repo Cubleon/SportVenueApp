@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import 'shared_widgets.dart';
@@ -93,7 +95,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Text(
-                  'Площадка',
+                  context.l10n.venuePickerTitle,
                   style: context.text.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -128,7 +130,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 14,
                             ),
-                            hintText: 'Название или адрес',
+                            hintText: context.l10n.venuePickerSearchHint,
                             hintStyle: context.text.bodyMedium?.copyWith(
                               color: context.colors.muted,
                             ),
@@ -138,7 +140,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                       if (_query.text.isNotEmpty)
                         Semantics(
                           button: true,
-                          label: 'Очистить',
+                          label: context.l10n.clear,
                           child: InkWell(
                             key: const ValueKey('venue-picker-clear'),
                             onTap: () {
@@ -167,11 +169,11 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                         child: EmptyState(
                           key: const ValueKey('venue-picker-empty'),
                           icon: Icons.search_off_rounded,
-                          title: 'Ничего не нашлось',
-                          description:
-                              'По запросу «${_query.text.trim()}» нет ни клуба, '
-                              'ни адреса.',
-                          actionLabel: 'Сбросить',
+                          title: context.l10n.nothingFound,
+                          description: context.l10n.nothingFoundFor(
+                            _query.text.trim(),
+                          ),
+                          actionLabel: context.l10n.reset,
                           onAction: () {
                             _query.clear();
                             setState(() {});
