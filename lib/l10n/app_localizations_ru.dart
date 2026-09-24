@@ -791,9 +791,6 @@ class LRu extends L {
   String get vividPickedForYou => 'Подобрали для вас';
 
   @override
-  String get vividWhereToPlay => 'Где играете';
-
-  @override
   String get vividSports => 'Виды спорта';
 
   @override

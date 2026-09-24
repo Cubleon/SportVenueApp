@@ -435,10 +435,6 @@
   },
   "vividBook": "Забронировать",
   "vividPickedForYou": "Подобрали для вас",
-  "vividWhereToPlay": "Где играете",
-  "@vividWhereToPlay": {
-    "description": "Подпись над городом на ярком главном экране"
-  },
   "vividSports": "Виды спорта",
   "@vividSports": {
     "description": "Заголовок ряда категорий на ярком главном экране"

@@ -1413,12 +1413,6 @@ abstract class L {
   /// **'Подобрали для вас'**
   String get vividPickedForYou;
 
-  /// Подпись над городом на ярком главном экране
-  ///
-  /// In ru, this message translates to:
-  /// **'Где играете'**
-  String get vividWhereToPlay;
-
   /// Заголовок ряда категорий на ярком главном экране
   ///
   /// In ru, this message translates to:

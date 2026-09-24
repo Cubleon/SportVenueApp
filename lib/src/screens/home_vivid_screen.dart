@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../l10n/l10n.dart';
 import '../data/app_controller.dart';
@@ -7,17 +10,20 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sport_surface.dart';
 
-/// A second answer to the same screen, in the register the delivery apps use.
+/// A second answer to the same screen: the loud half and the calm half of the
+/// references, in one page.
 ///
-/// Same data as the quiet home — the city, the sports, the clubs, their
-/// prices, the open games — laid out the way a grocery app lays out food: a
-/// pale page, white cards floating on it with generous corners, one banner
-/// doing the selling, a row of round category tiles, and a single saturated
-/// accent that every tappable thing borrows. The accent here is blue.
+/// The top is the bright one — saturated blue running edge to edge under the
+/// status bar, one fact blown up to a third of the screen, and balls that
+/// break out of the block onto the page below. The rest is the grocery-app
+/// one — a pale page, white cards with generous corners, round category tiles,
+/// a floating bar. The search field straddles the seam between them, which is
+/// what keeps the two halves reading as one screen rather than two pasted
+/// together.
 ///
 /// Nothing is invented: no discount that does not exist, no badge for a
-/// promotion nobody ran. The loudness is in the layout and the colour, not in
-/// claims about the product.
+/// promotion nobody ran. The big number is the next real game's kick-off, the
+/// pills beside it its real price and its real free places.
 ///
 /// What responds to a tap: the search field, the category tiles, and the
 /// filter they drive. The cards and the bottom bar are drawn, not wired — this
@@ -44,6 +50,13 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   static const _muted = Color(0xFF7B7791);
   static const _blue = Color(0xFF2F5BFF);
   static const _blueSoft = Color(0xFFE6EBFF);
+  static const _skyTop = Color(0xFF2E86FF);
+  static const _skyLow = Color(0xFF5BA6FF);
+
+  /// The one warm colour on the page. It marks where you are in the bar and
+  /// nothing else — a single hot accent is what the references do, and it only
+  /// works while it stays rare.
+  static const _hot = Color(0xFFFF4D3D);
 
   static const _cardShadow = [
     BoxShadow(color: Color(0x14201A4A), blurRadius: 18, offset: Offset(0, 8)),
@@ -91,36 +104,28 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
         final games = _games;
         final empty = venues.isEmpty && games.isEmpty;
 
-        return Scaffold(
-          backgroundColor: _bg,
-          body: SafeArea(
-            bottom: false,
-            child: Stack(
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle.light.copyWith(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
+          child: Scaffold(
+            backgroundColor: _bg,
+            body: Stack(
               children: [
                 CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
-                      child: _AddressBar(controller: widget.controller),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _SearchRow(
-                        controller: _search,
-                        onChanged: (value) =>
+                      child: _Hero(
+                        controller: widget.controller,
+                        game: games.isNotEmpty ? games.first : null,
+                        venue: venues.isNotEmpty ? venues.first : null,
+                        search: _search,
+                        onQuery: (value) =>
                             setState(() => _query = value.trim().toLowerCase()),
                       ),
                     ),
-                    if (games.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _Banner.forGame(context, games.first),
-                      )
-                    else if (venues.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: _Banner.forVenue(
-                          context,
-                          venues.first,
-                          _sportOf(venues.first),
-                        ),
-                      ),
                     SliverToBoxAdapter(
                       child: _SectionTitle(context.l10n.vividSports),
                     ),
@@ -194,67 +199,276 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   }
 }
 
-/// Where you are and who you are — the line the grocery apps open with,
-/// because it is the one thing that changes what everything below means.
-class _AddressBar extends StatelessWidget {
-  const _AddressBar({required this.controller});
+/// The loud half: blue to the very top of the glass, one fact at display size,
+/// and balls that leave the block.
+class _Hero extends StatelessWidget {
+  const _Hero({
+    required this.controller,
+    required this.game,
+    required this.venue,
+    required this.search,
+    required this.onQuery,
+  });
+
+  final AppController controller;
+  final Game? game;
+  final Venue? venue;
+  final TextEditingController search;
+  final ValueChanged<String> onQuery;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final current = game;
+    final club = current?.venue ?? venue;
+
+    final (String, String, String)? headline = switch (current) {
+      final Game g => (
+        l10n.vividNextGame,
+        '${g.startHour.toString().padLeft(2, '0')}:00',
+        '${AppFormatters.dateShort(g.date)} · ${g.venue.name.capitalized}',
+      ),
+      _ => switch (venue) {
+        final Venue v => (
+          l10n.vividNearby,
+          AppFormatters.money(v.pricePerHour),
+          '${v.name.capitalized} · ${v.distanceKm.toStringAsFixed(1)} км',
+        ),
+        // Nothing matched the search: the block keeps its colour and its
+        // header, and says nothing rather than saying it with a dash.
+        _ => null,
+      },
+    };
+
+    // Half the search field hangs below the blue, onto the page.
+    const overhang = 30.0;
+    final topInset = MediaQuery.viewPaddingOf(context).top;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: overhang),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, overhang + 46),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _HomeVividScreenState._skyTop,
+                  _HomeVividScreenState._skyLow,
+                ],
+              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(36)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _HeaderPill(controller: controller),
+                if (headline case (final label, final display, final line)) ...[
+                  SizedBox(height: context.scaled(26, max: 1.4)),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: context.text.labelLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.88),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    display,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: context.text.displayMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -3,
+                      height: 1.12,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0x452A5FA8),
+                          blurRadius: 24,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodyMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: context.scaled(16, max: 1.4)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (current != null && !current.isFull)
+                        _HeroPill(
+                          text: l10n.freePlaces(current.freePlaces),
+                          solid: true,
+                        ),
+                      if (current != null && !current.isFull)
+                        const SizedBox(width: 8),
+                      if (current != null)
+                        _HeroPill(
+                          text: AppFormatters.money(current.pricePerPerson),
+                        )
+                      else if (club != null)
+                        _HeroPill(
+                          text: l10n.rating(club.rating.toStringAsFixed(1)),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // The balls sit behind the type and spill past the block — the trick
+          // the bright references use to get depth out of a flat background.
+          // They go with it: over a block shrunk to its header they would just
+          // be litter on the page.
+          if (headline != null) ...[
+            Positioned(
+              left: -34,
+              top: topInset + 88,
+              child: _Ball(
+                kind: _BallKind.soccer,
+                size: context.scaled(104, max: 1.15),
+              ),
+            ),
+            Positioned(
+              right: -30,
+              top: topInset + 100,
+              child: _Ball(
+                kind: _BallKind.basket,
+                size: context.scaled(92, max: 1.15),
+                tilt: 0.2,
+              ),
+            ),
+            Positioned(
+              right: -16,
+              bottom: 56,
+              child: _Ball(
+                kind: _BallKind.tennis,
+                size: context.scaled(56, max: 1.1),
+                tilt: -0.3,
+              ),
+            ),
+          ],
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 0,
+            child: _SearchField(controller: search, onChanged: onQuery),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderPill extends StatelessWidget {
+  const _HeaderPill({required this.controller});
 
   final AppController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x2A123A7A),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          Container(
+            width: context.scaled(42, max: 1.25),
+            height: context.scaled(42, max: 1.25),
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _HomeVividScreenState._blue,
+                  _HomeVividScreenState._skyLow,
+                ],
+              ),
+            ),
+            child: Text(
+              controller.greetingName.characters.first.toUpperCase(),
+              style: context.text.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  context.l10n.vividWhereToPlay,
-                  style: context.text.labelSmall?.copyWith(
-                    color: _HomeVividScreenState._muted,
-                  ),
-                ),
-                const SizedBox(height: 2),
                 Row(
                   children: [
                     const Icon(
                       Icons.location_on_rounded,
-                      size: 18,
-                      color: _HomeVividScreenState._ink,
+                      size: 13,
+                      color: _HomeVividScreenState._muted,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 2),
                     Flexible(
                       child: Text(
                         context.l10n.city,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.text.titleMedium?.copyWith(
-                          color: _HomeVividScreenState._ink,
-                          fontWeight: FontWeight.w800,
+                        style: context.text.labelSmall?.copyWith(
+                          color: _HomeVividScreenState._muted,
                         ),
                       ),
                     ),
                   ],
                 ),
+                Text(
+                  controller.greetingName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleSmall?.copyWith(
+                    color: _HomeVividScreenState._ink,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Container(
-            width: context.scaled(48, max: 1.3),
-            height: context.scaled(48, max: 1.3),
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: _HomeVividScreenState._cardShadow,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: _HomeVividScreenState._blueSoft,
+              borderRadius: BorderRadius.circular(99),
             ),
             child: Text(
-              controller.greetingName.characters.first.toUpperCase(),
-              style: context.text.titleMedium?.copyWith(
+              context.l10n.clubsNearby(controller.venues.length),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.labelSmall?.copyWith(
                 color: _HomeVividScreenState._blue,
                 fontWeight: FontWeight.w800,
               ),
@@ -266,68 +480,93 @@ class _AddressBar extends StatelessWidget {
   }
 }
 
-class _SearchRow extends StatelessWidget {
-  const _SearchRow({required this.controller, required this.onChanged});
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({required this.text, this.solid = false});
+
+  final String text;
+  final bool solid;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: solid ? Colors.white : Colors.white.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(99),
+        border: solid
+            ? null
+            : Border.all(color: Colors.white.withValues(alpha: 0.45)),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: context.text.labelLarge?.copyWith(
+          color: solid ? _HomeVividScreenState._blue : Colors.white,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+    return Container(
+      height: context.scaled(60, max: 1.4),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x2A123A7A),
+            blurRadius: 26,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          const Icon(
+            Icons.search_rounded,
+            size: 21,
+            color: _HomeVividScreenState._muted,
+          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: Container(
-              height: context.scaled(54, max: 1.4),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(99),
-                boxShadow: _HomeVividScreenState._cardShadow,
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              cursorColor: _HomeVividScreenState._blue,
+              style: context.text.bodyMedium?.copyWith(
+                color: _HomeVividScreenState._ink,
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.search_rounded,
-                    size: 20,
-                    color: _HomeVividScreenState._muted,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      onChanged: onChanged,
-                      cursorColor: _HomeVividScreenState._blue,
-                      style: context.text.bodyMedium?.copyWith(
-                        color: _HomeVividScreenState._ink,
-                      ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: context.l10n.searchFieldHint,
-                        hintStyle: context.text.bodyMedium?.copyWith(
-                          color: _HomeVividScreenState._muted,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              decoration: InputDecoration.collapsed(
+                hintText: context.l10n.searchFieldHint,
+                hintStyle: context.text.bodyMedium?.copyWith(
+                  color: _HomeVividScreenState._muted,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
           Container(
-            width: context.scaled(54, max: 1.4),
-            height: context.scaled(54, max: 1.4),
+            width: context.scaled(38, max: 1.2),
+            height: context.scaled(38, max: 1.2),
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: _HomeVividScreenState._blueSoft,
               shape: BoxShape.circle,
-              boxShadow: _HomeVividScreenState._cardShadow,
             ),
             child: const Icon(
               Icons.tune_rounded,
-              size: 20,
-              color: _HomeVividScreenState._ink,
+              size: 18,
+              color: _HomeVividScreenState._blue,
             ),
           ),
         ],
@@ -336,155 +575,152 @@ class _SearchRow extends StatelessWidget {
   }
 }
 
-/// The one card that sells. A playing surface behind it, a blue wash over it,
-/// and three lines of the same facts that sit in a list further down.
-class _Banner extends StatelessWidget {
-  const _Banner({
-    required this.sportId,
-    required this.chip,
-    required this.title,
-    required this.line,
-    required this.pill,
-  });
+enum _BallKind { soccer, basket, tennis }
 
-  factory _Banner.forGame(BuildContext context, Game game) => _Banner(
-    sportId: game.sportId,
-    chip: context.l10n.vividNextGame,
-    title: game.venue.name.capitalized,
-    line: context.l10n.gameWhen(
-      AppFormatters.dateShort(game.date),
-      game.timeRange,
-    ),
-    pill: game.isFull
-        ? AppFormatters.money(game.pricePerPerson)
-        : context.l10n.freePlaces(game.freePlaces),
-  );
+/// Drawn, not photographed. The references float 3-D renders; a ball painted
+/// from a couple of gradients and four arcs gets most of that lift without
+/// shipping a megabyte of PNG per sport.
+class _Ball extends StatelessWidget {
+  const _Ball({required this.kind, required this.size, this.tilt = 0});
 
-  factory _Banner.forVenue(BuildContext context, Venue venue, String sportId) =>
-      _Banner(
-        sportId: sportId,
-        chip: context.l10n.vividNearby,
-        title: venue.name.capitalized,
-        line: context.l10n.venueAddressDistance(
-          venue.address,
-          venue.distanceKm.toStringAsFixed(1),
-        ),
-        pill: context.l10n.vividFrom(AppFormatters.money(venue.pricePerHour)),
-      );
-
-  final String sportId;
-  final String chip;
-  final String title;
-  final String line;
-  final String pill;
+  final _BallKind kind;
+  final double size;
+  final double tilt;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+    return Transform.rotate(
+      angle: tilt,
       child: Container(
-        height: context.scaled(186, max: 1.35),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
             BoxShadow(
-              color: Color(0x332F5BFF),
+              color: Color(0x4D0B2A66),
               blurRadius: 24,
-              offset: Offset(0, 12),
+              offset: Offset(0, 14),
             ),
           ],
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            SportSurface(sportId: sportId),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [Color(0xCC2F5BFF), Color(0xF0141C4D)],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      chip,
-                      style: context.text.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.6,
-                      height: 1.05,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          line,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.bodySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.86),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 9,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                        child: Text(
-                          pill,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.labelLarge?.copyWith(
-                            color: _HomeVividScreenState._blue,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        child: CustomPaint(painter: _BallPainter(kind)),
       ),
     );
   }
+}
+
+class _BallPainter extends CustomPainter {
+  const _BallPainter(this.kind);
+
+  final _BallKind kind;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final r = size.width / 2;
+    final c = Offset(r, r);
+    final rect = Rect.fromCircle(center: c, radius: r);
+
+    final base = switch (kind) {
+      _BallKind.soccer => Colors.white,
+      _BallKind.basket => const Color(0xFFF2802A),
+      _BallKind.tennis => const Color(0xFFD9F24B),
+    };
+    canvas.drawCircle(c, r, Paint()..color = base);
+
+    canvas.save();
+    canvas.clipPath(Path()..addOval(rect));
+    switch (kind) {
+      case _BallKind.soccer:
+        final dark = Paint()..color = const Color(0xFF15131C);
+        for (final (dx, dy, k) in const [
+          (0.0, -0.58, 0.22),
+          (-0.56, 0.2, 0.19),
+          (0.56, 0.22, 0.19),
+          (0.0, 0.78, 0.18),
+        ]) {
+          canvas.drawCircle(c + Offset(dx * r, dy * r), k * r, dark);
+        }
+      case _BallKind.basket:
+        final line = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = r * 0.075
+          ..color = const Color(0xCC170A00);
+        canvas.drawLine(Offset(0, r), Offset(size.width, r), line);
+        canvas.drawOval(
+          Rect.fromCenter(center: c, width: r * 0.9, height: size.height * 1.5),
+          line,
+        );
+        canvas.drawOval(
+          Rect.fromCenter(center: c, width: size.width * 1.5, height: r * 0.9),
+          line,
+        );
+      case _BallKind.tennis:
+        final seam = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = r * 0.16
+          ..color = Colors.white;
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: c + Offset(-r * 0.92, 0),
+            width: r * 1.5,
+            height: size.height * 1.05,
+          ),
+          -math.pi / 2.4,
+          math.pi / 1.2,
+          false,
+          seam,
+        );
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: c + Offset(r * 0.92, 0),
+            width: r * 1.5,
+            height: size.height * 1.05,
+          ),
+          math.pi / 1.7,
+          math.pi / 1.2,
+          false,
+          seam,
+        );
+    }
+    canvas.restore();
+
+    // Light from the upper left, shade at the lower right: the two gradients
+    // that turn a disc into a sphere.
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.4, -0.5),
+          radius: 0.85,
+          colors: [
+            Colors.white.withValues(alpha: 0.7),
+            Colors.white.withValues(alpha: 0),
+          ],
+        ).createShader(rect),
+    );
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(0.45, 0.6),
+          radius: 0.95,
+          colors: [
+            Colors.black.withValues(alpha: 0),
+            Colors.black.withValues(
+              alpha: kind == _BallKind.soccer ? 0.2 : 0.32,
+            ),
+          ],
+          stops: const [0.45, 1],
+        ).createShader(rect),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BallPainter oldDelegate) => oldDelegate.kind != kind;
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -929,7 +1165,7 @@ class _BottomBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: switch (i) {
-                    0 => _HomeVividScreenState._ink,
+                    0 => const Color(0xFFFFE9E6),
                     2 => _HomeVividScreenState._blue,
                     _ => Colors.transparent,
                   },
@@ -937,9 +1173,11 @@ class _BottomBar extends StatelessWidget {
                 child: Icon(
                   icons[i],
                   size: 21,
-                  color: i == 0 || i == 2
-                      ? Colors.white
-                      : _HomeVividScreenState._muted,
+                  color: switch (i) {
+                    0 => _HomeVividScreenState._hot,
+                    2 => Colors.white,
+                    _ => _HomeVividScreenState._muted,
+                  },
                 ),
               ),
           ],
