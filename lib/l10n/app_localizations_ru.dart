@@ -766,4 +766,27 @@ class LRu extends L {
 
   @override
   String get playerPending => 'ждёт одобрения';
+
+  @override
+  String get vividNearby => 'Рядом';
+
+  @override
+  String get vividTonight => 'Сегодня вечером';
+
+  @override
+  String get vividNewVenues => 'Новые площадки';
+
+  @override
+  String get vividFreeNow => 'Свободно сейчас';
+
+  @override
+  String vividFrom(String price) {
+    return 'от $price';
+  }
+
+  @override
+  String get vividBook => 'Забронировать';
+
+  @override
+  String get vividPickedForYou => 'Подобрали для вас';
 }

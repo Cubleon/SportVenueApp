@@ -238,5 +238,13 @@
   "playerOrganizer": "Организатор",
   "playerGames": "Игры этого участника",
   "playerNoGames": "Других игр этого участника здесь нет",
-  "playerPending": "ждёт одобрения"
+  "playerPending": "ждёт одобрения",
+  "vividNearby": "Рядом",
+  "vividTonight": "Сегодня вечером",
+  "vividNewVenues": "Новые площадки",
+  "vividFreeNow": "Свободно сейчас",
+  "vividFrom": "от {price}",
+  "@vividFrom": {"placeholders": {"price": {"type": "String"}}},
+  "vividBook": "Забронировать",
+  "vividPickedForYou": "Подобрали для вас"
 }
