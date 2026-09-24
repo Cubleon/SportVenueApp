@@ -789,4 +789,16 @@ class LRu extends L {
 
   @override
   String get vividPickedForYou => 'Подобрали для вас';
+
+  @override
+  String get vividWhereToPlay => 'Где играете';
+
+  @override
+  String get vividSports => 'Виды спорта';
+
+  @override
+  String get vividNextGame => 'Ближайшая игра';
+
+  @override
+  String get vividFreeToday => 'Свободно сегодня';
 }

@@ -1412,6 +1412,30 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Подобрали для вас'**
   String get vividPickedForYou;
+
+  /// Подпись над городом на ярком главном экране
+  ///
+  /// In ru, this message translates to:
+  /// **'Где играете'**
+  String get vividWhereToPlay;
+
+  /// Заголовок ряда категорий на ярком главном экране
+  ///
+  /// In ru, this message translates to:
+  /// **'Виды спорта'**
+  String get vividSports;
+
+  /// Метка на баннере яркого главного экрана
+  ///
+  /// In ru, this message translates to:
+  /// **'Ближайшая игра'**
+  String get vividNextGame;
+
+  /// Заголовок ряда площадок на ярком главном экране
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободно сегодня'**
+  String get vividFreeToday;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
