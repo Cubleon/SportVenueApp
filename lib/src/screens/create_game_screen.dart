@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../labels.dart';
 
@@ -215,7 +216,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                   ),
                                 ),
                               Icon(
-                                Icons.expand_more_rounded,
+                                AppIcons.chevronDown,
                                 color: context.colors.dim,
                               ),
                             ],
@@ -277,7 +278,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                 () => setState(() => _capacity--),
                               )
                             : null,
-                        icon: const Icon(Icons.remove_rounded),
+                        icon: const Icon(AppIcons.minus),
                       ),
                       Expanded(
                         child: Text(
@@ -297,7 +298,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                 () => setState(() => _capacity++),
                               )
                             : null,
-                        icon: const Icon(Icons.add_rounded),
+                        icon: const Icon(AppIcons.plus),
                       ),
                     ],
                   ),
@@ -512,7 +513,7 @@ class _CreateHeader extends StatelessWidget {
         IconButton.filled(
           tooltip: context.l10n.back,
           onPressed: onBack,
-          icon: const Icon(Icons.chevron_left_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
           style: IconButton.styleFrom(
             backgroundColor: context.colors.surface,
             foregroundColor: context.colors.ink,

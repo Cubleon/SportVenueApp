@@ -39,7 +39,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -66,6 +65,9 @@ flutter:
   generate: true
 
   fonts:
+    - family: AppIcons
+      fonts:
+        - asset: assets/fonts/AppIcons.ttf
     - family: Rubik
       fonts:
         - asset: assets/fonts/Rubik-Regular.ttf

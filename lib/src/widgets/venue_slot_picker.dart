@@ -6,6 +6,7 @@ import '../data/app_controller.dart';
 import '../models/sport_venue_models.dart';
 import '../labels.dart';
 import '../theme/app_theme.dart';
+import 'skeleton.dart';
 import 'shared_widgets.dart';
 
 /// The hours a particular club has free on a particular day, and the one
@@ -124,9 +125,19 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return SizedBox(
-        height: context.scaled(52),
-        child: const Center(child: CircularProgressIndicator()),
+      // The shape of the answer, not a spinner: the grid that is coming,
+      // in the size it will be, so nothing jumps when it lands.
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (var i = 0; i < 8; i++)
+            Skeleton(
+              width: context.scaled(84, max: 1.3),
+              height: context.scaled(48, max: 1.3),
+              radius: AppTheme.radiusInner,
+            ),
+        ],
       );
     }
     if (_error != null) {

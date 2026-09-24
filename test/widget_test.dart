@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sport_venue_app/src/theme/app_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -345,7 +346,7 @@ void main() {
     // The phone number starts with a 7 for everyone, so falling back to it
     // put the same digit in every avatar.
     expect(find.text('7'), findsNothing);
-    expect(find.byIcon(Icons.person_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.user), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('logout-button')),

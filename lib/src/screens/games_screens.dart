@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../labels.dart';
 
@@ -11,7 +12,6 @@ import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
-import '../widgets/sport_ball.dart';
 import '../widgets/sport_surface.dart';
 import 'player_screen.dart';
 
@@ -72,9 +72,8 @@ class _GamesScreenState extends State<GamesScreen> {
                   title: context.l10n.games,
                   eyebrow: AppFormatters.dateFull(widget.controller.now),
                   subtitle: context.l10n.gamesSubtitle,
-                  ball: SportBallKind.basket,
                   trailing: SkyIconButton(
-                    icon: Icons.tune_rounded,
+                    icon: AppIcons.slidersHorizontal,
                     label: context.l10n.filters,
                     onTap: () =>
                         showAppSnack(context, context.l10n.filtersLater),
@@ -101,7 +100,7 @@ class _GamesScreenState extends State<GamesScreen> {
                     child: _filtered
                         ? EmptyState(
                             key: const ValueKey('games-empty-filtered'),
-                            icon: Icons.filter_alt_off_rounded,
+                            icon: AppIcons.filterX,
                             title: context.l10n.nothingMatchesFilters,
                             description: context.l10n.nothingMatchesFiltersHint,
                             actionLabel: context.l10n.showAllGames,
@@ -112,7 +111,7 @@ class _GamesScreenState extends State<GamesScreen> {
                           )
                         : EmptyState(
                             key: const ValueKey('games-empty'),
-                            icon: Icons.sports_soccer_rounded,
+                            icon: AppIcons.volleyball,
                             title: context.l10n.noOpenGames,
                             description: context.l10n.noOpenGamesHint,
                           ),
@@ -181,119 +180,124 @@ class MiniGameCard extends StatelessWidget {
     final countdown = countdownText(context, game.startsAt, controller.now);
     final details = [game.timeRange, ?game.level, ?game.format].join(' · ');
 
-    return AppCard(
-      onTap: onTap,
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppTheme.radius - 1),
-            ),
-            child: SizedBox(
-              height: context.scaled(92, max: 1.2),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.sportGradient(game.sportId),
-                    ),
-                  ),
-                  Opacity(
-                    opacity: 0.35,
-                    child: SportSurface(sportId: game.sportId),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: _Marker(
-                            text:
-                                countdown ?? AppFormatters.dateShort(game.date),
-                            background: countdown == null
-                                ? Colors.black.withValues(alpha: 0.5)
-                                : colors.skyLow,
-                            foreground: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: _Marker(
-                            text: game.isFull
-                                ? context.l10n.gameFull
-                                : context.l10n.freePlaces(game.freePlaces),
-                            background: Colors.black.withValues(alpha: 0.5),
-                            foreground: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 12,
-                    right: 12,
-                    bottom: 10,
-                    child: Text(
-                      sport.name.capitalized,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.eyebrow(
-                        context,
-                        Colors.white.withValues(alpha: 0.85),
+    return Pressable(
+      child: AppCard(
+        onTap: onTap,
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radius - 1),
+              ),
+              child: SizedBox(
+                height: context.scaled(92, max: 1.2),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.sportGradient(game.sportId),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  game.venue.name.capitalized,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleLarge,
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  details,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(color: colors.muted),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Flexible(
-                      child: _AvatarStack(participants: game.participants),
+                    Opacity(
+                      opacity: 0.35,
+                      child: SportSurface(sportId: game.sportId),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: _Marker(
+                              text:
+                                  countdown ??
+                                  AppFormatters.dateShort(game.date),
+                              background: countdown == null
+                                  ? Colors.black.withValues(alpha: 0.5)
+                                  : colors.skyLow,
+                              foreground: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: _Marker(
+                              text: game.isFull
+                                  ? context.l10n.gameFull
+                                  : context.l10n.freePlaces(game.freePlaces),
+                              background: Colors.black.withValues(alpha: 0.5),
+                              foreground: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 10,
                       child: Text(
-                        AppFormatters.money(game.pricePerPerson),
+                        sport.name.capitalized,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: AppTheme.numeric(
-                          context.text.headlineSmall,
-                        ).copyWith(color: colors.ink),
+                        style: AppTheme.eyebrow(
+                          context,
+                          Colors.white.withValues(alpha: 0.85),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    game.venue.name.capitalized,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleLarge,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    details,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodySmall?.copyWith(
+                      color: colors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: _AvatarStack(participants: game.participants),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          AppFormatters.money(game.pricePerPerson),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: AppTheme.numeric(
+                            context.text.headlineSmall,
+                          ).copyWith(color: colors.ink),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -633,6 +637,7 @@ class _SportFilter extends StatelessWidget {
                 label: sport.name.capitalized,
                 icon: sport.icon,
                 selected: value == sport.id,
+                color: AppTheme.sportGround(sport.id).last,
                 onTap: () => onChanged(sport.id),
               ),
             ),
@@ -750,7 +755,7 @@ class _DetailHeader extends StatelessWidget {
           IconButton.filled(
             tooltip: context.l10n.back,
             onPressed: onBack,
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(AppIcons.chevronLeft),
             style: IconButton.styleFrom(
               backgroundColor: context.colors.surface,
               foregroundColor: context.colors.ink,

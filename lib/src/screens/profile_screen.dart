@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
 
@@ -10,7 +11,6 @@ import 'sport_selection_screen.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
-import '../widgets/sport_ball.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({
@@ -43,7 +43,6 @@ class ProfileScreen extends StatelessWidget {
                 subtitle: controller.isConnected
                     ? context.l10n.accountSportVenue
                     : context.l10n.demoAccountSportVenue,
-                ball: SportBallKind.soccer,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
@@ -63,7 +62,7 @@ class ProfileScreen extends StatelessWidget {
                             child: Center(
                               child: initial == null
                                   ? Icon(
-                                      Icons.person_rounded,
+                                      AppIcons.user,
                                       color: context.colors.onAccent,
                                       size: context.scaled(30),
                                     )
@@ -108,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
                               context,
                               context.l10n.editProfileLater,
                             ),
-                            icon: const Icon(Icons.edit_rounded),
+                            icon: const Icon(AppIcons.pencil),
                           ),
                         ],
                       ),
@@ -143,6 +142,7 @@ class ProfileScreen extends StatelessWidget {
                               label: sport.name.capitalized,
                               icon: sport.icon,
                               selected: true,
+                              color: AppTheme.sportGround(sport.id).last,
                             ),
                           )
                           .toList(),
@@ -151,7 +151,7 @@ class ProfileScreen extends StatelessWidget {
                     _Stats(controller: controller),
                     const SizedBox(height: 18),
                     _MenuItem(
-                      icon: Icons.history_rounded,
+                      icon: AppIcons.history,
                       title: context.l10n.history,
                       subtitle: context.l10n.historySubtitle(
                         controller.bookings.length,
@@ -350,7 +350,7 @@ class _MenuItem extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.dim),
           ],
         ),
       ),

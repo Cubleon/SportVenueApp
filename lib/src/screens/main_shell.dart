@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
 
@@ -130,7 +131,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const SizedBox(height: 14),
                 _SheetAction(
-                  icon: Icons.sports_soccer_rounded,
+                  icon: AppIcons.volleyball,
                   title: context.l10n.createGameAction,
                   subtitle: context.l10n.createGameActionSubtitle,
                   onTap: () {
@@ -145,7 +146,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const SizedBox(height: 10),
                 _SheetAction(
-                  icon: Icons.calendar_month_rounded,
+                  icon: AppIcons.calendarDays,
                   title: context.l10n.bookVenueAction,
                   subtitle: context.l10n.bookVenueActionSubtitle,
                   onTap: () {
@@ -256,14 +257,14 @@ class _BottomNav extends StatelessWidget {
                             index: 0,
                             selectedIndex: selectedIndex,
                             label: context.l10n.navHome,
-                            icon: Icons.home_rounded,
+                            icon: AppIcons.home,
                             onTab: onTab,
                           ),
                           _NavItem(
                             index: 1,
                             selectedIndex: selectedIndex,
                             label: context.l10n.navSearch,
-                            icon: Icons.search_rounded,
+                            icon: AppIcons.search,
                             onTab: onTab,
                           ),
                           Expanded(
@@ -282,7 +283,7 @@ class _BottomNav extends StatelessWidget {
                                       color: context.colors.accent,
                                     ),
                                     child: Icon(
-                                      Icons.add_rounded,
+                                      AppIcons.plus,
                                       color: context.colors.onAccent,
                                       size: 26,
                                     ),
@@ -295,14 +296,14 @@ class _BottomNav extends StatelessWidget {
                             index: 2,
                             selectedIndex: selectedIndex,
                             label: context.l10n.navGames,
-                            icon: Icons.sports_soccer_rounded,
+                            icon: AppIcons.volleyball,
                             onTab: onTab,
                           ),
                           _NavItem(
                             index: 3,
                             selectedIndex: selectedIndex,
                             label: context.l10n.navProfile,
-                            icon: Icons.person_rounded,
+                            icon: AppIcons.user,
                             onTab: onTab,
                           ),
                         ],
@@ -437,7 +438,7 @@ class _SheetAction extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+          Icon(AppIcons.chevronRight, color: context.colors.dim),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../l10n/l10n.dart';
 import 'package:flutter/services.dart';
@@ -265,7 +266,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                         child: _accepted
                             ? Icon(
-                                Icons.check_rounded,
+                                AppIcons.check,
                                 size: 16,
                                 color: context.colors.ink,
                               )
@@ -464,10 +465,7 @@ class _OtpScreenState extends State<OtpScreen>
             children: [
               Row(
                 children: [
-                  _IconBox(
-                    icon: Icons.chevron_left_rounded,
-                    onTap: widget.onBack,
-                  ),
+                  _IconBox(icon: AppIcons.chevronLeft, onTap: widget.onBack),
                   const Spacer(),
                   const AppLogo(size: 38),
                   const Spacer(),

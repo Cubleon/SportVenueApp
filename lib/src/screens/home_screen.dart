@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/l10n.dart';
@@ -9,7 +10,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/sport_ball.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/sport_surface.dart';
 import 'booking_screens.dart';
 import 'games_screens.dart';
@@ -253,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  Icons.event_available_rounded,
+                                  AppIcons.calendarCheck,
                                   size: 19,
                                   color: colors.accent,
                                 ),
@@ -309,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
 /// The field: who you are, when you are playing, and what you are looking
 /// for — on the app's own colour, fading into the page rather than ending at
 /// an edge.
-class _SkyHeader extends StatelessWidget {
+class _SkyHeader extends StatefulWidget {
   const _SkyHeader({
     required this.controller,
     required this.date,
@@ -330,10 +331,50 @@ class _SkyHeader extends StatelessWidget {
   final int gamesToday;
   final int venuesToday;
 
+  @override
+  State<_SkyHeader> createState() => _SkyHeaderState();
+}
+
+class _SkyHeaderState extends State<_SkyHeader> {
   static const _days = 14;
+  static const _cardExtent = 70.0;
+
+  final ScrollController _strip = ScrollController();
+
+  @override
+  void didUpdateWidget(_SkyHeader old) {
+    super.didUpdateWidget(old);
+    if (!DateUtils.isSameDay(old.date, widget.date)) {
+      _bringIntoView();
+    }
+  }
+
+  @override
+  void dispose() {
+    _strip.dispose();
+    super.dispose();
+  }
+
+  /// Slides the chosen day towards the left edge rather than leaving it
+  /// wherever the finger happened to land. Picking a day at the far right
+  /// otherwise hides the week that follows it, which is the week you are
+  /// about to look at.
+  void _bringIntoView() {
+    if (!_strip.hasClients) return;
+    final start = DateUtils.dateOnly(widget.controller.now);
+    final index = widget.date.difference(start).inDays;
+    final target = (index - 1) * _cardExtent;
+    _strip.animateTo(
+      target.clamp(0, _strip.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final date = widget.date;
     final colors = context.colors;
     final topInset = MediaQuery.viewPaddingOf(context).top;
     final start = DateUtils.dateOnly(controller.now);
@@ -350,25 +391,6 @@ class _SkyHeader extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Two balls break out of the field, which is what keeps it from
-          // reading as a coloured rectangle.
-          Positioned(
-            left: -50,
-            top: topInset - 10,
-            child: SportBall(
-              kind: SportBallKind.soccer,
-              size: context.scaled(86, max: 1.15),
-            ),
-          ),
-          Positioned(
-            right: -36,
-            bottom: -14,
-            child: SportBall(
-              kind: SportBallKind.basket,
-              size: context.scaled(84, max: 1.15),
-              tilt: 0.2,
-            ),
-          ),
           Padding(
             padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 16),
             child: Column(
@@ -407,6 +429,7 @@ class _SkyHeader extends StatelessWidget {
                 SizedBox(
                   height: context.scaled(98, max: 1.45),
                   child: ListView.separated(
+                    controller: _strip,
                     scrollDirection: Axis.horizontal,
                     itemCount: _days,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -419,15 +442,17 @@ class _SkyHeader extends StatelessWidget {
                         date: day,
                         selected: DateUtils.isSameDay(day, date),
                         isToday: index == 0,
-                        onTap: withSelectionFeedback(() => onPickDate(day)),
+                        onTap: withSelectionFeedback(
+                          () => widget.onPickDate(day),
+                        ),
                       );
                     },
                   ),
                 ),
                 SizedBox(height: context.scaled(14, max: 1.3)),
                 Text(
-                  '${context.l10n.gamesCount(gamesToday)} · '
-                  '${context.l10n.clubsNearby(venuesToday)}',
+                  '${context.l10n.gamesCount(widget.gamesToday)} · '
+                  '${context.l10n.clubsNearby(widget.venuesToday)}',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -438,9 +463,9 @@ class _SkyHeader extends StatelessWidget {
                 ),
                 SizedBox(height: context.scaled(16, max: 1.3)),
                 _SearchField(
-                  controller: search,
-                  onChanged: onQuery,
-                  onOpenSearch: onOpenSearch,
+                  controller: widget.search,
+                  onChanged: widget.onQuery,
+                  onOpenSearch: widget.onOpenSearch,
                 ),
               ],
             ),
@@ -491,11 +516,7 @@ class _HeaderPill extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.location_on_rounded,
-                      size: 13,
-                      color: colors.dim,
-                    ),
+                    Icon(AppIcons.mapPin, size: 13, color: colors.dim),
                     const SizedBox(width: 2),
                     Flexible(
                       child: Text(
@@ -534,11 +555,7 @@ class _HeaderPill extends StatelessWidget {
                 child: SizedBox(
                   width: context.scaled(42, max: 1.25),
                   height: context.scaled(42, max: 1.25),
-                  child: Icon(
-                    Icons.notifications_none_rounded,
-                    size: 20,
-                    color: colors.ink,
-                  ),
+                  child: Icon(AppIcons.bell, size: 20, color: colors.ink),
                 ),
               ),
             ),
@@ -656,7 +673,7 @@ class _SearchField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, size: 21, color: colors.dim),
+          Icon(AppIcons.search, size: 21, color: colors.dim),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -697,7 +714,7 @@ class _SearchField extends StatelessWidget {
                   width: context.scaled(40, max: 1.2),
                   height: context.scaled(40, max: 1.2),
                   child: Icon(
-                    Icons.tune_rounded,
+                    AppIcons.slidersHorizontal,
                     size: 19,
                     color: colors.accent,
                   ),
@@ -728,41 +745,27 @@ class _CategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: context.scaled(106, max: 1.5),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            right: 8,
-            top: -22,
-            child: SportBall(
-              kind: SportBallKind.tennis,
-              size: context.scaled(54, max: 1.15),
-              tilt: -0.3,
-            ),
-          ),
-          ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: sports.length + 1,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return _CategoryTile(
-                  label: context.l10n.allFilter,
-                  selected: selected == 'all',
-                  onTap: () => onSelect('all'),
-                );
-              }
-              final sport = sports[index - 1];
-              return _CategoryTile(
-                label: sport.name.capitalized,
-                sportId: sport.id,
-                selected: selected == sport.id,
-                onTap: () => onSelect(sport.id),
-              );
-            },
-          ),
-        ],
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: sports.length + 1,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _CategoryTile(
+              label: context.l10n.allFilter,
+              selected: selected == 'all',
+              onTap: () => onSelect('all'),
+            );
+          }
+          final sport = sports[index - 1];
+          return _CategoryTile(
+            label: sport.name.capitalized,
+            sportId: sport.id,
+            selected: selected == sport.id,
+            onTap: () => onSelect(sport.id),
+          );
+        },
       ),
     );
   }
@@ -800,15 +803,21 @@ class _CategoryTile extends StatelessWidget {
                 height: context.scaled(72, max: 1.3),
                 padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
-                  color: selected ? colors.accentSoft : colors.surface,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                    color: selected ? colors.accent : Colors.transparent,
+                    // The ring is the sport's own colour, so choosing hockey
+                    // and choosing tennis do not look like the same act.
+                    color: selected
+                        ? (id == null
+                              ? colors.accent
+                              : AppTheme.sportGround(id).last)
+                        : Colors.transparent,
                     width: 2,
                   ),
                 ),
                 child: id == null
-                    ? Icon(Icons.apps_rounded, color: colors.accent)
+                    ? Icon(AppIcons.layoutGrid, color: colors.accent)
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: SportSurface(sportId: id),
@@ -820,7 +829,11 @@ class _CategoryTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: context.text.labelSmall?.copyWith(
-                  color: selected ? colors.accent : colors.muted,
+                  color: selected
+                      ? (id == null
+                            ? colors.accent
+                            : AppTheme.sportGround(id).last)
+                      : colors.muted,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -912,12 +925,15 @@ class _VenueRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: context.scaled(56, max: 1.2),
-                  height: context.scaled(56, max: 1.2),
-                  child: SportSurface(sportId: sportId),
+              Hero(
+                tag: venueHeroTag(venue),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: context.scaled(56, max: 1.2),
+                    height: context.scaled(56, max: 1.2),
+                    child: SportSurface(sportId: sportId),
+                  ),
                 ),
               ),
               const SizedBox(width: 13),
@@ -957,12 +973,16 @@ class _VenueRow extends StatelessWidget {
                       runSpacing: 6,
                       children: [
                         // What is free today comes first: it is the one fact
-                        // that changes with the calendar above.
+                        // that changes with the calendar above. Until it
+                        // lands it holds its own space, so the row does not
+                        // jump when it does.
                         if (free != null)
                           _Tag(
                             label: context.l10n.freeHoursToday(free),
                             tone: _TagTone.live,
-                          ),
+                          )
+                        else
+                          const Skeleton.line(width: 96, height: 18, radius: 6),
                         for (final amenity in venue.amenities.take(
                           free == null ? 2 : 1,
                         ))
@@ -995,7 +1015,7 @@ class _VenueRow extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.star_rounded, size: 13, color: colors.ink),
+                        Icon(AppIcons.star, size: 13, color: colors.ink),
                         const SizedBox(width: 3),
                         Flexible(
                           // Written short, read long: a reader hears
@@ -1076,7 +1096,7 @@ class _NothingFound extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: EmptyState(
-        icon: Icons.search_off_rounded,
+        icon: AppIcons.searchX,
         title: context.l10n.nothingFound,
         description: context.l10n.noVenuesForSportHint,
         actionLabel: context.l10n.reset,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
 
@@ -280,7 +281,7 @@ class _SportCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.check_rounded,
+                          AppIcons.check,
                           color: context.colors.ink,
                           size: 18,
                         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../l10n/l10n.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
@@ -9,7 +10,6 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
-import '../widgets/sport_ball.dart';
 import 'booking_screens.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -70,9 +70,8 @@ class _SearchScreenState extends State<SearchScreen> {
             SkyHeader(
               title: context.l10n.search,
               subtitle: context.l10n.searchSubtitle,
-              ball: SportBallKind.tennis,
               trailing: SkyIconButton(
-                icon: Icons.my_location_rounded,
+                icon: AppIcons.locateFixed,
                 label: context.l10n.centreOnMoscow,
                 onTap: _focusMoscow,
               ),
@@ -100,6 +99,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         label: sport.name.capitalized,
                         icon: sport.icon,
                         selected: _sportId == sport.id,
+                        color: AppTheme.sportGround(sport.id).last,
                         onTap: () => setState(() => _sportId = sport.id),
                       ),
                     ),
@@ -285,7 +285,7 @@ class _SearchField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: context.colors.dim),
+          Icon(AppIcons.search, color: context.colors.dim),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -322,7 +322,7 @@ class _SearchField extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.all(4),
                   child: Icon(
-                    Icons.close_rounded,
+                    AppIcons.x,
                     size: 20,
                     color: context.colors.muted,
                   ),
@@ -512,9 +512,7 @@ class _ResultsSheet extends StatelessWidget {
                 // say which filter emptied it.
                 EmptyState(
                   key: const ValueKey('search-empty'),
-                  icon: query.isEmpty
-                      ? Icons.location_off_rounded
-                      : Icons.search_off_rounded,
+                  icon: query.isEmpty ? AppIcons.mapPinOff : AppIcons.searchX,
                   title: query.isEmpty
                       ? context.l10n.noVenuesForSport
                       : context.l10n.nothingFound,

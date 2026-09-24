@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../labels.dart';
 
@@ -398,6 +399,9 @@ class SelectableChip extends StatelessWidget {
   /// tapping — a preference is not something to lose by accident.
   final VoidCallback? onTap;
   final String? icon;
+
+  /// The fill a chosen chip takes. A sport passes its own ground here, so a
+  /// row of filters is a row of sports rather than a row of the same blue.
   final Color? color;
 
   @override
@@ -419,7 +423,9 @@ class SelectableChip extends StatelessWidget {
             height: context.scaled(44),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: selected ? context.colors.accent : context.colors.surface,
+              color: selected
+                  ? (color ?? context.colors.accent)
+                  : context.colors.surface,
               borderRadius: BorderRadius.circular(99),
             ),
             child: FittedBox(
@@ -440,7 +446,9 @@ class SelectableChip extends StatelessWidget {
                     maxLines: 1,
                     style: context.text.labelLarge?.copyWith(
                       color: selected
-                          ? context.colors.onAccent
+                          ? (color == null
+                                ? context.colors.onAccent
+                                : Colors.white)
                           : context.colors.muted,
                       fontWeight: FontWeight.w600,
                     ),
@@ -460,15 +468,71 @@ class SelectableChip extends StatelessWidget {
 /// Nothing is written on top of it: white text over pitch markings never
 /// reads cleanly, so the name and address sit under the image in ink where
 /// the card owns them.
+/// Gives way under the thumb.
+///
+/// A ripple says a tap landed; a card that dips says the card itself is the
+/// thing you are pressing. It is 2% and 90ms — enough to feel, not enough to
+/// notice.
+class Pressable extends StatefulWidget {
+  const Pressable({super.key, required this.child, this.enabled = true});
+
+  final Widget child;
+
+  /// Off for a card that does not open anything: a dip promises a
+  /// destination.
+  final bool enabled;
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _down = false;
+
+  void _set(bool value) {
+    if (mounted && _down != value) {
+      setState(() => _down = value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Listener, not GestureDetector: the child already handles the tap, and
+    // a second handler here would open the next screen twice. This only
+    // watches the pointer to know when to dip.
+    return Listener(
+      onPointerDown: widget.enabled ? (_) => _set(true) : null,
+      onPointerUp: widget.enabled ? (_) => _set(false) : null,
+      onPointerCancel: widget.enabled ? (_) => _set(false) : null,
+      child: AnimatedScale(
+        scale: _down ? 0.98 : 1,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class VenueHero extends StatelessWidget {
-  const VenueHero({super.key, required this.venue, this.height = 116});
+  const VenueHero({
+    super.key,
+    required this.venue,
+    this.height = 116,
+    this.flies = true,
+  });
 
   final Venue venue;
   final double height;
 
+  /// Whether this one takes part in the flight between screens. Two pictures
+  /// of the same club on one screen would both claim the tag and Flutter
+  /// would refuse to fly either, so a list that repeats a club turns it off.
+  final bool flies;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final picture = Container(
       height: height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -477,8 +541,14 @@ class VenueHero extends StatelessWidget {
       ),
       child: SportSurface(sportId: venue.sportIds.first),
     );
+    return flies ? Hero(tag: venueHeroTag(venue), child: picture) : picture;
   }
 }
+
+/// The tag a club's picture flies under. A list row and the screen it opens
+/// share it, so the thumbnail grows into the header instead of the screen
+/// cutting to a new one.
+String venueHeroTag(Venue venue) => 'venue-picture-${venue.id}';
 
 class BookingSummaryRows extends StatelessWidget {
   const BookingSummaryRows({super.key, required this.draft});
@@ -827,7 +897,7 @@ class BookingRow extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.dim),
         ],
       ),
     );
@@ -845,7 +915,7 @@ class BackCircleButton extends StatelessWidget {
     return IconButton.filled(
       tooltip: context.l10n.back,
       onPressed: onTap,
-      icon: const Icon(Icons.chevron_left_rounded),
+      icon: const Icon(AppIcons.chevronLeft),
       style: IconButton.styleFrom(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.ink,
@@ -1326,11 +1396,7 @@ class VenueRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 15,
-                        color: context.colors.ink,
-                      ),
+                      Icon(AppIcons.star, size: 15, color: context.colors.ink),
                       const SizedBox(width: 3),
                       Text(
                         venue.rating.toStringAsFixed(1),
@@ -1353,8 +1419,7 @@ class VenueRow extends StatelessWidget {
                 ],
               ),
             ),
-            trailing ??
-                Icon(Icons.chevron_right_rounded, color: context.colors.dim),
+            trailing ?? Icon(AppIcons.chevronRight, color: context.colors.dim),
           ],
         ),
       ),

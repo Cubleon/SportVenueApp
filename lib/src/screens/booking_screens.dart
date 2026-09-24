@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../labels.dart';
 
@@ -100,7 +101,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       selected: false,
                       onTap: _pickVenue,
                       trailing: Icon(
-                        Icons.expand_more_rounded,
+                        AppIcons.chevronDown,
                         color: context.colors.dim,
                       ),
                     ),
@@ -643,9 +644,7 @@ class _SharesCard extends StatelessWidget {
                   // The mark carries the state too: paid and not paid must
                   // not differ by colour alone.
                   Icon(
-                    share.isPaid
-                        ? Icons.check_circle_rounded
-                        : Icons.schedule_rounded,
+                    share.isPaid ? AppIcons.checkCircle : AppIcons.clock,
                     size: 18,
                     color: share.isPaid
                         ? context.colors.success
@@ -712,7 +711,7 @@ class _BookingHeader extends StatelessWidget {
           IconButton.filled(
             tooltip: context.l10n.back,
             onPressed: onBack,
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(AppIcons.chevronLeft),
             style: IconButton.styleFrom(
               backgroundColor: context.colors.surface,
               foregroundColor: context.colors.ink,
@@ -752,7 +751,7 @@ class _BookingNav extends StatelessWidget {
         IconButton.filled(
           tooltip: context.l10n.back,
           onPressed: onBack,
-          icon: const Icon(Icons.chevron_left_rounded),
+          icon: const Icon(AppIcons.chevronLeft),
           style: IconButton.styleFrom(
             backgroundColor: context.colors.surface,
             foregroundColor: context.colors.ink,
@@ -846,7 +845,7 @@ class _CounterRow extends StatelessWidget {
       children: [
         _CounterButton(
           key: const ValueKey('players-minus'),
-          icon: Icons.remove_rounded,
+          icon: AppIcons.minus,
           label: context.l10n.removePlayer,
           enabled: value > min,
           onTap: withSelectionFeedback(() => onChanged(value - 1))!,
@@ -862,7 +861,7 @@ class _CounterRow extends StatelessWidget {
         ),
         _CounterButton(
           key: const ValueKey('players-plus'),
-          icon: Icons.add_rounded,
+          icon: AppIcons.plus,
           label: context.l10n.addPlayer,
           enabled: value < max,
           onTap: withSelectionFeedback(() => onChanged(value + 1))!,

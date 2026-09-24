@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
 
@@ -111,7 +112,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.search_rounded, color: context.colors.dim),
+                      Icon(AppIcons.search, color: context.colors.dim),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
@@ -151,7 +152,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                             child: Padding(
                               padding: const EdgeInsets.all(4),
                               child: Icon(
-                                Icons.close_rounded,
+                                AppIcons.x,
                                 size: 20,
                                 color: context.colors.muted,
                               ),
@@ -168,7 +169,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                         child: EmptyState(
                           key: const ValueKey('venue-picker-empty'),
-                          icon: Icons.search_off_rounded,
+                          icon: AppIcons.searchX,
                           title: context.l10n.nothingFound,
                           description: context.l10n.nothingFoundFor(
                             _query.text.trim(),
@@ -196,7 +197,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                             onTap: () => Navigator.pop(context, venue),
                             trailing: isSelected
                                 ? Icon(
-                                    Icons.check_circle_rounded,
+                                    AppIcons.checkCircle,
                                     color: context.colors.accent,
                                   )
                                 : const SizedBox(width: 24),

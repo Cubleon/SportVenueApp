@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import 'sport_ball.dart';
 
 /// The top of a tab: the app's colour running under the status bar, the
 /// screen's name at display size on it, and an object breaking out of it.
@@ -16,7 +15,6 @@ class SkyHeader extends StatelessWidget {
     this.subtitle,
     this.eyebrow,
     this.trailing,
-    this.ball,
     this.child,
   });
 
@@ -30,10 +28,6 @@ class SkyHeader extends StatelessWidget {
   /// What the screen does, not how to leave it.
   final Widget? trailing;
 
-  /// The object that breaks out of the field. Each tab gets its own, so the
-  /// screens are told apart before a word is read.
-  final SportBallKind? ball;
-
   /// Anything that belongs on the colour rather than on the page — a search
   /// field, a row of pills.
   final Widget? child;
@@ -42,7 +36,6 @@ class SkyHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final topInset = MediaQuery.viewPaddingOf(context).top;
-    final kind = ball;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -56,19 +49,6 @@ class SkyHeader extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          if (kind != null)
-            // Low and to the right, where it crosses the field's edge onto the
-            // page. Up top it would sit under whatever the screen puts in the
-            // corner.
-            Positioned(
-              right: -30,
-              bottom: -16,
-              child: SportBall(
-                kind: kind,
-                size: context.scaled(84, max: 1.15),
-                tilt: 0.18,
-              ),
-            ),
           // A short header would compress the wash into a bar with a visible
           // end. The floor gives the fade room to be a fade.
           ConstrainedBox(
