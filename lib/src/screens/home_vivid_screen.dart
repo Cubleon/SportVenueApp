@@ -88,19 +88,20 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
                         sportId: _sportOf(venues.first),
                       ),
                     ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
-                      child: Text(
-                        context.l10n.vividPickedForYou,
-                        style: context.text.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
+                  if (venues.length > 1)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
+                        child: Text(
+                          context.l10n.vividPickedForYou,
+                          style: context.text.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   SliverList.separated(
                     itemCount: venues.length > 1 ? venues.length - 1 : 0,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
