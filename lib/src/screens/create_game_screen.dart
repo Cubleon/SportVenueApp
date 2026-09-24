@@ -298,23 +298,15 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 _Block(
                   step: 7,
-                  title: 'Тип игры',
+                  title: 'Кто может вступить',
+                  // "Закрытая · только по ссылке" stood here, and there are
+                  // no links: nothing in the app produces one, sends one or
+                  // opens one, and nothing hides such a game from the public
+                  // list either. It was an option that made a game harder to
+                  // join and no harder to find. It comes back with the
+                  // sharing it names.
                   child: Column(
                     children: [
-                      _OptionTile(
-                        title: 'Открытая',
-                        subtitle: 'Любой может вступить',
-                        selected: _type == GameType.open,
-                        onTap: () => setState(() => _type = GameType.open),
-                      ),
-                      const SizedBox(height: 8),
-                      _OptionTile(
-                        title: 'Закрытая',
-                        subtitle: 'Только по ссылке',
-                        selected: _type == GameType.closed,
-                        onTap: () => setState(() => _type = GameType.closed),
-                      ),
-                      const SizedBox(height: 8),
                       SwitchListTile.adaptive(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 4,
@@ -583,58 +575,6 @@ class _Block extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           child,
-        ],
-      ),
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: withSelectionFeedback(onTap),
-      borderColor: selected ? context.colors.accent : context.colors.border,
-      child: Row(
-        children: [
-          Icon(
-            selected
-                ? Icons.radio_button_checked_rounded
-                : Icons.radio_button_off_rounded,
-            color: selected ? context.colors.accent : context.colors.dim,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
