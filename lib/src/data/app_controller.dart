@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/sport_venue_models.dart';
 import 'api_client.dart';
+import 'session_store.dart';
 import 'mock_data.dart';
 
 class AppController extends ChangeNotifier {
@@ -11,16 +12,22 @@ class AppController extends ChangeNotifier {
     DateTime? now,
     SportVenueApiClient? api,
     bool closeApiOnDispose = false,
+    SessionStore session = const NoSessionStore(),
   }) {
     return AppController._(
       now: now,
       api: api,
       closeApiOnDispose: closeApiOnDispose,
+      session: session,
     );
   }
 
-  AppController._({DateTime? now, this._api, this._closeApiOnDispose = false})
-    : _now = now ?? DateTime.now() {
+  AppController._({
+    DateTime? now,
+    this._api,
+    this._closeApiOnDispose = false,
+    this._session = const NoSessionStore(),
+  }) : _now = now ?? DateTime.now() {
     sports = List<Sport>.from(MockData.sports);
     venues = List<Venue>.from(MockData.venues);
     selectedSportIds = {'football', 'padel', 'tennis'};
@@ -34,14 +41,32 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  factory AppController.connected({DateTime? now, SportVenueApiClient? api}) {
-    final client = api ?? SportVenueApiClient();
-    return AppController(now: now, api: client, closeApiOnDispose: api == null);
+  factory AppController.connected({
+    DateTime? now,
+    SportVenueApiClient? api,
+    SessionStore session = const SecureSessionStore(),
+  }) {
+    // The client already knew how to hand its tokens over — nothing was
+    // catching them, so every launch started from the phone number again.
+    late final SportVenueApiClient client;
+    client =
+        api ??
+        SportVenueApiClient(
+          onTokensChanged: (tokens) =>
+              tokens == null ? session.clear() : session.write(tokens),
+        );
+    return AppController(
+      now: now,
+      api: client,
+      closeApiOnDispose: api == null,
+      session: session,
+    );
   }
 
   final DateTime _now;
   final SportVenueApiClient? _api;
   final bool _closeApiOnDispose;
+  final SessionStore _session;
 
   String phone = '';
   String? userId;
@@ -363,6 +388,43 @@ class AppController extends ChangeNotifier {
     return true;
   }
 
+  /// Gives up a place in a game. Answers false when there was none to give.
+  Future<bool> leaveGame(Game game) async {
+    if (!game.participants.any((player) => player.isCurrentUser)) {
+      return false;
+    }
+
+    final api = _api;
+    if (api == null) {
+      games = [
+        for (final item in games)
+          if (item.id == game.id)
+            item.copyWith(
+              participants: item.participants
+                  .where((player) => !player.isCurrentUser)
+                  .toList(),
+            )
+          else
+            item,
+      ];
+      notifyListeners();
+      return true;
+    }
+
+    final row = await api.leaveGame(game.id);
+    final updated = _gameFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
+    games = [
+      for (final item in games)
+        if (item.id == updated.id) updated else item,
+    ];
+    notifyListeners();
+    return true;
+  }
+
   Future<Game> createGame({
     required String sportId,
     required Venue venue,
@@ -437,6 +499,33 @@ class AppController extends ChangeNotifier {
     games = [game, ...games.where((item) => item.id != game.id)];
     notifyListeners();
     return game;
+  }
+
+  /// Picks up a session left by a previous run, if the device still has one
+  /// and the server still honours it.
+  ///
+  /// Answers whether the app can go straight to the main screen. A refusal
+  /// is not an error to report: an expired or withdrawn session simply means
+  /// signing in again, which is what the screen behind the splash is for.
+  Future<bool> restoreSession() async {
+    final api = _api;
+    if (api == null) {
+      return false;
+    }
+    final tokens = await _session.read();
+    if (tokens == null) {
+      return false;
+    }
+    api.setTokens(tokens);
+    try {
+      await _loadRemoteState(api);
+    } catch (_) {
+      api.clearTokens();
+      return false;
+    }
+    isSignedIn = true;
+    notifyListeners();
+    return true;
   }
 
   /// Re-reads everything the screens show. Pull-to-refresh calls this.

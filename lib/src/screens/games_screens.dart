@@ -432,18 +432,31 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   bottom: 0,
                   // The button used to float with nothing under it, so the
                   // cards slid through it on the way past.
+                  // Someone already in the game is not offered a way in; a
+                  // place nobody can give back is a place nobody can take.
                   child: PinnedActionBar(
                     onHeight: _onBarHeight,
-                    child: PrimaryButton(
-                      key: const ValueKey('detail-join-game'),
-                      label: current.type == GameType.approval
-                          ? 'Заявка и оплата после одобрения'
-                          : 'Присоединиться к игре',
-                      isLoading: _joining,
-                      onPressed: current.isFull || _joining
-                          ? null
-                          : () => _join(current),
-                    ),
+                    child:
+                        current.participants.any(
+                          (player) => player.isCurrentUser,
+                        )
+                        ? PrimaryButton(
+                            key: const ValueKey('detail-leave-game'),
+                            label: 'Выйти из игры',
+                            tone: ButtonTone.neutral,
+                            isLoading: _joining,
+                            onPressed: _joining ? null : () => _leave(current),
+                          )
+                        : PrimaryButton(
+                            key: const ValueKey('detail-join-game'),
+                            label: current.type == GameType.approval
+                                ? 'Заявка и оплата после одобрения'
+                                : 'Присоединиться к игре',
+                            isLoading: _joining,
+                            onPressed: current.isFull || _joining
+                                ? null
+                                : () => _join(current),
+                          ),
                   ),
                 ),
               ],
@@ -452,6 +465,48 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         );
       },
     );
+  }
+
+  Future<void> _leave(Game game) async {
+    final confirmed = await confirmAction(
+      context,
+      title: 'Выйти из игры?',
+      message:
+          '${game.venue.name.capitalized}, '
+          '${AppFormatters.dateShort(game.date)} · ${game.timeRange}. '
+          'Место вернётся в игру, и его сможет занять кто-то другой.',
+      confirmLabel: 'Выйти',
+      cancelLabel: 'Остаться',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    setState(() => _joining = true);
+    try {
+      final left = await widget.controller.leaveGame(game);
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(
+        context,
+        left ? 'Вы вышли из игры' : 'Вас не было в этой игре',
+        tone: left ? SnackTone.done : SnackTone.plain,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(
+        context,
+        widget.controller.messageFor(error),
+        tone: SnackTone.failed,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _joining = false);
+      }
+    }
   }
 
   Future<void> _join(Game game) async {

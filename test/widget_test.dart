@@ -227,7 +227,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.games.length, before + 1);
-    expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
+    // The organiser is in their own game, so it offers the way out.
+    expect(find.byKey(const ValueKey('detail-leave-game')), findsOneWidget);
   });
 
   testWidgets('signing out asks first, and the avatar never shows a digit', (
@@ -269,6 +270,54 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('confirm-yes')));
     await tester.pumpAndSettle();
     expect(loggedOut, isTrue);
+  });
+
+  testWidgets('a place in a game can be given back', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    final game = controller.games.first;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: GameDetailScreen(controller: controller, game: game),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('detail-join-game')));
+    await tester.pumpAndSettle();
+
+    final joined = controller.games.firstWhere((item) => item.id == game.id);
+    expect(joined.participants.any((p) => p.isCurrentUser), isTrue);
+    // The way in is replaced by the way out, not offered twice.
+    expect(find.byKey(const ValueKey('detail-join-game')), findsNothing);
+
+    // The snack floats over the pinned bar; let it go before tapping there.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('detail-leave-game')));
+    await tester.pumpAndSettle();
+    expect(find.text('Выйти из игры?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-no')));
+    await tester.pumpAndSettle();
+
+    expect(
+      controller.games
+          .firstWhere((item) => item.id == game.id)
+          .participants
+          .any((p) => p.isCurrentUser),
+      isTrue,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('detail-leave-game')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+    await tester.pumpAndSettle();
+
+    final left = controller.games.firstWhere((item) => item.id == game.id);
+    expect(left.participants.any((p) => p.isCurrentUser), isFalse);
+    expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
   });
 
   testWidgets('booking can change club without starting over', (tester) async {

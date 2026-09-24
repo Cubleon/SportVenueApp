@@ -35,6 +35,7 @@ dependencies:
   google_fonts: ^8.1.0
   http: ^1.6.0
   maplibre: ^0.3.5
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
