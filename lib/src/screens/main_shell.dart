@@ -34,24 +34,35 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    // The home screen paints its own field under the status bar, so the
+    // inset is each screen's business rather than the shell's.
     final screens = [
       HomeScreen(
         controller: widget.controller,
         onOpenSearch: () => setState(() => _tab = 1),
         onOpenGames: () => setState(() => _tab = 2),
       ),
-      SearchScreen(controller: widget.controller),
-      GamesScreen(controller: widget.controller),
-      ProfileScreen(controller: widget.controller, onLogout: widget.onLogout),
+      SafeArea(
+        bottom: false,
+        child: SearchScreen(controller: widget.controller),
+      ),
+      SafeArea(
+        bottom: false,
+        child: GamesScreen(controller: widget.controller),
+      ),
+      SafeArea(
+        bottom: false,
+        child: ProfileScreen(
+          controller: widget.controller,
+          onLogout: widget.onLogout,
+        ),
+      ),
     ];
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
-        ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 220),
+        child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
       ),
       extendBody: true,
       bottomNavigationBar: _BottomNav(

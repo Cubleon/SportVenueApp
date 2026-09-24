@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sport_venue_app/src/app.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
+import 'package:sport_venue_app/src/data/formatters.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
@@ -150,6 +151,88 @@ void main() {
       expect(controller.bookings.length, initialCount + 1);
     },
   );
+
+  testWidgets('the home calendar decides which day the page is about', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    final game = controller.games.first;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: HomeScreen(
+          controller: controller,
+          onOpenSearch: () {},
+          onOpenGames: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Nothing is played on the day the app opens on, and the page says so
+    // rather than showing games from another day. The games sit below the
+    // fold, so they have to be scrolled to before they exist at all.
+    expect(find.text('Свободно вс 24 мая'), findsOneWidget);
+    await tester.drag(
+      find.byKey(const ValueKey('home-screen')),
+      const Offset(0, -700),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Открытых игр пока нет'), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const ValueKey('home-screen')),
+      const Offset(0, 700),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        ValueKey('home-date-${game.date.toIso8601String().substring(0, 10)}'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
+      findsOneWidget,
+    );
+    await tester.drag(
+      find.byKey(const ValueKey('home-screen')),
+      const Offset(0, -700),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Открытых игр пока нет'), findsNothing);
+    expect(find.text(game.venue.name.capitalized), findsWidgets);
+  });
+
+  testWidgets('the home survives the reader doubling the text', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+
+    await tester.pumpWidget(
+      _Harness(
+        textScale: 2,
+        child: HomeScreen(
+          controller: controller,
+          onOpenSearch: () {},
+          onOpenGames: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // An overflow paints a stripe and logs an error, which fails the test.
+    // Scrolling the whole page is what exercises every box on it.
+    for (var i = 0; i < 4; i++) {
+      await tester.drag(
+        find.byKey(const ValueKey('home-screen')),
+        const Offset(0, -500),
+      );
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('cancelling an existing booking removes it from upcoming', (
     tester,
@@ -458,9 +541,13 @@ void _setPhoneSize(WidgetTester tester) {
 }
 
 class _Harness extends StatelessWidget {
-  const _Harness({required this.child});
+  const _Harness({required this.child, this.textScale = 1});
 
   final Widget child;
+
+  /// The reader's text size. The layouts have to survive it, so a test can
+  /// turn it up.
+  final double textScale;
 
   @override
   Widget build(BuildContext context) {
@@ -469,6 +556,11 @@ class _Harness extends StatelessWidget {
       // The screens read their words from the same place the app does.
       localizationsDelegates: L.localizationsDelegates,
       supportedLocales: L.supportedLocales,
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        minScaleFactor: textScale,
+        maxScaleFactor: textScale,
+        child: child!,
+      ),
       home: Scaffold(body: child),
     );
   }

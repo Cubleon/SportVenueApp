@@ -38,6 +38,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.danger,
     required this.onDanger,
     required this.warning,
+    required this.skyTop,
+    required this.skyLow,
   });
 
   final Brightness brightness;
@@ -94,6 +96,13 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color warning;
 
+  /// The field the home screen opens with: a wash from [skyTop] down to the
+  /// page colour, with white on it the whole way. Both ends carry white above
+  /// 4.5:1 — 7.4:1 and 4.9:1 in the light theme, 12.6:1 and 15.1:1 in the
+  /// dark — so the loudest surface in the app is still one you can read.
+  final Color skyTop;
+  final Color skyLow;
+
   /// Contrast, measured against both grounds this palette uses — cards and
   /// the tinted page: ink 17.9:1 / 15.9:1, muted 5.3:1 / 4.7:1, both clear
   /// AA for body text. dim clears 3:1 only, so it is for icons, hints and
@@ -120,6 +129,8 @@ class AppColors extends ThemeExtension<AppColors> {
     danger: Color(0xFFCE2C31),
     onDanger: Color(0xFFFFFFFF),
     warning: Color(0xFFE8A317),
+    skyTop: Color(0xFF2A3CE0),
+    skyLow: Color(0xFF4462F5),
   );
 
   /// The same palette read in the dark: ink 16.4:1 on the page and 14.4:1 on
@@ -151,6 +162,8 @@ class AppColors extends ThemeExtension<AppColors> {
     danger: Color(0xFFFF6B6B),
     onDanger: Color(0xFF121627),
     warning: Color(0xFFF0B429),
+    skyTop: Color(0xFF1E2A7A),
+    skyLow: Color(0xFF16205A),
   );
 
   bool get isDark => brightness == Brightness.dark;
