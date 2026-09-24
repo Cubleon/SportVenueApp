@@ -31,6 +31,11 @@ class AppFormatters {
   /// The month on its own, as a date strip labels the days under it.
   static String monthGenitive(DateTime date) => _months[date.month - 1];
 
+  /// Roughly how long it takes to walk that far, at a plain 5 km/h. It is an
+  /// estimate from the distance and nothing more — no route, no traffic — so
+  /// the label that carries it says "пешком" and never promises an arrival.
+  static int walkMinutes(double km) => (km / 5 * 60).round().clamp(1, 999);
+
   static String dateShort(DateTime date) {
     return '${weekdayShort(date)} ${date.day} ${_months[date.month - 1].substring(0, 3)}';
   }

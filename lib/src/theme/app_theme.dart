@@ -214,6 +214,90 @@ class AppTheme {
   /// it read this through [ScaledMetricsX.bottomBarInset].
   static const tabBarHeight = 64.0;
 
+  /// A name set in the register of a poster: upper case, heavy, and tracked
+  /// tight enough that the letters hold together as a shape.
+  ///
+  /// Used for what a screen is about — the club you are looking at, the tab
+  /// you are on — and nowhere else. It is the top of a range that runs down to
+  /// an 11pt label; a page where every line is 14 to 22 has no hierarchy at
+  /// all, and reads as something a machine laid out.
+  static TextStyle display(BuildContext context) => context.text.headlineMedium!
+      .copyWith(fontWeight: FontWeight.w900, letterSpacing: -1.4, height: 0.98);
+
+  /// Prices, times and counts. Tabular figures so a column of them lines up
+  /// and a changing number does not shift the words beside it.
+  static TextStyle numeric(TextStyle? base) => (base ?? const TextStyle())
+      .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+
+  /// The small type that says what kind of thing follows: a date over a
+  /// title, a section over a list.
+  static TextStyle eyebrow(BuildContext context, Color color) => context
+      .text
+      .labelSmall!
+      .copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 1.4);
+
+  /// Widens the gap between the sizes the base theme ships with: the large
+  /// end goes larger and heavier, the small end stays small, and the middle
+  /// is left alone.
+  static TextTheme _scale(TextTheme base) {
+    return base.copyWith(
+      headlineLarge: base.headlineLarge?.copyWith(
+        fontSize: 40,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1.6,
+        height: 1,
+      ),
+      headlineMedium: base.headlineMedium?.copyWith(
+        fontSize: 32,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1.2,
+        height: 1.02,
+      ),
+      headlineSmall: base.headlineSmall?.copyWith(
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.6,
+      ),
+      titleLarge: base.titleLarge?.copyWith(
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
+      ),
+      labelSmall: base.labelSmall?.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  /// The colour a sport brings with it.
+  ///
+  /// Every card in the app used to be the same blue, so one screen looked
+  /// like another with the words swapped. A pitch is green, ice is blue, clay
+  /// is ochre — using that is both louder and truer than tinting everything
+  /// with the brand.
+  ///
+  /// These are the dark ends: they carry white text and stand in for the
+  /// photograph a club will have once there is one.
+  static const _sportGrounds = <String, List<Color>>{
+    'football': [Color(0xFF16281C), Color(0xFF3C7C48)],
+    'hockey': [Color(0xFF0E2233), Color(0xFF2E6E96)],
+    'tennis': [Color(0xFF2A1A08), Color(0xFF9A5A1E)],
+    'padel': [Color(0xFF0D2430), Color(0xFF1F6E63)],
+    'basketball': [Color(0xFF241634), Color(0xFF6B3A96)],
+    'volleyball': [Color(0xFF2B2207), Color(0xFF8A6A12)],
+  };
+
+  static const _sportFallback = [Color(0xFF1B1C28), Color(0xFF4A4E6B)];
+
+  static List<Color> sportGround(String sportId) =>
+      _sportGrounds[sportId] ?? _sportFallback;
+
+  static LinearGradient sportGradient(String sportId) => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: sportGround(sportId),
+  );
+
   static ThemeData light() => _build(AppColors.light);
 
   static ThemeData dark() => _build(AppColors.dark);
@@ -222,10 +306,12 @@ class AppTheme {
     final base = colors.isDark
         ? ThemeData.dark(useMaterial3: true)
         : ThemeData.light(useMaterial3: true);
-    final textTheme = base.textTheme.apply(
-      fontFamily: fontFamily,
-      bodyColor: colors.ink,
-      displayColor: colors.ink,
+    final textTheme = _scale(
+      base.textTheme.apply(
+        fontFamily: fontFamily,
+        bodyColor: colors.ink,
+        displayColor: colors.ink,
+      ),
     );
 
     return base.copyWith(

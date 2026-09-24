@@ -46,6 +46,8 @@ class Venue {
     required this.longitude,
     required this.description,
     required this.gradient,
+    this.reviewCount,
+    this.amenities = const [],
   });
 
   final String id;
@@ -61,6 +63,15 @@ class Venue {
   final double longitude;
   final String description;
   final List<Color> gradient;
+
+  /// How many ratings the club's score is made of. Null when the server does
+  /// not say — a rating with no count behind it is shown bare rather than
+  /// with a number nobody counted.
+  final int? reviewCount;
+
+  /// What the club has: indoors, showers, hire, parking. Short words, in the
+  /// server's own wording, and empty when it says nothing.
+  final List<String> amenities;
 
   factory Venue.fromJson(
     Map<String, dynamic> json, {
@@ -85,6 +96,8 @@ class Venue {
         Color.alphaBlend(Colors.black.withValues(alpha: 0.58), accent),
         Color.alphaBlend(Colors.white.withValues(alpha: 0.08), accent),
       ],
+      reviewCount: _optionalInt(json, 'review_count'),
+      amenities: _optionalStringList(json, 'amenities'),
     );
   }
 }
@@ -381,6 +394,8 @@ class Game {
     required this.genderFilter,
     required this.organizer,
     required this.participants,
+    this.level,
+    this.format,
   });
 
   final String id;
@@ -395,6 +410,18 @@ class Game {
   final GenderFilter genderFilter;
   final Participant organizer;
   final List<Participant> participants;
+
+  /// Who the game is for — "любой уровень", "с опытом". The organiser's own
+  /// words, or null when they said nothing.
+  final String? level;
+
+  /// How it is played and what to bring — "6×6", "коньки свои". Also the
+  /// organiser's words.
+  final String? format;
+
+  /// The moment play begins, which is what a countdown needs — the date and
+  /// the hour are stored apart.
+  DateTime get startsAt => DateTime(date.year, date.month, date.day, startHour);
 
   int get freePlaces => capacity - participants.length;
 
@@ -463,6 +490,8 @@ class Game {
       ),
       organizer: organizer,
       participants: participants,
+      level: _optionalString(json, 'level'),
+      format: _optionalString(json, 'format'),
     );
   }
 }
@@ -492,6 +521,35 @@ List<Map<String, dynamic>> _mapList(Map<String, dynamic> json, String key) {
     }
     throw FormatException('Expected an object in "$key".');
   }).toList();
+}
+
+/// Reads a field the server may not send at all. Absent and empty are the
+/// same thing here: both mean "nothing to show", and the screen leaves the
+/// line out rather than printing a blank.
+String? _optionalString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is String && value.trim().isNotEmpty) {
+    return value.trim();
+  }
+  return null;
+}
+
+int? _optionalInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+List<String> _optionalStringList(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is! List) return const [];
+  return value
+      .whereType<String>()
+      .map((item) => item.trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
 }
 
 List<String> _stringList(Map<String, dynamic> json, String key) {

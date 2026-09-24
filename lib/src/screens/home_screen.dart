@@ -197,34 +197,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  // A list, not a carousel: three clubs read in less room
+                  // than one and a half cards did, and nothing is hidden
+                  // off the right edge.
                   SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: context.scaled(248, max: 1.4),
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: venues.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final venue = venues[index];
-                          return _VenueCard(
-                            venue: venue,
-                            sportId: _sportOf(venue),
-                            freeSlots: _freeSlots[venue.id],
-                            // One card wears the page's own colour, the way
-                            // the top of the page does.
-                            accent: index == 0,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => BookingScreen(
-                                  controller: widget.controller,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radius),
+                        child: ColoredBox(
+                          color: colors.surface,
+                          child: Column(
+                            children: [
+                              for (final (index, venue) in venues.indexed)
+                                _VenueRow(
                                   venue: venue,
-                                  date: _date,
+                                  sportId: _sportOf(venue),
+                                  freeSlots: _freeSlots[venue.id],
+                                  divided: index > 0,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => BookingScreen(
+                                        controller: widget.controller,
+                                        venue: venue,
+                                        date: _date,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -867,12 +870,14 @@ class _Bookings extends StatelessWidget {
   }
 }
 
-class _VenueCard extends StatelessWidget {
-  const _VenueCard({
+/// A club in the list: its ground as a thumbnail, what it has, how much of
+/// the chosen day is still free, and the price.
+class _VenueRow extends StatelessWidget {
+  const _VenueRow({
     required this.venue,
     required this.sportId,
     required this.onTap,
-    this.accent = false,
+    required this.divided,
     this.freeSlots,
   });
 
@@ -880,9 +885,9 @@ class _VenueCard extends StatelessWidget {
   final String sportId;
   final VoidCallback onTap;
 
-  /// Filled with the accent instead of the card colour. One per row, so the
-  /// page's colour appears below the field as well as in it.
-  final bool accent;
+  /// Every row but the first carries a hairline. A list held together by one
+  /// surface reads denser than the same rows as separate cards.
+  final bool divided;
 
   /// Free hours on the day the calendar is showing, or null while the answer
   /// is still on its way.
@@ -891,165 +896,171 @@ class _VenueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final ink = accent ? colors.onAccent : colors.ink;
-    final sub = accent ? colors.onAccent.withValues(alpha: 0.78) : colors.muted;
+    final free = freeSlots;
 
-    return SizedBox(
-      width: context.scaled(176, max: 1.25),
-      child: AppCard(
+    return Semantics(
+      button: true,
+      child: InkWell(
         onTap: onTap,
-        color: accent ? colors.accent : null,
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(17),
-                  child: SizedBox(
-                    height: context.scaled(104, max: 1.15),
-                    width: double.infinity,
-                    child: SportSurface(sportId: sportId),
-                  ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          decoration: BoxDecoration(
+            border: divided
+                ? Border(top: BorderSide(color: colors.border))
+                : null,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: context.scaled(56, max: 1.2),
+                  height: context.scaled(56, max: 1.2),
+                  child: SportSurface(sportId: sportId),
                 ),
-                if (freeSlots case final int free)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: _Badge(
-                      background: colors.accent,
-                      foreground: colors.onAccent,
-                      child: Text(
-                        context.l10n.slotsFree(free),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.text.labelSmall?.copyWith(
-                          color: colors.onAccent,
-                          fontWeight: FontWeight.w800,
-                        ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      venue.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: _Badge(
-                    background: colors.surface,
-                    foreground: colors.ink,
-                    child: Row(
+                    const SizedBox(height: 3),
+                    Text(
+                      // Walking time is only worth saying while walking is
+                      // plausible; past that it is a distance, and how you
+                      // get there is your business.
+                      venue.distanceKm <= 2.5
+                          ? '${venue.address} · '
+                                '${context.l10n.walkMinutes(AppFormatters.walkMinutes(venue.distanceKm))}'
+                          : context.l10n.venueAddressDistance(
+                              venue.address,
+                              venue.distanceKm.toStringAsFixed(1),
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.labelSmall?.copyWith(
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        // What is free today comes first: it is the one fact
+                        // that changes with the calendar above.
+                        if (free != null)
+                          _Tag(
+                            label: context.l10n.freeHoursToday(free),
+                            tone: _TagTone.live,
+                          ),
+                        for (final amenity in venue.amenities.take(
+                          free == null ? 2 : 1,
+                        ))
+                          _Tag(label: amenity),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Capped rather than flexible: a flexible column would split
+              // the row evenly with the name and clip it at the default text
+              // size, which is not where the pressure is.
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: context.scaled(98, max: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      AppFormatters.money(venue.pricePerHour),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.numeric(
+                        context.text.titleMedium,
+                      ).copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 13,
-                          color: colors.accent,
-                        ),
+                        Icon(Icons.star_rounded, size: 13, color: colors.ink),
                         const SizedBox(width: 3),
-                        Text(
-                          venue.rating.toStringAsFixed(1),
-                          style: context.text.labelSmall?.copyWith(
-                            color: colors.ink,
-                            fontWeight: FontWeight.w800,
+                        Flexible(
+                          // Written short, read long: a reader hears
+                          // "4.8 · 128 отзывов", the row shows what fits.
+                          child: Semantics(
+                            label: venue.reviewCount == null
+                                ? null
+                                : context.l10n.ratingWithReviews(
+                                    venue.rating.toStringAsFixed(1),
+                                    venue.reviewCount!,
+                                  ),
+                            child: Text(
+                              venue.reviewCount == null
+                                  ? venue.rating.toStringAsFixed(1)
+                                  : '${venue.rating.toStringAsFixed(1)} · '
+                                        '${venue.reviewCount}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                              style: AppTheme.numeric(
+                                context.text.labelSmall,
+                              ).copyWith(color: colors.muted),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Flexible(
-                    child: Text(
-                      venue.name.capitalized,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.text.titleSmall?.copyWith(
-                        color: ink,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    context.l10n.venueAddressDistance(
-                      venue.address,
-                      venue.distanceKm.toStringAsFixed(1),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.labelSmall?.copyWith(color: sub),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          context.l10n.pricePerHour(
-                            AppFormatters.money(venue.pricePerHour),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.titleSmall?.copyWith(
-                            color: ink,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: accent ? colors.onAccent : colors.accent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_outward_rounded,
-                          size: 18,
-                          color: accent ? colors.accent : colors.onAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.child,
-    required this.background,
-    required this.foreground,
-  });
+enum _TagTone { plain, live }
 
-  final Widget child;
-  final Color background;
-  final Color foreground;
+/// What a club has, in its own word. Small, quiet, and only as many as fit —
+/// except the one that answers the calendar, which is allowed to speak up.
+class _Tag extends StatelessWidget {
+  const _Tag({required this.label, this.tone = _TagTone.plain});
+
+  final String label;
+  final _TagTone tone;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final live = tone == _TagTone.live;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(99),
+        color: live ? colors.accentSoft : colors.bgAlt,
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: DefaultTextStyle.merge(
-        style: TextStyle(color: foreground),
-        child: child,
+      child: Text(
+        label,
+        style: context.text.labelSmall?.copyWith(
+          fontSize: 10.5,
+          color: live ? colors.accent : colors.muted,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

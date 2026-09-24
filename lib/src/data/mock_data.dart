@@ -39,6 +39,8 @@ class MockData {
       longitude: 37.5537,
       description: 'крытые поля, душевые и прокат инвентаря',
       gradient: [Color(0xFF0D3A1C), Color(0xFF2D7A3E)],
+      reviewCount: 128,
+      amenities: ['крытая', 'душевые', 'прокат'],
     ),
     Venue(
       id: 'taganka',
@@ -54,6 +56,8 @@ class MockData {
       longitude: 37.6558,
       description: 'корты с вечерними слотами и кафе',
       gradient: [Color(0xFF1A3860), Color(0xFF2979FF)],
+      reviewCount: 64,
+      amenities: ['крытая', 'кафе', 'вечерние слоты'],
     ),
     Venue(
       id: 'north',
@@ -69,6 +73,8 @@ class MockData {
       longitude: 37.5574,
       description: 'ледовая площадка и мини-футбол',
       gradient: [Color(0xFF0D2540), Color(0xFF40C4FF)],
+      reviewCount: 31,
+      amenities: ['лёд', 'парковка', 'раздевалки'],
     ),
     Venue(
       id: 'river',
@@ -84,6 +90,8 @@ class MockData {
       longitude: 37.5367,
       description: 'панорамные корты и быстрый вход',
       gradient: [Color(0xFF0D2A3A), Color(0xFF1A6A3A)],
+      reviewCount: 92,
+      amenities: ['открытый', 'душевые', 'парковка'],
     ),
   ];
 
@@ -123,6 +131,8 @@ class MockData {
         durationMinutes: 120,
         capacity: 4,
         pricePerPerson: 600,
+        level: 'любой уровень',
+        format: '6×6',
         type: GameType.approval,
         genderFilter: GenderFilter.any,
         organizer: organizer,
@@ -156,6 +166,8 @@ class MockData {
         durationMinutes: 90,
         capacity: 4,
         pricePerPerson: 750,
+        level: 'с опытом',
+        format: 'коньки свои',
         type: GameType.open,
         genderFilter: GenderFilter.any,
         organizer: const Participant(
@@ -188,6 +200,8 @@ class MockData {
         durationMinutes: 60,
         capacity: 2,
         pricePerPerson: 900,
+        level: 'любой уровень',
+        format: 'ракетки в прокате',
         type: GameType.open,
         genderFilter: GenderFilter.any,
         organizer: const Participant(

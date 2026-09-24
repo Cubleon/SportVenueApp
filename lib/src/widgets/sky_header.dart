@@ -14,6 +14,7 @@ class SkyHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.eyebrow,
     this.trailing,
     this.ball,
     this.child,
@@ -21,6 +22,10 @@ class SkyHeader extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+
+  /// The small line above the title that says what kind of thing follows —
+  /// the date over a list of games, for instance.
+  final String? eyebrow;
 
   /// What the screen does, not how to leave it.
   final Widget? trailing;
@@ -82,17 +87,27 @@ class SkyHeader extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (eyebrow != null) ...[
+                              Text(
+                                eyebrow!,
+                                style: AppTheme.eyebrow(
+                                  context,
+                                  Colors.white.withValues(alpha: 0.75),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            // Upper case: this is the one word the screen is
+                            // about, and it should read as a poster rather
+                            // than as a row of navigation.
                             Text(
-                              title,
+                              title.toUpperCase(),
                               style: context.text.headlineMedium?.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -1,
-                                height: 1.05,
                               ),
                             ),
                             if (subtitle != null) ...[
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(
                                 subtitle!,
                                 style: context.text.bodyMedium?.copyWith(

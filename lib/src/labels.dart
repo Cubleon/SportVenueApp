@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show DateUtils;
 import 'package:flutter/widgets.dart';
 
 import '../l10n/l10n.dart';
@@ -60,4 +61,29 @@ String bookingStatusText(BuildContext context, Booking booking) {
     // than nothing at all.
     _ => booking.statusCode,
   };
+}
+
+/// How long until a game starts, said the way a person would.
+///
+/// A date tells you when; "через 2 ч 40 мин" tells you whether to put your
+/// boots in the bag now. Past the end of tomorrow the countdown stops being
+/// useful and the caller shows the date instead, so this returns null.
+String? countdownText(BuildContext context, DateTime startsAt, DateTime now) {
+  final left = startsAt.difference(now);
+  if (left.isNegative) {
+    return context.l10n.gameRunning;
+  }
+  if (left.inMinutes < 60) {
+    return context.l10n.startsInMinutes(left.inMinutes);
+  }
+  if (left.inHours < 12) {
+    return context.l10n.startsInHours(left.inHours, left.inMinutes % 60);
+  }
+  final tomorrow = DateTime(now.year, now.month, now.day + 1);
+  if (DateUtils.isSameDay(startsAt, tomorrow)) {
+    return context.l10n.startsTomorrow(
+      '${startsAt.hour.toString().padLeft(2, '0')}:00',
+    );
+  }
+  return null;
 }

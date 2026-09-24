@@ -459,5 +459,69 @@
   "gameFull": "мест нет",
   "@gameFull": {
     "description": "Подпись на карточке игры, когда свободных мест не осталось"
+  },
+  "startsInHours": "через {hours} ч {minutes} мин",
+  "@startsInHours": {
+    "description": "Сколько осталось до начала игры, когда больше часа",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "startsInMinutes": "через {count, plural, one{{count} минуту} few{{count} минуты} other{{count} минут}}",
+  "@startsInMinutes": {
+    "description": "Сколько осталось до начала игры, когда меньше часа",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startsTomorrow": "завтра в {time}",
+  "@startsTomorrow": {
+    "description": "Игра начинается завтра",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "gameRunning": "идёт сейчас",
+  "@gameRunning": {
+    "description": "Игра уже началась"
+  },
+  "walkMinutes": "{count} мин пешком",
+  "@walkMinutes": {
+    "description": "Примерное время пешком до площадки",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingWithReviews": "{rating} · {count, plural, one{{count} отзыв} few{{count} отзыва} other{{count} отзывов}}",
+  "@ratingWithReviews": {
+    "description": "Рейтинг и число отзывов",
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeHoursToday": "свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
+  "@freeHoursToday": {
+    "description": "Сколько часов свободно у площадки в выбранный день",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

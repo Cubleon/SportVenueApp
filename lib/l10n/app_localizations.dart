@@ -1406,6 +1406,48 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'мест нет'**
   String get gameFull;
+
+  /// Сколько осталось до начала игры, когда больше часа
+  ///
+  /// In ru, this message translates to:
+  /// **'через {hours} ч {minutes} мин'**
+  String startsInHours(int hours, int minutes);
+
+  /// Сколько осталось до начала игры, когда меньше часа
+  ///
+  /// In ru, this message translates to:
+  /// **'через {count, plural, one{{count} минуту} few{{count} минуты} other{{count} минут}}'**
+  String startsInMinutes(int count);
+
+  /// Игра начинается завтра
+  ///
+  /// In ru, this message translates to:
+  /// **'завтра в {time}'**
+  String startsTomorrow(String time);
+
+  /// Игра уже началась
+  ///
+  /// In ru, this message translates to:
+  /// **'идёт сейчас'**
+  String get gameRunning;
+
+  /// Примерное время пешком до площадки
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} мин пешком'**
+  String walkMinutes(int count);
+
+  /// Рейтинг и число отзывов
+  ///
+  /// In ru, this message translates to:
+  /// **'{rating} · {count, plural, one{{count} отзыв} few{{count} отзыва} other{{count} отзывов}}'**
+  String ratingWithReviews(String rating, int count);
+
+  /// Сколько часов свободно у площадки в выбранный день
+  ///
+  /// In ru, this message translates to:
+  /// **'свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
+  String freeHoursToday(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -12,6 +12,7 @@ import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
 import '../widgets/sport_ball.dart';
+import '../widgets/sport_surface.dart';
 import 'player_screen.dart';
 
 /// Stands in for a sport the server sent that this build does not know.
@@ -69,6 +70,7 @@ class _GamesScreenState extends State<GamesScreen> {
               SliverToBoxAdapter(
                 child: SkyHeader(
                   title: context.l10n.games,
+                  eyebrow: AppFormatters.dateFull(widget.controller.now),
                   subtitle: context.l10n.gamesSubtitle,
                   ball: SportBallKind.basket,
                   trailing: SkyIconButton(
@@ -152,6 +154,14 @@ class _GamesScreenState extends State<GamesScreen> {
 /// are left. It does not offer to join — joining is a decision you take after
 /// reading who is playing and what the rules are, so the card opens the game
 /// and the screen behind it carries the button.
+/// A game in a list: what it is, when, where, how much, and how many places
+/// are left. It does not offer to join — joining is a decision you take after
+/// reading who is playing and what the rules are, so the card opens the game
+/// and the screen behind it carries the button.
+///
+/// The band across the top is the sport's own ground rather than the brand's
+/// blue: a pitch is green and ice is blue, so a list of games is told apart
+/// at a glance instead of by reading every line.
 class MiniGameCard extends StatelessWidget {
   const MiniGameCard({
     super.key,
@@ -166,61 +176,157 @@ class MiniGameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final sport = _sportById(controller.sports, game.sportId);
+    final countdown = countdownText(context, game.startsAt, controller.now);
+    final details = [game.timeRange, ?game.level, ?game.format].join(' · ');
+
     return AppCard(
       onTap: onTap,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              SportBadge(sport: sport, compact: true),
-              const Spacer(),
-              Text(
-                AppFormatters.money(game.pricePerPerson),
-                style: context.text.titleMedium?.copyWith(
-                  color: context.colors.ink,
-                  fontWeight: FontWeight.w700,
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppTheme.radius - 1),
+            ),
+            child: SizedBox(
+              height: context.scaled(92, max: 1.2),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.sportGradient(game.sportId),
+                    ),
+                  ),
+                  Opacity(
+                    opacity: 0.35,
+                    child: SportSurface(sportId: game.sportId),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: _Marker(
+                            text:
+                                countdown ?? AppFormatters.dateShort(game.date),
+                            background: countdown == null
+                                ? Colors.black.withValues(alpha: 0.5)
+                                : colors.skyLow,
+                            foreground: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: _Marker(
+                            text: game.isFull
+                                ? context.l10n.gameFull
+                                : context.l10n.freePlaces(game.freePlaces),
+                            background: Colors.black.withValues(alpha: 0.5),
+                            foreground: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 10,
+                    child: Text(
+                      sport.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.eyebrow(
+                        context,
+                        Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  game.venue.name.capitalized,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleLarge,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            game.venue.name.capitalized,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            context.l10n.gameWhen(
-              AppFormatters.dateShort(game.date),
-              game.timeRange,
-            ),
-            style: context.text.bodySmall?.copyWith(
-              color: context.colors.muted,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _CardFooter(
-            places: Text(
-              game.isFull
-                  ? context.l10n.gameFull
-                  : context.l10n.freePlaces(game.freePlaces),
-              style: context.text.bodySmall?.copyWith(
-                color: game.isFull ? context.colors.dim : context.colors.muted,
-              ),
-            ),
-            avatars: _AvatarStack(participants: game.participants),
-            action: Icon(
-              Icons.chevron_right_rounded,
-              color: context.colors.dim,
+                const SizedBox(height: 5),
+                Text(
+                  details,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.bodySmall?.copyWith(color: colors.muted),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Flexible(
+                      child: _AvatarStack(participants: game.participants),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        AppFormatters.money(game.pricePerPerson),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: AppTheme.numeric(
+                          context.text.headlineSmall,
+                        ).copyWith(color: colors.ink),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A word stamped on the picture: when it starts, how many places are left.
+class _Marker extends StatelessWidget {
+  const _Marker({
+    required this.text,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String text;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: context.text.labelSmall?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -573,46 +679,6 @@ class _TimeFilter extends StatelessWidget {
 /// the button to take one. Side by side normally; at a large system font the
 /// three of them cannot share a line without breaking words mid-syllable, so
 /// the button drops underneath and spans the card.
-class _CardFooter extends StatelessWidget {
-  const _CardFooter({
-    required this.avatars,
-    required this.places,
-    required this.action,
-  });
-
-  final Widget avatars;
-  final Widget places;
-  final Widget action;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!context.textIsLarge) {
-      return Row(
-        children: [
-          avatars,
-          const SizedBox(width: 10),
-          Expanded(child: places),
-          action,
-        ],
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            avatars,
-            const SizedBox(width: 10),
-            Expanded(child: places),
-          ],
-        ),
-        const SizedBox(height: 12),
-        action,
-      ],
-    );
-  }
-}
-
 class _AvatarStack extends StatelessWidget {
   const _AvatarStack({required this.participants});
 

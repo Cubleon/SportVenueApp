@@ -804,4 +804,58 @@ class LRu extends L {
 
   @override
   String get gameFull => 'мест нет';
+
+  @override
+  String startsInHours(int hours, int minutes) {
+    return 'через $hours ч $minutes мин';
+  }
+
+  @override
+  String startsInMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count минут',
+      few: '$count минуты',
+      one: '$count минуту',
+    );
+    return 'через $_temp0';
+  }
+
+  @override
+  String startsTomorrow(String time) {
+    return 'завтра в $time';
+  }
+
+  @override
+  String get gameRunning => 'идёт сейчас';
+
+  @override
+  String walkMinutes(int count) {
+    return '$count мин пешком';
+  }
+
+  @override
+  String ratingWithReviews(String rating, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count отзывов',
+      few: '$count отзыва',
+      one: '$count отзыв',
+    );
+    return '$rating · $_temp0';
+  }
+
+  @override
+  String freeHoursToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count часов',
+      few: '$count часа',
+      one: '$count час',
+    );
+    return 'свободно $_temp0';
+  }
 }
