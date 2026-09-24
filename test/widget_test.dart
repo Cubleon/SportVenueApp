@@ -278,15 +278,25 @@ void main() {
     expect(find.text('У вас пока нет предстоящих броней'), findsOneWidget);
   });
 
-  testWidgets('game join action updates mock participants', (tester) async {
+  testWidgets('a game is read before it is joined', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
-    final before = controller.games.first.participants.length;
+    final game = controller.games.first;
+    final before = game.participants.length;
 
     await tester.pumpWidget(
       _Harness(child: GamesScreen(controller: controller)),
     );
-    await tester.tap(find.byKey(const ValueKey('join-game-1')));
+
+    // The card offers no shortcut: joining is only on the screen that shows
+    // who is playing and what the rules are.
+    expect(find.byKey(const ValueKey('join-game-1')), findsNothing);
+    expect(find.text('Вступить'), findsNothing);
+
+    await tester.tap(find.text(game.venue.name.capitalized).first);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('detail-join-game')));
     await tester.pumpAndSettle();
 
     expect(controller.games.first.participants.length, before + 1);

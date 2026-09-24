@@ -801,4 +801,7 @@ class LRu extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get gameFull => 'мест нет';
 }

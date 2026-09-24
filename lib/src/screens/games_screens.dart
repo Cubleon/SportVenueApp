@@ -10,6 +10,8 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sky_header.dart';
+import '../widgets/sport_ball.dart';
 import 'player_screen.dart';
 
 /// Stands in for a sport the server sent that this build does not know.
@@ -65,14 +67,15 @@ class _GamesScreenState extends State<GamesScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
-                child: ScreenTitleBar(
+                child: SkyHeader(
                   title: context.l10n.games,
                   subtitle: context.l10n.gamesSubtitle,
-                  trailing: IconButton(
-                    tooltip: context.l10n.filters,
-                    onPressed: () =>
+                  ball: SportBallKind.basket,
+                  trailing: SkyIconButton(
+                    icon: Icons.tune_rounded,
+                    label: context.l10n.filters,
+                    onTap: () =>
                         showAppSnack(context, context.l10n.filtersLater),
-                    icon: const Icon(Icons.tune_rounded),
                   ),
                 ),
               ),
@@ -145,7 +148,11 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 }
 
-class MiniGameCard extends StatefulWidget {
+/// A game in a list: what it is, when, where, how much, and how many places
+/// are left. It does not offer to join — joining is a decision you take after
+/// reading who is playing and what the rules are, so the card opens the game
+/// and the screen behind it carries the button.
+class MiniGameCard extends StatelessWidget {
   const MiniGameCard({
     super.key,
     required this.controller,
@@ -158,19 +165,10 @@ class MiniGameCard extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<MiniGameCard> createState() => _MiniGameCardState();
-}
-
-class _MiniGameCardState extends State<MiniGameCard> {
-  bool _joining = false;
-
-  @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
-    final game = widget.game;
     final sport = _sportById(controller.sports, game.sportId);
     return AppCard(
-      onTap: widget.onTap,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -209,72 +207,22 @@ class _MiniGameCardState extends State<MiniGameCard> {
           const SizedBox(height: 12),
           _CardFooter(
             places: Text(
-              context.l10n.freePlaces(game.freePlaces),
+              game.isFull
+                  ? context.l10n.gameFull
+                  : context.l10n.freePlaces(game.freePlaces),
               style: context.text.bodySmall?.copyWith(
-                color: context.colors.muted,
+                color: game.isFull ? context.colors.dim : context.colors.muted,
               ),
             ),
             avatars: _AvatarStack(participants: game.participants),
-            action: SizedBox(
-              height: context.scaled(34),
-              child: FilledButton(
-                key: ValueKey('join-${game.id}'),
-                onPressed: game.isFull || _joining ? null : _join,
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.colors.accent,
-                  disabledBackgroundColor: context.colors.surfaceRaised,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
-                child: _joining
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.colors.onAccent,
-                        ),
-                      )
-                    : Text(
-                        context.l10n.join,
-                        style: context.text.labelLarge?.copyWith(
-                          color: context.colors.onAccent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-              ),
+            action: Icon(
+              Icons.chevron_right_rounded,
+              color: context.colors.dim,
             ),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _join() async {
-    setState(() => _joining = true);
-    try {
-      final joined = await widget.controller.joinGame(widget.game);
-      if (!mounted) {
-        return;
-      }
-      showAppSnack(
-        context,
-        joined ? context.l10n.joined : context.l10n.alreadyJoined,
-        // Only a join that took anything is worth a knock.
-        tone: joined ? SnackTone.done : SnackTone.plain,
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
-    } finally {
-      if (mounted) {
-        setState(() => _joining = false);
-      }
-    }
   }
 }
 

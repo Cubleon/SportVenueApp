@@ -8,6 +8,8 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sky_header.dart';
+import '../widgets/sport_ball.dart';
 import 'booking_screens.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -65,18 +67,19 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         Column(
           children: [
-            ScreenTitleBar(
+            SkyHeader(
               title: context.l10n.search,
               subtitle: context.l10n.searchSubtitle,
-              trailing: IconButton(
-                tooltip: context.l10n.centreOnMoscow,
-                onPressed: _focusMoscow,
-                icon: const Icon(Icons.my_location_rounded),
+              ball: SportBallKind.tennis,
+              trailing: SkyIconButton(
+                icon: Icons.my_location_rounded,
+                label: context.l10n.centreOnMoscow,
+                onTap: _focusMoscow,
               ),
-            ),
-            _SearchField(
-              controller: _searchController,
-              onChanged: (_) => setState(() => _selectedVenue = null),
+              child: _SearchField(
+                controller: _searchController,
+                onChanged: (_) => setState(() => _selectedVenue = null),
+              ),
             ),
             SizedBox(
               height: context.scaled(46),
@@ -276,58 +279,57 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        child: Row(
-          children: [
-            Icon(Icons.search_rounded, color: context.colors.dim),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                key: const ValueKey('venue-search-field'),
-                controller: controller,
-                onChanged: onChanged,
-                textInputAction: TextInputAction.search,
-                style: context.text.bodyMedium,
-                decoration: InputDecoration(
-                  isDense: true,
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  hintText: context.l10n.searchFieldHint,
-                  hintStyle: context.text.bodyMedium?.copyWith(
+    // It sits on the header's colour now, so it brings no outer padding of
+    // its own — the header owns the margins.
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, color: context.colors.dim),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              key: const ValueKey('venue-search-field'),
+              controller: controller,
+              onChanged: onChanged,
+              textInputAction: TextInputAction.search,
+              style: context.text.bodyMedium,
+              decoration: InputDecoration(
+                isDense: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                hintText: context.l10n.searchFieldHint,
+                hintStyle: context.text.bodyMedium?.copyWith(
+                  color: context.colors.muted,
+                ),
+              ),
+            ),
+          ),
+          if (controller.text.isNotEmpty)
+            Semantics(
+              button: true,
+              label: context.l10n.clearSearch,
+              child: InkWell(
+                key: const ValueKey('venue-search-clear'),
+                onTap: () {
+                  controller.clear();
+                  onChanged('');
+                },
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20,
                     color: context.colors.muted,
                   ),
                 ),
               ),
             ),
-            if (controller.text.isNotEmpty)
-              Semantics(
-                button: true,
-                label: context.l10n.clearSearch,
-                child: InkWell(
-                  key: const ValueKey('venue-search-clear'),
-                  onTap: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                  customBorder: const CircleBorder(),
-                  child: Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                      color: context.colors.muted,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

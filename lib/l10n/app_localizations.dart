@@ -1400,6 +1400,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}'**
   String slotsFree(int count);
+
+  /// Подпись на карточке игры, когда свободных мест не осталось
+  ///
+  /// In ru, this message translates to:
+  /// **'мест нет'**
+  String get gameFull;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
