@@ -28,6 +28,9 @@ class AppFormatters {
 
   static String weekdayShort(DateTime date) => _weekdays[date.weekday - 1];
 
+  /// The month on its own, as a date strip labels the days under it.
+  static String monthGenitive(DateTime date) => _months[date.month - 1];
+
   static String dateShort(DateTime date) {
     return '${weekdayShort(date)} ${date.day} ${_months[date.month - 1].substring(0, 3)}';
   }
@@ -57,4 +60,26 @@ class AppFormatters {
     final padded = local.padRight(10, '0');
     return '+7 (${padded.substring(0, 3)}) ${padded.substring(3, 6)}-${padded.substring(6, 8)}-${padded.substring(8, 10)}';
   }
+}
+
+/// Picks the Russian plural form for a count.
+///
+/// The form depends on the last two digits, not the last one: 21 takes the
+/// same form as 1, but 11 does not.
+String plural(int count, String one, String few, String many) {
+  final tens = count % 100;
+  if (tens >= 11 && tens <= 14) {
+    return many;
+  }
+  return switch (count % 10) {
+    1 => one,
+    2 || 3 || 4 => few,
+    _ => many,
+  };
+}
+
+/// Sentence case for names that arrive from the API already lower-cased.
+extension StringCase on String {
+  String get capitalized =>
+      isEmpty ? this : this[0].toUpperCase() + substring(1);
 }

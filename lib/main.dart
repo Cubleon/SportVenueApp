@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'src/app.dart';
-import 'src/theme/app_theme.dart';
 
 void main() {
+  // The status and navigation bars are dressed inside the app, where the
+  // theme in force is known — set once here they would stay light after the
+  // system switched to dark.
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(AppTheme.systemUiOverlayStyle);
   runApp(const SportVenueApp());
 }

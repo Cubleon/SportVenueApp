@@ -17,14 +17,12 @@ void main() {
           id: 'cancelled',
           date: DateTime(2026, 5, 24),
           startHour: 14,
-          status: 'отменена',
           statusCode: 'cancelled',
         ),
         _booking(
           id: 'today',
           date: DateTime(2026, 5, 24),
           startHour: 20,
-          status: 'сбор долей',
           statusCode: 'collecting_shares',
         ),
         _booking(id: 'past', date: DateTime(2026, 5, 24), startHour: 10),
@@ -32,7 +30,6 @@ void main() {
           id: 'expired',
           date: DateTime(2026, 5, 24),
           startHour: 16,
-          status: 'истекла',
           statusCode: 'expired',
         ),
       ];
@@ -49,7 +46,6 @@ Booking _booking({
   required String id,
   required DateTime date,
   required int startHour,
-  String status = 'подтверждена',
   String statusCode = 'confirmed',
 }) {
   return Booking(
@@ -62,7 +58,6 @@ Booking _booking({
       players: 4,
       mode: PaymentMode.full,
     ),
-    status: status,
     statusCode: statusCode,
     createdAt: date,
   );

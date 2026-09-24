@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_picker.dart';
+import '../widgets/venue_slot_picker.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({
@@ -21,26 +27,31 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 200;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   late DateTime _date = DateTime(
     widget.controller.now.year,
     widget.controller.now.month,
     widget.controller.now.day,
   );
+  late Venue _venue = widget.venue;
   int _duration = 60;
   int _hour = 20;
   int _players = 4;
-  List<TimeSlot> _slots = const [];
-  bool _slotsLoading = true;
-  String? _slotsError;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSlots();
-  }
+  /// Set by the slot picker, which is the only thing that knows whether the
+  /// hour on screen is one the club will take.
+  bool _slotReady = false;
 
   BookingDraft get _draft => BookingDraft(
-    venue: widget.venue,
+    venue: _venue,
     date: _date,
     durationMinutes: _duration,
     startHour: _hour,
@@ -58,67 +69,85 @@ class _BookingScreenState extends State<BookingScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: _BookingHeader(
-                    venue: widget.venue,
                     onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: VenueHero(venue: widget.venue, height: 138),
+                    child: VenueHero(venue: _venue, height: 138),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 1,
-                    title: 'дата',
-                    child: _DatePickerRow(
-                      now: widget.controller.now,
-                      selected: _date,
-                      onSelect: (date) {
-                        setState(() => _date = date);
-                        _loadSlots();
-                      },
+                    title: context.l10n.venueStep,
+                    // The club arrives with the screen, but it is still a
+                    // choice: comparing two clubs' free hours used to mean
+                    // going back out and starting over.
+                    child: VenueRow(
+                      key: const ValueKey('booking-venue-field'),
+                      venue: _venue,
+                      sport: _sportOf(_venue),
+                      selected: false,
+                      onTap: _pickVenue,
+                      trailing: Icon(
+                        Icons.expand_more_rounded,
+                        color: context.colors.dim,
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 2,
-                    title: 'продолжительность',
-                    child: _DurationPicker(
-                      value: _duration,
-                      onChanged: (value) {
-                        setState(() => _duration = value);
-                        _loadSlots();
-                      },
+                    title: context.l10n.dateStep,
+                    child: DateStrip(
+                      now: widget.controller.now,
+                      selected: _date,
+                      onSelect: (date) => setState(() => _date = date),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 3,
-                    title: 'время',
-                    child: _TimeGrid(
-                      slots: _slots,
-                      isLoading: _slotsLoading,
-                      error: _slotsError,
-                      selectedHour: _hour,
-                      onChanged: (hour) => setState(() => _hour = hour),
-                      onRetry: _loadSlots,
+                    title: context.l10n.durationStep,
+                    child: DurationPicker(
+                      value: _duration,
+                      onChanged: (value) => setState(() => _duration = value),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
                     step: 4,
-                    title: 'игроки',
+                    title: context.l10n.timeStep,
+                    child: VenueSlotPicker(
+                      controller: widget.controller,
+                      venue: _venue,
+                      date: _date,
+                      durationMinutes: _duration,
+                      selectedHour: _hour,
+                      onHourChanged: (hour) => setState(() => _hour = hour),
+                      onReadyChanged: (ready) {
+                        if (ready != _slotReady) {
+                          setState(() => _slotReady = ready);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _StepBlock(
+                    step: 5,
+                    title: context.l10n.playersStep,
                     child: Column(
                       children: [
                         _CounterRow(
                           value: _players,
-                          min: widget.venue.capacityMin,
-                          max: widget.venue.capacityMax,
+                          min: _venue.capacityMin,
+                          max: _venue.capacityMax,
                           onChanged: (value) =>
                               setState(() => _players = value),
                         ),
@@ -128,34 +157,41 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 156)),
+                // Room for the pinned bar, which floats over the content.
+                SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
               ],
             ),
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 28,
-              child: Column(
-                children: [
-                  PrimaryButton(
-                    key: const ValueKey('pay-share'),
-                    label:
-                        'оплатить свою часть · ${AppFormatters.money(_draft.sharePrice)}',
-                    onPressed: _canContinue
-                        ? () => _goToConfirm(PaymentMode.split)
-                        : null,
-                  ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    key: const ValueKey('pay-full'),
-                    label:
-                        'забронировать целиком · ${AppFormatters.money(_draft.totalPrice)}',
-                    secondary: true,
-                    onPressed: _canContinue
-                        ? () => _goToConfirm(PaymentMode.full)
-                        : null,
-                  ),
-                ],
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: PinnedActionBar(
+                onHeight: _onBarHeight,
+                child: Column(
+                  children: [
+                    PrimaryButton(
+                      key: const ValueKey('pay-share'),
+                      label: context.l10n.paySharePrice(
+                        AppFormatters.money(_draft.sharePrice),
+                      ),
+                      tone: ButtonTone.commit,
+                      onPressed: _canContinue
+                          ? () => _goToConfirm(PaymentMode.split)
+                          : null,
+                    ),
+                    const SizedBox(height: 10),
+                    PrimaryButton(
+                      key: const ValueKey('pay-full'),
+                      label: context.l10n.payFullPrice(
+                        AppFormatters.money(_draft.totalPrice),
+                      ),
+                      tone: ButtonTone.neutral,
+                      onPressed: _canContinue
+                          ? () => _goToConfirm(PaymentMode.full)
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -164,48 +200,35 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  bool get _canContinue =>
-      !_slotsLoading &&
-      _slotsError == null &&
-      _slots.any((slot) => slot.hour == _hour && slot.isAvailable);
+  bool get _canContinue => _slotReady;
 
-  Future<void> _loadSlots() async {
-    setState(() {
-      _slotsLoading = true;
-      _slotsError = null;
-    });
-    try {
-      final slots = await widget.controller.loadSlots(
-        venue: widget.venue,
-        day: _date,
-        durationMinutes: _duration,
-      );
-      if (!mounted) {
-        return;
+  /// The club's own first sport, which is what [VenueHero] above draws. Two
+  /// pictures of the same club disagreeing reads as a mistake.
+  Sport? _sportOf(Venue venue) {
+    for (final sport in widget.controller.sports) {
+      if (sport.id == venue.sportIds.first) {
+        return sport;
       }
-      final selectedStillAvailable = slots.any(
-        (slot) => slot.hour == _hour && slot.isAvailable,
-      );
-      final firstAvailable = slots
-          .where((slot) => slot.isAvailable)
-          .firstOrNull;
-      setState(() {
-        _slots = slots;
-        if (!selectedStillAvailable && firstAvailable != null) {
-          _hour = firstAvailable.hour;
-        }
-        _slotsLoading = false;
-      });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _slots = const [];
-        _slotsLoading = false;
-        _slotsError = widget.controller.messageFor(error);
-      });
     }
+    return null;
+  }
+
+  Future<void> _pickVenue() async {
+    final picked = await pickVenue(
+      context,
+      venues: widget.controller.venues,
+      selected: _venue,
+      sportOf: _sportOf,
+    );
+    if (picked == null || !mounted || picked.id == _venue.id) {
+      return;
+    }
+    setState(() {
+      _venue = picked;
+      // Clubs take different numbers of players; carrying a count the new
+      // one will not accept would be rejected at payment.
+      _players = _players.clamp(picked.capacityMin, picked.capacityMax);
+    });
   }
 
   void _goToConfirm(PaymentMode mode) {
@@ -236,6 +259,15 @@ class BookingConfirmationScreen extends StatefulWidget {
 }
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 136;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _accepted = true;
   bool _loading = false;
 
@@ -252,10 +284,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 136),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
               children: [
                 _BookingNav(
-                  title: 'подтверждение',
+                  title: context.l10n.confirmation,
                   onBack: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 12),
@@ -272,7 +304,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       children: [
                         Checkbox(
                           value: _accepted,
-                          activeColor: AppColors.accent,
+                          activeColor: context.colors.accent,
                           onChanged: (value) =>
                               setState(() => _accepted = value ?? false),
                         ),
@@ -280,9 +312,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                           child: Padding(
                             padding: const EdgeInsets.only(top: 10),
                             child: Text(
-                              'нажимая «перейти к оплате», вы соглашаетесь с условиями сервиса и политикой конфиденциальности',
+                              context.l10n.payConsent,
                               style: context.text.bodySmall?.copyWith(
-                                color: AppColors.dim,
+                                color: context.colors.muted,
                                 height: 1.42,
                               ),
                             ),
@@ -295,28 +327,33 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               ],
             ),
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 28,
-              child: Column(
-                children: [
-                  PrimaryButton(
-                    key: const ValueKey('confirm-payment'),
-                    label:
-                        'перейти к оплате · ${AppFormatters.money(_paymentAmount)}',
-                    isLoading: _loading,
-                    onPressed: _accepted ? _pay : null,
-                  ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    key: const ValueKey('close-booking-checkout'),
-                    label: 'вернуться назад',
-                    secondary: true,
-                    onPressed: _loading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                  ),
-                ],
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: PinnedActionBar(
+                onHeight: _onBarHeight,
+                child: Column(
+                  children: [
+                    PrimaryButton(
+                      key: const ValueKey('confirm-payment'),
+                      label: context.l10n.goToPayment(
+                        AppFormatters.money(_paymentAmount),
+                      ),
+                      tone: ButtonTone.commit,
+                      isLoading: _loading,
+                      onPressed: _accepted ? _pay : null,
+                    ),
+                    const SizedBox(height: 10),
+                    PrimaryButton(
+                      key: const ValueKey('close-booking-checkout'),
+                      label: context.l10n.goBack,
+                      tone: ButtonTone.neutral,
+                      onPressed: _loading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -333,14 +370,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'оплата прошла, бронь создана');
+      showAppSnack(context, context.l10n.paymentDone, tone: SnackTone.done);
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
   }
 }
@@ -360,6 +397,15 @@ class BookingDetailsScreen extends StatefulWidget {
 }
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  /// Measured, because the bar's buttons grow with the system font.
+  double _barHeight = 112;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _loading = false;
 
   @override
@@ -370,26 +416,35 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         child: Stack(
           children: [
             ListView(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, canCancel ? 112 : 24),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                canCancel ? _barHeight : 24,
+              ),
               children: [
                 _BookingNav(
-                  title: 'детали брони',
+                  title: context.l10n.bookingDetails,
                   onBack: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 12),
                 _BookingDetailsCard(
                   draft: widget.booking.draft,
-                  status: widget.booking.status,
+                  status: bookingStatusText(context, widget.booking),
                 ),
+                if (widget.booking.shares.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _SharesCard(booking: widget.booking),
+                ],
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
                 if (!canCancel) ...[
                   const SizedBox(height: 12),
                   AppCard(
                     child: Text(
-                      'отменить бронь может только организатор',
+                      context.l10n.onlyOrganizerCancels,
                       style: context.text.bodyMedium?.copyWith(
-                        color: AppColors.dim,
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
@@ -398,15 +453,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             ),
             if (canCancel)
               Positioned(
-                left: 20,
-                right: 20,
-                bottom: 28,
-                child: PrimaryButton(
-                  key: const ValueKey('cancel-booking'),
-                  label: 'отменить бронь',
-                  secondary: true,
-                  isLoading: _loading,
-                  onPressed: _loading ? null : _cancel,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: PinnedActionBar(
+                  onHeight: _onBarHeight,
+                  child: PrimaryButton(
+                    key: const ValueKey('cancel-booking'),
+                    label: context.l10n.cancelBooking,
+                    tone: ButtonTone.neutral,
+                    isLoading: _loading,
+                    onPressed: _loading ? null : _cancel,
+                  ),
                 ),
               ),
           ],
@@ -416,6 +474,22 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _cancel() async {
+    final draft = widget.booking.draft;
+    final confirmed = await confirmAction(
+      context,
+      title: context.l10n.cancelBookingQuestion,
+      message: context.l10n.cancelBookingMessage(
+        draft.venue.name.capitalized,
+        AppFormatters.dateFull(draft.date),
+        draft.timeRange,
+      ),
+      confirmLabel: context.l10n.cancelBooking,
+      cancelLabel: context.l10n.keepBooking,
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+
     setState(() => _loading = true);
     try {
       await widget.controller.cancelBooking(widget.booking);
@@ -423,14 +497,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, 'бронь отменена');
+      showAppSnack(
+        context,
+        context.l10n.bookingCancelled,
+        tone: SnackTone.done,
+      );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
   }
 }
@@ -448,10 +526,10 @@ class _BookingDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'детали бронирования',
+            context.l10n.bookingDetailsCard,
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.faint,
-              fontWeight: FontWeight.w900,
+              color: context.colors.muted,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
           ),
@@ -460,13 +538,126 @@ class _BookingDetailsCard extends StatelessWidget {
           if (status != null) ...[
             const SizedBox(height: 12),
             Text(
-              'статус · $status',
+              context.l10n.statusLine(status!),
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.accent,
-                fontWeight: FontWeight.w800,
+                color: context.colors.accent,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Who has paid their part and who has not.
+///
+/// A booking that is collecting shares raises exactly one question, and the
+/// old label answered none of it: the organiser could not tell whom to
+/// remind, and the others could not tell whether they were the ones holding
+/// it up.
+class _SharesCard extends StatelessWidget {
+  const _SharesCard({required this.booking});
+
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final unpaid = booking.shares.length - booking.paidShares;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.sharesTitle,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                unpaid == 0
+                    ? context.l10n.sharesAllPaid
+                    : context.l10n.sharesLeft(unpaid),
+                style: context.text.bodySmall?.copyWith(
+                  color: unpaid == 0
+                      ? context.colors.success
+                      : context.colors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (final share in booking.shares)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: context.scaled(34),
+                    height: context.scaled(34),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: share.isPaid
+                          ? context.colors.accentSoft
+                          : context.colors.surfaceRaised,
+                    ),
+                    child: Text(
+                      share.initial,
+                      style: context.text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: share.isPaid
+                            ? context.colors.accent
+                            : context.colors.muted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      share.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodyMedium?.copyWith(
+                        fontWeight: share.isCurrentUser
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // The mark carries the state too: paid and not paid must
+                  // not differ by colour alone.
+                  Icon(
+                    share.isPaid
+                        ? Icons.check_circle_rounded
+                        : Icons.schedule_rounded,
+                    size: 18,
+                    color: share.isPaid
+                        ? context.colors.success
+                        : context.colors.dim,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    share.isPaid
+                        ? context.l10n.sharePaid
+                        : context.l10n.shareUnpaid,
+                    style: context.text.bodySmall?.copyWith(
+                      color: share.isPaid
+                          ? context.colors.success
+                          : context.colors.muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -483,22 +674,16 @@ class _CancellationTermsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'условия отмены',
+            context.l10n.cancellationTerms,
             style: context.text.labelLarge?.copyWith(
-              color: AppColors.faint,
-              fontWeight: FontWeight.w900,
+              color: context.colors.muted,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
             ),
           ),
           const SizedBox(height: 12),
-          const _Bullet(
-            text:
-                'если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически',
-          ),
-          const _Bullet(
-            text:
-                'если вы отменяете сами, средства возвращаются на счёт в течение 3 дней',
-          ),
+          _Bullet(text: context.l10n.cancellationTermAuto),
+          _Bullet(text: context.l10n.cancellationTermRefund),
         ],
       ),
     );
@@ -506,9 +691,8 @@ class _CancellationTermsCard extends StatelessWidget {
 }
 
 class _BookingHeader extends StatelessWidget {
-  const _BookingHeader({required this.venue, required this.onBack});
+  const _BookingHeader({required this.onBack});
 
-  final Venue venue;
   final VoidCallback onBack;
 
   @override
@@ -518,24 +702,24 @@ class _BookingHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
+            tooltip: context.l10n.back,
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
-            style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+            style: IconButton.styleFrom(
+              backgroundColor: context.colors.surface,
+              foregroundColor: context.colors.ink,
+            ),
           ),
           Expanded(
             child: Column(
               children: [
+                // The club is named by the step below, which is also where
+                // it can be changed.
                 Text(
-                  'бронирование',
+                  context.l10n.booking,
                   style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
-                ),
-                Text(
-                  venue.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
                 ),
               ],
             ),
@@ -558,16 +742,20 @@ class _BookingNav extends StatelessWidget {
     return Row(
       children: [
         IconButton.filled(
+          tooltip: context.l10n.back,
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
-          style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+          style: IconButton.styleFrom(
+            backgroundColor: context.colors.surface,
+            foregroundColor: context.colors.ink,
+          ),
         ),
         Expanded(
           child: Text(
             title,
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -598,18 +786,18 @@ class _StepBlock extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: AppColors.accent,
+                width: context.scaled(22),
+                height: context.scaled(22),
+                decoration: BoxDecoration(
+                  color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
+                      color: context.colors.ink,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -618,7 +806,7 @@ class _StepBlock extends StatelessWidget {
               Text(
                 title,
                 style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -627,197 +815,6 @@ class _StepBlock extends StatelessWidget {
           child,
         ],
       ),
-    );
-  }
-}
-
-class _DatePickerRow extends StatelessWidget {
-  const _DatePickerRow({
-    required this.now,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final DateTime now;
-  final DateTime selected;
-  final ValueChanged<DateTime> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final start = DateTime(now.year, now.month, now.day);
-    return SizedBox(
-      height: 70,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final date = start.add(Duration(days: index));
-          final isSelected = DateUtils.isSameDay(date, selected);
-          return GestureDetector(
-            onTap: () => onSelect(date),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 54,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : AppColors.surface,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: isSelected ? AppColors.accent : AppColors.border,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppFormatters.weekdayShort(date).toUpperCase(),
-                    style: context.text.labelSmall?.copyWith(
-                      color: isSelected
-                          ? AppColors.white.withValues(alpha: 0.82)
-                          : AppColors.dim,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${date.day}',
-                    style: context.text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemCount: 14,
-      ),
-    );
-  }
-}
-
-class _DurationPicker extends StatelessWidget {
-  const _DurationPicker({required this.value, required this.onChanged});
-
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final values = {60: '1 час', 90: '1.5 часа', 120: '2 часа'};
-    return Row(
-      children: values.entries.map((entry) {
-        final selected = value == entry.key;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: entry.key == 120 ? 0 : 8),
-            child: SelectableChip(
-              label: entry.value,
-              selected: selected,
-              onTap: () => onChanged(entry.key),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _TimeGrid extends StatelessWidget {
-  const _TimeGrid({
-    required this.slots,
-    required this.isLoading,
-    required this.error,
-    required this.selectedHour,
-    required this.onChanged,
-    required this.onRetry,
-  });
-
-  final List<TimeSlot> slots;
-  final bool isLoading;
-  final String? error;
-  final int selectedHour;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const SizedBox(
-        height: 52,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (error != null) {
-      return AppCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                error!,
-                style: context.text.bodySmall?.copyWith(color: AppColors.dim),
-              ),
-            ),
-            TextButton(onPressed: onRetry, child: const Text('повторить')),
-          ],
-        ),
-      );
-    }
-    if (slots.isEmpty) {
-      return Text(
-        'на эту дату свободных слотов нет',
-        style: context.text.bodySmall?.copyWith(color: AppColors.dim),
-      );
-    }
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: slots.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 2.25,
-      ),
-      itemBuilder: (context, index) {
-        final slot = slots[index];
-        final selected = slot.hour == selectedHour;
-        return GestureDetector(
-          onTap: slot.isAvailable ? () => onChanged(slot.hour) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.accent
-                  : slot.isAvailable
-                  ? Colors.transparent
-                  : AppColors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? AppColors.accent
-                    : slot.isAvailable
-                    ? AppColors.white.withValues(alpha: 0.12)
-                    : AppColors.white.withValues(alpha: 0.05),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                slot.label,
-                style: context.text.titleSmall?.copyWith(
-                  color: slot.isAvailable
-                      ? AppColors.white
-                      : AppColors.white.withValues(alpha: 0.3),
-                  decoration: slot.isAvailable
-                      ? null
-                      : TextDecoration.lineThrough,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -842,27 +839,25 @@ class _CounterRow extends StatelessWidget {
         _CounterButton(
           key: const ValueKey('players-minus'),
           icon: Icons.remove_rounded,
+          label: context.l10n.removePlayer,
           enabled: value > min,
-          onTap: () => onChanged(value - 1),
+          onTap: withSelectionFeedback(() => onChanged(value - 1))!,
         ),
         Expanded(
           child: Text(
-            '$value ${value == 1
-                ? 'игрок'
-                : value < 5
-                ? 'игрока'
-                : 'игроков'}',
+            context.l10n.playersCount(value),
             textAlign: TextAlign.center,
             style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
         _CounterButton(
           key: const ValueKey('players-plus'),
           icon: Icons.add_rounded,
+          label: context.l10n.addPlayer,
           enabled: value < max,
-          onTap: () => onChanged(value + 1),
+          onTap: withSelectionFeedback(() => onChanged(value + 1))!,
         ),
       ],
     );
@@ -873,24 +868,31 @@ class _CounterButton extends StatelessWidget {
   const _CounterButton({
     super.key,
     required this.icon,
+    required this.label,
     required this.enabled,
     required this.onTap,
   });
 
   final IconData icon;
+
+  /// An icon on its own says nothing out loud.
+  final String label;
   final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return IconButton.filled(
+      tooltip: label,
       onPressed: enabled ? onTap : null,
       icon: Icon(icon),
       style: IconButton.styleFrom(
         backgroundColor: enabled
-            ? AppColors.accent
-            : AppColors.white.withValues(alpha: 0.08),
-        disabledBackgroundColor: AppColors.white.withValues(alpha: 0.08),
+            ? context.colors.accent
+            : context.colors.surfaceRaised,
+        disabledBackgroundColor: context.colors.surfaceRaised,
+        foregroundColor: context.colors.onAccent,
+        disabledForegroundColor: context.colors.dim,
       ),
     );
   }
@@ -912,8 +914,8 @@ class _Bullet extends StatelessWidget {
             width: 6,
             height: 6,
             margin: const EdgeInsets.only(top: 7),
-            decoration: const BoxDecoration(
-              color: AppColors.accent,
+            decoration: BoxDecoration(
+              color: context.colors.accent,
               shape: BoxShape.circle,
             ),
           ),
@@ -922,7 +924,7 @@ class _Bullet extends StatelessWidget {
             child: Text(
               text,
               style: context.text.bodySmall?.copyWith(
-                color: AppColors.dim,
+                color: context.colors.muted,
                 height: 1.4,
               ),
             ),
@@ -932,3 +934,9 @@ class _Bullet extends StatelessWidget {
     );
   }
 }
+
+/// Holds the actions pinned to the bottom of a flow.
+///
+/// Without a ground of its own, content scrolls up through a floating button
+/// and both become unreadable; the fade above it keeps the join from looking
+/// like a hard edge.

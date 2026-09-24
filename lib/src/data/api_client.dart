@@ -423,6 +423,18 @@ class SportVenueApiClient {
     return _parseObject(response);
   }
 
+  /// Gives a place back. The counterpart of [joinGame]: pickup games lose
+  /// players as readily as they gain them, and a player with no way out is
+  /// a place nobody else can take.
+  Future<ApiJsonObject> leaveGame(String gameId) async {
+    final response = await _send('POST', [
+      'games',
+      gameId,
+      'leave',
+    ], authenticated: true);
+    return _parseObject(response);
+  }
+
   Future<ApiJsonObject> approveGameParticipant(
     String gameId,
     String participantId,

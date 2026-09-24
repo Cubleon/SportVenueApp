@@ -1,0 +1,8 @@
+# Strings live in lib/l10n as ARB, and the lookup class is generated from
+# them. Russian is the template: it is the language the app was written in,
+# and a second one is now a file rather than a project.
+arb-dir: lib/l10n
+template-arb-file: app_ru.arb
+output-localization-file: app_localizations.dart
+output-class: L
+nullable-getter: false

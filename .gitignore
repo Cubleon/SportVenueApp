@@ -77,3 +77,7 @@ firebase_options.dart
 .zed/
 Thumbs.db
 Desktop.ini
+
+# Golden test output: when a picture does not match, Flutter writes the
+# master, the new render and their difference here to be looked at.
+test/failures/

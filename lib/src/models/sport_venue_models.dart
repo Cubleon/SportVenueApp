@@ -185,18 +185,30 @@ class Booking {
   const Booking({
     required this.id,
     required this.draft,
-    required this.status,
     required this.createdAt,
     this.statusCode = 'confirmed',
     this.organizerId,
+    this.shares = const [],
   });
 
   final String id;
   final BookingDraft draft;
-  final String status;
   final DateTime createdAt;
+
+  /// The server's own word for the state, put into the reader's language
+  /// where it is shown. It used to be stored here already translated, which
+  /// is how a data class ends up speaking one language for ever.
   final String statusCode;
   final String? organizerId;
+
+  /// Who owes what, when the booking is being split. Empty when the server
+  /// sent none, which is not the same as nobody having paid — so the counts
+  /// below only mean anything when this is not empty.
+  final List<BookingShare> shares;
+
+  int get paidShares => shares.where((share) => share.isPaid).length;
+
+  bool get isCollectingShares => statusCode == 'collecting_shares';
 
   DateTime get startsAt => DateTime(
     draft.date.year,
@@ -210,18 +222,22 @@ class Booking {
     _ => false,
   };
 
-  Booking copyWith({String? status, String? statusCode}) {
+  Booking copyWith({String? statusCode, List<BookingShare>? shares}) {
     return Booking(
       id: id,
       draft: draft,
-      status: status ?? this.status,
       createdAt: createdAt,
       statusCode: statusCode ?? this.statusCode,
       organizerId: organizerId,
+      shares: shares ?? this.shares,
     );
   }
 
-  factory Booking.fromJson(Map<String, dynamic> json, {required Venue venue}) {
+  factory Booking.fromJson(
+    Map<String, dynamic> json, {
+    required Venue venue,
+    String? currentUserId,
+  }) {
     final slot = _requiredMap(json, 'time_slot');
     final startsAt = _requiredDateTime(slot, 'starts_at').toUtc();
     final players = _requiredInt(json, 'players_count');
@@ -243,10 +259,20 @@ class Booking {
         quotedTotalPrice: _requiredInt(json, 'total_price'),
         quotedSharePrice: _requiredInt(json, 'share_price'),
       ),
-      status: _bookingStatusLabel(status),
       createdAt: _requiredDateTime(json, 'created_at'),
       statusCode: status,
       organizerId: _requiredString(json, 'organizer_id'),
+      shares: switch (json['shares']) {
+        final List<dynamic> rows =>
+          rows
+              .whereType<Map<String, dynamic>>()
+              .map(
+                (row) =>
+                    BookingShare.fromJson(row, currentUserId: currentUserId),
+              )
+              .toList(),
+        _ => const [],
+      },
     );
   }
 }
@@ -256,15 +282,32 @@ class Participant {
     required this.name,
     required this.initial,
     required this.rating,
+    this.id,
     this.status = 'joined',
     this.isCurrentUser = false,
   });
 
+  /// The player, as the server knows them. Null for a fixture, and for a
+  /// server that did not send one — which is why anything matching players
+  /// across games falls back to the name.
+  final String? id;
   final String name;
   final String initial;
+
+  /// Zero when nobody has rated them, or when the server did not say.
   final double rating;
   final String status;
   final bool isCurrentUser;
+
+  bool get hasRating => rating > 0;
+
+  /// Whether this is the same player as [other], by id where there is one.
+  bool sameAs(Participant other) {
+    if (id != null && other.id != null) {
+      return id == other.id;
+    }
+    return name == other.name;
+  }
 
   factory Participant.fromJson(
     Map<String, dynamic> json, {
@@ -272,13 +315,56 @@ class Participant {
   }) {
     final name = json['name'] as String?;
     return Participant(
+      id: json['user_id'] as String?,
       name: name == null || name.trim().isEmpty ? 'Игрок' : name,
       initial: _requiredString(json, 'initial'),
-      rating: 0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
       status: _requiredString(json, 'status'),
       isCurrentUser: json['user_id'] == currentUserId,
     );
   }
+}
+
+/// One person's part of a split booking.
+///
+/// The server has been sending these all along and the app was dropping
+/// them, so "сбор долей" could say that money was being collected but never
+/// how much of it had arrived.
+class BookingShare {
+  const BookingShare({
+    required this.name,
+    required this.initial,
+    required this.isPaid,
+    this.id,
+    this.isCurrentUser = false,
+  });
+
+  factory BookingShare.fromJson(
+    Map<String, dynamic> json, {
+    required String? currentUserId,
+  }) {
+    final name = json['name'] as String?;
+    final status = (json['status'] as String? ?? '').toLowerCase();
+    final initial = json['initial'] as String?;
+    final resolved = name == null || name.trim().isEmpty ? 'Игрок' : name;
+    return BookingShare(
+      id: json['user_id'] as String?,
+      name: resolved,
+      initial: initial == null || initial.isEmpty
+          ? resolved.characters.first.toUpperCase()
+          : initial,
+      // Anything the server does not call paid is treated as not yet paid:
+      // saying a share is outstanding when it is not is the safer mistake.
+      isPaid: status == 'paid' || json['is_paid'] == true,
+      isCurrentUser: json['user_id'] == currentUserId,
+    );
+  }
+
+  final String? id;
+  final String name;
+  final String initial;
+  final bool isPaid;
+  final bool isCurrentUser;
 }
 
 class Game {
@@ -484,14 +570,4 @@ double _distanceFromMoscow(double latitude, double longitude) {
           math.sin(deltaLng / 2) *
           math.sin(deltaLng / 2);
   return earthRadiusKm * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-}
-
-String _bookingStatusLabel(String status) {
-  return switch (status) {
-    'collecting_shares' => 'сбор долей',
-    'confirmed' => 'подтверждена',
-    'cancelled' => 'отменена',
-    'expired' => 'истекла',
-    _ => status,
-  };
 }

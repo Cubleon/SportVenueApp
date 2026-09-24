@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
+import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import 'history_screen.dart';
+import 'sport_selection_screen.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -19,145 +25,161 @@ class ProfileScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return ListView(
-          key: const ValueKey('profile-screen'),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 118),
-          children: [
-            ScreenTitleBar(
-              title: 'профиль',
-              subtitle: controller.isConnected
-                  ? 'аккаунт sportvenue'
-                  : 'демо-аккаунт sportvenue',
-            ),
-            AppCard(
-              child: Row(
+        final initial = _profileInitial(controller);
+        return PullToRefresh(
+          controller: controller,
+          child: ListView(
+            key: const ValueKey('profile-screen'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
+            children: [
+              ScreenTitleBar(
+                title: context.l10n.profile,
+                subtitle: controller.isConnected
+                    ? context.l10n.accountSportVenue
+                    : context.l10n.demoAccountSportVenue,
+              ),
+              AppCard(
+                child: Row(
+                  children: [
+                    Container(
+                      width: context.scaled(62),
+                      height: context.scaled(62),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.colors.accent,
+                      ),
+                      child: Center(
+                        child: initial == null
+                            ? Icon(
+                                Icons.person_rounded,
+                                color: context.colors.onAccent,
+                                size: context.scaled(30),
+                              )
+                            : Text(
+                                initial,
+                                style: context.text.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: context.colors.onAccent,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.userName?.trim().isNotEmpty == true
+                                ? controller.userName!
+                                : context.l10n.userSportVenue,
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            controller.phone.isEmpty
+                                ? context.l10n.noPhone
+                                : controller.phone,
+                            style: context.text.bodySmall?.copyWith(
+                              color: context.colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.editProfile,
+                      onPressed: () =>
+                          showAppSnack(context, context.l10n.editProfileLater),
+                      icon: const Icon(Icons.edit_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
                 children: [
-                  Container(
-                    width: 62,
-                    height: 62,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [AppColors.accentPressed, AppColors.accent],
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _profileInitial(controller),
-                        style: context.text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controller.userName?.trim().isNotEmpty == true
-                              ? controller.userName!
-                              : 'Пользователь SportVenue',
-                          style: context.text.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          controller.phone.isEmpty
-                              ? 'номер не указан'
-                              : controller.phone,
-                          style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      context.l10n.sportPreferences,
+                      style: context.text.labelLarge?.copyWith(
+                        color: context.colors.muted,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => showAppSnack(
-                      context,
-                      'редактирование профиля подключится позже',
-                    ),
-                    icon: const Icon(Icons.edit_rounded),
+                  TextButton(
+                    key: const ValueKey('edit-sports'),
+                    onPressed: () => _editSports(context, controller),
+                    child: Text(context.l10n.change),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'спортивные предпочтения',
-              style: context.text.labelLarge?.copyWith(
-                color: AppColors.faint,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: controller.selectedSports
+                    .map(
+                      (sport) => SelectableChip(
+                        label: sport.name.capitalized,
+                        icon: sport.icon,
+                        selected: true,
+                      ),
+                    )
+                    .toList(),
               ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: controller.selectedSports
-                  .map(
-                    (sport) => SelectableChip(
-                      label: sport.name,
-                      icon: sport.icon,
-                      color: sport.color,
-                      selected: true,
-                      onTap: () => controller.togglePreferredSport(sport.id),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 20),
-            _Stats(controller: controller),
-            const SizedBox(height: 18),
-            _MenuItem(
-              icon: Icons.history_rounded,
-              title: 'история',
-              subtitle:
-                  '${controller.bookings.length} броней · ${controller.games.length} игр',
-              onTap: () => showAppSnack(
-                context,
-                'полная история появится в следующей версии',
+              const SizedBox(height: 20),
+              _Stats(controller: controller),
+              const SizedBox(height: 18),
+              _MenuItem(
+                icon: Icons.history_rounded,
+                title: context.l10n.history,
+                subtitle: context.l10n.historySubtitle(
+                  controller.bookings.length,
+                  controller.games.length,
+                ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => HistoryScreen(controller: controller),
+                  ),
+                ),
               ),
-            ),
-            _MenuItem(
-              icon: Icons.credit_card_rounded,
-              title: 'платежи',
-              subtitle: 'карты и транзакции',
-              onTap: () => showAppSnack(
-                context,
-                'платёжные методы будут через эквайринг',
+              // Платежи, Уведомления and Поддержка stood here looking
+              // exactly like История — same card, same chevron promising a
+              // screen — and answered with "позже". A row that cannot be
+              // followed is worse than no row: it spends a tap and teaches
+              // the reader to distrust the next chevron. They come back
+              // when there is something behind them.
+              const SizedBox(height: 16),
+              PrimaryButton(
+                key: const ValueKey('logout-button'),
+                label: context.l10n.logout,
+                tone: ButtonTone.neutral,
+                onPressed: () => _confirmLogout(context, onLogout),
               ),
-            ),
-            _MenuItem(
-              icon: Icons.notifications_active_rounded,
-              title: 'уведомления',
-              subtitle: 'push, бронь, игры и чат',
-              onTap: () =>
-                  showAppSnack(context, 'push-уведомления появятся позже'),
-            ),
-            _MenuItem(
-              icon: Icons.support_agent_rounded,
-              title: 'поддержка',
-              subtitle: 'faq и форма обращения',
-              onTap: () =>
-                  showAppSnack(context, 'заявка в поддержку создана локально'),
-            ),
-            const SizedBox(height: 16),
-            PrimaryButton(
-              key: const ValueKey('logout-button'),
-              label: 'выйти из аккаунта',
-              secondary: true,
-              onPressed: onLogout,
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
+  }
+}
+
+Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
+  final confirmed = await confirmAction(
+    context,
+    title: context.l10n.logoutQuestion,
+    message: context.l10n.logoutMessage,
+    confirmLabel: context.l10n.logoutConfirm,
+    cancelLabel: context.l10n.logoutCancel,
+  );
+  if (confirmed) {
+    onLogout();
   }
 }
 
@@ -168,69 +190,94 @@ class _Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            value: '${controller.bookings.length}',
-            label: 'броней',
+    final games = controller.games
+        .where((game) => game.participants.any((p) => p.isCurrentUser))
+        .length;
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _Stat(
+              value: '${controller.bookings.length}',
+              label: context.l10n.statBookings,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            value:
-                '${controller.games.where((game) => game.participants.any((p) => p.isCurrentUser)).length}',
-            label: 'моих игр',
+          Expanded(
+            child: _Stat(value: '$games', label: context.l10n.statMyGames),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            value: '${controller.selectedSports.length}',
-            label: 'видов спорта',
+          Expanded(
+            child: _Stat(
+              value: '${controller.selectedSports.length}',
+              label: context.l10n.statSports,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-String _profileInitial(AppController controller) {
-  final source = controller.userName?.trim().isNotEmpty == true
-      ? controller.userName!.trim()
-      : controller.phone.replaceAll(RegExp(r'\D'), '');
-  return source.isEmpty ? 'С' : source.characters.first.toUpperCase();
+Future<void> _editSports(BuildContext context, AppController controller) async {
+  await Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => SportSelectionScreen(
+        sports: controller.sports,
+        initialSelection: controller.selectedSportIds,
+        onContinue: (ids) async {
+          await controller.completeSports(ids);
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+    ),
+  );
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.value, required this.label});
+/// The letter in the avatar, or null when there is no name to take one
+/// from.
+///
+/// It used to fall back to the phone number, which put a digit in the
+/// circle — a 7, because every number here starts with one. A digit is not
+/// an initial, and it read as a bug.
+String? _profileInitial(AppController controller) {
+  final name = controller.userName?.trim() ?? '';
+  if (name.isEmpty) {
+    return null;
+  }
+  final letter = name.characters.first.toUpperCase();
+  return RegExp(r'\p{L}', unicode: true).hasMatch(letter) ? letter : null;
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.value, required this.label});
 
   final String value;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      child: Column(
-        children: [
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.text.titleMedium?.copyWith(
-              color: AppColors.accent,
-              fontWeight: FontWeight.w900,
-            ),
+    return Column(
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.4,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: context.text.labelSmall?.copyWith(color: AppColors.dim),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.bodySmall?.copyWith(color: context.colors.muted),
+        ),
+      ],
     );
   }
 }
@@ -258,12 +305,12 @@ class _MenuItem extends StatelessWidget {
           children: [
             Container(
               width: 42,
-              height: 42,
+              height: 46,
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.14),
+                color: context.colors.accent.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(icon, color: AppColors.accent),
+              child: Icon(icon, color: context.colors.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -273,20 +320,20 @@ class _MenuItem extends StatelessWidget {
                   Text(
                     title,
                     style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: context.text.bodySmall?.copyWith(
-                      color: AppColors.dim,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+            Icon(Icons.chevron_right_rounded, color: context.colors.dim),
           ],
         ),
       ),

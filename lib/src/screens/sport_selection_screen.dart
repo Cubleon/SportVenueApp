@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
+
+import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sport_surface.dart';
 
 class SportSelectionScreen extends StatefulWidget {
   const SportSelectionScreen({
@@ -46,36 +50,36 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'шаг 1 из 2',
+                    context.l10n.sportStep,
                     style: context.text.labelSmall?.copyWith(
-                      color: AppColors.faint,
-                      fontWeight: FontWeight.w800,
+                      color: context.colors.muted,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 1.1,
                     ),
                   ),
                   const SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(99),
-                    child: const LinearProgressIndicator(
+                    child: LinearProgressIndicator(
                       value: 0.5,
                       minHeight: 3,
-                      backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                      backgroundColor: context.colors.border,
+                      valueColor: AlwaysStoppedAnimation(context.colors.accent),
                     ),
                   ),
                   const SizedBox(height: 22),
                   Text(
-                    'какой спорт?',
+                    context.l10n.sportQuestion,
                     style: context.text.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'можно выбрать несколько',
+                    context.l10n.sportHint,
                     style: context.text.bodyMedium?.copyWith(
-                      color: AppColors.dim,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],
@@ -87,10 +91,10 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          'виды спорта пока недоступны',
+                          context.l10n.sportsUnavailable,
                           textAlign: TextAlign.center,
                           style: context.text.bodyMedium?.copyWith(
-                            color: AppColors.dim,
+                            color: context.colors.muted,
                           ),
                         ),
                       ),
@@ -122,9 +126,9 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.bg.withValues(alpha: 0),
-                    AppColors.bg,
-                    AppColors.bg,
+                    context.colors.bg.withValues(alpha: 0),
+                    context.colors.bg,
+                    context.colors.bg,
                   ],
                 ),
               ),
@@ -133,12 +137,8 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                 child: PrimaryButton(
                   key: const ValueKey('sports-continue'),
                   label: _selected.isEmpty
-                      ? 'продолжить'
-                      : 'продолжить · ${_selected.length} ${_selected.length == 1
-                            ? 'вид'
-                            : _selected.length < 5
-                            ? 'вида'
-                            : 'видов'}',
+                      ? context.l10n.continueLabel
+                      : context.l10n.continueWithSports(_selected.length),
                   isLoading: _saving,
                   onPressed: _canContinue ? _save : null,
                 ),
@@ -171,7 +171,8 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
       setState(() => _saving = false);
       showAppSnack(
         context,
-        widget.errorMessage?.call(error) ?? 'не удалось сохранить выбор',
+        widget.errorMessage?.call(error) ?? context.l10n.sportsSaveFailed,
+        tone: SnackTone.failed,
       );
       return;
     }
@@ -195,167 +196,102 @@ class _SportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 160),
-      scale: selected ? 0.985 : 1,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? AppColors.accent : AppColors.border,
-                width: selected ? 2.5 : 1.5,
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        scale: selected ? 0.985 : 1,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: withSelectionFeedback(onTap),
+            borderRadius: BorderRadius.circular(20),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected
+                      ? context.colors.accent
+                      : context.colors.border,
+                  width: selected ? 2.5 : 1.5,
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: context.colors.accent.withValues(alpha: 0.22),
+                          blurRadius: 18,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.22),
-                        blurRadius: 18,
-                        spreadRadius: 1,
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  SportSurface(sportId: sport.id),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.45, 1],
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.62),
+                        ],
                       ),
-                    ]
-                  : null,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ColoredBox(color: sport.color.withValues(alpha: 0.7)),
-                CustomPaint(painter: _SportSurfacePainter(sport: sport)),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.78),
-                      ],
                     ),
                   ),
-                ),
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 12,
-                  child: Text(
-                    sport.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Text(sport.icon, style: const TextStyle(fontSize: 26)),
-                ),
-                if (selected)
                   Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        color: AppColors.white,
-                        size: 18,
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: Text(
+                      sport.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      // Sits on the pitch drawing, not on the page.
+                      style: context.text.titleSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   ),
-              ],
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: ExcludeSemantics(
+                      child: SportGlyph(sport: sport, size: 34),
+                    ),
+                  ),
+                  if (selected)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: context.colors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: context.colors.ink,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
-
-class _SportSurfacePainter extends CustomPainter {
-  const _SportSurfacePainter({required this.sport});
-
-  final Sport sport;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..color = Colors.white.withValues(alpha: 0.45);
-    final rect = Rect.fromLTWH(10, 16, size.width - 20, size.height - 32);
-
-    canvas.drawRect(rect, paint);
-    canvas.drawLine(
-      Offset(rect.left, rect.center.dy),
-      Offset(rect.right, rect.center.dy),
-      paint,
-    );
-
-    if (sport.id == 'football' || sport.id == 'basketball') {
-      canvas.drawCircle(rect.center, size.width * 0.17, paint);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(rect.center.dx, rect.top + 24),
-          width: 70,
-          height: 34,
-        ),
-        paint,
-      );
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset(rect.center.dx, rect.bottom - 24),
-          width: 70,
-          height: 34,
-        ),
-        paint,
-      );
-    } else if (sport.id == 'tennis' || sport.id == 'padel') {
-      canvas.drawLine(
-        Offset(rect.center.dx, rect.top),
-        Offset(rect.center.dx, rect.bottom),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.top + rect.height * 0.28),
-        Offset(rect.right, rect.top + rect.height * 0.28),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.bottom - rect.height * 0.28),
-        Offset(rect.right, rect.bottom - rect.height * 0.28),
-        paint,
-      );
-    } else {
-      canvas.drawLine(
-        Offset(rect.left, rect.center.dy - 5),
-        Offset(rect.right, rect.center.dy - 5),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.center.dy + 5),
-        Offset(rect.right, rect.center.dy + 5),
-        paint,
-      );
-      canvas.drawCircle(Offset(rect.center.dx, rect.top + 38), 16, paint);
-      canvas.drawCircle(Offset(rect.center.dx, rect.bottom - 38), 16, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SportSurfacePainter oldDelegate) =>
-      oldDelegate.sport != sport;
 }

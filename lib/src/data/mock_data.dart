@@ -107,6 +107,7 @@ class MockData {
   static List<Game> games(DateTime now) {
     final base = DateTime(now.year, now.month, now.day);
     const organizer = Participant(
+      id: 'orlov',
       name: 'Максим Орлов',
       initial: 'М',
       rating: 4.8,
@@ -126,9 +127,24 @@ class MockData {
         genderFilter: GenderFilter.any,
         organizer: organizer,
         participants: const [
-          Participant(name: 'Даниил Фёдоров', initial: 'Д', rating: 4.2),
-          Participant(name: 'Антон Паршутин', initial: 'А', rating: 3.9),
-          Participant(name: 'Илья Сергеев', initial: 'И', rating: 4.4),
+          Participant(
+            id: 'fedorov',
+            name: 'Даниил Фёдоров',
+            initial: 'Д',
+            rating: 4.2,
+          ),
+          Participant(
+            id: 'parshutin',
+            name: 'Антон Паршутин',
+            initial: 'А',
+            rating: 3.9,
+          ),
+          Participant(
+            id: 'sergeev',
+            name: 'Илья Сергеев',
+            initial: 'И',
+            rating: 4.4,
+          ),
         ],
       ),
       Game(
@@ -143,13 +159,24 @@ class MockData {
         type: GameType.open,
         genderFilter: GenderFilter.any,
         organizer: const Participant(
+          id: 'melnik',
           name: 'Саша Мельник',
           initial: 'С',
           rating: 4.6,
         ),
         participants: const [
-          Participant(name: 'Олег Миронов', initial: 'О', rating: 4.1),
-          Participant(name: 'Ника Волкова', initial: 'Н', rating: 4.5),
+          Participant(
+            id: 'mironov',
+            name: 'Олег Миронов',
+            initial: 'О',
+            rating: 4.1,
+          ),
+          Participant(
+            id: 'volkova',
+            name: 'Ника Волкова',
+            initial: 'Н',
+            rating: 4.5,
+          ),
         ],
       ),
       Game(
@@ -191,9 +218,37 @@ class MockData {
         players: 4,
         mode: PaymentMode.split,
       ),
-      status: 'ожидает участников',
       statusCode: 'collecting_shares',
       createdAt: now,
+      // Two of the four have paid, so the demo can show what a half-collected
+      // booking looks like rather than only that one exists.
+      shares: const [
+        BookingShare(
+          id: 'me',
+          name: 'Вы',
+          initial: 'В',
+          isPaid: true,
+          isCurrentUser: true,
+        ),
+        BookingShare(
+          id: 'orlov',
+          name: 'Максим Орлов',
+          initial: 'М',
+          isPaid: true,
+        ),
+        BookingShare(
+          id: 'fedorov',
+          name: 'Даниил Фёдоров',
+          initial: 'Д',
+          isPaid: false,
+        ),
+        BookingShare(
+          id: 'volkova',
+          name: 'Ника Волкова',
+          initial: 'Н',
+          isPaid: false,
+        ),
+      ],
     );
   }
 }

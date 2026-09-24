@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
+import 'history_screen.dart';
 import 'games_screens.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -24,55 +28,66 @@ class HomeScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return CustomScrollView(
-          key: const ValueKey('home-screen'),
-          slivers: [
-            SliverToBoxAdapter(child: _TopBar(controller: controller)),
-            SliverToBoxAdapter(child: _SearchBar(onTap: onOpenSearch)),
-            SliverToBoxAdapter(child: _Sports(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                title: 'предстоящая бронь',
-                action: 'все',
-                onAction: () =>
-                    showAppSnack(context, 'история броней откроется в профиле'),
+        return PullToRefresh(
+          controller: controller,
+          child: CustomScrollView(
+            key: const ValueKey('home-screen'),
+            // A short list still has to be draggable, or there is nothing
+            // to pull.
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _TopBar(controller: controller)),
+              SliverToBoxAdapter(child: _SearchBar(onTap: onOpenSearch)),
+              SliverToBoxAdapter(child: _Sports(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: context.l10n.upcomingBooking,
+                  action: context.l10n.seeAll,
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => HistoryScreen(controller: controller),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            SliverToBoxAdapter(child: _Bookings(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(title: 'рекомендованные площадки'),
-            ),
-            SliverToBoxAdapter(child: _Venues(controller: controller)),
-            SliverToBoxAdapter(
-              child: SectionHeader(
-                title: 'открытые игры',
-                action: 'все',
-                onAction: onOpenGames,
+              SliverToBoxAdapter(child: _Bookings(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(title: context.l10n.recommendedVenues),
               ),
-            ),
-            SliverList.builder(
-              itemCount: controller.preferredGames.take(2).length,
-              itemBuilder: (context, index) {
-                final game = controller.preferredGames[index];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: MiniGameCard(
-                    controller: controller,
-                    game: game,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GameDetailScreen(
-                          controller: controller,
-                          game: game,
+              SliverToBoxAdapter(child: _Venues(controller: controller)),
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: context.l10n.openGames,
+                  action: context.l10n.seeAll,
+                  onAction: onOpenGames,
+                ),
+              ),
+              SliverList.builder(
+                itemCount: controller.preferredGames.take(2).length,
+                itemBuilder: (context, index) {
+                  final game = controller.preferredGames[index];
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: MiniGameCard(
+                      controller: controller,
+                      game: game,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(
+                            controller: controller,
+                            game: game,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
-          ],
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.bottomBarInset),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -95,25 +110,25 @@ class _TopBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'привет, ${controller.greetingName.toLowerCase()}',
+                  context.l10n.greeting(controller.greetingName.capitalized),
                   style: context.text.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_rounded,
                       size: 16,
-                      color: AppColors.accent,
+                      color: context.colors.accent,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'москва',
+                      context.l10n.city,
                       style: context.text.bodySmall?.copyWith(
-                        color: AppColors.dim,
+                        color: context.colors.muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -124,7 +139,8 @@ class _TopBar extends StatelessWidget {
           ),
           _RoundIcon(
             icon: Icons.notifications_none_rounded,
-            onTap: () => showAppSnack(context, 'уведомлений пока нет'),
+            label: context.l10n.notifications,
+            onTap: () => showAppSnack(context, context.l10n.noNotifications),
           ),
         ],
       ),
@@ -146,12 +162,14 @@ class _SearchBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, color: AppColors.dim),
+            Icon(Icons.search_rounded, color: context.colors.dim),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'найти площадку или игру',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+                context.l10n.searchPlaceholder,
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.colors.muted,
+                ),
               ),
             ),
           ],
@@ -169,17 +187,16 @@ class _Sports extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: context.scaled(46),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
         itemBuilder: (context, index) {
           final sport = controller.selectedSports[index];
           return SelectableChip(
-            label: sport.name,
+            label: sport.name.capitalized,
             icon: sport.icon,
             selected: true,
-            color: sport.color,
             onTap: () => controller.togglePreferredSport(sport.id),
           );
         },
@@ -203,8 +220,10 @@ class _Bookings extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: AppCard(
           child: Text(
-            'у вас пока нет предстоящих броней',
-            style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+            context.l10n.noUpcomingBookings,
+            style: context.text.bodyMedium?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
         ),
       );
@@ -213,69 +232,13 @@ class _Bookings extends StatelessWidget {
     final booking = upcomingBookings.first;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: AppCard(
-        key: ValueKey('upcoming-booking-${booking.id}'),
+      child: BookingRow(
+        booking: booking,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
                 BookingDetailsScreen(controller: controller, booking: booking),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 62,
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppFormatters.weekdayShort(
-                      booking.draft.date,
-                    ).toUpperCase(),
-                    style: context.text.labelSmall?.copyWith(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    '${booking.draft.date.day}',
-                    style: context.text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    booking.draft.venue.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${booking.draft.timeRange} · ${booking.status}',
-                    style: context.text.bodySmall?.copyWith(
-                      color: AppColors.dim,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
-          ],
         ),
       ),
     );
@@ -291,7 +254,7 @@ class _Venues extends StatelessWidget {
   Widget build(BuildContext context) {
     final venues = controller.preferredVenues;
     return SizedBox(
-      height: 232,
+      height: context.scaled(292),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -312,43 +275,70 @@ class _Venues extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  VenueHero(venue: venue, height: 120),
                   Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                    child: VenueHero(venue: venue, height: 116),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          venue.name.capitalized,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.15,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          context.l10n.venueAddressDistance(
+                            venue.address,
+                            venue.distanceKm.toStringAsFixed(1),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.colors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.star_rounded,
                               size: 16,
-                              color: AppColors.warning,
+                              color: context.colors.ink,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               venue.rating.toStringAsFixed(1),
                               style: context.text.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const Spacer(),
                             Text(
-                              '${AppFormatters.money(venue.pricePerHour)}/час',
+                              context.l10n.pricePerHour(
+                                AppFormatters.money(venue.pricePerHour),
+                              ),
                               style: context.text.labelLarge?.copyWith(
-                                color: AppColors.accent,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          venue.description,
+                          venue.description.capitalized,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodySmall?.copyWith(
-                            color: AppColors.dim,
+                            color: context.colors.muted,
                           ),
                         ),
                       ],
@@ -365,23 +355,34 @@ class _Venues extends StatelessWidget {
 }
 
 class _RoundIcon extends StatelessWidget {
-  const _RoundIcon({required this.icon, required this.onTap});
+  const _RoundIcon({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
+
+  /// Spoken by a screen reader, which has no icon to look at.
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: AppColors.white),
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: context.colors.surface,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, color: context.colors.ink, size: 22),
+          ),
         ),
       ),
     );

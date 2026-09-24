@@ -1,8 +1,13 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
+
+import '../../../l10n/l10n.dart';
 
 import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_picker.dart';
 import 'booking_screens.dart';
 import 'create_game_screen.dart';
 import 'games_screens.dart';
@@ -57,10 +62,45 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  /// Booking from the tab bar names no club, so it asks for one instead of
+  /// picking whichever happened to be first in the catalogue.
+  Future<void> _startBooking() async {
+    final venues = widget.controller.venues;
+    if (venues.isEmpty) {
+      showAppSnack(context, context.l10n.noVenuesAvailable);
+      return;
+    }
+    final venue = await pickVenue(
+      context,
+      venues: venues,
+      selected: null,
+      sportOf: (venue) {
+        for (final sport in widget.controller.sports) {
+          if (sport.id == venue.sportIds.first) {
+            return sport;
+          }
+        }
+        return null;
+      },
+    );
+    if (venue == null || !mounted) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            BookingScreen(controller: widget.controller, venue: venue),
+      ),
+    );
+  }
+
   void _showCreateSheet() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -77,23 +117,23 @@ class _MainShellState extends State<MainShell> {
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.18),
+                      color: context.colors.ink.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'создать',
+                  context.l10n.createSheetTitle,
                   style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 14),
                 _SheetAction(
                   icon: Icons.sports_soccer_rounded,
-                  title: 'создать игру',
-                  subtitle: 'соберите участников и оплатите долю',
+                  title: context.l10n.createGameAction,
+                  subtitle: context.l10n.createGameActionSubtitle,
                   onTap: () {
                     Navigator.pop(sheetContext);
                     Navigator.of(context).push(
@@ -107,26 +147,11 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 10),
                 _SheetAction(
                   icon: Icons.calendar_month_rounded,
-                  title: 'забронировать площадку',
-                  subtitle: 'быстрый выбор слота в первом клубе',
+                  title: context.l10n.bookVenueAction,
+                  subtitle: context.l10n.bookVenueActionSubtitle,
                   onTap: () {
-                    final venues = widget.controller.preferredVenues.isNotEmpty
-                        ? widget.controller.preferredVenues
-                        : widget.controller.venues;
                     Navigator.pop(sheetContext);
-                    if (venues.isEmpty) {
-                      showAppSnack(context, 'доступных площадок пока нет');
-                      return;
-                    }
-                    final venue = venues[0];
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => BookingScreen(
-                          controller: widget.controller,
-                          venue: venue,
-                        ),
-                      ),
-                    );
+                    _startBooking();
                   },
                 ),
               ],
@@ -138,6 +163,12 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
+/// The tab bar: a capsule floating over the page, frosted so the content
+/// shows through it, with the selection sliding between slots.
+///
+/// It sits on `extendBody`, so the page scrolls underneath — which is the
+/// whole point of the blur, and why each tab screen keeps a tail of empty
+/// space at the bottom.
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.selectedIndex,
@@ -149,94 +180,140 @@ class _BottomNav extends StatelessWidget {
   final ValueChanged<int> onTab;
   final VoidCallback onCreate;
 
+  /// Slot 2 holds the create button, so the four tabs live either side of it.
+  static const _slotOfTab = [0, 1, 3, 4];
+  static const _slots = 5;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bg.withValues(alpha: 0.94),
-        border: Border(
-          top: BorderSide(color: AppColors.white.withValues(alpha: 0.06)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 28,
-            offset: const Offset(0, -12),
-          ),
-        ],
+    // The bar has to be given a height, and the labels inside it grow with
+    // the system font. Capped lower than elsewhere: it is pinned over the
+    // content, so every pixel it takes is a pixel of the screen it covers.
+    final height = context.scaled(AppTheme.tabBarHeight, max: 1.3);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        12 + MediaQuery.of(context).padding.bottom,
       ),
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 18),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            _NavItem(
-              index: 0,
-              selectedIndex: selectedIndex,
-              label: 'главная',
-              icon: Icons.home_rounded,
-              onTab: onTab,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(height / 2),
+          boxShadow: [
+            BoxShadow(
+              color: context.colors.ink.withValues(alpha: 0.12),
+              blurRadius: 26,
+              offset: const Offset(0, 10),
             ),
-            _NavItem(
-              index: 1,
-              selectedIndex: selectedIndex,
-              label: 'поиск',
-              icon: Icons.search_rounded,
-              onTab: onTab,
-            ),
-            Expanded(
-              child: GestureDetector(
-                key: const ValueKey('create-fab'),
-                onTap: onCreate,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      margin: const EdgeInsets.only(top: 0, bottom: 2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [AppColors.accent, AppColors.accentPressed],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(height / 2),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              height: height,
+              decoration: BoxDecoration(
+                // Translucent, so the blur has something to do.
+                color: context.colors.surface.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(height / 2),
+                border: Border.all(
+                  // The rim that makes the capsule read as glass. White at
+                  // this strength is a highlight on a light page and a glare
+                  // on a dark one, so the dark theme takes a faint one.
+                  color: context.colors.isDark
+                      ? context.colors.ink.withValues(alpha: 0.10)
+                      : Colors.white.withValues(alpha: 0.55),
+                  width: 1,
+                ),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slot = constraints.maxWidth / _slots;
+                  return Stack(
+                    children: [
+                      // The selection flies across rather than blinking from
+                      // one tab to the next.
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOutCubic,
+                        left: slot * _slotOfTab[selectedIndex] + 6,
+                        top: 6,
+                        width: slot - 12,
+                        height: height - 14,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: context.colors.accentSoft,
+                            borderRadius: BorderRadius.circular(
+                              (height - 14) / 2,
+                            ),
+                          ),
                         ),
-                        border: Border.all(color: AppColors.bg, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.48),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                      ),
+                      Row(
+                        children: [
+                          _NavItem(
+                            index: 0,
+                            selectedIndex: selectedIndex,
+                            label: context.l10n.navHome,
+                            icon: Icons.home_rounded,
+                            onTab: onTab,
+                          ),
+                          _NavItem(
+                            index: 1,
+                            selectedIndex: selectedIndex,
+                            label: context.l10n.navSearch,
+                            icon: Icons.search_rounded,
+                            onTab: onTab,
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Semantics(
+                                button: true,
+                                label: context.l10n.navCreate,
+                                child: GestureDetector(
+                                  key: const ValueKey('create-fab'),
+                                  onTap: onCreate,
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: context.colors.accent,
+                                    ),
+                                    child: Icon(
+                                      Icons.add_rounded,
+                                      color: context.colors.onAccent,
+                                      size: 26,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          _NavItem(
+                            index: 2,
+                            selectedIndex: selectedIndex,
+                            label: context.l10n.navGames,
+                            icon: Icons.sports_soccer_rounded,
+                            onTab: onTab,
+                          ),
+                          _NavItem(
+                            index: 3,
+                            selectedIndex: selectedIndex,
+                            label: context.l10n.navProfile,
+                            icon: Icons.person_rounded,
+                            onTab: onTab,
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: AppColors.white,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
             ),
-            _NavItem(
-              index: 2,
-              selectedIndex: selectedIndex,
-              label: 'игры',
-              icon: Icons.sports_soccer_rounded,
-              onTab: onTab,
-            ),
-            _NavItem(
-              index: 3,
-              selectedIndex: selectedIndex,
-              label: 'профиль',
-              icon: Icons.person_rounded,
-              onTab: onTab,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -261,30 +338,49 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = index == selectedIndex;
-    final color = selected
-        ? AppColors.accent
-        : AppColors.white.withValues(alpha: 0.48);
     return Expanded(
-      child: InkWell(
-        key: ValueKey('nav-$label'),
-        onTap: () => onTab(index),
-        child: SizedBox(
-          height: 56,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 23, color: color),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.text.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+      child: Semantics(
+        selected: selected,
+        button: true,
+        child: GestureDetector(
+          key: ValueKey('nav-$label'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onTab(index),
+          child: TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            builder: (context, t, _) {
+              final color = Color.lerp(
+                context.colors.muted,
+                context.colors.accent,
+                t,
+              )!;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 22, color: color),
+                  const SizedBox(height: 2),
+                  // Five slots share the bar's width, so a label has about
+                  // 80 logical pixels. Past a modest enlargement it would
+                  // come out as "Глав…" — less use than the smaller word,
+                  // and the icon above it carries the meaning anyway. A
+                  // screen reader is given the label in full regardless.
+                  MediaQuery.withClampedTextScaling(
+                    maxScaleFactor: 1.3,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -316,10 +412,10 @@ class _SheetAction extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.15),
+              color: context.colors.accent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: AppColors.accent),
+            child: Icon(icon, color: context.colors.accent),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -329,18 +425,20 @@ class _SheetAction extends StatelessWidget {
                 Text(
                   title,
                   style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.colors.muted,
+                  ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.dim),
+          Icon(Icons.chevron_right_rounded, color: context.colors.dim),
         ],
       ),
     );

@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../labels.dart';
+
+import '../../l10n/l10n.dart';
+
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
+import 'player_screen.dart';
 
+/// Stands in for a sport the server sent that this build does not know.
+/// Its colour is fixed rather than themed: it is a marker on a map, and a
+/// painter draws it where no theme is in reach.
 const _fallbackSport = Sport(
   id: 'unknown',
-  name: 'спорт',
+  name: 'Спорт',
   icon: '🏅',
-  color: AppColors.accent,
+  color: Color(0xFF3D48F5),
 );
 
 Sport _sportById(List<Sport> sports, String id) {
@@ -35,6 +44,10 @@ class _GamesScreenState extends State<GamesScreen> {
   String _sportId = 'all';
   String _timeFilter = 'evening';
 
+  /// The screen opens on the evening filter, so an empty list is far more
+  /// often a filter than an empty city.
+  bool get _filtered => _sportId != 'all' || _timeFilter != 'all';
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -45,58 +58,87 @@ class _GamesScreenState extends State<GamesScreen> {
             .where((game) => _timeFilter == 'all' || game.startHour >= 18)
             .toList();
 
-        return CustomScrollView(
-          key: const ValueKey('games-screen'),
-          slivers: [
-            SliverToBoxAdapter(
-              child: ScreenTitleBar(
-                title: 'игры',
-                subtitle: 'pickup-матчи рядом',
-                trailing: IconButton(
-                  onPressed: () => showAppSnack(
-                    context,
-                    'расширенные фильтры появятся позже',
+        return PullToRefresh(
+          controller: widget.controller,
+          child: CustomScrollView(
+            key: const ValueKey('games-screen'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: ScreenTitleBar(
+                  title: context.l10n.games,
+                  subtitle: context.l10n.gamesSubtitle,
+                  trailing: IconButton(
+                    tooltip: context.l10n.filters,
+                    onPressed: () =>
+                        showAppSnack(context, context.l10n.filtersLater),
+                    icon: const Icon(Icons.tune_rounded),
                   ),
-                  icon: const Icon(Icons.tune_rounded),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _SportFilter(
-                sports: widget.controller.sports,
-                value: _sportId,
-                onChanged: (id) => setState(() => _sportId = id),
+              SliverToBoxAdapter(
+                child: _SportFilter(
+                  sports: widget.controller.sports,
+                  value: _sportId,
+                  onChanged: (id) => setState(() => _sportId = id),
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _TimeFilter(
-                value: _timeFilter,
-                onChanged: (id) => setState(() => _timeFilter = id),
+              SliverToBoxAdapter(
+                child: _TimeFilter(
+                  value: _timeFilter,
+                  onChanged: (id) => setState(() => _timeFilter = id),
+                ),
               ),
-            ),
-            SliverList.builder(
-              itemCount: games.length,
-              itemBuilder: (context, index) {
-                final game = games[index];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: MiniGameCard(
-                    controller: widget.controller,
-                    game: game,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GameDetailScreen(
-                          controller: widget.controller,
-                          game: game,
+              if (games.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: _filtered
+                        ? EmptyState(
+                            key: const ValueKey('games-empty-filtered'),
+                            icon: Icons.filter_alt_off_rounded,
+                            title: context.l10n.nothingMatchesFilters,
+                            description: context.l10n.nothingMatchesFiltersHint,
+                            actionLabel: context.l10n.showAllGames,
+                            onAction: () => setState(() {
+                              _sportId = 'all';
+                              _timeFilter = 'all';
+                            }),
+                          )
+                        : EmptyState(
+                            key: const ValueKey('games-empty'),
+                            icon: Icons.sports_soccer_rounded,
+                            title: context.l10n.noOpenGames,
+                            description: context.l10n.noOpenGamesHint,
+                          ),
+                  ),
+                ),
+              SliverList.builder(
+                itemCount: games.length,
+                itemBuilder: (context, index) {
+                  final game = games[index];
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: MiniGameCard(
+                      controller: widget.controller,
+                      game: game,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GameDetailScreen(
+                            controller: widget.controller,
+                            game: game,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 118)),
-          ],
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(height: context.bottomBarInset),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -139,73 +181,71 @@ class _MiniGameCardState extends State<MiniGameCard> {
               Text(
                 AppFormatters.money(game.pricePerPerson),
                 style: context.text.titleMedium?.copyWith(
-                  color: sport.color,
-                  fontWeight: FontWeight.w900,
+                  color: context.colors.ink,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            game.venue.name,
+            game.venue.name.capitalized,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 5),
           Text(
-            '${AppFormatters.dateShort(game.date)} · ${game.timeRange}',
-            style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+            context.l10n.gameWhen(
+              AppFormatters.dateShort(game.date),
+              game.timeRange,
+            ),
+            style: context.text.bodySmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _AvatarStack(participants: game.participants),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '${game.freePlaces} ${game.freePlaces == 1 ? 'место' : 'места'} свободно',
-                  style: context.text.bodySmall?.copyWith(
-                    color: AppColors.muted,
-                  ),
-                ),
+          _CardFooter(
+            places: Text(
+              context.l10n.freePlaces(game.freePlaces),
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
               ),
-              SizedBox(
-                height: 34,
-                child: FilledButton(
-                  key: ValueKey('join-${game.id}'),
-                  onPressed: game.isFull || _joining ? null : _join,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: sport.color,
-                    disabledBackgroundColor: AppColors.white.withValues(
-                      alpha: 0.08,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+            ),
+            avatars: _AvatarStack(participants: game.participants),
+            action: SizedBox(
+              height: context.scaled(34),
+              child: FilledButton(
+                key: ValueKey('join-${game.id}'),
+                onPressed: game.isFull || _joining ? null : _join,
+                style: FilledButton.styleFrom(
+                  backgroundColor: context.colors.accent,
+                  disabledBackgroundColor: context.colors.surfaceRaised,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: _joining
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
-                          ),
-                        )
-                      : Text(
-                          'вступить',
-                          style: context.text.labelLarge?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+                child: _joining
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: context.colors.onAccent,
                         ),
-                ),
+                      )
+                    : Text(
+                        context.l10n.join,
+                        style: context.text.labelLarge?.copyWith(
+                          color: context.colors.onAccent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -221,13 +261,15 @@ class _MiniGameCardState extends State<MiniGameCard> {
       }
       showAppSnack(
         context,
-        joined ? 'вы присоединились к игре' : 'вы уже в этой игре',
+        joined ? context.l10n.joined : context.l10n.alreadyJoined,
+        // Only a join that took anything is worth a knock.
+        tone: joined ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -251,6 +293,15 @@ class GameDetailScreen extends StatefulWidget {
 }
 
 class _GameDetailScreenState extends State<GameDetailScreen> {
+  /// Measured, because the bar's button grows with the system font.
+  double _barHeight = 128;
+
+  void _onBarHeight(double height) {
+    if (mounted && height != _barHeight) {
+      setState(() => _barHeight = height);
+    }
+  }
+
   bool _joining = false;
 
   @override
@@ -271,7 +322,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: _DetailHeader(
-                        title: _gameTypeTitle(current.type),
+                        title: _gameTypeTitle(context, current.type),
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
@@ -285,33 +336,30 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               SportBadge(sport: sport),
                               const SizedBox(height: 12),
                               Text(
-                                current.venue.name,
+                                current.venue.name.capitalized,
                                 style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 current.venue.address,
                                 style: context.text.bodySmall?.copyWith(
-                                  color: AppColors.dim,
+                                  color: context.colors.muted,
                                 ),
                               ),
-                              const Divider(
-                                height: 28,
-                                color: AppColors.border,
-                              ),
+                              Divider(height: 28, color: context.colors.border),
                               SummaryRow(
-                                label: 'дата',
+                                label: context.l10n.summaryDate,
                                 value: AppFormatters.dateFull(current.date),
                               ),
                               SummaryRow(
-                                label: 'время',
+                                label: context.l10n.summaryTime,
                                 value: current.timeRange,
                               ),
                               SummaryRow(
-                                label: 'стоимость',
+                                label: context.l10n.price,
                                 value: AppFormatters.money(
                                   current.pricePerPerson,
                                 ),
@@ -323,22 +371,30 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                       ),
                     ),
                     SliverToBoxAdapter(
-                      child: _SectionLabel(text: 'организатор'),
+                      child: _SectionLabel(text: context.l10n.organizer),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                         child: _ParticipantTile(
                           participant: current.organizer,
+                          onTap: () => _openPlayer(
+                            context,
+                            widget.controller,
+                            current.organizer,
+                            isOrganizer: true,
+                          ),
                           trailing: OutlinedButton(
                             onPressed: () =>
-                                showAppSnack(context, 'чат подключится позже'),
-                            child: const Text('написать'),
+                                showAppSnack(context, context.l10n.chatLater),
+                            child: Text(context.l10n.write),
                           ),
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(child: _SectionLabel(text: 'игроки')),
+                    SliverToBoxAdapter(
+                      child: _SectionLabel(text: context.l10n.players),
+                    ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
@@ -355,6 +411,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                       ? current.participants[i]
                                       : null,
                                   isLast: i == current.capacity - 1,
+                                  onTap: i < current.participants.length
+                                      ? () => _openPlayer(
+                                          context,
+                                          widget.controller,
+                                          current.participants[i],
+                                        )
+                                      : null,
                                 ),
                             ],
                           ),
@@ -363,11 +426,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 128),
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, _barHeight),
                         child: AppCard(
-                          borderColor: AppColors.accent.withValues(alpha: 0.2),
+                          borderColor: context.colors.accent.withValues(
+                            alpha: 0.2,
+                          ),
                           child: SummaryRow(
-                            label: 'стоимость',
+                            label: context.l10n.price,
                             value: AppFormatters.money(current.pricePerPerson),
                             accent: true,
                           ),
@@ -377,18 +442,36 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   ],
                 ),
                 Positioned(
-                  left: 20,
-                  right: 20,
-                  bottom: 28,
-                  child: PrimaryButton(
-                    key: const ValueKey('detail-join-game'),
-                    label: current.type == GameType.approval
-                        ? 'заявка и оплата после одобрения'
-                        : 'присоединиться к игре',
-                    isLoading: _joining,
-                    onPressed: current.isFull || _joining
-                        ? null
-                        : () => _join(current),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  // The button used to float with nothing under it, so the
+                  // cards slid through it on the way past.
+                  // Someone already in the game is not offered a way in; a
+                  // place nobody can give back is a place nobody can take.
+                  child: PinnedActionBar(
+                    onHeight: _onBarHeight,
+                    child:
+                        current.participants.any(
+                          (player) => player.isCurrentUser,
+                        )
+                        ? PrimaryButton(
+                            key: const ValueKey('detail-leave-game'),
+                            label: context.l10n.leaveGame,
+                            tone: ButtonTone.neutral,
+                            isLoading: _joining,
+                            onPressed: _joining ? null : () => _leave(current),
+                          )
+                        : PrimaryButton(
+                            key: const ValueKey('detail-join-game'),
+                            label: current.type == GameType.approval
+                                ? context.l10n.requestAfterApproval
+                                : context.l10n.joinGame,
+                            isLoading: _joining,
+                            onPressed: current.isFull || _joining
+                                ? null
+                                : () => _join(current),
+                          ),
                   ),
                 ),
               ],
@@ -397,6 +480,45 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         );
       },
     );
+  }
+
+  Future<void> _leave(Game game) async {
+    final confirmed = await confirmAction(
+      context,
+      title: context.l10n.leaveGameQuestion,
+      message: context.l10n.leaveGameMessage(
+        game.venue.name.capitalized,
+        AppFormatters.dateShort(game.date),
+        game.timeRange,
+      ),
+      confirmLabel: context.l10n.leaveConfirm,
+      cancelLabel: context.l10n.stay,
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    setState(() => _joining = true);
+    try {
+      final left = await widget.controller.leaveGame(game);
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(
+        context,
+        left ? context.l10n.leftGame : context.l10n.wasNotInGame,
+        tone: left ? SnackTone.done : SnackTone.plain,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _joining = false);
+      }
+    }
   }
 
   Future<void> _join(Game game) async {
@@ -408,13 +530,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        joined ? 'вы присоединились к игре' : 'вы уже в этой игре',
+        joined ? context.l10n.joined : context.l10n.alreadyJoined,
+        // Only a join that took anything is worth a knock.
+        tone: joined ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      showAppSnack(context, widget.controller.messageFor(error));
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     } finally {
       if (mounted) {
         setState(() => _joining = false);
@@ -437,13 +561,13 @@ class _SportFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: context.scaled(46),
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
         children: [
           SelectableChip(
-            label: 'все',
+            label: context.l10n.allFilter,
             selected: value == 'all',
             onTap: () => onChanged('all'),
           ),
@@ -452,9 +576,8 @@ class _SportFilter extends StatelessWidget {
             (sport) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: SelectableChip(
-                label: sport.name,
+                label: sport.name.capitalized,
                 icon: sport.icon,
-                color: sport.color,
                 selected: value == sport.id,
                 onTap: () => onChanged(sport.id),
               ),
@@ -474,7 +597,10 @@ class _TimeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = {'evening': 'вечер', 'all': 'любой день'};
+    final options = {
+      'evening': context.l10n.evening,
+      'all': context.l10n.anyDay,
+    };
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Row(
@@ -491,6 +617,50 @@ class _TimeFilter extends StatelessWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+/// The bottom line of a game card: who is in, how many places are left, and
+/// the button to take one. Side by side normally; at a large system font the
+/// three of them cannot share a line without breaking words mid-syllable, so
+/// the button drops underneath and spans the card.
+class _CardFooter extends StatelessWidget {
+  const _CardFooter({
+    required this.avatars,
+    required this.places,
+    required this.action,
+  });
+
+  final Widget avatars;
+  final Widget places;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.textIsLarge) {
+      return Row(
+        children: [
+          avatars,
+          const SizedBox(width: 10),
+          Expanded(child: places),
+          action,
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            avatars,
+            const SizedBox(width: 10),
+            Expanded(child: places),
+          ],
+        ),
+        const SizedBox(height: 12),
+        action,
+      ],
     );
   }
 }
@@ -531,19 +701,19 @@ class _Avatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: participant.isCurrentUser
-              ? const [AppColors.accentPressed, AppColors.accent]
-              : const [Color(0xFF4A148C), Color(0xFFB388FF)],
-        ),
-        border: Border.all(color: AppColors.bg, width: 2),
+        color: participant.isCurrentUser
+            ? context.colors.accent
+            : context.colors.surfaceRaised,
+        border: Border.all(color: context.colors.bg, width: 2),
       ),
       child: Center(
         child: Text(
           participant.initial,
           style: context.text.labelLarge?.copyWith(
-            color: AppColors.white,
-            fontWeight: FontWeight.w900,
+            color: participant.isCurrentUser
+                ? context.colors.onAccent
+                : context.colors.muted,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -564,16 +734,20 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton.filled(
+            tooltip: context.l10n.back,
             onPressed: onBack,
             icon: const Icon(Icons.chevron_left_rounded),
-            style: IconButton.styleFrom(backgroundColor: AppColors.surface),
+            style: IconButton.styleFrom(
+              backgroundColor: context.colors.surface,
+              foregroundColor: context.colors.ink,
+            ),
           ),
           Expanded(
             child: Text(
-              title.toLowerCase(),
+              title,
               textAlign: TextAlign.center,
               style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -596,8 +770,8 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: context.text.labelSmall?.copyWith(
-          color: AppColors.faint,
-          fontWeight: FontWeight.w900,
+          color: context.colors.muted,
+          fontWeight: FontWeight.w700,
           letterSpacing: 1.4,
         ),
       ),
@@ -606,14 +780,20 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _ParticipantTile extends StatelessWidget {
-  const _ParticipantTile({required this.participant, this.trailing});
+  const _ParticipantTile({
+    required this.participant,
+    this.trailing,
+    this.onTap,
+  });
 
   final Participant participant;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: onTap,
       child: Row(
         children: [
           _Avatar(participant: participant, size: 48),
@@ -625,13 +805,19 @@ class _ParticipantTile extends StatelessWidget {
                 Text(
                   participant.name,
                   style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'рейтинг ${participant.rating.toStringAsFixed(1)}',
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
+                  participant.hasRating
+                      ? context.l10n.rating(
+                          participant.rating.toStringAsFixed(1),
+                        )
+                      : context.l10n.playerOrganizer,
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.colors.muted,
+                  ),
                 ),
               ],
             ),
@@ -644,64 +830,94 @@ class _ParticipantTile extends StatelessWidget {
 }
 
 class _PlayerSlot extends StatelessWidget {
-  const _PlayerSlot({required this.participant, required this.isLast});
+  const _PlayerSlot({
+    required this.participant,
+    required this.isLast,
+    this.onTap,
+  });
 
   final Participant? participant;
   final bool isLast;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final empty = participant == null;
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              if (empty)
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.white.withValues(alpha: 0.36),
-                      width: 1.5,
-                      style: BorderStyle.solid,
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTheme.radiusInner),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                if (empty)
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: context.colors.ink.withValues(alpha: 0.36),
+                        width: 1.5,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                  )
+                else
+                  _Avatar(participant: participant!, size: 40),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    empty ? context.l10n.freeSlot : participant!.name,
+                    style: context.text.bodyMedium?.copyWith(
+                      color: empty ? context.colors.dim : context.colors.ink,
+                      fontStyle: empty ? FontStyle.italic : FontStyle.normal,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                )
-              else
-                _Avatar(participant: participant!, size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  empty ? 'свободно' : participant!.name,
-                  style: context.text.bodyMedium?.copyWith(
-                    color: empty ? AppColors.dim : AppColors.white,
-                    fontStyle: empty ? FontStyle.italic : FontStyle.normal,
-                    fontWeight: FontWeight.w700,
+                ),
+                if (!empty && participant!.hasRating)
+                  Text(
+                    participant!.rating.toStringAsFixed(1),
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.muted,
+                    ),
                   ),
-                ),
-              ),
-              if (!empty)
-                Text(
-                  participant!.rating.toStringAsFixed(1),
-                  style: context.text.bodySmall?.copyWith(color: AppColors.dim),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
-        if (!isLast) const Divider(height: 1, color: AppColors.border),
+        if (!isLast) Divider(height: 1, color: context.colors.border),
       ],
     );
   }
 }
 
-String _gameTypeTitle(GameType type) {
+/// Opens a player, so a roster reads as people rather than as a list of
+/// names that does nothing when tapped.
+void _openPlayer(
+  BuildContext context,
+  AppController controller,
+  Participant player, {
+  bool isOrganizer = false,
+}) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PlayerScreen(
+        controller: controller,
+        player: player,
+        isOrganizer: isOrganizer,
+      ),
+    ),
+  );
+}
+
+String _gameTypeTitle(BuildContext context, GameType type) {
   return switch (type) {
-    GameType.open => 'открытая игра',
-    GameType.approval => 'игра по одобрению',
-    GameType.closed => 'закрытая игра',
+    GameType.open => context.l10n.openGame,
+    GameType.approval => context.l10n.approvalGame,
+    GameType.closed => context.l10n.closedGame,
   };
 }

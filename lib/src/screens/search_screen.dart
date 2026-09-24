@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/l10n.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
 
 import '../data/app_controller.dart';
@@ -25,40 +27,65 @@ class _SearchScreenState extends State<SearchScreen> {
   String _sportId = 'all';
   Venue? _selectedVenue;
   maplibre.MapController? _mapController;
+  final _searchController = TextEditingController();
+  final _sheetController = DraggableScrollableController();
+
+  /// Three rests: out of the way, showing the first couple of results, and
+  /// reading the list. Tapping a pin raises it to the middle one.
+  static const _sheetPeek = 0.18;
+  static const _sheetOpen = 0.42;
+  static const _sheetFull = 0.92;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _sheetController.dispose();
+    super.dispose();
+  }
 
   List<Venue> get _venues {
-    if (_sportId == 'all') {
-      return widget.controller.venues;
-    }
-    return widget.controller.venues
-        .where((venue) => venue.sportIds.contains(_sportId))
-        .toList();
+    final query = _searchController.text.trim().toLowerCase();
+    return widget.controller.venues.where((venue) {
+      if (_sportId != 'all' && !venue.sportIds.contains(_sportId)) {
+        return false;
+      }
+      if (query.isEmpty) {
+        return true;
+      }
+      return venue.name.toLowerCase().contains(query) ||
+          venue.address.toLowerCase().contains(query);
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final venues = _venues;
+    final query = _searchController.text.trim();
     return Stack(
       children: [
         Column(
           children: [
             ScreenTitleBar(
-              title: 'поиск',
-              subtitle: 'москва · openfreemap',
+              title: context.l10n.search,
+              subtitle: context.l10n.searchSubtitle,
               trailing: IconButton(
+                tooltip: context.l10n.centreOnMoscow,
                 onPressed: _focusMoscow,
                 icon: const Icon(Icons.my_location_rounded),
               ),
             ),
-            _SearchField(),
+            _SearchField(
+              controller: _searchController,
+              onChanged: (_) => setState(() => _selectedVenue = null),
+            ),
             SizedBox(
-              height: 42,
+              height: context.scaled(46),
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
                 children: [
                   SelectableChip(
-                    label: 'все',
+                    label: context.l10n.allFilter,
                     selected: _sportId == 'all',
                     onTap: () => setState(() => _sportId = 'all'),
                   ),
@@ -67,9 +94,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     (sport) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: SelectableChip(
-                        label: sport.name,
+                        label: sport.name.capitalized,
                         icon: sport.icon,
-                        color: sport.color,
                         selected: _sportId == sport.id,
                         onTap: () => setState(() => _sportId = sport.id),
                       ),
@@ -80,7 +106,12 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  14,
+                  20,
+                  context.bottomBarInset,
+                ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Stack(
@@ -133,15 +164,28 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: IgnorePointer(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: context.colors.border),
                             ),
                           ),
                         ),
                       ),
-                      Positioned(
-                        left: 14,
-                        top: 14,
-                        child: _MapPill(text: '${venues.length} клубов рядом'),
+                      // The results, as a list, over the map they are
+                      // plotted on. A map alone answers "where is it" and
+                      // nothing else: a name typed into the field could
+                      // match a single club three screens away, and the
+                      // only sign of it was a pin nobody was looking at.
+                      _ResultsSheet(
+                        controller: widget.controller,
+                        sheetController: _sheetController,
+                        venues: venues,
+                        sportOf: _sportForVenue,
+                        selected: _selectedVenue,
+                        query: query,
+                        onPick: _openVenue,
+                        onReset: () => setState(() {
+                          _sportId = 'all';
+                          _searchController.clear();
+                        }),
                       ),
                     ],
                   ),
@@ -150,23 +194,31 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ],
         ),
-        if (_selectedVenue != null)
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 108,
-            child: _VenueBottomSheet(
-              venue: _selectedVenue!,
-              controller: widget.controller,
-              onClose: () => setState(() => _selectedVenue = null),
-            ),
-          ),
       ],
+    );
+  }
+
+  /// Opens a club from the list. The map keeps up, so coming back leaves
+  /// the pin where the eye last had it.
+  void _openVenue(Venue venue) {
+    _selectVenue(venue);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            BookingScreen(controller: widget.controller, venue: venue),
+      ),
     );
   }
 
   void _selectVenue(Venue venue) {
     setState(() => _selectedVenue = venue);
+    if (_sheetController.isAttached && _sheetController.size < _sheetOpen) {
+      _sheetController.animateTo(
+        _sheetOpen,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
     _mapController?.animateCamera(
       center: venue.mapPoint,
       zoom: 12.8,
@@ -176,7 +228,15 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  /// The sport a club is shown as. Under a filter it is the filtered one —
+  /// a club listed under "хоккей" drawing a football pitch reads as the
+  /// wrong club.
   Sport? _sportForVenue(Venue venue) {
+    for (final sport in widget.controller.sports) {
+      if (sport.id == _sportId && venue.sportIds.contains(sport.id)) {
+        return sport;
+      }
+    }
     for (final sport in widget.controller.sports) {
       if (venue.sportIds.contains(sport.id)) {
         return sport;
@@ -189,7 +249,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _selectedVenue = null);
     final controller = _mapController;
     if (controller == null) {
-      showAppSnack(context, 'карта загружается');
+      showAppSnack(context, context.l10n.mapLoading);
       return;
     }
     await controller.animateCamera(
@@ -203,24 +263,69 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
+/// The search field.
+///
+/// It used to be a Text in a card: it looked like an input and did nothing.
+/// Now it filters the venues, and the trailing button clears the query
+/// instead of standing there inert.
 class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, color: AppColors.dim),
+            Icon(Icons.search_rounded, color: context.colors.dim),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                'клуб, площадка или район',
-                style: context.text.bodyMedium?.copyWith(color: AppColors.dim),
+              child: TextField(
+                key: const ValueKey('venue-search-field'),
+                controller: controller,
+                onChanged: onChanged,
+                textInputAction: TextInputAction.search,
+                style: context.text.bodyMedium,
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  hintText: context.l10n.searchFieldHint,
+                  hintStyle: context.text.bodyMedium?.copyWith(
+                    color: context.colors.muted,
+                  ),
+                ),
               ),
             ),
-            const Icon(Icons.tune_rounded, color: AppColors.accent),
+            if (controller.text.isNotEmpty)
+              Semantics(
+                button: true,
+                label: context.l10n.clearSearch,
+                child: InkWell(
+                  key: const ValueKey('venue-search-clear'),
+                  onTap: () {
+                    controller.clear();
+                    onChanged('');
+                  },
+                  customBorder: const CircleBorder(),
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: context.colors.muted,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -244,11 +349,11 @@ class _MapMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected
-        ? sport?.color ?? AppColors.accent
-        : AppColors.accent;
+        ? sport?.color ?? context.colors.accent
+        : context.colors.accent;
     return Semantics(
       button: true,
-      label: venue.name,
+      label: venue.name.capitalized,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -268,7 +373,7 @@ class _MapMarker extends StatelessWidget {
                     color: color,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.white.withValues(alpha: 0.32),
+                      color: context.colors.ink.withValues(alpha: 0.32),
                       width: 2,
                     ),
                     boxShadow: [
@@ -295,11 +400,11 @@ class _MapMarker extends StatelessWidget {
                       color: color,
                       border: Border(
                         right: BorderSide(
-                          color: AppColors.white.withValues(alpha: 0.22),
+                          color: context.colors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                         bottom: BorderSide(
-                          color: AppColors.white.withValues(alpha: 0.22),
+                          color: context.colors.ink.withValues(alpha: 0.22),
                           width: 2,
                         ),
                       ),
@@ -322,104 +427,118 @@ extension _VenueMapPoint on Venue {
   }
 }
 
-class _MapPill extends StatelessWidget {
-  const _MapPill({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.bg.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(
-        text.toLowerCase(),
-        style: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w800),
-      ),
-    );
-  }
-}
-
-class _VenueBottomSheet extends StatelessWidget {
-  const _VenueBottomSheet({
-    required this.venue,
+/// The results, as a sheet that can be pulled up over the map.
+///
+/// It rests low enough to leave the map readable, and every club is one
+/// scroll away rather than one lucky tap on a pin.
+class _ResultsSheet extends StatelessWidget {
+  const _ResultsSheet({
     required this.controller,
-    required this.onClose,
+    required this.sheetController,
+    required this.venues,
+    required this.sportOf,
+    required this.selected,
+    required this.query,
+    required this.onPick,
+    required this.onReset,
   });
 
-  final Venue venue;
   final AppController controller;
-  final VoidCallback onClose;
+  final DraggableScrollableController sheetController;
+  final List<Venue> venues;
+  final Sport? Function(Venue) sportOf;
+  final Venue? selected;
+  final String query;
+  final ValueChanged<Venue> onPick;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      borderColor: AppColors.accent.withValues(alpha: 0.2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return DraggableScrollableSheet(
+      controller: sheetController,
+      initialChildSize: _SearchScreenState._sheetOpen,
+      minChildSize: _SearchScreenState._sheetPeek,
+      maxChildSize: _SearchScreenState._sheetFull,
+      snap: true,
+      snapSizes: const [
+        _SearchScreenState._sheetPeek,
+        _SearchScreenState._sheetOpen,
+        _SearchScreenState._sheetFull,
+      ],
+      builder: (context, scrollController) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+            boxShadow: [
+              BoxShadow(
+                color: context.colors.ink.withValues(alpha: 0.16),
+                blurRadius: 22,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
             children: [
-              Expanded(
-                child: Text(
-                  venue.name,
-                  style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.colors.ink.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: onClose,
-                icon: const Icon(Icons.close_rounded),
-              ),
-            ],
-          ),
-          Text(
-            venue.address,
-            style: context.text.bodySmall?.copyWith(color: AppColors.dim),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.star_rounded,
-                size: 17,
-                color: AppColors.warning,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${venue.rating}',
-                style: context.text.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  venues.isEmpty
+                      ? context.l10n.nothingFound
+                      : context.l10n.clubsNearby(venues.length),
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                '${AppFormatters.money(venue.pricePerHour)}/час',
-                style: context.text.labelLarge?.copyWith(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              const SizedBox(height: 10),
+              if (venues.isEmpty)
+                // An empty map is indistinguishable from a broken one, so
+                // say which filter emptied it.
+                EmptyState(
+                  key: const ValueKey('search-empty'),
+                  icon: query.isEmpty
+                      ? Icons.location_off_rounded
+                      : Icons.search_off_rounded,
+                  title: query.isEmpty
+                      ? context.l10n.noVenuesForSport
+                      : context.l10n.nothingFound,
+                  description: query.isEmpty
+                      ? context.l10n.noVenuesForSportHint
+                      : context.l10n.nothingFoundFor(query),
+                  actionLabel: context.l10n.resetSearch,
+                  onAction: onReset,
+                )
+              else
+                for (final venue in venues)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: VenueRow(
+                      key: ValueKey('search-result-${venue.id}'),
+                      venue: venue,
+                      sport: sportOf(venue),
+                      selected: selected?.id == venue.id,
+                      color: context.colors.bgAlt,
+                      onTap: () => onPick(venue),
+                    ),
+                  ),
             ],
           ),
-          const SizedBox(height: 14),
-          PrimaryButton(
-            label: 'подробнее и бронь',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    BookingScreen(controller: controller, venue: venue),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

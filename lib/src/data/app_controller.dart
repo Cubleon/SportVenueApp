@@ -4,23 +4,47 @@ import 'package:flutter/material.dart';
 
 import '../models/sport_venue_models.dart';
 import 'api_client.dart';
+import 'session_store.dart';
 import 'mock_data.dart';
+
+/// The kinds of failure the app has words for.
+enum AppErrorKind {
+  network,
+  invalidResponse,
+  sessionExpired,
+  slotTaken,
+  gameFull,
+  cancelNotOrganizer,
+  badPhone,
+  invalidCode,
+  challengeExpired,
+  tooManyAttempts,
+  timeout,
+  serverSaidSo,
+  unknown,
+}
 
 class AppController extends ChangeNotifier {
   factory AppController({
     DateTime? now,
     SportVenueApiClient? api,
     bool closeApiOnDispose = false,
+    SessionStore session = const NoSessionStore(),
   }) {
     return AppController._(
       now: now,
       api: api,
       closeApiOnDispose: closeApiOnDispose,
+      session: session,
     );
   }
 
-  AppController._({DateTime? now, this._api, this._closeApiOnDispose = false})
-    : _now = now ?? DateTime.now() {
+  AppController._({
+    DateTime? now,
+    this._api,
+    this._closeApiOnDispose = false,
+    this._session = const NoSessionStore(),
+  }) : _now = now ?? DateTime.now() {
     sports = List<Sport>.from(MockData.sports);
     venues = List<Venue>.from(MockData.venues);
     selectedSportIds = {'football', 'padel', 'tennis'};
@@ -34,14 +58,32 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  factory AppController.connected({DateTime? now, SportVenueApiClient? api}) {
-    final client = api ?? SportVenueApiClient();
-    return AppController(now: now, api: client, closeApiOnDispose: api == null);
+  factory AppController.connected({
+    DateTime? now,
+    SportVenueApiClient? api,
+    SessionStore session = const SecureSessionStore(),
+  }) {
+    // The client already knew how to hand its tokens over — nothing was
+    // catching them, so every launch started from the phone number again.
+    late final SportVenueApiClient client;
+    client =
+        api ??
+        SportVenueApiClient(
+          onTokensChanged: (tokens) =>
+              tokens == null ? session.clear() : session.write(tokens),
+        );
+    return AppController(
+      now: now,
+      api: client,
+      closeApiOnDispose: api == null,
+      session: session,
+    );
   }
 
   final DateTime _now;
   final SportVenueApiClient? _api;
   final bool _closeApiOnDispose;
+  final SessionStore _session;
 
   String phone = '';
   String? userId;
@@ -191,7 +233,13 @@ class AppController extends ChangeNotifier {
     phone = user['phone'] as String? ?? phone;
     selectedSportIds = nextSelectedIds;
     bookings = bookingRows
-        .map((row) => _bookingFromJson(row, venueCatalog: nextVenues))
+        .map(
+          (row) => _bookingFromJson(
+            row,
+            venueCatalog: nextVenues,
+            currentUserId: nextUserId,
+          ),
+        )
         .toList();
     games = gameRows
         .map(
@@ -275,7 +323,6 @@ class AppController extends ChangeNotifier {
       final booking = Booking(
         id: 'booking-${bookings.length + 1}',
         draft: draft,
-        status: draft.mode == PaymentMode.split ? 'сбор долей' : 'подтверждена',
         statusCode: statusCode,
         organizerId: userId,
         createdAt: _now,
@@ -298,7 +345,11 @@ class AppController extends ChangeNotifier {
       players: draft.players,
       paymentMode: draft.mode.name,
     );
-    final booking = _bookingFromJson(row, venueCatalog: venues);
+    final booking = _bookingFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
     bookings = [booking, ...bookings.where((item) => item.id != booking.id)];
     notifyListeners();
     return booking;
@@ -307,10 +358,11 @@ class AppController extends ChangeNotifier {
   Future<Booking> cancelBooking(Booking booking) async {
     final api = _api;
     final updated = api == null
-        ? booking.copyWith(status: 'отменена', statusCode: 'cancelled')
+        ? booking.copyWith(statusCode: 'cancelled')
         : _bookingFromJson(
             await api.cancelBooking(booking.id),
             venueCatalog: venues,
+            currentUserId: userId,
           );
 
     bookings = [
@@ -350,6 +402,43 @@ class AppController extends ChangeNotifier {
     }
 
     final row = await api.joinGame(game.id);
+    final updated = _gameFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
+    games = [
+      for (final item in games)
+        if (item.id == updated.id) updated else item,
+    ];
+    notifyListeners();
+    return true;
+  }
+
+  /// Gives up a place in a game. Answers false when there was none to give.
+  Future<bool> leaveGame(Game game) async {
+    if (!game.participants.any((player) => player.isCurrentUser)) {
+      return false;
+    }
+
+    final api = _api;
+    if (api == null) {
+      games = [
+        for (final item in games)
+          if (item.id == game.id)
+            item.copyWith(
+              participants: item.participants
+                  .where((player) => !player.isCurrentUser)
+                  .toList(),
+            )
+          else
+            item,
+      ];
+      notifyListeners();
+      return true;
+    }
+
+    final row = await api.leaveGame(game.id);
     final updated = _gameFromJson(
       row,
       venueCatalog: venues,
@@ -439,6 +528,50 @@ class AppController extends ChangeNotifier {
     return game;
   }
 
+  /// Picks up a session left by a previous run, if the device still has one
+  /// and the server still honours it.
+  ///
+  /// Answers whether the app can go straight to the main screen. A refusal
+  /// is not an error to report: an expired or withdrawn session simply means
+  /// signing in again, which is what the screen behind the splash is for.
+  Future<bool> restoreSession() async {
+    final api = _api;
+    if (api == null) {
+      return false;
+    }
+    final tokens = await _session.read();
+    if (tokens == null) {
+      return false;
+    }
+    api.setTokens(tokens);
+    try {
+      await _loadRemoteState(api);
+    } catch (_) {
+      api.clearTokens();
+      return false;
+    }
+    isSignedIn = true;
+    notifyListeners();
+    return true;
+  }
+
+  /// Re-reads everything the screens show. Pull-to-refresh calls this.
+  ///
+  /// It throws on failure rather than swallowing: the gesture was explicit,
+  /// so a server that will not answer is worth saying out loud.
+  Future<void> refresh() async {
+    final api = _api;
+    if (api == null) {
+      // Demo mode has no server to ask, but the gesture still has to
+      // resolve — an indicator with nothing to wait for never leaves.
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+      notifyListeners();
+      return;
+    }
+    await _loadRemoteState(api);
+    notifyListeners();
+  }
+
   void logout() {
     _api?.clearTokens();
     phone = '';
@@ -456,46 +589,53 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String messageFor(Object error) {
+  /// What went wrong, in terms a screen can put into words.
+  ///
+  /// The controller classifies; the wording belongs upstairs, where the
+  /// reader's language is known. It used to return Russian sentences from
+  /// the data layer, which meant the app could never speak anything else.
+  static AppErrorKind kindOf(Object error) {
     if (error is ApiException) {
       final message = error.message.toLowerCase();
       if (error.kind == ApiExceptionKind.network) {
-        return 'сервер недоступен — проверьте, что он запущен';
+        return AppErrorKind.network;
       }
       if (error.kind == ApiExceptionKind.invalidResponse) {
-        return 'сервер вернул неожиданный ответ';
+        return AppErrorKind.invalidResponse;
       }
       if (error.isUnauthorized) {
-        return 'сессия истекла — войдите снова';
+        return AppErrorKind.sessionExpired;
       }
       if (message.contains('slot is unavailable') ||
           message.contains('slot is locked')) {
-        return 'этот слот уже занят, выберите другое время';
+        return AppErrorKind.slotTaken;
       }
       if (message.contains('game is full')) {
-        return 'в игре больше нет свободных мест';
+        return AppErrorKind.gameFull;
       }
       if (message.contains('only organizer can cancel booking')) {
-        return 'отменить бронь может только организатор';
+        return AppErrorKind.cancelNotOrganizer;
       }
       if (message.contains('phone')) {
-        return 'проверьте номер телефона';
+        return AppErrorKind.badPhone;
       }
       if (message.contains('invalid call code')) {
-        return 'неверный код, попробуйте ещё раз';
+        return AppErrorKind.invalidCode;
       }
       if (message.contains('challenge has expired')) {
-        return 'время проверки истекло — запросите новый звонок';
+        return AppErrorKind.challengeExpired;
       }
       if (message.contains('too many code attempts')) {
-        return 'слишком много попыток — запросите новый звонок';
+        return AppErrorKind.tooManyAttempts;
       }
-      return error.message;
+      // Something the server explained in its own words, which is better
+      // than a shrug even untranslated.
+      return AppErrorKind.serverSaidSo;
     }
     if (error is TimeoutException) {
-      return 'сервер не ответил вовремя';
+      return AppErrorKind.timeout;
     }
-    return 'не удалось выполнить запрос';
+    return AppErrorKind.unknown;
   }
 
   @override
@@ -533,11 +673,13 @@ Venue _venueFromJson(ApiJsonObject row, {required List<Venue> venueCatalog}) {
 Booking _bookingFromJson(
   ApiJsonObject row, {
   required List<Venue> venueCatalog,
+  String? currentUserId,
 }) {
   final venueRow = _objectField(row, 'venue');
   return Booking.fromJson(
     row,
     venue: _venueFromJson(venueRow, venueCatalog: venueCatalog),
+    currentUserId: currentUserId,
   );
 }
 
