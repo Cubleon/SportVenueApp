@@ -768,34 +768,37 @@ class LRu extends L {
   String get playerPending => 'ждёт одобрения';
 
   @override
-  String get vividNearby => 'Рядом';
-
-  @override
-  String get vividTonight => 'Сегодня вечером';
-
-  @override
-  String get vividNewVenues => 'Новые площадки';
-
-  @override
-  String get vividFreeNow => 'Свободно сейчас';
-
-  @override
-  String vividFrom(String price) {
-    return 'от $price';
-  }
-
-  @override
-  String get vividBook => 'Забронировать';
-
-  @override
-  String get vividPickedForYou => 'Подобрали для вас';
-
-  @override
   String get vividSports => 'Виды спорта';
 
   @override
-  String get vividNextGame => 'Ближайшая игра';
+  String get vividWhen => 'Когда играете';
 
   @override
-  String get vividFreeToday => 'Свободно сегодня';
+  String vividGamesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count игр',
+      few: '$count игры',
+      one: '$count игра',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String vividFreeOn(String date) {
+    return 'Свободно $date';
+  }
+
+  @override
+  String vividSlots(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count слотов',
+      few: '$count слота',
+      one: '$count слот',
+    );
+    return '$_temp0';
+  }
 }

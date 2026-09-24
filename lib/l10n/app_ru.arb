@@ -421,30 +421,39 @@
   "playerGames": "Игры этого участника",
   "playerNoGames": "Других игр этого участника здесь нет",
   "playerPending": "ждёт одобрения",
-  "vividNearby": "Рядом",
-  "vividTonight": "Сегодня вечером",
-  "vividNewVenues": "Новые площадки",
-  "vividFreeNow": "Свободно сейчас",
-  "vividFrom": "от {price}",
-  "@vividFrom": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "vividBook": "Забронировать",
-  "vividPickedForYou": "Подобрали для вас",
   "vividSports": "Виды спорта",
   "@vividSports": {
     "description": "Заголовок ряда категорий на ярком главном экране"
   },
-  "vividNextGame": "Ближайшая игра",
-  "@vividNextGame": {
-    "description": "Метка на баннере яркого главного экрана"
+  "vividWhen": "Когда играете",
+  "@vividWhen": {
+    "description": "Подпись над календарём на ярком главном экране"
   },
-  "vividFreeToday": "Свободно сегодня",
-  "@vividFreeToday": {
-    "description": "Заголовок ряда площадок на ярком главном экране"
+  "vividGamesCount": "{count, plural, one{{count} игра} few{{count} игры} other{{count} игр}}",
+  "@vividGamesCount": {
+    "description": "Сколько игр в выбранный день",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vividFreeOn": "Свободно {date}",
+  "@vividFreeOn": {
+    "description": "Заголовок ряда площадок с выбранной датой",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "vividSlots": "{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}",
+  "@vividSlots": {
+    "description": "Сколько слотов свободно у площадки в выбранный день",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

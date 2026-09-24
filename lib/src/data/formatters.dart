@@ -28,6 +28,9 @@ class AppFormatters {
 
   static String weekdayShort(DateTime date) => _weekdays[date.weekday - 1];
 
+  /// The month on its own, as a date strip labels the days under it.
+  static String monthGenitive(DateTime date) => _months[date.month - 1];
+
   static String dateShort(DateTime date) {
     return '${weekdayShort(date)} ${date.day} ${_months[date.month - 1].substring(0, 3)}';
   }

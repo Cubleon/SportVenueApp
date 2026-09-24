@@ -45,6 +45,15 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   String _sportId = 'all';
   String _query = '';
 
+  /// The day the whole page is about. Everything below the calendar answers
+  /// for this date and nothing else.
+  DateTime _date = DateUtils.dateOnly(DateTime.now());
+
+  /// How many hours each club still has free on [_date], by club id. Empty
+  /// until the first load answers, and reloaded whenever the day changes.
+  Map<String, int> _freeSlots = const {};
+  int _slotsToken = 0;
+
   /// The palette for this one screen. Local on purpose: a mood, not tokens.
   static const _bg = Color(0xFFF1EFFA);
   static const _ink = Color(0xFF14121C);
@@ -65,9 +74,43 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadSlots();
+  }
+
+  @override
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  void _pickDate(DateTime date) {
+    if (DateUtils.isSameDay(date, _date)) return;
+    setState(() {
+      _date = date;
+      _freeSlots = const {};
+    });
+    _loadSlots();
+  }
+
+  /// Asks the same endpoint the booking screens ask. On the demo controller
+  /// every day answers the same, so the count sits still here; against a
+  /// server it moves with the date like everything else on the page.
+  Future<void> _loadSlots() async {
+    final token = ++_slotsToken;
+    final day = _date;
+    final counts = <String, int>{};
+    for (final venue in widget.controller.venues) {
+      final slots = await widget.controller.loadSlots(
+        venue: venue,
+        day: day,
+        durationMinutes: 60,
+      );
+      counts[venue.id] = slots.where((slot) => slot.isAvailable).length;
+    }
+    if (!mounted || token != _slotsToken) return;
+    setState(() => _freeSlots = counts);
   }
 
   bool _matches(String text) =>
@@ -84,6 +127,7 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   List<Game> get _games => widget.controller.games
       .where(
         (game) =>
+            DateUtils.isSameDay(game.date, _date) &&
             (_sportId == 'all' || game.sportId == _sportId) &&
             (_matches(game.venue.name) || _matches(game.venue.address)),
       )
@@ -104,7 +148,7 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
       builder: (context, _) {
         final venues = _venues;
         final games = _games;
-        final empty = venues.isEmpty && games.isEmpty;
+        final empty = venues.isEmpty;
         final topInset = MediaQuery.viewPaddingOf(context).top;
 
         // The blue is a wash over the page colour, not a block on top of it:
@@ -143,11 +187,13 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _HeroTop(
+                          _CalendarHead(
                             controller: widget.controller,
-                            game: games.isNotEmpty ? games.first : null,
-                            venue: venues.isNotEmpty ? venues.first : null,
                             topInset: topInset,
+                            date: _date,
+                            onPick: _pickDate,
+                            gamesToday: games.length,
+                            venuesToday: venues.length,
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
@@ -165,7 +211,11 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
                             onSelect: (id) => setState(() => _sportId = id),
                           ),
                           if (venues.isNotEmpty) ...[
-                            _SectionTitle(context.l10n.vividFreeToday),
+                            _SectionTitle(
+                              context.l10n.vividFreeOn(
+                                AppFormatters.dateShort(_date),
+                              ),
+                            ),
                             SizedBox(
                               height: context.scaled(248, max: 1.4),
                               child: ListView.separated(
@@ -179,6 +229,7 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
                                 itemBuilder: (context, index) => _VenueCard(
                                   venue: venues[index],
                                   sportId: _sportOf(venues[index]),
+                                  freeSlots: _freeSlots[venues[index].id],
                                   // One blue card in the row, the way the
                                   // top of the page is blue: the accent
                                   // travels down instead of staying up there.
@@ -187,8 +238,13 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
                               ),
                             ),
                           ],
-                          if (games.isNotEmpty) ...[
+                          if (venues.isNotEmpty) ...[
                             _SectionTitle(context.l10n.openGames),
+                            if (games.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                                child: _NoGamesCard(),
+                              ),
                             for (final game in games)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
@@ -229,44 +285,34 @@ class _HomeVividScreenState extends State<HomeVividScreen> {
   }
 }
 
-/// The top of the page: the same cards as everywhere else, plus the one fact
-/// worth blowing up and the balls that carry the loud reference in.
-class _HeroTop extends StatelessWidget {
-  const _HeroTop({
+/// The top of the page: the calendar the rest of the page answers to.
+///
+/// It keeps the loud reference's hierarchy without a headline stat — the
+/// selected day grows into the big element instead, and the line under the
+/// strip says what that day holds.
+class _CalendarHead extends StatelessWidget {
+  const _CalendarHead({
     required this.controller,
-    required this.game,
-    required this.venue,
     required this.topInset,
+    required this.date,
+    required this.onPick,
+    required this.gamesToday,
+    required this.venuesToday,
   });
 
   final AppController controller;
-  final Game? game;
-  final Venue? venue;
   final double topInset;
+  final DateTime date;
+  final ValueChanged<DateTime> onPick;
+  final int gamesToday;
+  final int venuesToday;
+
+  static const _days = 14;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final current = game;
-    final club = current?.venue ?? venue;
-
-    final (String, String, String)? headline = switch (current) {
-      final Game g => (
-        l10n.vividNextGame,
-        '${g.startHour.toString().padLeft(2, '0')}:00',
-        '${AppFormatters.dateShort(g.date)} · ${g.venue.name.capitalized}',
-      ),
-      _ => switch (venue) {
-        final Venue v => (
-          l10n.vividNearby,
-          AppFormatters.money(v.pricePerHour),
-          '${v.name.capitalized} · ${v.distanceKm.toStringAsFixed(1)} км',
-        ),
-        // Nothing matched the search: the page keeps its colour and its
-        // header, and says nothing rather than saying it with a dash.
-        _ => null,
-      },
-    };
+    final today = DateUtils.dateOnly(DateTime.now());
 
     return Stack(
       clipBehavior: Clip.none,
@@ -277,90 +323,214 @@ class _HeroTop extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _HeaderPill(controller: controller),
-              if (headline case (final label, final display, final line)) ...[
-                SizedBox(height: context.scaled(26, max: 1.4)),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: context.text.labelLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.88),
-                    fontWeight: FontWeight.w600,
+              SizedBox(height: context.scaled(22, max: 1.4)),
+              Row(
+                children: [
+                  Text(
+                    l10n.vividWhen,
+                    style: context.text.labelLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.88),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Text(
-                  display,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  style: context.text.displayMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -3,
-                    height: 1.12,
-                    shadows: const [
-                      Shadow(
-                        color: Color(0x452A5FA8),
-                        blurRadius: 24,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
+                  const Spacer(),
+                  Text(
+                    AppFormatters.monthGenitive(date),
+                    style: context.text.labelLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: context.scaled(98, max: 1.45),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _days,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final day = today.add(Duration(days: index));
+                    return _DateCard(
+                      date: day,
+                      selected: DateUtils.isSameDay(day, date),
+                      isToday: index == 0,
+                      onTap: () => onPick(day),
+                    );
+                  },
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  line,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    fontWeight: FontWeight.w600,
+              ),
+              SizedBox(height: context.scaled(14, max: 1.3)),
+              Text(
+                '${l10n.vividGamesCount(gamesToday)} · '
+                '${l10n.clubsNearby(venuesToday)}',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // The balls flank the calendar rather than sitting under it: a strip
+        // of glass cards over a ball turns both to mud.
+        Positioned(
+          left: -50,
+          top: topInset - 10,
+          child: _Ball(
+            kind: _BallKind.soccer,
+            size: context.scaled(86, max: 1.15),
+          ),
+        ),
+        Positioned(
+          right: -40,
+          bottom: -26,
+          child: _Ball(
+            kind: _BallKind.basket,
+            size: context.scaled(84, max: 1.15),
+            tilt: 0.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One day. The chosen one grows and turns solid — the biggest, brightest
+/// thing on the page is the thing everything else answers to.
+class _DateCard extends StatelessWidget {
+  const _DateCard({
+    required this.date,
+    required this.selected,
+    required this.isToday,
+    required this.onTap,
+  });
+
+  final DateTime date;
+  final bool selected;
+  final bool isToday;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          width: context.scaled(selected ? 78 : 62, max: 1.3),
+          decoration: BoxDecoration(
+            color: selected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: selected ? 1 : 0.38),
+            ),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x33123A7A),
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                AppFormatters.weekdayShort(date),
+                style: context.text.labelSmall?.copyWith(
+                  color: selected
+                      ? _HomeVividScreenState._muted
+                      : Colors.white.withValues(alpha: 0.82),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${date.day}',
+                style:
+                    (selected
+                            ? context.text.headlineSmall
+                            : context.text.titleLarge)
+                        ?.copyWith(
+                          color: selected
+                              ? _HomeVividScreenState._blue
+                              : Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.8,
+                          height: 1.1,
+                        ),
+              ),
+              if (isToday) ...[
+                const SizedBox(height: 4),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? _HomeVividScreenState._blue
+                        : Colors.white.withValues(alpha: 0.9),
                   ),
-                ),
-                SizedBox(height: context.scaled(16, max: 1.4)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (current != null && !current.isFull) ...[
-                      _HeroPill(
-                        text: l10n.freePlaces(current.freePlaces),
-                        solid: true,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    if (current != null)
-                      _HeroPill(
-                        text: AppFormatters.money(current.pricePerPerson),
-                      )
-                    else if (club != null)
-                      _HeroPill(
-                        text: l10n.rating(club.rating.toStringAsFixed(1)),
-                      ),
-                  ],
                 ),
               ],
             ],
           ),
         ),
-        if (headline != null) ...[
-          Positioned(
-            left: -34,
-            top: topInset + 88,
-            child: _Ball(
-              kind: _BallKind.soccer,
-              size: context.scaled(104, max: 1.15),
+      ),
+    );
+  }
+}
+
+/// A day with clubs but no games still owes the reader a sentence.
+class _NoGamesCard extends StatelessWidget {
+  const _NoGamesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: _HomeVividScreenState._cardShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              color: _HomeVividScreenState._blueSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.event_available_rounded,
+              size: 19,
+              color: _HomeVividScreenState._blue,
             ),
           ),
-          Positioned(
-            right: -30,
-            top: topInset + 100,
-            child: _Ball(
-              kind: _BallKind.basket,
-              size: context.scaled(92, max: 1.15),
-              tilt: 0.2,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              context.l10n.noOpenGames,
+              style: context.text.bodyMedium?.copyWith(
+                color: _HomeVividScreenState._muted,
+              ),
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -466,36 +636,6 @@ class _HeaderPill extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _HeroPill extends StatelessWidget {
-  const _HeroPill({required this.text, this.solid = false});
-
-  final String text;
-  final bool solid;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: solid ? Colors.white : Colors.white.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(99),
-        border: solid
-            ? null
-            : Border.all(color: Colors.white.withValues(alpha: 0.45)),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: context.text.labelLarge?.copyWith(
-          color: solid ? _HomeVividScreenState._blue : Colors.white,
-          fontWeight: FontWeight.w800,
-        ),
       ),
     );
   }
@@ -872,10 +1012,15 @@ class _VenueCard extends StatelessWidget {
     required this.venue,
     required this.sportId,
     this.accent = false,
+    this.freeSlots,
   });
 
   final Venue venue;
   final String sportId;
+
+  /// Free hours on the day the calendar is showing, or null while the answer
+  /// is still on its way.
+  final int? freeSlots;
 
   /// Blue instead of white. One card per row wears the page's own colour, so
   /// the accent is something the whole page does rather than a band at the
@@ -918,6 +1063,28 @@ class _VenueCard extends StatelessWidget {
                   child: SportSurface(sportId: sportId),
                 ),
               ),
+              if (freeSlots case final int free)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _HomeVividScreenState._blue,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      context.l10n.vividSlots(free),
+                      style: context.text.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: 8,
                 right: 8,

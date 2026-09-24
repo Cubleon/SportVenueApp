@@ -1371,65 +1371,35 @@ abstract class L {
   /// **'ждёт одобрения'**
   String get playerPending;
 
-  /// No description provided for @vividNearby.
-  ///
-  /// In ru, this message translates to:
-  /// **'Рядом'**
-  String get vividNearby;
-
-  /// No description provided for @vividTonight.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сегодня вечером'**
-  String get vividTonight;
-
-  /// No description provided for @vividNewVenues.
-  ///
-  /// In ru, this message translates to:
-  /// **'Новые площадки'**
-  String get vividNewVenues;
-
-  /// No description provided for @vividFreeNow.
-  ///
-  /// In ru, this message translates to:
-  /// **'Свободно сейчас'**
-  String get vividFreeNow;
-
-  /// No description provided for @vividFrom.
-  ///
-  /// In ru, this message translates to:
-  /// **'от {price}'**
-  String vividFrom(String price);
-
-  /// No description provided for @vividBook.
-  ///
-  /// In ru, this message translates to:
-  /// **'Забронировать'**
-  String get vividBook;
-
-  /// No description provided for @vividPickedForYou.
-  ///
-  /// In ru, this message translates to:
-  /// **'Подобрали для вас'**
-  String get vividPickedForYou;
-
   /// Заголовок ряда категорий на ярком главном экране
   ///
   /// In ru, this message translates to:
   /// **'Виды спорта'**
   String get vividSports;
 
-  /// Метка на баннере яркого главного экрана
+  /// Подпись над календарём на ярком главном экране
   ///
   /// In ru, this message translates to:
-  /// **'Ближайшая игра'**
-  String get vividNextGame;
+  /// **'Когда играете'**
+  String get vividWhen;
 
-  /// Заголовок ряда площадок на ярком главном экране
+  /// Сколько игр в выбранный день
   ///
   /// In ru, this message translates to:
-  /// **'Свободно сегодня'**
-  String get vividFreeToday;
+  /// **'{count, plural, one{{count} игра} few{{count} игры} other{{count} игр}}'**
+  String vividGamesCount(int count);
+
+  /// Заголовок ряда площадок с выбранной датой
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободно {date}'**
+  String vividFreeOn(String date);
+
+  /// Сколько слотов свободно у площадки в выбранный день
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}'**
+  String vividSlots(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
