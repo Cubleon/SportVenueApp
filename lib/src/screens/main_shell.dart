@@ -34,6 +34,8 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Every tab opens on a field of colour that runs under the status bar,
+    // so each screen takes the inset itself and the shell adds none.
     final screens = [
       HomeScreen(
         controller: widget.controller,
@@ -46,12 +48,9 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
-        ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 220),
+        child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
       ),
       extendBody: true,
       bottomNavigationBar: _BottomNav(

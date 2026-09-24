@@ -17,10 +17,16 @@ class BookingScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.venue,
+    this.date,
   });
 
   final AppController controller;
   final Venue venue;
+
+  /// The day the screen opens on. The home screen sends the day its calendar
+  /// is showing, so picking Friday there and tapping a club does not land you
+  /// back on today.
+  final DateTime? date;
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -36,11 +42,13 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  late DateTime _date = DateTime(
-    widget.controller.now.year,
-    widget.controller.now.month,
-    widget.controller.now.day,
-  );
+  late DateTime _date =
+      widget.date ??
+      DateTime(
+        widget.controller.now.year,
+        widget.controller.now.month,
+        widget.controller.now.day,
+      );
   late Venue _venue = widget.venue;
   int _duration = 60;
   int _hour = 20;

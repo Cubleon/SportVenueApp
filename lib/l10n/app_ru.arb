@@ -421,16 +421,16 @@
   "playerGames": "Игры этого участника",
   "playerNoGames": "Других игр этого участника здесь нет",
   "playerPending": "ждёт одобрения",
-  "vividSports": "Виды спорта",
-  "@vividSports": {
+  "sportsSection": "Виды спорта",
+  "@sportsSection": {
     "description": "Заголовок ряда категорий на ярком главном экране"
   },
-  "vividWhen": "Когда играете",
-  "@vividWhen": {
+  "whenToPlay": "Когда играете",
+  "@whenToPlay": {
     "description": "Подпись над календарём на ярком главном экране"
   },
-  "vividGamesCount": "{count, plural, one{{count} игра} few{{count} игры} other{{count} игр}}",
-  "@vividGamesCount": {
+  "gamesCount": "{count, plural, one{{count} игра} few{{count} игры} other{{count} игр}}",
+  "@gamesCount": {
     "description": "Сколько игр в выбранный день",
     "placeholders": {
       "count": {
@@ -438,8 +438,8 @@
       }
     }
   },
-  "vividFreeOn": "Свободно {date}",
-  "@vividFreeOn": {
+  "freeOnDate": "Свободно {date}",
+  "@freeOnDate": {
     "description": "Заголовок ряда площадок с выбранной датой",
     "placeholders": {
       "date": {
@@ -447,13 +447,17 @@
       }
     }
   },
-  "vividSlots": "{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}",
-  "@vividSlots": {
+  "slotsFree": "{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}",
+  "@slotsFree": {
     "description": "Сколько слотов свободно у площадки в выбранный день",
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
+  },
+  "gameFull": "мест нет",
+  "@gameFull": {
+    "description": "Подпись на карточке игры, когда свободных мест не осталось"
   }
 }

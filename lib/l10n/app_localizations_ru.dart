@@ -768,13 +768,13 @@ class LRu extends L {
   String get playerPending => 'ждёт одобрения';
 
   @override
-  String get vividSports => 'Виды спорта';
+  String get sportsSection => 'Виды спорта';
 
   @override
-  String get vividWhen => 'Когда играете';
+  String get whenToPlay => 'Когда играете';
 
   @override
-  String vividGamesCount(int count) {
+  String gamesCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -786,12 +786,12 @@ class LRu extends L {
   }
 
   @override
-  String vividFreeOn(String date) {
+  String freeOnDate(String date) {
     return 'Свободно $date';
   }
 
   @override
-  String vividSlots(int count) {
+  String slotsFree(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -801,4 +801,7 @@ class LRu extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get gameFull => 'мест нет';
 }

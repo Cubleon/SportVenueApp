@@ -9,6 +9,8 @@ import 'history_screen.dart';
 import 'sport_selection_screen.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/sky_header.dart';
+import '../widgets/sport_ball.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({
@@ -31,136 +33,151 @@ class ProfileScreen extends StatelessWidget {
           child: ListView(
             key: const ValueKey('profile-screen'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(20, 12, 20, context.bottomBarInset),
+            // The header runs to both edges and under the status bar, so the
+            // list carries no padding of its own; everything after it is
+            // inset by hand.
+            padding: EdgeInsets.only(bottom: context.bottomBarInset),
             children: [
-              ScreenTitleBar(
+              SkyHeader(
                 title: context.l10n.profile,
                 subtitle: controller.isConnected
                     ? context.l10n.accountSportVenue
                     : context.l10n.demoAccountSportVenue,
+                ball: SportBallKind.soccer,
               ),
-              AppCard(
-                child: Row(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: context.scaled(62),
-                      height: context.scaled(62),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: context.colors.accent,
-                      ),
-                      child: Center(
-                        child: initial == null
-                            ? Icon(
-                                Icons.person_rounded,
-                                color: context.colors.onAccent,
-                                size: context.scaled(30),
-                              )
-                            : Text(
-                                initial,
-                                style: context.text.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: context.colors.onAccent,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    AppCard(
+                      child: Row(
                         children: [
-                          Text(
-                            controller.userName?.trim().isNotEmpty == true
-                                ? controller.userName!
-                                : context.l10n.userSportVenue,
-                            style: context.text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          Container(
+                            width: context.scaled(62),
+                            height: context.scaled(62),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: context.colors.accent,
+                            ),
+                            child: Center(
+                              child: initial == null
+                                  ? Icon(
+                                      Icons.person_rounded,
+                                      color: context.colors.onAccent,
+                                      size: context.scaled(30),
+                                    )
+                                  : Text(
+                                      initial,
+                                      style: context.text.headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: context.colors.onAccent,
+                                          ),
+                                    ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            controller.phone.isEmpty
-                                ? context.l10n.noPhone
-                                : controller.phone,
-                            style: context.text.bodySmall?.copyWith(
-                              color: context.colors.muted,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  controller.userName?.trim().isNotEmpty == true
+                                      ? controller.userName!
+                                      : context.l10n.userSportVenue,
+                                  style: context.text.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  controller.phone.isEmpty
+                                      ? context.l10n.noPhone
+                                      : controller.phone,
+                                  style: context.text.bodySmall?.copyWith(
+                                    color: context.colors.muted,
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                          IconButton(
+                            tooltip: context.l10n.editProfile,
+                            onPressed: () => showAppSnack(
+                              context,
+                              context.l10n.editProfileLater,
+                            ),
+                            icon: const Icon(Icons.edit_rounded),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: context.l10n.editProfile,
-                      onPressed: () =>
-                          showAppSnack(context, context.l10n.editProfileLater),
-                      icon: const Icon(Icons.edit_rounded),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            context.l10n.sportPreferences,
+                            style: context.text.labelLarge?.copyWith(
+                              color: context.colors.muted,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          key: const ValueKey('edit-sports'),
+                          onPressed: () => _editSports(context, controller),
+                          child: Text(context.l10n.change),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: controller.selectedSports
+                          .map(
+                            (sport) => SelectableChip(
+                              label: sport.name.capitalized,
+                              icon: sport.icon,
+                              selected: true,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    _Stats(controller: controller),
+                    const SizedBox(height: 18),
+                    _MenuItem(
+                      icon: Icons.history_rounded,
+                      title: context.l10n.history,
+                      subtitle: context.l10n.historySubtitle(
+                        controller.bookings.length,
+                        controller.games.length,
+                      ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => HistoryScreen(controller: controller),
+                        ),
+                      ),
+                    ),
+                    // Платежи, Уведомления and Поддержка stood here looking
+                    // exactly like История — same card, same chevron promising a
+                    // screen — and answered with "позже". A row that cannot be
+                    // followed is worse than no row: it spends a tap and teaches
+                    // the reader to distrust the next chevron. They come back
+                    // when there is something behind them.
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      key: const ValueKey('logout-button'),
+                      label: context.l10n.logout,
+                      tone: ButtonTone.neutral,
+                      onPressed: () => _confirmLogout(context, onLogout),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.sportPreferences,
-                      style: context.text.labelLarge?.copyWith(
-                        color: context.colors.muted,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    key: const ValueKey('edit-sports'),
-                    onPressed: () => _editSports(context, controller),
-                    child: Text(context.l10n.change),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: controller.selectedSports
-                    .map(
-                      (sport) => SelectableChip(
-                        label: sport.name.capitalized,
-                        icon: sport.icon,
-                        selected: true,
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 20),
-              _Stats(controller: controller),
-              const SizedBox(height: 18),
-              _MenuItem(
-                icon: Icons.history_rounded,
-                title: context.l10n.history,
-                subtitle: context.l10n.historySubtitle(
-                  controller.bookings.length,
-                  controller.games.length,
-                ),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => HistoryScreen(controller: controller),
-                  ),
-                ),
-              ),
-              // Платежи, Уведомления and Поддержка stood here looking
-              // exactly like История — same card, same chevron promising a
-              // screen — and answered with "позже". A row that cannot be
-              // followed is worse than no row: it spends a tap and teaches
-              // the reader to distrust the next chevron. They come back
-              // when there is something behind them.
-              const SizedBox(height: 16),
-              PrimaryButton(
-                key: const ValueKey('logout-button'),
-                label: context.l10n.logout,
-                tone: ButtonTone.neutral,
-                onPressed: () => _confirmLogout(context, onLogout),
               ),
             ],
           ),

@@ -1375,31 +1375,37 @@ abstract class L {
   ///
   /// In ru, this message translates to:
   /// **'Виды спорта'**
-  String get vividSports;
+  String get sportsSection;
 
   /// Подпись над календарём на ярком главном экране
   ///
   /// In ru, this message translates to:
   /// **'Когда играете'**
-  String get vividWhen;
+  String get whenToPlay;
 
   /// Сколько игр в выбранный день
   ///
   /// In ru, this message translates to:
   /// **'{count, plural, one{{count} игра} few{{count} игры} other{{count} игр}}'**
-  String vividGamesCount(int count);
+  String gamesCount(int count);
 
   /// Заголовок ряда площадок с выбранной датой
   ///
   /// In ru, this message translates to:
   /// **'Свободно {date}'**
-  String vividFreeOn(String date);
+  String freeOnDate(String date);
 
   /// Сколько слотов свободно у площадки в выбранный день
   ///
   /// In ru, this message translates to:
   /// **'{count, plural, one{{count} слот} few{{count} слота} other{{count} слотов}}'**
-  String vividSlots(int count);
+  String slotsFree(int count);
+
+  /// Подпись на карточке игры, когда свободных мест не осталось
+  ///
+  /// In ru, this message translates to:
+  /// **'мест нет'**
+  String get gameFull;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
