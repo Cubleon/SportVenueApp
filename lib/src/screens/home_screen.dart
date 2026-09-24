@@ -661,7 +661,19 @@ class _SearchField extends StatelessWidget {
               onChanged: onChanged,
               cursorColor: colors.accent,
               style: context.text.bodyMedium,
-              decoration: InputDecoration.collapsed(
+              textInputAction: TextInputAction.search,
+              // Spelled out rather than collapsed: a collapsed decoration
+              // still inherits the theme's focused outline, and this field
+              // already has a shape of its own — the pill it sits in.
+              decoration: InputDecoration(
+                isDense: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
                 hintText: context.l10n.searchFieldHint,
                 hintStyle: context.text.bodyMedium?.copyWith(
                   color: colors.muted,
