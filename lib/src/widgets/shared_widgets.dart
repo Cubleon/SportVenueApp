@@ -602,7 +602,12 @@ class SummaryRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          // The label takes what it needs, the value takes the rest and ends
+          // at the card's edge. Loose, the value box used to shrink to its
+          // own text and stop wherever that text happened to end, so a
+          // column of values lined up on nothing at all.
+          Flexible(
+            flex: 3,
             child: Text(
               label,
               style: context.text.bodySmall?.copyWith(
@@ -612,7 +617,8 @@ class SummaryRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Flexible(
+          Expanded(
+            flex: 7,
             child: Text(
               value,
               textAlign: TextAlign.right,
