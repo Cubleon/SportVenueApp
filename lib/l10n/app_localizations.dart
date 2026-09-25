@@ -1472,6 +1472,24 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'{count, plural, one{{count} бронь} few{{count} брони} other{{count} броней}}'**
   String bookingsCount(int count);
+
+  /// Сколько игроков набрано из нужного
+  ///
+  /// In ru, this message translates to:
+  /// **'{taken} из {capacity}'**
+  String playersOfCapacity(int taken, int capacity);
+
+  /// Строка «Уровень» в карточке игры
+  ///
+  /// In ru, this message translates to:
+  /// **'Уровень'**
+  String get gameLevel;
+
+  /// Строка «Формат» в карточке игры
+  ///
+  /// In ru, this message translates to:
+  /// **'Формат'**
+  String get gameFormat;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -277,7 +277,10 @@ class MiniGameCard extends StatelessWidget {
                   Row(
                     children: [
                       Flexible(
-                        child: _AvatarStack(participants: game.participants),
+                        child: _AvatarStack(
+                          participants: game.participants,
+                          capacity: game.capacity,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -416,6 +419,23 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                 label: context.l10n.summaryTime,
                                 value: current.timeRange,
                               ),
+                              SummaryRow(
+                                label: context.l10n.playersStep,
+                                value: context.l10n.playersOfCapacity(
+                                  current.participants.length,
+                                  current.capacity,
+                                ),
+                              ),
+                              if (current.level case final String level)
+                                SummaryRow(
+                                  label: context.l10n.gameLevel,
+                                  value: level,
+                                ),
+                              if (current.format case final String format)
+                                SummaryRow(
+                                  label: context.l10n.gameFormat,
+                                  value: format,
+                                ),
                               SummaryRow(
                                 label: context.l10n.price,
                                 value: AppFormatters.money(
@@ -683,24 +703,76 @@ class _TimeFilter extends StatelessWidget {
 /// the button to take one. Side by side normally; at a large system font the
 /// three of them cannot share a line without breaking words mid-syllable, so
 /// the button drops underneath and spans the card.
+/// Who is in, and how many places are still open — filled circles for the
+/// players, hollow ones for the rest.
+///
+/// A row of three faces says nothing about whether the game is nearly full
+/// or barely started. Six circles, three of them empty, says it without a
+/// word.
 class _AvatarStack extends StatelessWidget {
-  const _AvatarStack({required this.participants});
+  const _AvatarStack({required this.participants, required this.capacity});
 
   final List<Participant> participants;
+  final int capacity;
+
+  /// Beyond this the circles stop being countable at a glance and start being
+  /// a texture, so the rest is written as a number instead.
+  static const _maxCircles = 6;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 74,
-      height: 30,
-      child: Stack(
-        children: [
-          for (var i = 0; i < participants.take(3).length; i++)
-            Positioned(
-              left: i * 22,
-              child: _Avatar(participant: participants[i], size: 30),
-            ),
+    final taken = participants.length;
+    final circles = capacity.clamp(taken, _maxCircles);
+    final hidden = capacity - circles;
+    const step = 22.0;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: circles == 0 ? 0 : (circles - 1) * step + 30,
+          height: 30,
+          child: Stack(
+            children: [
+              for (var i = circles - 1; i >= 0; i--)
+                Positioned(
+                  left: i * step,
+                  child: i < taken
+                      ? _Avatar(participant: participants[i], size: 30)
+                      : const _EmptySeat(size: 30),
+                ),
+            ],
+          ),
+        ),
+        if (hidden > 0) ...[
+          const SizedBox(width: 6),
+          Text(
+            '+$hidden',
+            style: AppTheme.numeric(
+              context.text.labelSmall,
+            ).copyWith(color: context.colors.dim, fontWeight: FontWeight.w700),
+          ),
         ],
+      ],
+    );
+  }
+}
+
+/// A place nobody has taken: the same circle, drawn as an outline.
+class _EmptySeat extends StatelessWidget {
+  const _EmptySeat({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: context.colors.bg,
+        border: Border.all(color: context.colors.faint, width: 1.5),
       ),
     );
   }

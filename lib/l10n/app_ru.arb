@@ -544,5 +544,25 @@
         "type": "int"
       }
     }
+  },
+  "playersOfCapacity": "{taken} из {capacity}",
+  "@playersOfCapacity": {
+    "description": "Сколько игроков набрано из нужного",
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
+  "gameLevel": "Уровень",
+  "@gameLevel": {
+    "description": "Строка «Уровень» в карточке игры"
+  },
+  "gameFormat": "Формат",
+  "@gameFormat": {
+    "description": "Строка «Формат» в карточке игры"
   }
 }

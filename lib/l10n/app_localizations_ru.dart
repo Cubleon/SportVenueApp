@@ -879,4 +879,15 @@ class LRu extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String playersOfCapacity(int taken, int capacity) {
+    return '$taken из $capacity';
+  }
+
+  @override
+  String get gameLevel => 'Уровень';
+
+  @override
+  String get gameFormat => 'Формат';
 }
