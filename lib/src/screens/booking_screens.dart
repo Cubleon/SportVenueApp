@@ -452,7 +452,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   AppCard(
                     child: Text(
                       context.l10n.onlyOrganizerCancels,
-                      textAlign: TextAlign.right,
                       style: context.text.bodyMedium?.copyWith(
                         color: context.colors.muted,
                       ),
@@ -532,14 +531,11 @@ class _BookingDetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      // Everything that stands on its own line sits against the right edge
-      // here, so the card has one vertical edge to read down instead of two.
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.l10n.bookingDetailsCard,
-            textAlign: TextAlign.right,
             style: context.text.labelLarge?.copyWith(
               color: context.colors.muted,
               fontWeight: FontWeight.w700,
@@ -552,7 +548,6 @@ class _BookingDetailsCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               context.l10n.statusLine(status!),
-              textAlign: TextAlign.right,
               style: context.text.bodySmall?.copyWith(
                 color: context.colors.accent,
                 fontWeight: FontWeight.w600,
@@ -581,10 +576,18 @@ class _SharesCard extends StatelessWidget {
     final unpaid = booking.shares.length - booking.paidShares;
     return AppCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              Expanded(
+                child: Text(
+                  context.l10n.sharesTitle,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
               Text(
                 unpaid == 0
                     ? context.l10n.sharesAllPaid
@@ -596,25 +599,48 @@ class _SharesCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Expanded(
-                child: Text(
-                  context.l10n.sharesTitle,
-                  textAlign: TextAlign.right,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
-          // Mirrored with the rest of the card: the state first, then the
-          // name and the initial against the right edge.
           for (final share in booking.shares)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
+                  Container(
+                    width: context.scaled(34),
+                    height: context.scaled(34),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: share.isPaid
+                          ? context.colors.accentSoft
+                          : context.colors.surfaceRaised,
+                    ),
+                    child: Text(
+                      share.initial,
+                      style: context.text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: share.isPaid
+                            ? context.colors.accent
+                            : context.colors.muted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      share.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodyMedium?.copyWith(
+                        fontWeight: share.isCurrentUser
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   // The mark carries the state too: paid and not paid must
                   // not differ by colour alone.
                   Icon(
@@ -636,41 +662,6 @@ class _SharesCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      share.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: context.text.bodyMedium?.copyWith(
-                        fontWeight: share.isCurrentUser
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: context.scaled(34),
-                    height: context.scaled(34),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: share.isPaid
-                          ? context.colors.accentSoft
-                          : context.colors.surfaceRaised,
-                    ),
-                    child: Text(
-                      share.initial,
-                      style: context.text.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: share.isPaid
-                            ? context.colors.accent
-                            : context.colors.muted,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -687,11 +678,10 @@ class _CancellationTermsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             context.l10n.cancellationTerms,
-            textAlign: TextAlign.right,
             style: context.text.labelLarge?.copyWith(
               color: context.colors.muted,
               fontWeight: FontWeight.w700,
@@ -927,17 +917,6 @@ class _Bullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              text,
-              textAlign: TextAlign.right,
-              style: context.text.bodySmall?.copyWith(
-                color: context.colors.muted,
-                height: 1.4,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
           Container(
             width: 6,
             height: 6,
@@ -945,6 +924,16 @@ class _Bullet extends StatelessWidget {
             decoration: BoxDecoration(
               color: context.colors.accent,
               shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+                height: 1.4,
+              ),
             ),
           ),
         ],
