@@ -797,14 +797,17 @@ class _CategoryTile extends StatelessWidget {
           width: context.scaled(74, max: 1.35),
           child: Column(
             children: [
+              // The ground fills the tile, corner to corner. Inset inside a
+              // white frame it read as an icon of a pitch; at full bleed it
+              // reads as the pitch.
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: context.scaled(72, max: 1.3),
                 height: context.scaled(72, max: 1.3),
-                padding: const EdgeInsets.all(9),
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: colors.surface,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     // The ring is the sport's own colour, so choosing hockey
                     // and choosing tennis do not look like the same act.
@@ -813,15 +816,12 @@ class _CategoryTile extends StatelessWidget {
                               ? colors.accent
                               : AppTheme.sportGround(id).last)
                         : Colors.transparent,
-                    width: 2,
+                    width: 2.5,
                   ),
                 ),
                 child: id == null
                     ? Icon(AppIcons.layoutGrid, color: colors.accent)
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: SportSurface(sportId: id),
-                      ),
+                    : SportSurface(sportId: id),
               ),
               const SizedBox(height: 7),
               Text(
