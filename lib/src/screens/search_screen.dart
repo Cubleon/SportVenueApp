@@ -97,7 +97,6 @@ class _SearchScreenState extends State<SearchScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: SelectableChip(
                         label: sport.name.capitalized,
-                        icon: sport.icon,
                         selected: _sportId == sport.id,
                         color: AppTheme.sportGround(sport.id).last,
                         onTap: () => setState(() => _sportId = sport.id),
@@ -387,9 +386,15 @@ class _MapMarker extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Text(
-                      sport?.icon ?? '•',
-                      style: const TextStyle(fontSize: 21),
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: sport == null
+                            ? context.colors.accent
+                            : AppTheme.sportGround(sport!.id).last,
+                      ),
                     ),
                   ),
                 ),

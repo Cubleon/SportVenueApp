@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// The app's colours, in the shape of a menu app: a tinted page with cards
 /// floating on it, one indigo accent for actions, and neutrals with a blue
@@ -197,9 +196,15 @@ class AppTheme {
     );
   }
 
-  /// Bundled with the app, so text renders identically offline and on web —
-  /// and unlike DM Sans it actually carries Cyrillic.
-  static const fontFamily = 'Rubik';
+  /// Bundled with the app, so text renders identically offline, on web and
+  /// in the first second of a cold start — no font arrives over a network.
+  ///
+  /// Manrope is semi-condensed, which buys width back on a screen full of
+  /// club names, and its heavy weights are hard enough that a title set in
+  /// them reads as a poster. The copy here is cut from the OFL variable font
+  /// into the five weights the app uses; the licence sits beside it in
+  /// `assets/fonts/Manrope-OFL.txt`.
+  static const fontFamily = 'Manrope';
 
   /// Cards and sheets. Generous, because a card here is a soft tile rather
   /// than a boxed panel.
@@ -229,39 +234,10 @@ class AppTheme {
   /// column of them lines up and a changing number does not shift the words
   /// beside it.
   static TextStyle numeric(TextStyle? base) =>
-      poster(base).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
-
-  /// Whether the two downloaded faces are used at all.
-  ///
-  /// They come down from Google Fonts on first run and are cached from then
-  /// on; google_fonts throws rather than falling back when fetching is off,
-  /// and a test cannot depend on a network either way. Tests turn this off
-  /// and render in the bundled Rubik, so a golden file pins the layout rather
-  /// than the state of a font cache.
-  static bool useWebFonts = true;
-
-  /// Wix Madefor Display: what the screen is about — a tab's name, a club's
-  /// name, every number you compare. Tight, high-shouldered, and upper case
-  /// in it reads as a poster.
-  static TextStyle poster(TextStyle? style) {
-    if (!useWebFonts) {
-      return (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
-    }
-    return GoogleFonts.wixMadeforDisplay(
-      textStyle: style,
-    ).copyWith(fontFamilyFallback: const [fontFamily]);
-  }
-
-  /// Onest: everything else. Drawn from Cyrillic rather than fitted with it
-  /// afterwards, and it holds together down at the 11pt labels.
-  static TextStyle voice(TextStyle? style) {
-    if (!useWebFonts) {
-      return (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
-    }
-    return GoogleFonts.onest(
-      textStyle: style,
-    ).copyWith(fontFamilyFallback: const [fontFamily]);
-  }
+      (base ?? const TextStyle()).copyWith(
+        fontFamily: fontFamily,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
 
   /// The small type that says what kind of thing follows: a date over a
   /// title, a section over a list.
@@ -270,16 +246,20 @@ class AppTheme {
       .labelSmall!
       .copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 1.4);
 
-  /// Two voices, and a wider gap between the sizes than the base theme ships
-  /// with: the large end goes larger and heavier and is set in the display
-  /// face, the small end stays small and quiet. A page where every line is 14
-  /// to 22 at one weight has no hierarchy at all.
+  static TextStyle _face(TextStyle? style) =>
+      (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
+
+  /// One family, and a wider gap between the sizes than the base theme ships
+  /// than the base theme ships with: the large end goes to 40 at the heaviest
+  /// weight the family has, the small end stays at 11 and light. A page where
+  /// every line is 14 to 22 at one weight has no hierarchy at all, and one
+  /// family can hold a range as long as the range is real.
   static TextTheme _typography(TextTheme base) {
     return base.copyWith(
-      displayLarge: poster(base.displayLarge),
-      displayMedium: poster(base.displayMedium),
-      displaySmall: poster(base.displaySmall),
-      headlineLarge: poster(
+      displayLarge: _face(base.displayLarge),
+      displayMedium: _face(base.displayMedium),
+      displaySmall: _face(base.displaySmall),
+      headlineLarge: _face(
         base.headlineLarge?.copyWith(
           fontSize: 40,
           fontWeight: FontWeight.w800,
@@ -287,7 +267,7 @@ class AppTheme {
           height: 1,
         ),
       ),
-      headlineMedium: poster(
+      headlineMedium: _face(
         base.headlineMedium?.copyWith(
           fontSize: 32,
           fontWeight: FontWeight.w800,
@@ -295,27 +275,27 @@ class AppTheme {
           height: 1.02,
         ),
       ),
-      headlineSmall: poster(
+      headlineSmall: _face(
         base.headlineSmall?.copyWith(
           fontSize: 24,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.5,
         ),
       ),
-      titleLarge: poster(
+      titleLarge: _face(
         base.titleLarge?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
         ),
       ),
-      titleMedium: voice(base.titleMedium),
-      titleSmall: voice(base.titleSmall),
-      bodyLarge: voice(base.bodyLarge),
-      bodyMedium: voice(base.bodyMedium),
-      bodySmall: voice(base.bodySmall),
-      labelLarge: voice(base.labelLarge),
-      labelMedium: voice(base.labelMedium),
-      labelSmall: voice(
+      titleMedium: _face(base.titleMedium),
+      titleSmall: _face(base.titleSmall),
+      bodyLarge: _face(base.bodyLarge),
+      bodyMedium: _face(base.bodyMedium),
+      bodySmall: _face(base.bodySmall),
+      labelLarge: _face(base.labelLarge),
+      labelMedium: _face(base.labelMedium),
+      labelSmall: _face(
         base.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );

@@ -635,7 +635,6 @@ class _SportFilter extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: SelectableChip(
                 label: sport.name.capitalized,
-                icon: sport.icon,
                 selected: value == sport.id,
                 color: AppTheme.sportGround(sport.id).last,
                 onTap: () => onChanged(sport.id),

@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/screens/auth_screens.dart';
@@ -43,11 +42,7 @@ void main() {
   final fixedNow = DateTime(2026, 5, 24);
 
   setUpAll(() async {
-    GoogleFonts.config.allowRuntimeFetching = false;
-    // The two downloaded faces are not in the assets, so a test renders in
-    // the bundled Rubik: a golden then pins the layout, not a font cache.
-    AppTheme.useWebFonts = false;
-    await _loadRubik();
+    await _loadAppFont();
   });
 
   for (final theme in _themes) {
@@ -161,18 +156,11 @@ void _golden(
 
 /// The bundled typeface, so the pictures show the app's own letters rather
 /// than the test font's boxes.
-Future<void> _loadRubik() async {
-  const weights = [
-    'Regular',
-    'Medium',
-    'SemiBold',
-    'Bold',
-    'ExtraBold',
-    'Black',
-  ];
-  final loader = FontLoader('Rubik');
+Future<void> _loadAppFont() async {
+  const weights = ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold'];
+  final loader = FontLoader(AppTheme.fontFamily);
   for (final weight in weights) {
-    final file = File('assets/fonts/Rubik-$weight.ttf');
+    final file = File('assets/fonts/Manrope-$weight.ttf');
     loader.addFont(
       file.readAsBytes().then((bytes) => ByteData.view(bytes.buffer)),
     );

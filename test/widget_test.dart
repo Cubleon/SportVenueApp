@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sport_venue_app/src/theme/app_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:sport_venue_app/src/app.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/data/formatters.dart';
@@ -20,12 +19,7 @@ import 'package:sport_venue_app/src/theme/app_theme.dart';
 void main() {
   final fixedNow = DateTime(2026, 5, 24);
 
-  setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
-    // The two downloaded faces are not in the assets, so a test renders in
-    // the bundled Rubik: a golden then pins the layout, not a font cache.
-    AppTheme.useWebFonts = false;
-  });
+  setUpAll(() {});
 
   testWidgets('registration, otp and sport onboarding reach main screen', (
     tester,

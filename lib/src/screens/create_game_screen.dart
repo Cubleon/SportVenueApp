@@ -177,7 +177,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           children: widget.controller.sports.map((sport) {
                             return SelectableChip(
                               label: sport.name.capitalized,
-                              icon: sport.icon,
                               selected: _sportId == sport.id,
                               onTap: () => _selectSport(sport),
                             );

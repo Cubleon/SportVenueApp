@@ -361,13 +361,17 @@ class SportBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ExcludeSemantics(
-            child: Text(
-              sport.icon,
-              style: TextStyle(fontSize: compact ? 11 : 13),
+          // A dot in the sport's own colour. The emoji that used to sit here
+          // was clip art, and the colour says the same thing without it.
+          Container(
+            width: compact ? 6 : 7,
+            height: compact ? 6 : 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.sportGround(sport.id).last,
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
             sport.name.toUpperCase(),
             style: context.text.labelSmall?.copyWith(
@@ -388,7 +392,6 @@ class SelectableChip extends StatelessWidget {
     required this.label,
     required this.selected,
     this.onTap,
-    this.icon,
     this.color,
   });
 
@@ -398,7 +401,6 @@ class SelectableChip extends StatelessWidget {
   /// Omit it for a chip that only reports a state and cannot be changed by
   /// tapping — a preference is not something to lose by accident.
   final VoidCallback? onTap;
-  final String? icon;
 
   /// The fill a chosen chip takes. A sport passes its own ground here, so a
   /// row of filters is a row of sports rather than a row of the same blue.
@@ -433,14 +435,6 @@ class SelectableChip extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    // An emoji is decoration here: read aloud it becomes
-                    // "soccer ball" in the middle of the label.
-                    ExcludeSemantics(
-                      child: Text(icon!, style: const TextStyle(fontSize: 13)),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
                   Text(
                     label,
                     maxLines: 1,

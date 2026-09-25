@@ -140,7 +140,6 @@ class ProfileScreen extends StatelessWidget {
                           .map(
                             (sport) => SelectableChip(
                               label: sport.name.capitalized,
-                              icon: sport.icon,
                               selected: true,
                               color: AppTheme.sportGround(sport.id).last,
                             ),
