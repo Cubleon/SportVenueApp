@@ -10,6 +10,7 @@ import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
 import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
+import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
 import 'package:sport_venue_app/src/screens/profile_screen.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
@@ -172,18 +173,8 @@ void main() {
     // rather than showing games from another day. The games sit below the
     // fold, so they have to be scrolled to before they exist at all.
     expect(find.text('Свободно вс 24 мая'), findsOneWidget);
-    await tester.drag(
-      find.byKey(const ValueKey('home-screen')),
-      const Offset(0, -700),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Открытых игр пока нет'), findsOneWidget);
+    expect(find.text('0 игр · 4 клуба рядом'), findsOneWidget);
 
-    await tester.drag(
-      find.byKey(const ValueKey('home-screen')),
-      const Offset(0, 700),
-    );
-    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
         ValueKey('home-date-${game.date.toIso8601String().substring(0, 10)}'),
@@ -195,13 +186,7 @@ void main() {
       find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
       findsOneWidget,
     );
-    await tester.drag(
-      find.byKey(const ValueKey('home-screen')),
-      const Offset(0, -700),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Открытых игр пока нет'), findsNothing);
-    expect(find.text(game.venue.name.capitalized), findsWidgets);
+    expect(find.text('1 игра · 4 клуба рядом'), findsOneWidget);
   });
 
   testWidgets('the home survives the reader doubling the text', (tester) async {
@@ -232,7 +217,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('cancelling an existing booking removes it from upcoming', (
+  testWidgets('a booking is cancelled from «мои брони», and asks first', (
     tester,
   ) async {
     _setPhoneSize(tester);
@@ -241,10 +226,9 @@ void main() {
 
     await tester.pumpWidget(
       _Harness(
-        child: HomeScreen(
+        child: HistoryScreen(
           controller: controller,
-          onOpenSearch: () {},
-          onOpenGames: () {},
+          focus: HistoryFocus.bookings,
         ),
       ),
     );
@@ -272,8 +256,10 @@ void main() {
 
     expect(controller.bookings.single.statusCode, 'cancelled');
     expect(controller.upcomingBookings, isEmpty);
-    expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsNothing);
-    expect(find.text('У вас пока нет предстоящих броней'), findsOneWidget);
+    // A cancelled booking stays in the list: this screen is a history, and a
+    // row that vanishes leaves a reader wondering whether it ever existed.
+    expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsOneWidget);
+    expect(find.textContaining('отменена'), findsWidgets);
   });
 
   testWidgets('a game is read before it is joined', (tester) async {

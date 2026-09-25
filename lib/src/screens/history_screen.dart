@@ -9,15 +9,36 @@ import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
 import 'games_screens.dart';
 
+/// Which half of a player's history a screen opens on.
+enum HistoryFocus {
+  /// Both, bookings first. The profile's own history row.
+  all,
+
+  /// Only what they have booked.
+  bookings,
+
+  /// Only the games they joined.
+  games,
+}
+
 /// Everything the player has already committed to: bookings first, then the
 /// games they joined.
 ///
 /// Sorted newest first, because a history is read from the top, and the
 /// bookings still ahead are the ones a player checks most often.
+///
+/// The home screen opens it on one half at a time — "мои брони" and "мои
+/// игры" are two different questions, and a reader who asked one of them
+/// should not have to scroll past the other.
 class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key, required this.controller});
+  const HistoryScreen({
+    super.key,
+    required this.controller,
+    this.focus = HistoryFocus.all,
+  });
 
   final AppController controller;
+  final HistoryFocus focus;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +70,22 @@ class HistoryScreen extends StatelessWidget {
                 return bStart.compareTo(aStart);
               });
 
+        final showBookings = focus != HistoryFocus.games;
+        final showGames = focus != HistoryFocus.bookings;
+        final title = switch (focus) {
+          HistoryFocus.all => context.l10n.history,
+          HistoryFocus.bookings => context.l10n.myBookings,
+          HistoryFocus.games => context.l10n.myGames,
+        };
+        final subtitle = switch (focus) {
+          HistoryFocus.all => context.l10n.historySummary(
+            bookings.length,
+            games.length,
+          ),
+          HistoryFocus.bookings => context.l10n.bookingsCount(bookings.length),
+          HistoryFocus.games => context.l10n.gamesCount(games.length),
+        };
+
         return Scaffold(
           body: SafeArea(
             child: PullToRefresh(
@@ -58,23 +95,26 @@ class HistoryScreen extends StatelessWidget {
                 slivers: [
                   SliverToBoxAdapter(
                     child: ScreenTitleBar(
-                      title: context.l10n.history,
-                      subtitle: context.l10n.historySummary(
-                        bookings.length,
-                        games.length,
-                      ),
+                      title: title,
+                      subtitle: subtitle,
                       leading: BackCircleButton(
                         onTap: () => Navigator.of(context).pop(),
                       ),
                     ),
                   ),
-                  if (bookings.isEmpty && games.isEmpty)
+                  if ((!showBookings || bookings.isEmpty) &&
+                      (!showGames || games.isEmpty))
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: AppCard(
                           child: Text(
-                            context.l10n.historyEmpty,
+                            switch (focus) {
+                              HistoryFocus.all => context.l10n.historyEmpty,
+                              HistoryFocus.bookings =>
+                                context.l10n.noUpcomingBookings,
+                              HistoryFocus.games => context.l10n.noMyGames,
+                            },
                             style: context.text.bodyMedium?.copyWith(
                               color: context.colors.muted,
                             ),
@@ -82,10 +122,15 @@ class HistoryScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (bookings.isNotEmpty) ...[
-                    SliverToBoxAdapter(
-                      child: SectionHeader(title: context.l10n.bookingsSection),
-                    ),
+                  if (showBookings && bookings.isNotEmpty) ...[
+                    if (focus == HistoryFocus.all)
+                      SliverToBoxAdapter(
+                        child: SectionHeader(
+                          title: context.l10n.bookingsSection,
+                        ),
+                      )
+                    else
+                      const SliverToBoxAdapter(child: SizedBox(height: 4)),
                     SliverList.separated(
                       itemCount: bookings.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -108,10 +153,13 @@ class HistoryScreen extends StatelessWidget {
                       },
                     ),
                   ],
-                  if (games.isNotEmpty) ...[
-                    SliverToBoxAdapter(
-                      child: SectionHeader(title: context.l10n.gamesSection),
-                    ),
+                  if (showGames && games.isNotEmpty) ...[
+                    if (focus == HistoryFocus.all)
+                      SliverToBoxAdapter(
+                        child: SectionHeader(title: context.l10n.gamesSection),
+                      )
+                    else
+                      const SliverToBoxAdapter(child: SizedBox(height: 4)),
                     SliverList.separated(
                       itemCount: games.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),

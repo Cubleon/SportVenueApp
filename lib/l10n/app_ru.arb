@@ -523,5 +523,26 @@
         "type": "int"
       }
     }
+  },
+  "myBookings": "Мои брони",
+  "@myBookings": {
+    "description": "Кнопка на главной и заголовок экрана с бронями"
+  },
+  "myGames": "Мои игры",
+  "@myGames": {
+    "description": "Кнопка на главной и заголовок экрана с играми игрока"
+  },
+  "noMyGames": "Вы пока не вступили ни в одну игру",
+  "@noMyGames": {
+    "description": "Пустой экран «Мои игры»"
+  },
+  "bookingsCount": "{count, plural, one{{count} бронь} few{{count} брони} other{{count} броней}}",
+  "@bookingsCount": {
+    "description": "Сколько у игрока броней",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

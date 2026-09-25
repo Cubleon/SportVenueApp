@@ -1448,6 +1448,30 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
   String freeHoursToday(int count);
+
+  /// Кнопка на главной и заголовок экрана с бронями
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои брони'**
+  String get myBookings;
+
+  /// Кнопка на главной и заголовок экрана с играми игрока
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои игры'**
+  String get myGames;
+
+  /// Пустой экран «Мои игры»
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы пока не вступили ни в одну игру'**
+  String get noMyGames;
+
+  /// Сколько у игрока броней
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} бронь} few{{count} брони} other{{count} броней}}'**
+  String bookingsCount(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

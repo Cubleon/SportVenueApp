@@ -858,4 +858,25 @@ class LRu extends L {
     );
     return 'свободно $_temp0';
   }
+
+  @override
+  String get myBookings => 'Мои брони';
+
+  @override
+  String get myGames => 'Мои игры';
+
+  @override
+  String get noMyGames => 'Вы пока не вступили ни в одну игру';
+
+  @override
+  String bookingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count броней',
+      few: '$count брони',
+      one: '$count бронь',
+    );
+    return '$_temp0';
+  }
 }

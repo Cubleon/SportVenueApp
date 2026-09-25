@@ -13,7 +13,6 @@ import '../widgets/shared_widgets.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/sport_surface.dart';
 import 'booking_screens.dart';
-import 'games_screens.dart';
 import 'history_screen.dart';
 
 /// The home screen: a date, and everything that date holds.
@@ -174,19 +173,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: SectionHeader(
-                    title: context.l10n.upcomingBooking,
-                    action: context.l10n.seeAll,
-                    onAction: () => Navigator.of(context).push(
+                  child: _MineRow(
+                    controller: widget.controller,
+                    onBookings: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            HistoryScreen(controller: widget.controller),
+                        builder: (_) => HistoryScreen(
+                          controller: widget.controller,
+                          focus: HistoryFocus.bookings,
+                        ),
+                      ),
+                    ),
+                    onGames: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => HistoryScreen(
+                          controller: widget.controller,
+                          focus: HistoryFocus.games,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: _Bookings(controller: widget.controller),
                 ),
                 if (venues.isEmpty)
                   SliverToBoxAdapter(child: _NothingFound(onReset: _reset))
@@ -231,68 +236,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: SectionHeader(
-                      title: context.l10n.openGames,
-                      action: context.l10n.seeAll,
-                      onAction: widget.onOpenGames,
-                    ),
-                  ),
-                  if (games.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                        child: AppCard(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: colors.accentSoft,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  AppIcons.calendarCheck,
-                                  size: 19,
-                                  color: colors.accent,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  context.l10n.noOpenGames,
-                                  style: context.text.bodyMedium?.copyWith(
-                                    color: colors.muted,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  SliverList.builder(
-                    itemCount: games.length,
-                    itemBuilder: (context, index) {
-                      final game = games[index];
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                        child: MiniGameCard(
-                          controller: widget.controller,
-                          game: game,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => GameDetailScreen(
-                                controller: widget.controller,
-                                game: game,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
                   ),
                 ],
                 SliverToBoxAdapter(
@@ -845,46 +788,103 @@ class _CategoryTile extends StatelessWidget {
   }
 }
 
-class _Bookings extends StatelessWidget {
-  const _Bookings({required this.controller});
+class _MineRow extends StatelessWidget {
+  const _MineRow({
+    required this.controller,
+    required this.onBookings,
+    required this.onGames,
+  });
 
   final AppController controller;
+  final VoidCallback onBookings;
+  final VoidCallback onGames;
 
   @override
   Widget build(BuildContext context) {
-    final upcomingBookings = controller.upcomingBookings;
-    if (upcomingBookings.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: AppCard(
-          child: Text(
-            context.l10n.noUpcomingBookings,
-            style: context.text.bodyMedium?.copyWith(
-              color: context.colors.muted,
+    final mine = controller.games
+        .where(
+          (game) => game.participants.any((player) => player.isCurrentUser),
+        )
+        .length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _MineCard(
+              icon: AppIcons.calendarCheck,
+              count: controller.bookings.length,
+              label: context.l10n.myBookings,
+              onTap: onBookings,
             ),
           ),
-        ),
-      );
-    }
-
-    final booking = upcomingBookings.first;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: BookingRow(
-        booking: booking,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                BookingDetailsScreen(controller: controller, booking: booking),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _MineCard(
+              icon: AppIcons.volleyball,
+              count: mine,
+              label: context.l10n.myGames,
+              onTap: onGames,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MineCard extends StatelessWidget {
+  const _MineCard({
+    required this.icon,
+    required this.count,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final int count;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Pressable(
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18, color: colors.accent),
+                const Spacer(),
+                Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
+              ],
+            ),
+            SizedBox(height: context.scaled(14, max: 1.3)),
+            Text(
+              '$count',
+              style: AppTheme.numeric(
+                context.text.headlineMedium,
+              ).copyWith(color: colors.ink),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.bodySmall?.copyWith(color: colors.muted),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// A club in the list: its ground as a thumbnail, what it has, how much of
-/// the chosen day is still free, and the price.
 class _VenueRow extends StatelessWidget {
   const _VenueRow({
     required this.venue,
