@@ -129,7 +129,7 @@ class MockData {
         date: base.add(const Duration(days: 1)),
         startHour: 19,
         durationMinutes: 120,
-        capacity: 4,
+        capacity: 6,
         pricePerPerson: 600,
         level: 'любой уровень',
         format: '6×6',

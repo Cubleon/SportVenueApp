@@ -703,57 +703,55 @@ class _TimeFilter extends StatelessWidget {
 /// the button to take one. Side by side normally; at a large system font the
 /// three of them cannot share a line without breaking words mid-syllable, so
 /// the button drops underneath and spans the card.
-/// Who is in, and how many places are still open — filled circles for the
-/// players, hollow ones for the rest.
+/// Who is in, and how many places are still open — a filled circle for each
+/// player, a hollow one for each place nobody has taken.
 ///
-/// A row of three faces says nothing about whether the game is nearly full
-/// or barely started. Six circles, three of them empty, says it without a
-/// word.
+/// Laid out in a row with air between the circles rather than overlapped like
+/// a stack of faces: the point here is counting, and three filled beside
+/// three hollow only counts at a glance if the circles are separate.
 class _AvatarStack extends StatelessWidget {
   const _AvatarStack({required this.participants, required this.capacity});
 
   final List<Participant> participants;
   final int capacity;
 
-  /// Beyond this the circles stop being countable at a glance and start being
-  /// a texture, so the rest is written as a number instead.
-  static const _maxCircles = 6;
+  /// Past this many, circles stop being countable and become a texture, so
+  /// the remainder is written as a number instead.
+  static const _maxCircles = 8;
 
   @override
   Widget build(BuildContext context) {
     final taken = participants.length;
     final circles = capacity.clamp(taken, _maxCircles);
     final hidden = capacity - circles;
-    const step = 22.0;
+    final size = context.scaled(26, max: 1.2);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: circles == 0 ? 0 : (circles - 1) * step + 30,
-          height: 30,
-          child: Stack(
-            children: [
-              for (var i = circles - 1; i >= 0; i--)
-                Positioned(
-                  left: i * step,
-                  child: i < taken
-                      ? _Avatar(participant: participants[i], size: 30)
-                      : const _EmptySeat(size: 30),
-                ),
-            ],
-          ),
-        ),
-        if (hidden > 0) ...[
-          const SizedBox(width: 6),
-          Text(
-            '+$hidden',
-            style: AppTheme.numeric(
-              context.text.labelSmall,
-            ).copyWith(color: context.colors.dim, fontWeight: FontWeight.w700),
-          ),
+    // Eight seats and a price do not always fit a narrow card, and a row that
+    // overflows is worse than one drawn a little smaller.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < circles; i++) ...[
+            if (i > 0) const SizedBox(width: 5),
+            i < taken
+                ? _Avatar(participant: participants[i], size: size)
+                : _EmptySeat(size: size),
+          ],
+          if (hidden > 0) ...[
+            const SizedBox(width: 6),
+            Text(
+              '+$hidden',
+              style: AppTheme.numeric(context.text.labelSmall).copyWith(
+                color: context.colors.dim,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -771,7 +769,6 @@ class _EmptySeat extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: context.colors.bg,
         border: Border.all(color: context.colors.faint, width: 1.5),
       ),
     );
@@ -794,7 +791,6 @@ class _Avatar extends StatelessWidget {
         color: participant.isCurrentUser
             ? context.colors.accent
             : context.colors.surfaceRaised,
-        border: Border.all(color: context.colors.bg, width: 2),
       ),
       child: Center(
         child: Text(
