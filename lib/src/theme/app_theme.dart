@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// The app's colours, in the shape of a menu app: a tinted page with cards
 /// floating on it, one indigo accent for actions, and neutrals with a blue
@@ -221,13 +222,46 @@ class AppTheme {
   /// you are on — and nowhere else. It is the top of a range that runs down to
   /// an 11pt label; a page where every line is 14 to 22 has no hierarchy at
   /// all, and reads as something a machine laid out.
-  static TextStyle display(BuildContext context) => context.text.headlineMedium!
-      .copyWith(fontWeight: FontWeight.w900, letterSpacing: -1.4, height: 0.98);
+  static TextStyle display(BuildContext context) =>
+      context.text.headlineMedium!.copyWith(letterSpacing: -1.4, height: 0.98);
 
-  /// Prices, times and counts. Tabular figures so a column of them lines up
-  /// and a changing number does not shift the words beside it.
-  static TextStyle numeric(TextStyle? base) => (base ?? const TextStyle())
-      .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+  /// Prices, times and counts: the display face, with tabular figures so a
+  /// column of them lines up and a changing number does not shift the words
+  /// beside it.
+  static TextStyle numeric(TextStyle? base) =>
+      poster(base).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+
+  /// Whether the two downloaded faces are used at all.
+  ///
+  /// They come down from Google Fonts on first run and are cached from then
+  /// on; google_fonts throws rather than falling back when fetching is off,
+  /// and a test cannot depend on a network either way. Tests turn this off
+  /// and render in the bundled Rubik, so a golden file pins the layout rather
+  /// than the state of a font cache.
+  static bool useWebFonts = true;
+
+  /// Wix Madefor Display: what the screen is about — a tab's name, a club's
+  /// name, every number you compare. Tight, high-shouldered, and upper case
+  /// in it reads as a poster.
+  static TextStyle poster(TextStyle? style) {
+    if (!useWebFonts) {
+      return (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
+    }
+    return GoogleFonts.wixMadeforDisplay(
+      textStyle: style,
+    ).copyWith(fontFamilyFallback: const [fontFamily]);
+  }
+
+  /// Onest: everything else. Drawn from Cyrillic rather than fitted with it
+  /// afterwards, and it holds together down at the 11pt labels.
+  static TextStyle voice(TextStyle? style) {
+    if (!useWebFonts) {
+      return (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
+    }
+    return GoogleFonts.onest(
+      textStyle: style,
+    ).copyWith(fontFamilyFallback: const [fontFamily]);
+  }
 
   /// The small type that says what kind of thing follows: a date over a
   /// title, a section over a list.
@@ -236,35 +270,53 @@ class AppTheme {
       .labelSmall!
       .copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 1.4);
 
-  /// Widens the gap between the sizes the base theme ships with: the large
-  /// end goes larger and heavier, the small end stays small, and the middle
-  /// is left alone.
-  static TextTheme _scale(TextTheme base) {
+  /// Two voices, and a wider gap between the sizes than the base theme ships
+  /// with: the large end goes larger and heavier and is set in the display
+  /// face, the small end stays small and quiet. A page where every line is 14
+  /// to 22 at one weight has no hierarchy at all.
+  static TextTheme _typography(TextTheme base) {
     return base.copyWith(
-      headlineLarge: base.headlineLarge?.copyWith(
-        fontSize: 40,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -1.6,
-        height: 1,
+      displayLarge: poster(base.displayLarge),
+      displayMedium: poster(base.displayMedium),
+      displaySmall: poster(base.displaySmall),
+      headlineLarge: poster(
+        base.headlineLarge?.copyWith(
+          fontSize: 40,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1.6,
+          height: 1,
+        ),
       ),
-      headlineMedium: base.headlineMedium?.copyWith(
-        fontSize: 32,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -1.2,
-        height: 1.02,
+      headlineMedium: poster(
+        base.headlineMedium?.copyWith(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1.1,
+          height: 1.02,
+        ),
       ),
-      headlineSmall: base.headlineSmall?.copyWith(
-        fontSize: 24,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.6,
+      headlineSmall: poster(
+        base.headlineSmall?.copyWith(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
+        ),
       ),
-      titleLarge: base.titleLarge?.copyWith(
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.4,
+      titleLarge: poster(
+        base.titleLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
+        ),
       ),
-      labelSmall: base.labelSmall?.copyWith(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+      titleMedium: voice(base.titleMedium),
+      titleSmall: voice(base.titleSmall),
+      bodyLarge: voice(base.bodyLarge),
+      bodyMedium: voice(base.bodyMedium),
+      bodySmall: voice(base.bodySmall),
+      labelLarge: voice(base.labelLarge),
+      labelMedium: voice(base.labelMedium),
+      labelSmall: voice(
+        base.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -306,12 +358,8 @@ class AppTheme {
     final base = colors.isDark
         ? ThemeData.dark(useMaterial3: true)
         : ThemeData.light(useMaterial3: true);
-    final textTheme = _scale(
-      base.textTheme.apply(
-        fontFamily: fontFamily,
-        bodyColor: colors.ink,
-        displayColor: colors.ink,
-      ),
+    final textTheme = _typography(
+      base.textTheme.apply(bodyColor: colors.ink, displayColor: colors.ink),
     );
 
     return base.copyWith(

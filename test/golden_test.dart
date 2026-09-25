@@ -44,6 +44,9 @@ void main() {
 
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
+    // The two downloaded faces are not in the assets, so a test renders in
+    // the bundled Rubik: a golden then pins the layout, not a font cache.
+    AppTheme.useWebFonts = false;
     await _loadRubik();
   });
 
