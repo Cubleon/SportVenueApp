@@ -602,11 +602,13 @@ class SummaryRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // The label takes what it needs, the value takes the rest and ends
-          // at the card's edge. Loose, the value box used to shrink to its
-          // own text and stop wherever that text happened to end, so a
-          // column of values lined up on nothing at all.
-          Flexible(
+          // Both boxes are tight, three parts to seven. Anything loose here
+          // keeps the width it does not use, and a row packs from the left,
+          // so the leftover lands after the value: the shorter the label, the
+          // further from the edge its value stops. That is what made a column
+          // of values look hand-placed — "Дата" left its value 38 pixels
+          // short of where "Стоимость" left its own.
+          Expanded(
             flex: 3,
             child: Text(
               label,
