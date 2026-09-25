@@ -769,7 +769,11 @@ class _EmptySeat extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: context.colors.faint, width: 1.5),
+        color: context.colors.bgAlt,
+        // At full strength the ring carries 3.5:1 against the card in light
+        // and 4.5:1 in dark — an outline is a shape, and a shape has to
+        // clear 3:1 to be seen at all.
+        border: Border.all(color: context.colors.dim, width: 2),
       ),
     );
   }
@@ -788,9 +792,12 @@ class _Avatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
+        // Taken seats are tinted and their initials carry the accent: grey on
+        // a grey disc was there, but only just, and a seat is meant to be
+        // countable across the room.
         color: participant.isCurrentUser
             ? context.colors.accent
-            : context.colors.surfaceRaised,
+            : context.colors.accentSoft,
       ),
       child: Center(
         child: Text(
@@ -798,8 +805,9 @@ class _Avatar extends StatelessWidget {
           style: context.text.labelLarge?.copyWith(
             color: participant.isCurrentUser
                 ? context.colors.onAccent
-                : context.colors.muted,
-            fontWeight: FontWeight.w700,
+                : context.colors.accent,
+            fontWeight: FontWeight.w800,
+            fontSize: size * 0.42,
           ),
         ),
       ),
@@ -939,36 +947,29 @@ class _PlayerSlot extends StatelessWidget {
             child: Row(
               children: [
                 if (empty)
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: context.colors.ink.withValues(alpha: 0.36),
-                        width: 1.5,
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                  )
+                  const _EmptySeat(size: 40)
                 else
                   _Avatar(participant: participant!, size: 40),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     empty ? context.l10n.freeSlot : participant!.name,
-                    style: context.text.bodyMedium?.copyWith(
-                      color: empty ? context.colors.dim : context.colors.ink,
-                      fontStyle: empty ? FontStyle.italic : FontStyle.normal,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: empty
+                        ? context.text.bodyMedium?.copyWith(
+                            color: context.colors.dim,
+                            fontStyle: FontStyle.italic,
+                          )
+                        : context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                   ),
                 ),
                 if (!empty && participant!.hasRating)
                   Text(
                     participant!.rating.toStringAsFixed(1),
-                    style: context.text.bodySmall?.copyWith(
+                    style: AppTheme.numeric(context.text.labelLarge).copyWith(
                       color: context.colors.muted,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
               ],
