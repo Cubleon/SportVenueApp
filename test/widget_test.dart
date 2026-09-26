@@ -13,7 +13,9 @@ import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
 import 'package:sport_venue_app/src/screens/profile_screen.dart';
+import 'package:sport_venue_app/src/screens/main_shell.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
+import 'package:sport_venue_app/src/widgets/shared_widgets.dart';
 import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 
@@ -257,6 +259,53 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('open-created-booking')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
+  });
+
+  testWidgets('the keyboard can reach the home, and is seen when it does', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        child: MainShell(controller: controller, onLogout: () {}),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The tabs, the date cards and the sport tiles were GestureDetectors,
+    // which no amount of tabbing can reach.
+    final tabs = find.byType(TapTarget);
+    expect(tabs, findsWidgets);
+
+    final node = tester.firstWidget<Focus>(
+      find.descendant(
+        of: find.byKey(const ValueKey('nav-Главная')),
+        matching: find.byType(Focus),
+        matchRoot: true,
+      ),
+    );
+    expect(node.canRequestFocus, isTrue);
+
+    // And pressing Enter on a focused tab does what a tap does.
+    var tapped = 0;
+    await tester.pumpWidget(
+      _Harness(
+        child: Center(
+          child: TapTarget(
+            onTap: () => tapped++,
+            child: const SizedBox(width: 60, height: 60),
+          ),
+        ),
+      ),
+    );
+    Focus.of(tester.element(find.byType(SizedBox).first)).requestFocus();
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(tapped, 1);
   });
 
   testWidgets('a booking is cancelled from «мои брони», and asks first', (

@@ -37,7 +37,21 @@ class _SkeletonState extends State<Skeleton>
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // A placeholder that breathes is still movement on the screen. Asked to
+    // stop, it holds its middle tone rather than freezing at either end,
+    // where it would read as a filled box or as nothing at all.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pulse.stop();
+      _pulse.value = 0.5;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {

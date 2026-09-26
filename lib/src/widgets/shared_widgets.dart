@@ -218,7 +218,7 @@ class PrimaryButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
+          duration: context.motion(const Duration(milliseconds: 180)),
           child: isLoading
               ? SizedBox(
                   key: ValueKey('loader'),
@@ -263,7 +263,86 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-class AppCard extends StatelessWidget {
+/// A tap target the keyboard can reach, and can be seen to have reached.
+///
+/// Seven of the app's controls were a bare [GestureDetector] — the date
+/// cards, the sport tiles, the tabs, the create button, the map markers,
+/// the chips, the time cells. A GestureDetector is invisible to focus
+/// traversal, so none of them could be reached with a keyboard at all, and
+/// nothing was drawn when focus landed anywhere else. This keeps the press
+/// feedback the design already has and adds the two things it lacked:
+/// a stop in the traversal order, and a ring that says so.
+class TapTarget extends StatefulWidget {
+  const TapTarget({
+    super.key,
+    required this.child,
+    required this.onTap,
+    this.radius = AppTheme.radius,
+    this.ringColor,
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final double radius;
+
+  /// Overrides the accent ring where the accent is what the control is
+  /// drawn on.
+  final Color? ringColor;
+
+  @override
+  State<TapTarget> createState() => _TapTargetState();
+}
+
+class _TapTargetState extends State<TapTarget> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      canRequestFocus: widget.onTap != null,
+      descendantsAreFocusable: false,
+      onFocusChange: (value) {
+        if (value != _focused) setState(() => _focused = value);
+      },
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent || widget.onTap == null) {
+          return KeyEventResult.ignored;
+        }
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.enter ||
+            key == LogicalKeyboardKey.space ||
+            key == LogicalKeyboardKey.numpadEnter) {
+          widget.onTap!();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: widget.child,
+          ),
+          if (_focused)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: AppTheme.focusRing(
+                    context,
+                    widget.radius,
+                    color: widget.ringColor,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class AppCard extends StatefulWidget {
   const AppCard({
     super.key,
     required this.child,
@@ -282,27 +361,51 @@ class AppCard extends StatelessWidget {
   final Color? color;
 
   @override
+  State<AppCard> createState() => _AppCardState();
+}
+
+class _AppCardState extends State<AppCard> {
+  bool _focused = false;
+
+  @override
   Widget build(BuildContext context) {
     final content = Container(
       decoration: BoxDecoration(
-        color: color ?? context.colors.surface,
+        color: widget.color ?? context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
-        border: borderColor == null ? null : Border.all(color: borderColor!),
+        border: widget.borderColor == null
+            ? null
+            : Border.all(color: widget.borderColor!),
       ),
-      padding: padding,
-      child: child,
+      padding: widget.padding,
+      child: widget.child,
     );
 
-    if (onTap == null) {
+    if (widget.onTap == null) {
       return content;
     }
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        child: content,
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(AppTheme.radius),
+            onFocusChange: (value) {
+              if (value != _focused) setState(() => _focused = value);
+            },
+            child: content,
+          ),
+          if (_focused)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: AppTheme.focusRing(context, AppTheme.radius),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -429,6 +532,9 @@ class SelectableChip extends StatelessWidget {
                   ? (color ?? context.colors.accent)
                   : context.colors.surface,
               borderRadius: BorderRadius.circular(99),
+              border: selected
+                  ? null
+                  : Border.all(color: context.colors.borderStrong, width: 1),
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -500,7 +606,7 @@ class _PressableState extends State<Pressable> {
       onPointerCancel: widget.enabled ? (_) => _set(false) : null,
       child: AnimatedScale(
         scale: _down ? 0.98 : 1,
-        duration: const Duration(milliseconds: 90),
+        duration: context.motion(const Duration(milliseconds: 90)),
         curve: Curves.easeOut,
         child: widget.child,
       ),
@@ -1145,10 +1251,11 @@ class _DayCard extends StatelessWidget {
     return Semantics(
       selected: isSelected,
       button: true,
-      child: GestureDetector(
+      child: TapTarget(
         onTap: onTap,
+        radius: 20,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: context.motion(const Duration(milliseconds: 180)),
           curve: Curves.easeOut,
           width: context.scaled(isSelected ? 74 : 60, max: 1.3),
           decoration: BoxDecoration(
@@ -1254,14 +1361,15 @@ class TimeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapTarget(
       onTap: available ? withSelectionFeedback(onTap) : null,
+      radius: 16,
       child: Semantics(
         selected: selected,
         button: available,
         enabled: available,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: context.motion(const Duration(milliseconds: 150)),
           decoration: BoxDecoration(
             color: selected
                 ? context.colors.accent
@@ -1270,11 +1378,14 @@ class TimeTile extends StatelessWidget {
                 : context.colors.ink.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
+              // Nothing but this line says where a free hour is: at 12% of
+              // the ink it sat near 1.3:1 on the page, and a boundary that
+              // identifies a control owes 3:1.
               color: selected
                   ? context.colors.accent
                   : available
-                  ? context.colors.ink.withValues(alpha: 0.12)
-                  : context.colors.ink.withValues(alpha: 0.05),
+                  ? context.colors.borderStrong
+                  : context.colors.faint,
               width: 1.5,
             ),
           ),

@@ -262,7 +262,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
+                        duration: context.motion(
+                          const Duration(milliseconds: 160),
+                        ),
                         width: 22,
                         height: 22,
                         decoration: BoxDecoration(
@@ -501,7 +503,7 @@ class _OtpScreenState extends State<OtpScreen>
                               borderSide: BorderSide(
                                 color: _error
                                     ? context.colors.error
-                                    : context.colors.border,
+                                    : context.colors.borderStrong,
                                 width: 2,
                               ),
                             ),
@@ -522,7 +524,7 @@ class _OtpScreenState extends State<OtpScreen>
               ),
               AnimatedOpacity(
                 opacity: _error ? 1 : 0,
-                duration: const Duration(milliseconds: 160),
+                duration: context.motion(const Duration(milliseconds: 160)),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 14),
                   child: Text(
@@ -626,7 +628,11 @@ class _OtpScreenState extends State<OtpScreen>
       _error = true;
       _errorText = message;
     });
-    _shake.forward(from: 0);
+    // The red border and the message say it too; the shake is the part a
+    // reader can ask not to have.
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      _shake.forward(from: 0);
+    }
     Future<void>.delayed(const Duration(milliseconds: 650), () {
       if (!mounted) {
         return;

@@ -217,7 +217,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_sheetController.isAttached && _sheetController.size < _sheetOpen) {
       _sheetController.animateTo(
         _sheetOpen,
-        duration: const Duration(milliseconds: 260),
+        duration: context.motion(const Duration(milliseconds: 260)),
         curve: Curves.easeOutCubic,
       );
     }
@@ -355,11 +355,11 @@ class _MapMarker extends StatelessWidget {
     return Semantics(
       button: true,
       label: venue.name.capitalized,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: TapTarget(
         onTap: onTap,
+        radius: 16,
         child: AnimatedScale(
-          duration: const Duration(milliseconds: 180),
+          duration: context.motion(const Duration(milliseconds: 180)),
           scale: isSelected ? 1.08 : 1,
           child: SizedBox(
             width: 58,

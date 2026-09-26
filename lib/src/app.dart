@@ -81,7 +81,7 @@ class _SportVenueAppState extends State<SportVenueApp> {
           // long after this context stopped being theirs to use.
           final l10n = context.l10n;
           return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 320),
+            duration: context.motion(const Duration(milliseconds: 320)),
             child: switch (_stage) {
               _RootStage.splash => SplashScreen(
                 key: const ValueKey('splash'),

@@ -50,7 +50,7 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        duration: context.motion(const Duration(milliseconds: 220)),
         child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
       ),
       extendBody: true,
@@ -236,7 +236,9 @@ class _BottomNav extends StatelessWidget {
                       // The selection flies across rather than blinking from
                       // one tab to the next.
                       AnimatedPositioned(
-                        duration: const Duration(milliseconds: 320),
+                        duration: context.motion(
+                          const Duration(milliseconds: 320),
+                        ),
                         curve: Curves.easeOutCubic,
                         left: slot * _slotOfTab[selectedIndex] + 6,
                         top: 6,
@@ -272,8 +274,10 @@ class _BottomNav extends StatelessWidget {
                               child: Semantics(
                                 button: true,
                                 label: context.l10n.navCreate,
-                                child: GestureDetector(
+                                child: TapTarget(
                                   key: const ValueKey('create-fab'),
+                                  radius: 24,
+                                  ringColor: context.colors.onAccent,
                                   onTap: onCreate,
                                   child: Container(
                                     width: 48,
@@ -342,13 +346,13 @@ class _NavItem extends StatelessWidget {
       child: Semantics(
         selected: selected,
         button: true,
-        child: GestureDetector(
+        child: TapTarget(
           key: ValueKey('nav-$label'),
-          behavior: HitTestBehavior.opaque,
+          radius: 18,
           onTap: () => onTab(index),
           child: TweenAnimationBuilder(
             tween: Tween<double>(begin: 0, end: selected ? 1 : 0),
-            duration: const Duration(milliseconds: 320),
+            duration: context.motion(const Duration(milliseconds: 320)),
             curve: Curves.easeOutCubic,
             builder: (context, t, _) {
               final color = Color.lerp(

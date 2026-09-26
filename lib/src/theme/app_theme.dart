@@ -32,6 +32,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.muted,
     required this.dim,
     required this.faint,
+    required this.borderStrong,
     required this.border,
     required this.success,
     required this.error,
@@ -79,6 +80,12 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Hairlines and disabled marks only — it fails as text.
   final Color faint;
+
+  /// The outline of a control that has no fill to speak of — a field, a
+  /// time cell, a chip. [border] is a divider and may be as quiet as it
+  /// likes; this one has to clear 3:1 against the surface behind it,
+  /// because it is the only thing saying where the control begins.
+  final Color borderStrong;
   final Color border;
 
   final Color success;
@@ -121,11 +128,12 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFFFFFFFF),
     ink: Color(0xFF15171C),
     muted: Color(0xFF616C7A),
-    dim: Color(0xFF7E8A99),
+    dim: Color(0xFF5F6B7A),
     faint: Color(0xFFD5DDE5),
+    borderStrong: Color(0xFF7E8A99),
     border: Color(0xFFE3EAF0),
-    success: Color(0xFF12A150),
-    error: Color(0xFFE5484D),
+    success: Color(0xFF107F41),
+    error: Color(0xFFC8272D),
     danger: Color(0xFFCE2C31),
     onDanger: Color(0xFFFFFFFF),
     warning: Color(0xFFE8A317),
@@ -152,8 +160,9 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFF12141F),
     ink: Color(0xFFEDF1F7),
     muted: Color(0xFF9BA7B8),
-    dim: Color(0xFF7C8899),
+    dim: Color(0xFF8E9BAC),
     faint: Color(0xFF333C4A),
+    borderStrong: Color(0xFF6C7A8A),
     border: Color(0xFF262E3B),
     success: Color(0xFF2ECC71),
     error: Color(0xFFFF6B6B),
@@ -195,6 +204,23 @@ class AppTheme {
       systemNavigationBarIconBrightness: iconsOnDark,
     );
   }
+
+  /// The outline that says where the keyboard is.
+  ///
+  /// Two pixels of accent, offset outwards so it never eats the content it
+  /// surrounds. Everything focusable that paints its own background wraps
+  /// itself in one of these; [ThemeData.focusColor] covers the rest.
+  static BoxDecoration focusRing(
+    BuildContext context,
+    double radius, {
+    Color? color,
+  }) => BoxDecoration(
+    borderRadius: BorderRadius.circular(radius),
+    // The accent is the ring almost everywhere, but a control that sits on
+    // the blue header — or is the blue itself, like the create button — has
+    // to be ringed in white, or the indicator disappears into what it marks.
+    border: Border.all(color: color ?? context.colors.accent, width: 2),
+  );
 
   /// Bundled with the app, so text renders identically offline, on web and
   /// in the first second of a cold start — no font arrives over a network.
@@ -359,6 +385,11 @@ class AppTheme {
       textTheme: textTheme,
       splashColor: colors.accent.withValues(alpha: 0.10),
       highlightColor: colors.ink.withValues(alpha: 0.03),
+      // Keyboard focus used to be a tint at 1.31:1 — on most controls,
+      // nothing at all. WCAG 2.2 wants an indicator at 3:1 against what
+      // surrounds it, so it is drawn in the accent, which carries 5.4:1 on
+      // the page and 6.1:1 on a card.
+      focusColor: colors.accent.withValues(alpha: 0.16),
       dividerColor: colors.border,
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -422,6 +453,19 @@ extension TextThemeX on BuildContext {
   /// test harness, a preview — still paints.
   AppColors get colors =>
       Theme.of(this).extension<AppColors>() ?? AppColors.light;
+}
+
+extension MotionX on BuildContext {
+  /// A duration, or none of it if the reader has asked for less movement.
+  ///
+  /// «Уменьшение движения» is a system setting people turn on for a reason —
+  /// vestibular disorders, motion sickness, or simply preferring a still
+  /// screen. Only the splash honoured it; every card flight, scale and slide
+  /// in the app ran regardless. Passing durations through here makes the
+  /// whole app answer the setting, and the animations arrive already
+  /// finished rather than being skipped mid-flight.
+  Duration motion(Duration duration) =>
+      MediaQuery.disableAnimationsOf(this) ? Duration.zero : duration;
 }
 
 extension ScaledMetricsX on BuildContext {

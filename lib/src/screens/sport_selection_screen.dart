@@ -185,7 +185,7 @@ class _SportCard extends StatelessWidget {
       selected: selected,
       button: true,
       child: AnimatedScale(
-        duration: const Duration(milliseconds: 160),
+        duration: context.motion(const Duration(milliseconds: 160)),
         scale: selected ? 0.985 : 1,
         child: Material(
           color: Colors.transparent,
@@ -193,7 +193,7 @@ class _SportCard extends StatelessWidget {
             onTap: withSelectionFeedback(onTap),
             borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: context.motion(const Duration(milliseconds: 180)),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(

@@ -309,7 +309,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
     final target = (index - 1) * _cardExtent;
     _strip.animateTo(
       target.clamp(0, _strip.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 280),
+      duration: context.motion(const Duration(milliseconds: 280)),
       curve: Curves.easeOutCubic,
     );
   }
@@ -531,10 +531,12 @@ class _SkyDateCard extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      child: GestureDetector(
+      child: TapTarget(
         onTap: onTap,
+        radius: 22,
+        ringColor: Colors.white,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: context.motion(const Duration(milliseconds: 180)),
           curve: Curves.easeOut,
           width: context.scaled(selected ? 78 : 62, max: 1.3),
           decoration: BoxDecoration(
@@ -734,8 +736,9 @@ class _CategoryTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      child: GestureDetector(
+      child: TapTarget(
         onTap: withSelectionFeedback(onTap),
+        radius: 20,
         child: SizedBox(
           width: context.scaled(74, max: 1.35),
           child: Column(
@@ -744,7 +747,7 @@ class _CategoryTile extends StatelessWidget {
               // white frame it read as an icon of a pitch; at full bleed it
               // reads as the pitch.
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: context.motion(const Duration(milliseconds: 180)),
                 width: context.scaled(72, max: 1.3),
                 height: context.scaled(72, max: 1.3),
                 clipBehavior: Clip.antiAlias,
