@@ -537,7 +537,20 @@ class _OtpScreenState extends State<OtpScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 14),
+              // The one thing a reader has to know about a flash call, said
+              // where the code is typed. It used to sit pinned to the bottom
+              // of the screen, half a phone away from the boxes it explains,
+              // and people answered the call.
+              Text(
+                context.l10n.doNotAnswer,
+                textAlign: TextAlign.center,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 6),
               if (_submitting)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 18),
@@ -553,13 +566,6 @@ class _OtpScreenState extends State<OtpScreen>
                 ),
               ),
               const Spacer(),
-              Text(
-                context.l10n.doNotAnswer,
-                textAlign: TextAlign.center,
-                style: context.text.bodySmall?.copyWith(
-                  color: context.colors.muted,
-                ),
-              ),
             ],
           ),
         ),

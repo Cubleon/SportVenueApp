@@ -40,6 +40,10 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _tab = 0;
 
+  /// The day the home's calendar is showing, so «Создать игру» from the tab
+  /// bar opens on it.
+  DateTime? _homeDate;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +72,7 @@ class _MainShellState extends State<MainShell> {
         controller: widget.controller,
         onOpenSearch: () => setState(() => _tab = 1),
         onOpenGames: () => setState(() => _tab = 2),
+        onDateChanged: (date) => _homeDate = date,
       ),
       SearchScreen(controller: widget.controller),
       GamesScreen(controller: widget.controller),
@@ -160,7 +165,7 @@ class _MainShellState extends State<MainShell> {
                   subtitle: context.l10n.createGameActionSubtitle,
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    context.go(Routes.create);
+                    context.go(Routes.create(date: _homeDate));
                   },
                 ),
                 const SizedBox(height: 10),

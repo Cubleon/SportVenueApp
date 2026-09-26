@@ -433,7 +433,7 @@ void main() {
     await tester.tap(find.byKey(ValueKey('booking-row-${booking.id}')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Детали брони'), findsOneWidget);
+    expect(find.text('Бронь'), findsOneWidget);
     expect(find.byKey(const ValueKey('confirm-payment')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));

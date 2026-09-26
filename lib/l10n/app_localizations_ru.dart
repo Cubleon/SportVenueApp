@@ -104,6 +104,9 @@ class LRu extends L {
   String get shareGame => 'Поделиться игрой';
 
   @override
+  String get invitePlayers => 'Позвать игроков — скопировать ссылку';
+
+  @override
   String get linkCopied => 'Ссылка скопирована';
 
   @override
@@ -359,7 +362,7 @@ class LRu extends L {
 
   @override
   String codeHint(String phone) {
-    return 'Мы звоним на $phone. Введите последние 4 цифры входящего номера';
+    return 'Мы звоним на $phone';
   }
 
   @override
@@ -372,7 +375,7 @@ class LRu extends L {
 
   @override
   String get doNotAnswer =>
-      'Не отвечайте на звонок — нужны только последние 4 цифры номера';
+      'Не отвечайте на звонок — введите последние 4 цифры входящего номера.';
 
   @override
   String get callRequestedAgain => 'Звонок запрошен повторно';
@@ -405,25 +408,13 @@ class LRu extends L {
   String get durationStep => 'Продолжительность';
 
   @override
-  String get placesStep => 'Количество мест';
+  String get placesStep => 'Сколько игроков';
 
   @override
   String get removePlace => 'Убрать место';
 
   @override
   String get addPlace => 'Добавить место';
-
-  @override
-  String placesCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count мест',
-      few: '$count места',
-      one: '$count место',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get whoCanJoin => 'Кто может вступить';
@@ -435,7 +426,11 @@ class LRu extends L {
   String get approveManuallyHint => 'Вы будете подтверждать каждого игрока';
 
   @override
-  String get participantFilter => 'Фильтр участников';
+  String get participantFilter => 'Кто может играть';
+
+  @override
+  String get participantFilterHint =>
+      'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».';
 
   @override
   String get genderAny => 'Любой';
@@ -521,7 +516,10 @@ class LRu extends L {
   String get bookingSuccessDone => 'Готово';
 
   @override
-  String get bookingDetails => 'Детали брони';
+  String get bookingDetails => 'Бронь';
+
+  @override
+  String get statusLabel => 'Статус';
 
   @override
   String get onlyOrganizerCancels => 'Отменить бронь может только организатор';
@@ -534,7 +532,7 @@ class LRu extends L {
 
   @override
   String cancelBookingMessage(String venue, String date, String time) {
-    return '$venue, $date, $time. Вернуть её тем же нажатием не получится.';
+    return '$venue, $date, $time. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.';
   }
 
   @override
@@ -542,14 +540,6 @@ class LRu extends L {
 
   @override
   String get bookingCancelled => 'Бронь отменена';
-
-  @override
-  String get bookingDetailsCard => 'Детали бронирования';
-
-  @override
-  String statusLine(String status) {
-    return 'Статус · $status';
-  }
 
   @override
   String get howPaymentWorks => 'КАК ЭТО РАБОТАЕТ';
@@ -616,7 +606,10 @@ class LRu extends L {
   String get games => 'Игры';
 
   @override
-  String get gamesSubtitle => 'pickup-матчи рядом';
+  String get gamesSubtitle => 'открытые игры, куда можно вписаться';
+
+  @override
+  String get youAreIn => 'вы в игре';
 
   @override
   String get nothingMatchesFilters => 'Под фильтры ничего не подошло';

@@ -661,24 +661,31 @@ class _BookingDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.bookingDetailsCard,
-            style: context.text.labelLarge?.copyWith(
-              color: context.colors.muted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
           BookingSummaryRows(draft: draft),
           if (status != null) ...[
+            const SizedBox(height: 14),
+            Divider(height: 1, color: context.colors.border),
             const SizedBox(height: 12),
-            Text(
-              context.l10n.statusLine(status!),
-              style: context.text.bodySmall?.copyWith(
-                color: context.colors.accent,
-                fontWeight: FontWeight.w600,
-              ),
+            // A status, said as a status. In the accent it read as a link
+            // that never went anywhere — and the accent in this app means
+            // "tap me" or "this is the price".
+            Row(
+              children: [
+                Text(
+                  context.l10n.statusLabel,
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.colors.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  status!,
+                  style: context.text.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -792,6 +799,20 @@ class _SharesCard extends StatelessWidget {
                 ],
               ),
             ),
+          // The organiser's actual job, once the money is in: chasing the
+          // other shares. The card said who had not paid and offered nothing
+          // to do about it, and the booking dies two hours before kick-off
+          // if they never do.
+          if (unpaid > 0 && canShareLinks) ...[
+            const SizedBox(height: 4),
+            PrimaryButton(
+              key: const ValueKey('invite-to-booking'),
+              label: context.l10n.invitePlayers,
+              tone: ButtonTone.neutral,
+              icon: AppIcons.share,
+              onPressed: () => copyLink(context, Routes.booking(booking.id)),
+            ),
+          ],
         ],
       ),
     );
@@ -1006,7 +1027,9 @@ class _StepBlock extends StatelessWidget {
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: context.colors.ink,
+                      // On the accent, not beside it: near-black on blue is
+                      // 2.6:1, which is a number you have to hunt for.
+                      color: context.colors.onAccent,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1044,8 +1067,19 @@ class _CounterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The pair sits together on the right. Split to the two edges of the
+    // screen, changing four into six meant carrying a thumb three hundred
+    // pixels across and back for every step.
     return Row(
       children: [
+        Expanded(
+          child: Text(
+            context.l10n.playersCount(value),
+            style: context.text.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
         _CounterButton(
           key: const ValueKey('players-minus'),
           icon: AppIcons.minus,
@@ -1053,15 +1087,7 @@ class _CounterRow extends StatelessWidget {
           enabled: value > min,
           onTap: withSelectionFeedback(() => onChanged(value - 1))!,
         ),
-        Expanded(
-          child: Text(
-            context.l10n.playersCount(value),
-            textAlign: TextAlign.center,
-            style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        const SizedBox(width: 10),
         _CounterButton(
           key: const ValueKey('players-plus'),
           icon: AppIcons.plus,

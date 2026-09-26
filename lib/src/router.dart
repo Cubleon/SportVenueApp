@@ -33,7 +33,9 @@ abstract final class Routes {
   static const bookings = '/bookings';
   static const myGames = '/my-games';
   static const history = '/history';
-  static const create = '/create';
+  static String create({DateTime? date}) => date == null
+      ? '/create'
+      : '/create?date=${date.toIso8601String().substring(0, 10)}';
 
   static String game(String id) => '/game/$id';
   static String venue(String id, {DateTime? date}) {
@@ -324,7 +326,10 @@ List<RouteBase> shellRoutes(AppController controller) => [
   ),
   GoRoute(
     path: 'create',
-    builder: (context, state) => CreateGameScreen(controller: controller),
+    builder: (context, state) => CreateGameScreen(
+      controller: controller,
+      date: DateTime.tryParse(state.uri.queryParameters['date'] ?? ''),
+    ),
   ),
 ];
 

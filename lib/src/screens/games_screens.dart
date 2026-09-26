@@ -76,9 +76,11 @@ class _GamesScreenState extends State<GamesScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
+                // No date in the eyebrow. On the home the same line is a
+                // working calendar; here it was decoration, and it announced
+                // today over a list of games on other days.
                 child: SkyHeader(
                   title: context.l10n.games,
-                  eyebrow: AppFormatters.dateFull(widget.controller.now),
                   subtitle: context.l10n.gamesSubtitle,
                 ),
               ),
@@ -220,10 +222,20 @@ class MiniGameCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Flexible(
                             child: _Marker(
-                              text: game.isFull
+                              // Being in a game changes what the card is
+                              // for: the list used to look identical whether
+                              // the reader had joined or not, so checking
+                              // meant opening every one of them.
+                              text:
+                                  game.participants.any((p) => p.isCurrentUser)
+                                  ? context.l10n.youAreIn
+                                  : game.isFull
                                   ? context.l10n.gameFull
                                   : context.l10n.freePlaces(game.freePlaces),
-                              background: Colors.black.withValues(alpha: 0.5),
+                              background:
+                                  game.participants.any((p) => p.isCurrentUser)
+                                  ? context.colors.success
+                                  : Colors.black.withValues(alpha: 0.5),
                               foreground: Colors.white,
                             ),
                           ),

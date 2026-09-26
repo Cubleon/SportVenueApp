@@ -279,6 +279,12 @@ abstract class L {
   /// **'Поделиться игрой'**
   String get shareGame;
 
+  /// No description provided for @invitePlayers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвать игроков — скопировать ссылку'**
+  String get invitePlayers;
+
   /// No description provided for @linkCopied.
   ///
   /// In ru, this message translates to:
@@ -696,7 +702,7 @@ abstract class L {
   /// No description provided for @codeHint.
   ///
   /// In ru, this message translates to:
-  /// **'Мы звоним на {phone}. Введите последние 4 цифры входящего номера'**
+  /// **'Мы звоним на {phone}'**
   String codeHint(String phone);
 
   /// No description provided for @resend.
@@ -714,7 +720,7 @@ abstract class L {
   /// No description provided for @doNotAnswer.
   ///
   /// In ru, this message translates to:
-  /// **'Не отвечайте на звонок — нужны только последние 4 цифры номера'**
+  /// **'Не отвечайте на звонок — введите последние 4 цифры входящего номера.'**
   String get doNotAnswer;
 
   /// No description provided for @callRequestedAgain.
@@ -774,7 +780,7 @@ abstract class L {
   /// No description provided for @placesStep.
   ///
   /// In ru, this message translates to:
-  /// **'Количество мест'**
+  /// **'Сколько игроков'**
   String get placesStep;
 
   /// No description provided for @removePlace.
@@ -788,12 +794,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Добавить место'**
   String get addPlace;
-
-  /// No description provided for @placesCount.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} место} few{{count} места} other{{count} мест}}'**
-  String placesCount(int count);
 
   /// No description provided for @whoCanJoin.
   ///
@@ -816,8 +816,14 @@ abstract class L {
   /// No description provided for @participantFilter.
   ///
   /// In ru, this message translates to:
-  /// **'Фильтр участников'**
+  /// **'Кто может играть'**
   String get participantFilter;
+
+  /// No description provided for @participantFilterHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».'**
+  String get participantFilterHint;
 
   /// No description provided for @genderAny.
   ///
@@ -954,8 +960,14 @@ abstract class L {
   /// No description provided for @bookingDetails.
   ///
   /// In ru, this message translates to:
-  /// **'Детали брони'**
+  /// **'Бронь'**
   String get bookingDetails;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статус'**
+  String get statusLabel;
 
   /// No description provided for @onlyOrganizerCancels.
   ///
@@ -978,7 +990,7 @@ abstract class L {
   /// No description provided for @cancelBookingMessage.
   ///
   /// In ru, this message translates to:
-  /// **'{venue}, {date}, {time}. Вернуть её тем же нажатием не получится.'**
+  /// **'{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.'**
   String cancelBookingMessage(String venue, String date, String time);
 
   /// No description provided for @keepBooking.
@@ -992,18 +1004,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Бронь отменена'**
   String get bookingCancelled;
-
-  /// No description provided for @bookingDetailsCard.
-  ///
-  /// In ru, this message translates to:
-  /// **'Детали бронирования'**
-  String get bookingDetailsCard;
-
-  /// No description provided for @statusLine.
-  ///
-  /// In ru, this message translates to:
-  /// **'Статус · {status}'**
-  String statusLine(String status);
 
   /// No description provided for @howPaymentWorks.
   ///
@@ -1086,8 +1086,14 @@ abstract class L {
   /// No description provided for @gamesSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'pickup-матчи рядом'**
+  /// **'открытые игры, куда можно вписаться'**
   String get gamesSubtitle;
+
+  /// No description provided for @youAreIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'вы в игре'**
+  String get youAreIn;
 
   /// No description provided for @nothingMatchesFilters.
   ///

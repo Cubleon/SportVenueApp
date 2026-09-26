@@ -29,11 +29,17 @@ class HomeScreen extends StatefulWidget {
     required this.controller,
     required this.onOpenSearch,
     required this.onOpenGames,
+    this.onDateChanged,
   });
 
   final AppController controller;
   final VoidCallback onOpenSearch;
   final VoidCallback onOpenGames;
+
+  /// Told when the calendar moves, so the create sheet in the tab bar can
+  /// open a game on the day the reader is looking at rather than on
+  /// tomorrow, whatever they had chosen.
+  final ValueChanged<DateTime>? onDateChanged;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -87,21 +93,42 @@ class _HomeScreenState extends State<HomeScreen> {
       _date = date;
       _freeSlots = const {};
     });
+    widget.onDateChanged?.call(date);
     _loadSlots();
   }
 
   /// Asks the same endpoint the booking screen asks, for the day on show.
+  /// How many clubs to ask about at once.
+  ///
+  /// The counts used to be fetched one club after another, each awaiting the
+  /// last: four clubs hid it, fifty would make every tap on the calendar a
+  /// visible wait. Asking all at once would open fifty sockets instead, so
+  /// they go out in batches.
+  static const _slotBatch = 8;
+
   Future<void> _loadSlots() async {
     final token = ++_slotsToken;
     final day = _date;
+    final venues = widget.controller.venues;
     final counts = <String, int>{};
-    for (final venue in widget.controller.venues) {
-      final slots = await widget.controller.loadSlots(
-        venue: venue,
-        day: day,
-        durationMinutes: 60,
-      );
-      counts[venue.id] = slots.where((slot) => slot.isAvailable).length;
+    for (var start = 0; start < venues.length; start += _slotBatch) {
+      final batch = venues.skip(start).take(_slotBatch).toList();
+      final answers = await Future.wait([
+        for (final venue in batch)
+          widget.controller.loadSlots(
+            venue: venue,
+            day: day,
+            durationMinutes: 60,
+          ),
+      ]);
+      // A newer day was asked for while this batch was in the air; its
+      // answers are about yesterday's question.
+      if (!mounted || token != _slotsToken) return;
+      for (var i = 0; i < batch.length; i++) {
+        counts[batch[i].id] = answers[i]
+            .where((slot) => slot.isAvailable)
+            .length;
+      }
     }
     if (!mounted || token != _slotsToken) return;
     setState(() => _freeSlots = counts);
@@ -962,16 +989,14 @@ class _VenueRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      // Walking time is only worth saying while walking is
-                      // plausible; past that it is a distance, and how you
-                      // get there is your business.
-                      venue.distanceKm <= 2.5
-                          ? '${venue.address} · '
-                                '${context.l10n.walkMinutes(AppFormatters.walkMinutes(venue.distanceKm))}'
-                          : context.l10n.venueAddressDistance(
-                              venue.address,
-                              venue.distanceKm.toStringAsFixed(1),
-                            ),
+                      // Always the distance, because the column exists to
+                      // be compared down: «8.4 км» against «29 мин пешком»
+                      // is not a comparison anyone can make in their head.
+                      // Walking time, where it is plausible, is a tag below.
+                      context.l10n.venueAddressDistance(
+                        venue.address,
+                        venue.distanceKm.toStringAsFixed(1),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.text.labelSmall?.copyWith(
@@ -994,10 +1019,18 @@ class _VenueRow extends StatelessWidget {
                           )
                         else
                           const Skeleton.line(width: 96, height: 18, radius: 6),
-                        for (final amenity in venue.amenities.take(
-                          free == null ? 2 : 1,
-                        ))
-                          _Tag(label: amenity),
+                        // One more tag after the free-hours chip, and one
+                        // only: a second wraps the row onto a new line and
+                        // the list loses a club's worth of height per club.
+                        if (venue.distanceKm <= 2.5)
+                          _Tag(
+                            label: context.l10n.walkMinutes(
+                              AppFormatters.walkMinutes(venue.distanceKm),
+                            ),
+                          )
+                        else
+                          for (final amenity in venue.amenities.take(1))
+                            _Tag(label: amenity),
                       ],
                     ),
                   ],

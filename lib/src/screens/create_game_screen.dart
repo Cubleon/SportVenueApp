@@ -16,9 +16,14 @@ import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
 
 class CreateGameScreen extends StatefulWidget {
-  const CreateGameScreen({super.key, required this.controller});
+  const CreateGameScreen({super.key, required this.controller, this.date});
 
   final AppController controller;
+
+  /// The day to open on, when the reader came from a screen that was
+  /// showing one. Booking already carries the home's calendar through;
+  /// creating a game used to land on tomorrow whatever had been chosen.
+  final DateTime? date;
 
   @override
   State<CreateGameScreen> createState() => _CreateGameScreenState();
@@ -36,11 +41,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
   String? _sportId;
   Venue? _venue;
-  late DateTime _date = DateTime(
-    widget.controller.now.year,
-    widget.controller.now.month,
-    widget.controller.now.day,
-  ).add(const Duration(days: 1));
+  late DateTime _date =
+      widget.date ??
+      DateTime(
+        widget.controller.now.year,
+        widget.controller.now.month,
+        widget.controller.now.day,
+      ).add(const Duration(days: 1));
 
   int _hour = 19;
 
@@ -267,8 +274,18 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 _Block(
                   step: 6,
                   title: context.l10n.placesStep,
+                  // Same shape as the booking screen's: the value on the
+                  // left, the pair of buttons together on the right.
                   child: Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          context.l10n.playersCount(_capacity),
+                          style: context.text.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                       IconButton.filled(
                         tooltip: context.l10n.removePlace,
                         key: const ValueKey('create-capacity-minus'),
@@ -280,15 +297,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             : null,
                         icon: const Icon(AppIcons.minus),
                       ),
-                      Expanded(
-                        child: Text(
-                          context.l10n.placesCount(_capacity),
-                          textAlign: TextAlign.center,
-                          style: context.text.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                      const SizedBox(width: 10),
                       IconButton.filled(
                         tooltip: context.l10n.addPlace,
                         key: const ValueKey('create-capacity-plus'),
@@ -375,6 +384,20 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                // Three bare chips let anyone shut half the city out of a
+                // game with one tap and no thought. The line does not forbid
+                // it — women's and men's sessions are a real thing people
+                // organise — it just says what the option is for.
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    context.l10n.participantFilterHint,
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.muted,
+                      height: 1.35,
+                    ),
                   ),
                 ),
                 // The running total, set apart by a tinted fill rather than a
@@ -558,7 +581,9 @@ class _Block extends StatelessWidget {
                   child: Text(
                     '$step',
                     style: context.text.labelSmall?.copyWith(
-                      color: context.colors.ink,
+                      // On the accent, not beside it: near-black on blue is
+                      // 2.6:1, which is a number you have to hunt for.
+                      color: context.colors.onAccent,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

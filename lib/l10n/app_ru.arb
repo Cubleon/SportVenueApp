@@ -44,6 +44,7 @@
   "notFoundHint": "Возможно, ссылка устарела или запись удалили.",
   "toHome": "На главную",
   "shareGame": "Поделиться игрой",
+  "invitePlayers": "Позвать игроков — скопировать ссылку",
   "linkCopied": "Ссылка скопирована",
   "perHourSuffix": "/час",
   "pricePerHour": "{price}/час",
@@ -171,7 +172,7 @@
   "consentRequired": "Отметьте согласие, чтобы продолжить",
   "wrongCode": "Неверный код, попробуйте ещё раз",
   "enterCode": "Введите код",
-  "codeHint": "Мы звоним на {phone}. Введите последние 4 цифры входящего номера",
+  "codeHint": "Мы звоним на {phone}",
   "@codeHint": {
     "placeholders": {
       "phone": {
@@ -188,7 +189,7 @@
       }
     }
   },
-  "doNotAnswer": "Не отвечайте на звонок — нужны только последние 4 цифры номера",
+  "doNotAnswer": "Не отвечайте на звонок — введите последние 4 цифры входящего номера.",
   "callRequestedAgain": "Звонок запрошен повторно",
   "sportKind": "Вид спорта",
   "venueStep": "Площадка",
@@ -205,21 +206,14 @@
   "startStep": "Начало",
   "pickVenueFirst": "Сначала выберите площадку",
   "durationStep": "Продолжительность",
-  "placesStep": "Количество мест",
+  "placesStep": "Сколько игроков",
   "removePlace": "Убрать место",
   "addPlace": "Добавить место",
-  "placesCount": "{count, plural, one{{count} место} few{{count} места} other{{count} мест}}",
-  "@placesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "whoCanJoin": "Кто может вступить",
   "approveManually": "Одобрять вручную",
   "approveManuallyHint": "Вы будете подтверждать каждого игрока",
-  "participantFilter": "Фильтр участников",
+  "participantFilter": "Кто может играть",
+  "participantFilterHint": "Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».",
   "genderAny": "Любой",
   "genderMen": "Мужчины",
   "genderWomen": "Женщины",
@@ -266,11 +260,12 @@
   "bookingCreatedFull": "Площадка ваша целиком — искать игроков не нужно.",
   "openBooking": "Открыть бронь",
   "bookingSuccessDone": "Готово",
-  "bookingDetails": "Детали брони",
+  "bookingDetails": "Бронь",
+  "statusLabel": "Статус",
   "onlyOrganizerCancels": "Отменить бронь может только организатор",
   "cancelBooking": "Отменить бронь",
   "cancelBookingQuestion": "Отменить бронь?",
-  "cancelBookingMessage": "{venue}, {date}, {time}. Вернуть её тем же нажатием не получится.",
+  "cancelBookingMessage": "{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.",
   "@cancelBookingMessage": {
     "placeholders": {
       "venue": {
@@ -286,15 +281,6 @@
   },
   "keepBooking": "Оставить",
   "bookingCancelled": "Бронь отменена",
-  "bookingDetailsCard": "Детали бронирования",
-  "statusLine": "Статус · {status}",
-  "@statusLine": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
   "howPaymentWorks": "КАК ЭТО РАБОТАЕТ",
   "payShareTitle": "Своя часть · {price}",
   "@payShareTitle": {
@@ -327,7 +313,8 @@
   },
   "unknownSport": "Спорт",
   "games": "Игры",
-  "gamesSubtitle": "pickup-матчи рядом",
+  "gamesSubtitle": "открытые игры, куда можно вписаться",
+  "youAreIn": "вы в игре",
   "nothingMatchesFilters": "Под фильтры ничего не подошло",
   "nothingMatchesFiltersHint": "Игры есть, но не в этом виде спорта или не в это время.",
   "showAllGames": "Показать все игры",

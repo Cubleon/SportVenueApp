@@ -83,9 +83,11 @@ class ProfileScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  controller.userName?.trim().isNotEmpty == true
-                                      ? controller.userName!
-                                      : context.l10n.userSportVenue,
+                                  // The same fallback the home greets with.
+                                  // «Спортсмен» there and «Пользователь
+                                  // SportVenue» here is two names for one
+                                  // reader in one session.
+                                  controller.greetingName.capitalized,
                                   style: context.text.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
