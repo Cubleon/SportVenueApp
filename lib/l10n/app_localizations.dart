@@ -243,6 +243,48 @@ abstract class L {
   /// **'Открыть карту'**
   String get openMap;
 
+  /// No description provided for @gameNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра не найдена'**
+  String get gameNotFound;
+
+  /// No description provided for @venueNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клуб не найден'**
+  String get venueNotFound;
+
+  /// No description provided for @bookingNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь не найдена'**
+  String get bookingNotFound;
+
+  /// No description provided for @notFoundHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возможно, ссылка устарела или запись удалили.'**
+  String get notFoundHint;
+
+  /// No description provided for @toHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'На главную'**
+  String get toHome;
+
+  /// No description provided for @shareGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поделиться игрой'**
+  String get shareGame;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ссылка скопирована'**
+  String get linkCopied;
+
   /// No description provided for @perHourSuffix.
   ///
   /// In ru, this message translates to:

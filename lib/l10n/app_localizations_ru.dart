@@ -86,6 +86,27 @@ class LRu extends L {
   String get openMap => 'Открыть карту';
 
   @override
+  String get gameNotFound => 'Игра не найдена';
+
+  @override
+  String get venueNotFound => 'Клуб не найден';
+
+  @override
+  String get bookingNotFound => 'Бронь не найдена';
+
+  @override
+  String get notFoundHint => 'Возможно, ссылка устарела или запись удалили.';
+
+  @override
+  String get toHome => 'На главную';
+
+  @override
+  String get shareGame => 'Поделиться игрой';
+
+  @override
+  String get linkCopied => 'Ссылка скопирована';
+
+  @override
   String get perHourSuffix => '/час';
 
   @override

@@ -38,6 +38,13 @@
     }
   },
   "openMap": "Открыть карту",
+  "gameNotFound": "Игра не найдена",
+  "venueNotFound": "Клуб не найден",
+  "bookingNotFound": "Бронь не найдена",
+  "notFoundHint": "Возможно, ссылка устарела или запись удалили.",
+  "toHome": "На главную",
+  "shareGame": "Поделиться игрой",
+  "linkCopied": "Ссылка скопирована",
   "perHourSuffix": "/час",
   "pricePerHour": "{price}/час",
   "@pricePerHour": {

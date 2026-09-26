@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/l10n.dart';
 
 import '../data/app_controller.dart';
 import '../theme/app_icons.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
-import 'booking_screens.dart';
 import 'games_screens.dart';
 
 /// Which half of a player's history a screen opens on.
@@ -161,14 +162,7 @@ class HistoryScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: BookingRow(
                             booking: booking,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => BookingDetailsScreen(
-                                  controller: controller,
-                                  booking: booking,
-                                ),
-                              ),
-                            ),
+                            onTap: () => context.go(Routes.booking(booking.id)),
                           ),
                         );
                       },
@@ -191,14 +185,7 @@ class HistoryScreen extends StatelessWidget {
                           child: MiniGameCard(
                             controller: controller,
                             game: game,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => GameDetailScreen(
-                                  controller: controller,
-                                  game: game,
-                                ),
-                              ),
-                            ),
+                            onTap: () => context.go(gameLocation(game)),
                           ),
                         );
                       },

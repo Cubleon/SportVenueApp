@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 
 import '../../l10n/l10n.dart';
@@ -8,9 +9,9 @@ import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
-import 'booking_screens.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, required this.controller});
@@ -204,12 +205,7 @@ class _SearchScreenState extends State<SearchScreen> {
   /// the pin where the eye last had it.
   void _openVenue(Venue venue) {
     _selectVenue(venue);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            BookingScreen(controller: widget.controller, venue: venue),
-      ),
-    );
+    context.go(Routes.venue(venue.id));
   }
 
   void _selectVenue(Venue venue) {

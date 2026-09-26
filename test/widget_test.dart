@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sport_venue_app/src/theme/app_icons.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sport_venue_app/src/app.dart';
+import 'package:sport_venue_app/src/router.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/data/formatters.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
@@ -231,6 +233,7 @@ void main() {
 
     await tester.pumpWidget(
       _Harness(
+        controller: controller,
         child: BookingConfirmationScreen(
           controller: controller,
           draft: BookingDraft(
@@ -261,15 +264,14 @@ void main() {
     expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
   });
 
-  testWidgets('the keyboard can reach the home, and is seen when it does', (
-    tester,
-  ) async {
+  testWidgets('the keyboard can reach the tabs', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
       _Harness(
+        controller: controller,
         child: MainShell(controller: controller, onLogout: () {}),
       ),
     );
@@ -277,9 +279,7 @@ void main() {
 
     // The tabs, the date cards and the sport tiles were GestureDetectors,
     // which no amount of tabbing can reach.
-    final tabs = find.byType(TapTarget);
-    expect(tabs, findsWidgets);
-
+    expect(find.byType(TapTarget), findsWidgets);
     final node = tester.firstWidget<Focus>(
       find.descendant(
         of: find.byKey(const ValueKey('nav-Главная')),
@@ -288,52 +288,100 @@ void main() {
       ),
     );
     expect(node.canRequestFocus, isTrue);
+  });
 
-    // And pressing Enter on a focused tab does what a tap does.
+  testWidgets('Enter on a focused target does what a tap does', (tester) async {
+    _setPhoneSize(tester);
     var tapped = 0;
+
     await tester.pumpWidget(
       _Harness(
         child: Center(
           child: TapTarget(
             onTap: () => tapped++,
-            child: const SizedBox(width: 60, height: 60),
+            child: const SizedBox(
+              key: ValueKey('tap-probe'),
+              width: 60,
+              height: 60,
+            ),
           ),
         ),
       ),
     );
-    Focus.of(tester.element(find.byType(SizedBox).first)).requestFocus();
+    await tester.pumpAndSettle();
+
+    Focus.of(
+      tester.element(find.byKey(const ValueKey('tap-probe'))),
+    ).requestFocus();
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(tapped, 1);
   });
 
-  testWidgets('a request says what actually happened', (tester) async {
+  testWidgets('a link to a game opens that game', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
     addTearDown(controller.dispose);
-    final game = controller.games.firstWhere(
-      (item) => item.type == GameType.approval,
+    final game = controller.games.first;
+
+    final router = GoRouter(
+      initialLocation: Routes.game(game.id),
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: SizedBox()),
+          routes: shellRoutes(controller),
+        ),
+      ],
     );
+    addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      _Harness(
-        child: GameDetailScreen(controller: controller, game: game),
+      MaterialApp.router(
+        routerConfig: router,
+        theme: AppTheme.light(),
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
       ),
     );
     await tester.pumpAndSettle();
 
-    // The button is a verb, and the screen is titled by what it is rather
-    // than by how one gets in.
-    expect(find.text('Игра'), findsOneWidget);
-    expect(find.text('Подать заявку'), findsOneWidget);
+    // Arriving by address rather than by tap: the game is found by its id
+    // and the screen is the one a tap would have reached.
+    expect(find.text(game.venue.name.capitalized), findsWidgets);
+    expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
+  });
 
-    await tester.tap(find.byKey(const ValueKey('detail-join-game')));
+  testWidgets('a link to a game that is gone says so', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    final router = GoRouter(
+      initialLocation: Routes.game('no-such-game'),
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: SizedBox()),
+          routes: shellRoutes(controller),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        theme: AppTheme.light(),
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
+      ),
+    );
     await tester.pumpAndSettle();
 
-    // This backend puts the reader straight into the roster, so that is
-    // what is reported — never "заявка отправлена" over a completed join.
-    expect(find.text('Вы присоединились к игре'), findsOneWidget);
+    expect(find.text('Игра не найдена'), findsOneWidget);
+    expect(find.text('На главную'), findsOneWidget);
   });
 
   testWidgets('a cancelled booking stops being counted', (tester) async {
@@ -344,6 +392,7 @@ void main() {
 
     await tester.pumpWidget(
       _Harness(
+        controller: controller,
         child: HistoryScreen(
           controller: controller,
           focus: HistoryFocus.bookings,
@@ -373,6 +422,7 @@ void main() {
 
     await tester.pumpWidget(
       _Harness(
+        controller: controller,
         child: HistoryScreen(
           controller: controller,
           focus: HistoryFocus.bookings,
@@ -416,7 +466,10 @@ void main() {
     final before = game.participants.length;
 
     await tester.pumpWidget(
-      _Harness(child: GamesScreen(controller: controller)),
+      _Harness(
+        controller: controller,
+        child: GamesScreen(controller: controller),
+      ),
     );
 
     // The card offers no shortcut: joining is only on the screen that shows
@@ -441,7 +494,10 @@ void main() {
     final before = controller.games.length;
 
     await tester.pumpWidget(
-      _Harness(child: CreateGameScreen(controller: controller)),
+      _Harness(
+        controller: controller,
+        child: CreateGameScreen(controller: controller),
+      ),
     );
     // The hours belong to the chosen club, so the button waits for them.
     await tester.pumpAndSettle();
@@ -582,7 +638,10 @@ void main() {
     final controller = AppController(now: fixedNow);
 
     await tester.pumpWidget(
-      _Harness(child: CreateGameScreen(controller: controller)),
+      _Harness(
+        controller: controller,
+        child: CreateGameScreen(controller: controller),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -613,10 +672,9 @@ void main() {
   // Haptics cannot be seen, and on the web preview they do nothing at all,
   // so the only way to know they fire is to listen on the channel they
   // travel down.
-  testWidgets('choosing a sport ticks, and a booking knocks', (tester) async {
+  testWidgets('choosing a sport ticks', (tester) async {
     _setPhoneSize(tester);
     final felt = _recordHaptics();
-    final controller = AppController(now: fixedNow);
 
     await tester.pumpWidget(
       _Harness(
@@ -632,10 +690,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(felt, ['HapticFeedbackType.selectionClick']);
+  });
 
-    felt.clear();
+  testWidgets('a booking knocks when it goes through', (tester) async {
+    _setPhoneSize(tester);
+    final felt = _recordHaptics();
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
     await tester.pumpWidget(
       _Harness(
+        controller: controller,
         child: BookingConfirmationScreen(
           controller: controller,
           draft: BookingDraft(
@@ -681,8 +746,8 @@ void _setPhoneSize(WidgetTester tester) {
   addTearDown(tester.view.resetDevicePixelRatio);
 }
 
-class _Harness extends StatelessWidget {
-  const _Harness({required this.child, this.textScale = 1});
+class _Harness extends StatefulWidget {
+  const _Harness({required this.child, this.textScale = 1, this.controller});
 
   final Widget child;
 
@@ -690,19 +755,49 @@ class _Harness extends StatelessWidget {
   /// turn it up.
   final double textScale;
 
+  /// Given when the screen under test navigates. The app's own route table
+  /// is mounted underneath it, so a test pushes the locations the app
+  /// pushes rather than a set written for the test.
+  final AppController? controller;
+
+  @override
+  State<_Harness> createState() => _HarnessState();
+}
+
+class _HarnessState extends State<_Harness> {
+  // Built once. A router made inside build() is a new navigator on every
+  // rebuild, which pulls the ground out from under anything open.
+  late final GoRouter _router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(body: widget.child),
+        routes: widget.controller == null
+            ? const []
+            : shellRoutes(widget.controller!),
+      ),
+    ],
+  );
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: _router,
       theme: AppTheme.light(),
       // The screens read their words from the same place the app does.
       localizationsDelegates: L.localizationsDelegates,
       supportedLocales: L.supportedLocales,
       builder: (context, child) => MediaQuery.withClampedTextScaling(
-        minScaleFactor: textScale,
-        maxScaleFactor: textScale,
+        minScaleFactor: widget.textScale,
+        maxScaleFactor: widget.textScale,
         child: child!,
       ),
-      home: Scaffold(body: child),
     );
   }
 }

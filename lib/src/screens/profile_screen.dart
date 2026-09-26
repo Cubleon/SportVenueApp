@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
@@ -6,9 +7,9 @@ import '../../../l10n/l10n.dart';
 import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
-import 'history_screen.dart';
 import 'sport_selection_screen.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
 
@@ -148,11 +149,7 @@ class ProfileScreen extends StatelessWidget {
                         controller.activeBookings.length,
                         _myGamesCount(controller),
                       ),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => HistoryScreen(controller: controller),
-                        ),
-                      ),
+                      onTap: () => context.go(Routes.history),
                     ),
                     // Платежи, Уведомления and Поддержка stood here looking
                     // exactly like История — same card, same chevron promising a

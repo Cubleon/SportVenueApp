@@ -327,6 +327,10 @@ class _TapTargetState extends State<TapTarget> {
         return KeyEventResult.ignored;
       },
       child: Stack(
+        // Passthrough, so wrapping a control changes nothing about how it is
+        // laid out: a plain Stack sizes to its child and pins it top-left,
+        // which quietly un-centred every item in the tab bar.
+        fit: StackFit.passthrough,
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -1177,6 +1181,10 @@ Future<bool> confirmAction(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
+    // Everything inside reads [sheetContext], not the caller's. A sheet
+    // outlives the tap that opened it: cancel a booking and the screen
+    // underneath goes away while the sheet is still on screen, and a theme
+    // looked up through a dead element takes the whole frame down with it.
     builder: (sheetContext) {
       return SafeArea(
         child: Padding(
@@ -1190,7 +1198,7 @@ Future<bool> confirmAction(
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: context.colors.ink.withValues(alpha: 0.18),
+                    color: sheetContext.colors.ink.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
@@ -1198,15 +1206,15 @@ Future<bool> confirmAction(
               const SizedBox(height: 18),
               Text(
                 title,
-                style: context.text.titleLarge?.copyWith(
+                style: sheetContext.text.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
-                style: context.text.bodyMedium?.copyWith(
-                  color: context.colors.muted,
+                style: sheetContext.text.bodyMedium?.copyWith(
+                  color: sheetContext.colors.muted,
                   height: 1.4,
                 ),
               ),
@@ -1222,7 +1230,7 @@ Future<bool> confirmAction(
               // more often than on purpose.
               PrimaryButton(
                 key: const ValueKey('confirm-no'),
-                label: cancelLabel ?? context.l10n.cancel,
+                label: cancelLabel ?? sheetContext.l10n.cancel,
                 tone: ButtonTone.neutral,
                 onPressed: () => Navigator.pop(sheetContext, false),
               ),

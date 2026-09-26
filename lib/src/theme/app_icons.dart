@@ -5,12 +5,17 @@ import 'package:flutter/widgets.dart';
 /// Material's rounded set is recognisable as a default from across a room,
 /// which is half of why the app read as something nobody designed. This is a
 /// line set at a single weight, and it ships as [a subset of] the Lucide
-/// variable font — 5 KB for these twenty-six glyphs instead of the 2.8 MB of
-/// weights the package bundles for the full 1500.
+/// variable font — 10 KB for these twenty-seven glyphs instead of the 2.8 MB
+/// of weights the package bundles for the full 1500.
 ///
 /// Lucide is ISC-licensed; the copy here is generated from the pub package
 /// `lucide_icons_flutter` with `fontTools.subset`. To add an icon, add its
-/// code point below and regenerate the font with the new list.
+/// code point below — `assets/codepoints.json` in that package maps names to
+/// them — and regenerate:
+///
+///     python3 -m fontTools.subset .../lucide.ttf \
+///       --unicodes=U+E059,U+E06C,... --output-file=assets/fonts/AppIcons.ttf \
+///       --no-glyph-names --drop-tables+=GSUB --no-hinting
 @staticIconProvider
 class AppIcons {
   const AppIcons._();
@@ -56,6 +61,8 @@ class AppIcons {
   static const IconData search = IconData(57681, fontFamily: 'AppIcons');
 
   static const IconData searchX = IconData(58541, fontFamily: 'AppIcons');
+
+  static const IconData share = IconData(57686, fontFamily: 'AppIcons');
 
   static const IconData slidersHorizontal = IconData(
     58010,

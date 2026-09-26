@@ -1,16 +1,16 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 
 import '../../../l10n/l10n.dart';
 
 import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
-import 'booking_screens.dart';
-import 'create_game_screen.dart';
 import 'games_screens.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -23,6 +23,13 @@ class MainShell extends StatefulWidget {
     required this.onLogout,
   });
 
+  /// A tab asked for from outside the shell.
+  ///
+  /// Screens pushed over the shell — «Мои игры» and its «Найти игру» — sit
+  /// above it in the navigator rather than inside it, so they cannot reach
+  /// its state to change tabs. They leave the request here and go home.
+  static final ValueNotifier<int> requestedTab = ValueNotifier<int>(0);
+
   final AppController controller;
   final VoidCallback onLogout;
 
@@ -32,6 +39,25 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    MainShell.requestedTab.addListener(_takeRequestedTab);
+  }
+
+  @override
+  void dispose() {
+    MainShell.requestedTab.removeListener(_takeRequestedTab);
+    super.dispose();
+  }
+
+  void _takeRequestedTab() {
+    final wanted = MainShell.requestedTab.value;
+    if (mounted && wanted != _tab) {
+      setState(() => _tab = wanted);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +82,10 @@ class _MainShellState extends State<MainShell> {
       extendBody: true,
       bottomNavigationBar: _BottomNav(
         selectedIndex: _tab,
-        onTab: (index) => setState(() => _tab = index),
+        onTab: (index) {
+          MainShell.requestedTab.value = index;
+          setState(() => _tab = index);
+        },
         onCreate: _showCreateSheet,
       ),
     );
@@ -89,12 +118,7 @@ class _MainShellState extends State<MainShell> {
     if (!context.mounted) {
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            BookingScreen(controller: widget.controller, venue: venue),
-      ),
-    );
+    context.go(Routes.venue(venue.id));
   }
 
   void _showCreateSheet() {
@@ -136,12 +160,7 @@ class _MainShellState extends State<MainShell> {
                   subtitle: context.l10n.createGameActionSubtitle,
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            CreateGameScreen(controller: widget.controller),
-                      ),
-                    );
+                    context.go(Routes.create);
                   },
                 ),
                 const SizedBox(height: 10),

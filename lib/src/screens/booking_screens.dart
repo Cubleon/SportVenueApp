@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_icons.dart';
 
@@ -12,6 +13,7 @@ import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
@@ -496,14 +498,7 @@ class BookingSuccessScreen extends StatelessWidget {
                   PrimaryButton(
                     key: const ValueKey('open-created-booking'),
                     label: context.l10n.openBooking,
-                    onPressed: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => BookingDetailsScreen(
-                          controller: controller,
-                          booking: booking,
-                        ),
-                      ),
-                    ),
+                    onPressed: () => context.go(Routes.booking(booking.id)),
                   ),
                   const SizedBox(height: 10),
                   PrimaryButton(

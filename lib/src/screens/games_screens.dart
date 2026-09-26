@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 
 import '../labels.dart';
@@ -10,6 +11,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
 import '../widgets/sport_surface.dart';
@@ -126,14 +128,7 @@ class _GamesScreenState extends State<GamesScreen> {
                     child: MiniGameCard(
                       controller: widget.controller,
                       game: game,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => GameDetailScreen(
-                            controller: widget.controller,
-                            game: game,
-                          ),
-                        ),
-                      ),
+                      onTap: () => context.go(gameLocation(game)),
                     ),
                   );
                 },
@@ -385,6 +380,9 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                       child: _DetailHeader(
                         title: context.l10n.game,
                         onBack: () => Navigator.of(context).pop(),
+                        onShare: canShareLinks
+                            ? () => copyLink(context, gameLocation(current))
+                            : null,
                       ),
                     ),
                     SliverToBoxAdapter(
@@ -831,10 +829,19 @@ class _Avatar extends StatelessWidget {
 }
 
 class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({required this.title, required this.onBack});
+  const _DetailHeader({
+    required this.title,
+    required this.onBack,
+    this.onShare,
+  });
 
   final String title;
   final VoidCallback onBack;
+
+  /// Offered where there is an address to offer. Getting people into a
+  /// pickup game means sending them to it, and until the app had routes
+  /// there was nothing to send.
+  final VoidCallback? onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -860,7 +867,19 @@ class _DetailHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48),
+          if (onShare == null)
+            const SizedBox(width: 48)
+          else
+            IconButton.filled(
+              key: const ValueKey('share-game'),
+              tooltip: context.l10n.shareGame,
+              onPressed: onShare,
+              icon: const Icon(AppIcons.share),
+              style: IconButton.styleFrom(
+                backgroundColor: context.colors.surface,
+                foregroundColor: context.colors.ink,
+              ),
+            ),
         ],
       ),
     );

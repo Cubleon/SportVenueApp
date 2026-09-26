@@ -3,13 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import 'data/app_controller.dart';
-import 'labels.dart';
-import 'screens/auth_screens.dart';
-import 'screens/main_shell.dart';
-import 'screens/sport_selection_screen.dart';
+import 'router.dart';
 import 'theme/app_theme.dart';
-
-enum _RootStage { splash, registration, otp, sports, main }
 
 class SportVenueApp extends StatefulWidget {
   const SportVenueApp({super.key, this.controller});
@@ -23,21 +18,21 @@ class SportVenueApp extends StatefulWidget {
 class _SportVenueAppState extends State<SportVenueApp> {
   late final AppController _controller =
       widget.controller ?? AppController.connected();
-  _RootStage _stage = _RootStage.splash;
-  String _pendingPhone = '';
+  final AppBoot _boot = AppBoot();
 
   /// Started with the app, awaited by the splash. A reader who signed in
   /// last week lands on the main screen instead of the phone field.
-  late final Future<bool> _restoring;
+  late final Future<bool> _restoring = _controller.restoreSession();
 
-  @override
-  void initState() {
-    super.initState();
-    _restoring = _controller.restoreSession();
-  }
+  late final _router = buildRouter(
+    controller: _controller,
+    boot: _boot,
+    restoring: _restoring,
+  );
 
   @override
   void dispose() {
+    _router.dispose();
     if (widget.controller == null) {
       _controller.dispose();
     }
@@ -46,7 +41,8 @@ class _SportVenueAppState extends State<SportVenueApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: _router,
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: L.localizationsDelegates,
@@ -73,106 +69,6 @@ class _SportVenueAppState extends State<SportVenueApp> {
             ),
           ),
         ),
-      ),
-      home: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          // Taken before any await: the callbacks below report failures
-          // long after this context stopped being theirs to use.
-          final l10n = context.l10n;
-          return AnimatedSwitcher(
-            duration: context.motion(const Duration(milliseconds: 320)),
-            child: switch (_stage) {
-              _RootStage.splash => SplashScreen(
-                key: const ValueKey('splash'),
-                // The mark stays up until the session question is settled,
-                // which is the only thing this app has ever had to wait for.
-                onFinished: () async {
-                  var restored = false;
-                  try {
-                    restored = await _restoring;
-                  } catch (_) {
-                    // A session that will not come back is not an error to
-                    // report; it just means signing in again.
-                  }
-                  if (!mounted) {
-                    return;
-                  }
-                  setState(
-                    () => _stage = restored
-                        ? _RootStage.main
-                        : _RootStage.registration,
-                  );
-                },
-              ),
-              _RootStage.registration => RegistrationScreen(
-                key: const ValueKey('registration'),
-                onContinue: (phone) async {
-                  try {
-                    await _controller.startPhoneVerification(phone);
-                    if (!mounted) return null;
-                    setState(() {
-                      _pendingPhone = phone;
-                      _stage = _RootStage.otp;
-                    });
-                    return null;
-                  } catch (error) {
-                    return errorTextFor(l10n, error);
-                  }
-                },
-              ),
-              _RootStage.otp => OtpScreen(
-                key: const ValueKey('otp'),
-                phone: _pendingPhone,
-                onBack: () => setState(() => _stage = _RootStage.registration),
-                onVerified: (code) async {
-                  try {
-                    await _controller.signIn(_pendingPhone, code);
-                    if (!mounted) {
-                      return null;
-                    }
-                    setState(() => _stage = _RootStage.sports);
-                    return null;
-                  } catch (error) {
-                    return errorTextFor(l10n, error);
-                  }
-                },
-                onResend: () async {
-                  try {
-                    await _controller.startPhoneVerification(_pendingPhone);
-                    return null;
-                  } catch (error) {
-                    return errorTextFor(l10n, error);
-                  }
-                },
-              ),
-              _RootStage.sports => SportSelectionScreen(
-                key: const ValueKey('sports'),
-                sports: _controller.sports,
-                // Signing up starts from nothing ticked. Three sports chosen
-                // on the reader's behalf are three they never said they play,
-                // and the feed spends the rest of the session acting on them.
-                initialSelection: const <String>{},
-                errorMessage: (error) => errorTextFor(l10n, error),
-                onContinue: (ids) async {
-                  await _controller.completeSports(ids);
-                  if (!mounted) {
-                    return;
-                  }
-                  setState(() => _stage = _RootStage.main);
-                },
-              ),
-              _RootStage.main => MainShell(
-                key: const ValueKey('main'),
-                controller: _controller,
-                onLogout: () {
-                  _controller.logout();
-                  setState(() => _stage = _RootStage.registration);
-                },
-              ),
-            },
-          );
-        },
       ),
     );
   }

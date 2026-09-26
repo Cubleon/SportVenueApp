@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 import 'package:flutter/services.dart';
 
@@ -9,11 +10,10 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/sport_surface.dart';
-import 'booking_screens.dart';
-import 'history_screen.dart';
 
 /// The home screen: a date, and everything that date holds.
 ///
@@ -51,14 +51,32 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, int> _freeSlots = const {};
   int _slotsToken = 0;
 
+  /// How many bookings existed last time the free hours were counted.
+  ///
+  /// Coming back from a booking, the hours this club has left are one fewer
+  /// than the chip says. Watching the data rather than the navigation catches
+  /// it wherever the booking was made — the club list, the map, the tab bar.
+  int _bookingsSeen = 0;
+
   @override
   void initState() {
     super.initState();
+    _bookingsSeen = widget.controller.bookings.length;
+    widget.controller.addListener(_watchBookings);
     _loadSlots();
+  }
+
+  void _watchBookings() {
+    final now = widget.controller.bookings.length;
+    if (now != _bookingsSeen) {
+      _bookingsSeen = now;
+      _loadSlots();
+    }
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_watchBookings);
     _search.dispose();
     super.dispose();
   }
@@ -176,23 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 SliverToBoxAdapter(
                   child: _MineRow(
                     controller: widget.controller,
-                    onBookings: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => HistoryScreen(
-                          controller: widget.controller,
-                          focus: HistoryFocus.bookings,
-                        ),
-                      ),
-                    ),
-                    onGames: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => HistoryScreen(
-                          controller: widget.controller,
-                          focus: HistoryFocus.games,
-                          onFindGames: widget.onOpenGames,
-                        ),
-                      ),
-                    ),
+                    onBookings: () => context.go(Routes.bookings),
+                    onGames: () => context.go(Routes.myGames),
                   ),
                 ),
                 if (venues.isEmpty)
@@ -225,22 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   sportId: _sportOf(venue),
                                   freeSlots: _freeSlots[venue.id],
                                   divided: index > 0,
-                                  // Coming back from a booking, the hours
-                                  // this club has left are one fewer than
-                                  // the chip says. They were loaded once, on
-                                  // the way in, and never again.
-                                  onTap: () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => BookingScreen(
-                                          controller: widget.controller,
-                                          venue: venue,
-                                          date: _date,
-                                        ),
-                                      ),
-                                    );
-                                    await _loadSlots();
-                                  },
+                                  onTap: () => context.go(
+                                    Routes.venue(venue.id, date: _date),
+                                  ),
                                 ),
                             ],
                           ),

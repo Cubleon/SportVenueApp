@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
 
 import '../labels.dart';
@@ -9,10 +10,10 @@ import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
+import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
-import 'games_screens.dart';
 
 class CreateGameScreen extends StatefulWidget {
   const CreateGameScreen({super.key, required this.controller});
@@ -484,12 +485,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       }
       setState(() => _loading = false);
       showAppSnack(context, context.l10n.gameCreated, tone: SnackTone.done);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) =>
-              GameDetailScreen(controller: widget.controller, game: game),
-        ),
-      );
+      // Replaced rather than stacked, and by address rather than by
+      // object: the game now has a link its organiser can send to people.
+      context.go(gameLocation(game));
     } catch (error) {
       if (!mounted) {
         return;
