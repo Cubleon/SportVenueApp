@@ -149,7 +149,10 @@ class _SportVenueAppState extends State<SportVenueApp> {
               _RootStage.sports => SportSelectionScreen(
                 key: const ValueKey('sports'),
                 sports: _controller.sports,
-                initialSelection: _controller.selectedSportIds,
+                // Signing up starts from nothing ticked. Three sports chosen
+                // on the reader's behalf are three they never said they play,
+                // and the feed spends the rest of the session acting on them.
+                initialSelection: const <String>{},
                 errorMessage: (error) => errorTextFor(l10n, error),
                 onContinue: (ids) async {
                   await _controller.completeSports(ids);

@@ -93,7 +93,7 @@ class LRu extends L {
   }
 
   @override
-  String get sportStep => 'Шаг 1 из 2';
+  String get skipSports => 'Пропустить — показывать все виды';
 
   @override
   String get sportQuestion => 'Какой спорт?';
@@ -170,12 +170,6 @@ class LRu extends L {
   String get noPhone => 'Номер не указан';
 
   @override
-  String get editProfile => 'Редактировать профиль';
-
-  @override
-  String get editProfileLater => 'Редактирование профиля подключится позже';
-
-  @override
   String get sportPreferences => 'Спортивные предпочтения';
 
   @override
@@ -183,11 +177,6 @@ class LRu extends L {
 
   @override
   String get history => 'История';
-
-  @override
-  String historySubtitle(int bookings, int games) {
-    return '$bookings броней · $games игр';
-  }
 
   @override
   String get logout => 'Выйти из аккаунта';
@@ -316,23 +305,7 @@ class LRu extends L {
       'Согласен с обработкой персональных данных и условиями сервиса';
 
   @override
-  String get or => 'или';
-
-  @override
-  String get signInWithGoogle => 'Войти через Google';
-
-  @override
-  String get signInWithVk => 'Войти через VK';
-
-  @override
-  String get signInWithApple => 'Войти через Apple';
-
-  @override
-  String get termsFooter =>
-      'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности';
-
-  @override
-  String get socialLater => 'Социальный вход подключится позже';
+  String get consentRequired => 'Отметьте согласие, чтобы продолжить';
 
   @override
   String get wrongCode => 'Неверный код, попробуйте ещё раз';
@@ -479,7 +452,29 @@ class LRu extends L {
   String get goBack => 'Вернуться назад';
 
   @override
-  String get paymentDone => 'Оплата прошла, бронь создана';
+  String get bookingCreated => 'Бронь создана';
+
+  @override
+  String bookingCreatedShares(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count долей',
+      few: '$count доли',
+      one: '$count долю',
+    );
+    return 'Ваша часть оплачена. Осталось собрать $_temp0 — позовите игроков до начала.';
+  }
+
+  @override
+  String get bookingCreatedFull =>
+      'Площадка ваша целиком — искать игроков не нужно.';
+
+  @override
+  String get openBooking => 'Открыть бронь';
+
+  @override
+  String get bookingSuccessDone => 'Готово';
 
   @override
   String get bookingDetails => 'Детали брони';
@@ -511,6 +506,35 @@ class LRu extends L {
   String statusLine(String status) {
     return 'Статус · $status';
   }
+
+  @override
+  String get howPaymentWorks => 'КАК ЭТО РАБОТАЕТ';
+
+  @override
+  String payShareTitle(String price) {
+    return 'Своя часть · $price';
+  }
+
+  @override
+  String payShareExplainer(int others, String total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      others,
+      locale: localeName,
+      other: '$others долей',
+      few: '$others доли',
+      one: '$others долю',
+    );
+    return 'Вы платите свою долю, остальные $_temp0 оплачивают другие игроки — всего $total. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.';
+  }
+
+  @override
+  String payFullTitle(String price) {
+    return 'Целиком · $price';
+  }
+
+  @override
+  String get payFullExplainer =>
+      'Площадка ваша сразу, искать игроков не нужно.';
 
   @override
   String get cancellationTerms => 'Условия отмены';
@@ -549,12 +573,6 @@ class LRu extends L {
 
   @override
   String get gamesSubtitle => 'pickup-матчи рядом';
-
-  @override
-  String get filters => 'Фильтры';
-
-  @override
-  String get filtersLater => 'Расширенные фильтры появятся позже';
 
   @override
   String get nothingMatchesFilters => 'Под фильтры ничего не подошло';
@@ -604,12 +622,6 @@ class LRu extends L {
 
   @override
   String get organizer => 'Организатор';
-
-  @override
-  String get chatLater => 'Чат подключится позже';
-
-  @override
-  String get write => 'Написать';
 
   @override
   String get players => 'игроки';

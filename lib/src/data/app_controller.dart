@@ -252,10 +252,16 @@ class AppController extends ChangeNotifier {
         .toList();
   }
 
+  /// Saves the sports the reader says they play.
+  ///
+  /// An empty set is allowed and means "no preference": [preferredVenues]
+  /// and [preferredGames] already read it that way. Refusing it would force
+  /// onboarding to hold the reader at a greyed-out button until they name a
+  /// sport, and the honest answer "I'll play anything" has to be sayable.
   Future<void> completeSports(Set<String> ids) async {
     final next = Set<String>.from(ids);
-    if (next.isEmpty || next.length > 6) {
-      throw ArgumentError('Select between one and six sports.');
+    if (next.length > 6) {
+      throw ArgumentError('Select at most six sports.');
     }
     final api = _api;
     if (api != null) {
@@ -268,9 +274,6 @@ class AppController extends ChangeNotifier {
   void togglePreferredSport(String id) {
     final next = Set<String>.from(selectedSportIds);
     if (next.contains(id)) {
-      if (next.length == 1) {
-        return;
-      }
       next.remove(id);
     } else {
       next.add(id);

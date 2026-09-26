@@ -56,7 +56,7 @@
       }
     }
   },
-  "sportStep": "Шаг 1 из 2",
+  "skipSports": "Пропустить — показывать все виды",
   "sportQuestion": "Какой спорт?",
   "sportHint": "Можно выбрать несколько",
   "sportsUnavailable": "Виды спорта пока недоступны",
@@ -92,22 +92,9 @@
   "demoAccountSportVenue": "Демо-аккаунт SportVenue",
   "userSportVenue": "Пользователь SportVenue",
   "noPhone": "Номер не указан",
-  "editProfile": "Редактировать профиль",
-  "editProfileLater": "Редактирование профиля подключится позже",
   "sportPreferences": "Спортивные предпочтения",
   "change": "Изменить",
   "history": "История",
-  "historySubtitle": "{bookings} броней · {games} игр",
-  "@historySubtitle": {
-    "placeholders": {
-      "bookings": {
-        "type": "int"
-      },
-      "games": {
-        "type": "int"
-      }
-    }
-  },
   "logout": "Выйти из аккаунта",
   "logoutQuestion": "Выйти из аккаунта?",
   "logoutMessage": "Брони и игры останутся на месте — чтобы вернуться к ним, придётся снова подтвердить номер телефона.",
@@ -164,12 +151,7 @@
   "skipSplash": "Пропустить заставку",
   "signInTitle": "Войти или\nзарегистрироваться",
   "consent": "Согласен с обработкой персональных данных и условиями сервиса",
-  "or": "или",
-  "signInWithGoogle": "Войти через Google",
-  "signInWithVk": "Войти через VK",
-  "signInWithApple": "Войти через Apple",
-  "termsFooter": "Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности",
-  "socialLater": "Социальный вход подключится позже",
+  "consentRequired": "Отметьте согласие, чтобы продолжить",
   "wrongCode": "Неверный код, попробуйте ещё раз",
   "enterCode": "Введите код",
   "codeHint": "Мы звоним на {phone}. Введите последние 4 цифры входящего номера",
@@ -259,7 +241,14 @@
     }
   },
   "goBack": "Вернуться назад",
-  "paymentDone": "Оплата прошла, бронь создана",
+  "bookingCreated": "Бронь создана",
+  "bookingCreatedShares": "Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.",
+  "@bookingCreatedShares": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "bookingCreatedFull": "Площадка ваша целиком — искать игроков не нужно.",
+  "openBooking": "Открыть бронь",
+  "bookingSuccessDone": "Готово",
   "bookingDetails": "Детали брони",
   "onlyOrganizerCancels": "Отменить бронь может только организатор",
   "cancelBooking": "Отменить бронь",
@@ -289,6 +278,23 @@
       }
     }
   },
+  "howPaymentWorks": "КАК ЭТО РАБОТАЕТ",
+  "payShareTitle": "Своя часть · {price}",
+  "@payShareTitle": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payShareExplainer": "Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.",
+  "@payShareExplainer": {
+    "placeholders": {
+      "others": { "type": "int" },
+      "total": { "type": "String" }
+    }
+  },
+  "payFullTitle": "Целиком · {price}",
+  "@payFullTitle": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payFullExplainer": "Площадка ваша сразу, искать игроков не нужно.",
   "cancellationTerms": "Условия отмены",
   "cancellationTermAuto": "Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически",
   "cancellationTermRefund": "Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней",
@@ -305,8 +311,6 @@
   "unknownSport": "Спорт",
   "games": "Игры",
   "gamesSubtitle": "pickup-матчи рядом",
-  "filters": "Фильтры",
-  "filtersLater": "Расширенные фильтры появятся позже",
   "nothingMatchesFilters": "Под фильтры ничего не подошло",
   "nothingMatchesFiltersHint": "Игры есть, но не в этом виде спорта или не в это время.",
   "showAllGames": "Показать все игры",
@@ -336,8 +340,6 @@
   "alreadyJoined": "Вы уже в этой игре",
   "price": "Стоимость",
   "organizer": "Организатор",
-  "chatLater": "Чат подключится позже",
-  "write": "Написать",
   "players": "игроки",
   "leaveGame": "Выйти из игры",
   "requestAfterApproval": "Заявка и оплата после одобрения",

@@ -85,32 +85,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700));
   });
 
-  testWidgets('sport selection requires at least one sport', (tester) async {
+  testWidgets('sport selection lets a reader say "anything"', (tester) async {
     _setPhoneSize(tester);
-    var completed = false;
+    Set<String>? saved;
 
     await tester.pumpWidget(
       _Harness(
         child: SportSelectionScreen(
           sports: MockData.sports,
           initialSelection: const {},
-          onContinue: (_) async {
-            completed = true;
+          onContinue: (ids) async {
+            saved = ids;
           },
         ),
       ),
     );
 
+    // Nothing ticked: the button offers the way past rather than greying
+    // out, and passing through saves no preference at all.
+    expect(find.textContaining('Пропустить'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('sports-continue')));
     await tester.pump();
-    expect(completed, isFalse);
+    expect(saved, isEmpty);
 
     await tester.ensureVisible(find.text('Футбол'));
     await tester.tap(find.text('Футбол'));
     await tester.pumpAndSettle();
+    expect(find.textContaining('Продолжить'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('sports-continue')));
     await tester.pump();
-    expect(completed, isTrue);
+    expect(saved, {'football'});
   });
 
   testWidgets(
@@ -215,6 +219,44 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('paying opens the booking it just created', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+    final before = controller.bookings.length;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: BookingConfirmationScreen(
+          controller: controller,
+          draft: BookingDraft(
+            venue: MockData.venues.first,
+            date: fixedNow.add(const Duration(days: 1)),
+            durationMinutes: 60,
+            startHour: 20,
+            players: 4,
+            mode: PaymentMode.split,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('confirm-payment')));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+
+    // Not a toast over the previous screen: the money bought something, and
+    // the screen that follows says what, and where it now lives.
+    await tester.pumpAndSettle();
+    expect(controller.bookings.length, before + 1);
+    expect(find.text('Бронь создана'), findsOneWidget);
+    expect(find.textContaining('Осталось собрать'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('open-created-booking')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
   });
 
   testWidgets('a booking is cancelled from «мои брони», and asks first', (

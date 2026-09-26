@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_icons.dart';
 
 import '../labels.dart';
@@ -166,6 +169,18 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                    child: _PaymentExplainerCard(draft: _draft),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: _CancellationTermsCard(),
+                  ),
+                ),
                 // Room for the pinned bar, which floats over the content.
                 SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
               ],
@@ -178,6 +193,24 @@ class _BookingScreenState extends State<BookingScreen> {
                 onHeight: _onBarHeight,
                 child: Column(
                   children: [
+                    // What the money is for. The hour is chosen four steps
+                    // up the page and the button used to carry only a price,
+                    // so the one part of the deal that changes was the one
+                    // part the reader could not see while paying.
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        '${AppFormatters.dateShort(_date)} · '
+                        '${_draft.timeRange} · ${_venue.name.capitalized}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: context.text.bodySmall?.copyWith(
+                          color: context.colors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                     PrimaryButton(
                       key: const ValueKey('pay-share'),
                       label: context.l10n.paySharePrice(
@@ -277,7 +310,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
     }
   }
 
-  bool _accepted = true;
   bool _loading = false;
 
   int get _paymentAmount {
@@ -303,36 +335,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 _BookingDetailsCard(draft: widget.draft),
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => setState(() => _accepted = !_accepted),
-                  borderRadius: BorderRadius.circular(16),
-                  child: AppCard(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Checkbox(
-                          value: _accepted,
-                          activeColor: context.colors.accent,
-                          onChanged: (value) =>
-                              setState(() => _accepted = value ?? false),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: Text(
-                              context.l10n.payConsent,
-                              style: context.text.bodySmall?.copyWith(
-                                color: context.colors.muted,
-                                height: 1.42,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
             Positioned(
@@ -343,6 +345,20 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 onHeight: _onBarHeight,
                 child: Column(
                   children: [
+                    // The sentence says the press is the agreement, so a box
+                    // beside it asked for the same consent twice — and asked
+                    // for it pre-ticked, which is not consent at all.
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        context.l10n.payConsent,
+                        textAlign: TextAlign.center,
+                        style: context.text.bodySmall?.copyWith(
+                          color: context.colors.muted,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
                     PrimaryButton(
                       key: const ValueKey('confirm-payment'),
                       label: context.l10n.goToPayment(
@@ -350,7 +366,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       ),
                       tone: ButtonTone.commit,
                       isLoading: _loading,
-                      onPressed: _accepted ? _pay : null,
+                      onPressed: _loading ? null : _pay,
                     ),
                     const SizedBox(height: 10),
                     PrimaryButton(
@@ -374,13 +390,25 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   Future<void> _pay() async {
     setState(() => _loading = true);
     try {
-      await widget.controller.addBooking(widget.draft);
+      final booking = await widget.controller.addBooking(widget.draft);
       if (!mounted) {
         return;
       }
       setState(() => _loading = false);
-      showAppSnack(context, context.l10n.paymentDone, tone: SnackTone.done);
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Said in the hand as well as on the screen: the snack used to carry
+      // this, and the success screen that replaced it should not be quieter.
+      // Not awaited: the buzz is a side effect, and on a platform whose
+      // channel never answers, awaiting it holds the screen on a payment
+      // that has already gone through.
+      unawaited(HapticFeedback.mediumImpact());
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => BookingSuccessScreen(
+            controller: widget.controller,
+            booking: booking,
+          ),
+        ),
+      );
     } catch (error) {
       if (!mounted) {
         return;
@@ -388,6 +416,109 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
       setState(() => _loading = false);
       showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
+  }
+}
+
+/// The end of the payment, given a screen of its own.
+///
+/// It used to be a toast over the home screen: the one moment the reader
+/// has just paid for, and the app said it in two lines that disappeared,
+/// with no way back to the thing that had just been created. A booking
+/// that collects shares also has a next step, and this is where it is said.
+class BookingSuccessScreen extends StatelessWidget {
+  const BookingSuccessScreen({
+    super.key,
+    required this.controller,
+    required this.booking,
+  });
+
+  final AppController controller;
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final split = booking.draft.mode == PaymentMode.split;
+    final left = booking.shares.isEmpty
+        ? booking.draft.players - 1
+        : booking.shares.length - booking.paidShares;
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.colors.success.withValues(alpha: 0.12),
+                      ),
+                      child: Icon(
+                        AppIcons.check,
+                        size: 34,
+                        color: context.colors.success,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    context.l10n.bookingCreated,
+                    textAlign: TextAlign.center,
+                    style: context.text.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    split && left > 0
+                        ? context.l10n.bookingCreatedShares(left)
+                        : context.l10n.bookingCreatedFull,
+                    textAlign: TextAlign.center,
+                    style: context.text.bodyMedium?.copyWith(
+                      color: context.colors.muted,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  _BookingDetailsCard(draft: booking.draft),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                children: [
+                  PrimaryButton(
+                    key: const ValueKey('open-created-booking'),
+                    label: context.l10n.openBooking,
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => BookingDetailsScreen(
+                          controller: controller,
+                          booking: booking,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  PrimaryButton(
+                    key: const ValueKey('close-booking-success'),
+                    label: context.l10n.bookingSuccessDone,
+                    tone: ButtonTone.neutral,
+                    onPressed: () =>
+                        Navigator.of(context).popUntil((r) => r.isFirst),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -667,6 +798,82 @@ class _SharesCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// What the two buttons below actually mean.
+///
+/// «Оплатить свою часть» asks for a quarter of the price and says nothing
+/// about the other three quarters — who pays them, by when, and what
+/// happens if nobody does. Until this card the answer lived on the next
+/// screen, in the small print, after the decision had been made.
+class _PaymentExplainerCard extends StatelessWidget {
+  const _PaymentExplainerCard({required this.draft});
+
+  final BookingDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.howPaymentWorks,
+            style: context.text.labelLarge?.copyWith(
+              color: context.colors.muted,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ExplainerRow(
+            title: context.l10n.payShareTitle(
+              AppFormatters.money(draft.sharePrice),
+            ),
+            body: context.l10n.payShareExplainer(
+              draft.players - 1,
+              AppFormatters.money(draft.totalPrice),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ExplainerRow(
+            title: context.l10n.payFullTitle(
+              AppFormatters.money(draft.totalPrice),
+            ),
+            body: context.l10n.payFullExplainer,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExplainerRow extends StatelessWidget {
+  const _ExplainerRow({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          body,
+          style: context.text.bodySmall?.copyWith(
+            color: context.colors.muted,
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }

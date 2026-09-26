@@ -249,11 +249,11 @@ abstract class L {
   /// **'{time} · {status}'**
   String bookingRowSubtitle(String time, String status);
 
-  /// No description provided for @sportStep.
+  /// No description provided for @skipSports.
   ///
   /// In ru, this message translates to:
-  /// **'Шаг 1 из 2'**
-  String get sportStep;
+  /// **'Пропустить — показывать все виды'**
+  String get skipSports;
 
   /// No description provided for @sportQuestion.
   ///
@@ -381,18 +381,6 @@ abstract class L {
   /// **'Номер не указан'**
   String get noPhone;
 
-  /// No description provided for @editProfile.
-  ///
-  /// In ru, this message translates to:
-  /// **'Редактировать профиль'**
-  String get editProfile;
-
-  /// No description provided for @editProfileLater.
-  ///
-  /// In ru, this message translates to:
-  /// **'Редактирование профиля подключится позже'**
-  String get editProfileLater;
-
   /// No description provided for @sportPreferences.
   ///
   /// In ru, this message translates to:
@@ -410,12 +398,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'История'**
   String get history;
-
-  /// No description provided for @historySubtitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'{bookings} броней · {games} игр'**
-  String historySubtitle(int bookings, int games);
 
   /// No description provided for @logout.
   ///
@@ -609,41 +591,11 @@ abstract class L {
   /// **'Согласен с обработкой персональных данных и условиями сервиса'**
   String get consent;
 
-  /// No description provided for @or.
+  /// No description provided for @consentRequired.
   ///
   /// In ru, this message translates to:
-  /// **'или'**
-  String get or;
-
-  /// No description provided for @signInWithGoogle.
-  ///
-  /// In ru, this message translates to:
-  /// **'Войти через Google'**
-  String get signInWithGoogle;
-
-  /// No description provided for @signInWithVk.
-  ///
-  /// In ru, this message translates to:
-  /// **'Войти через VK'**
-  String get signInWithVk;
-
-  /// No description provided for @signInWithApple.
-  ///
-  /// In ru, this message translates to:
-  /// **'Войти через Apple'**
-  String get signInWithApple;
-
-  /// No description provided for @termsFooter.
-  ///
-  /// In ru, this message translates to:
-  /// **'Продолжая, вы соглашаетесь с условиями использования и политикой конфиденциальности'**
-  String get termsFooter;
-
-  /// No description provided for @socialLater.
-  ///
-  /// In ru, this message translates to:
-  /// **'Социальный вход подключится позже'**
-  String get socialLater;
+  /// **'Отметьте согласие, чтобы продолжить'**
+  String get consentRequired;
 
   /// No description provided for @wrongCode.
   ///
@@ -885,11 +837,35 @@ abstract class L {
   /// **'Вернуться назад'**
   String get goBack;
 
-  /// No description provided for @paymentDone.
+  /// No description provided for @bookingCreated.
   ///
   /// In ru, this message translates to:
-  /// **'Оплата прошла, бронь создана'**
-  String get paymentDone;
+  /// **'Бронь создана'**
+  String get bookingCreated;
+
+  /// No description provided for @bookingCreatedShares.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.'**
+  String bookingCreatedShares(int count);
+
+  /// No description provided for @bookingCreatedFull.
+  ///
+  /// In ru, this message translates to:
+  /// **'Площадка ваша целиком — искать игроков не нужно.'**
+  String get bookingCreatedFull;
+
+  /// No description provided for @openBooking.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть бронь'**
+  String get openBooking;
+
+  /// No description provided for @bookingSuccessDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Готово'**
+  String get bookingSuccessDone;
 
   /// No description provided for @bookingDetails.
   ///
@@ -945,6 +921,36 @@ abstract class L {
   /// **'Статус · {status}'**
   String statusLine(String status);
 
+  /// No description provided for @howPaymentWorks.
+  ///
+  /// In ru, this message translates to:
+  /// **'КАК ЭТО РАБОТАЕТ'**
+  String get howPaymentWorks;
+
+  /// No description provided for @payShareTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Своя часть · {price}'**
+  String payShareTitle(String price);
+
+  /// No description provided for @payShareExplainer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.'**
+  String payShareExplainer(int others, String total);
+
+  /// No description provided for @payFullTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Целиком · {price}'**
+  String payFullTitle(String price);
+
+  /// No description provided for @payFullExplainer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Площадка ваша сразу, искать игроков не нужно.'**
+  String get payFullExplainer;
+
   /// No description provided for @cancellationTerms.
   ///
   /// In ru, this message translates to:
@@ -998,18 +1004,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'pickup-матчи рядом'**
   String get gamesSubtitle;
-
-  /// No description provided for @filters.
-  ///
-  /// In ru, this message translates to:
-  /// **'Фильтры'**
-  String get filters;
-
-  /// No description provided for @filtersLater.
-  ///
-  /// In ru, this message translates to:
-  /// **'Расширенные фильтры появятся позже'**
-  String get filtersLater;
 
   /// No description provided for @nothingMatchesFilters.
   ///
@@ -1082,18 +1076,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Организатор'**
   String get organizer;
-
-  /// No description provided for @chatLater.
-  ///
-  /// In ru, this message translates to:
-  /// **'Чат подключится позже'**
-  String get chatLater;
-
-  /// No description provided for @write.
-  ///
-  /// In ru, this message translates to:
-  /// **'Написать'**
-  String get write;
 
   /// No description provided for @players.
   ///

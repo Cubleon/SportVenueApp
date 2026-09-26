@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../labels.dart';
@@ -43,8 +45,10 @@ Future<void> refreshAndReport(
   BuildContext context,
   AppController controller,
 ) async {
-  // The pull has taken. Said in the hand, before the waiting starts.
-  await HapticFeedback.lightImpact();
+  // The pull has taken. Said in the hand, before the waiting starts — and
+  // not awaited, or a platform that never answers the channel holds the
+  // refresh that the gesture asked for.
+  unawaited(HapticFeedback.lightImpact());
   try {
     await controller.refresh();
   } catch (error) {

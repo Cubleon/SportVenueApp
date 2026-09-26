@@ -72,12 +72,6 @@ class _GamesScreenState extends State<GamesScreen> {
                   title: context.l10n.games,
                   eyebrow: AppFormatters.dateFull(widget.controller.now),
                   subtitle: context.l10n.gamesSubtitle,
-                  trailing: SkyIconButton(
-                    icon: AppIcons.slidersHorizontal,
-                    label: context.l10n.filters,
-                    onTap: () =>
-                        showAppSnack(context, context.l10n.filtersLater),
-                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -461,11 +455,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             widget.controller,
                             current.organizer,
                             isOrganizer: true,
-                          ),
-                          trailing: OutlinedButton(
-                            onPressed: () =>
-                                showAppSnack(context, context.l10n.chatLater),
-                            child: Text(context.l10n.write),
                           ),
                         ),
                       ),
@@ -874,14 +863,9 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _ParticipantTile extends StatelessWidget {
-  const _ParticipantTile({
-    required this.participant,
-    this.trailing,
-    this.onTap,
-  });
+  const _ParticipantTile({required this.participant, this.onTap});
 
   final Participant participant;
-  final Widget? trailing;
   final VoidCallback? onTap;
 
   @override
@@ -916,7 +900,10 @@ class _ParticipantTile extends StatelessWidget {
               ],
             ),
           ),
-          ?trailing,
+          // A card that opens someone's profile says so, now that the
+          // button which used to sit here has gone.
+          if (onTap != null)
+            Icon(AppIcons.chevronRight, size: 18, color: context.colors.dim),
         ],
       ),
     );

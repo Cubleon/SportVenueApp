@@ -101,14 +101,6 @@ class ProfileScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          IconButton(
-                            tooltip: context.l10n.editProfile,
-                            onPressed: () => showAppSnack(
-                              context,
-                              context.l10n.editProfileLater,
-                            ),
-                            icon: const Icon(AppIcons.pencil),
-                          ),
                         ],
                       ),
                     ),
@@ -152,9 +144,9 @@ class ProfileScreen extends StatelessWidget {
                     _MenuItem(
                       icon: AppIcons.history,
                       title: context.l10n.history,
-                      subtitle: context.l10n.historySubtitle(
+                      subtitle: context.l10n.historySummary(
                         controller.bookings.length,
-                        controller.games.length,
+                        _myGamesCount(controller),
                       ),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
@@ -199,6 +191,14 @@ Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
   }
 }
 
+/// Games this reader is actually in.
+///
+/// The line under «История» used to count every game in the city, so the
+/// profile promised three and the history screen below it had none.
+int _myGamesCount(AppController controller) => controller.games
+    .where((game) => game.participants.any((p) => p.isCurrentUser))
+    .length;
+
 class _Stats extends StatelessWidget {
   const _Stats({required this.controller});
 
@@ -206,9 +206,7 @@ class _Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final games = controller.games
-        .where((game) => game.participants.any((p) => p.isCurrentUser))
-        .length;
+    final games = _myGamesCount(controller);
 
     return AppCard(
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),

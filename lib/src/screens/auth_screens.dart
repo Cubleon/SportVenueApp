@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
-import '../widgets/brand_marks.dart';
 import '../widgets/shared_widgets.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -175,7 +174,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String? _errorText;
   String _digits = '';
 
-  bool get _isValid => _digits.length == 10 && _accepted;
+  /// Set when someone presses the button without having ticked the box.
+  ///
+  /// The button used to grey itself out instead, which answers the question
+  /// "may I continue" and not the one being asked, which is "why not".
+  bool _consentMissing = false;
+
+  bool get _isValid => _digits.length == 10;
 
   @override
   void dispose() {
@@ -207,6 +212,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 key: const ValueKey('phone-field'),
                 controller: _controller,
                 keyboardType: TextInputType.phone,
+                // The number the keyboard already knows, offered rather than
+                // typed again.
+                autofillHints: const [AutofillHints.telephoneNumber],
+                autofocus: true,
                 inputFormatters: [_RuPhoneFormatter()],
                 style: context.text.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
@@ -241,7 +250,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 14),
               InkWell(
-                onTap: () => setState(() => _accepted = !_accepted),
+                key: const ValueKey('consent-toggle'),
+                onTap: () => setState(() {
+                  _accepted = !_accepted;
+                  if (_accepted) _consentMissing = false;
+                }),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -260,15 +273,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           border: Border.all(
                             color: _accepted
                                 ? context.colors.accent
+                                : _consentMissing
+                                ? context.colors.error
                                 : context.colors.border,
-                            width: 1.5,
+                            width: _consentMissing && !_accepted ? 2 : 1.5,
                           ),
                         ),
+                        // The tick sits on the accent fill, so it takes the
+                        // accent's own contrast colour: near-black on blue
+                        // was 2.6:1, which is a mark you have to look for.
                         child: _accepted
                             ? Icon(
                                 AppIcons.check,
                                 size: 16,
-                                color: context.colors.ink,
+                                color: context.colors.onAccent,
                               )
                             : null,
                       ),
@@ -277,7 +295,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: Text(
                           context.l10n.consent,
                           style: context.text.bodySmall?.copyWith(
-                            color: context.colors.muted,
+                            color: _consentMissing && !_accepted
+                                ? context.colors.error
+                                : context.colors.muted,
                             height: 1.35,
                           ),
                         ),
@@ -286,6 +306,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
               ),
+              if (_consentMissing && !_accepted)
+                Padding(
+                  padding: const EdgeInsets.only(left: 32, top: 2),
+                  child: Text(
+                    context.l10n.consentRequired,
+                    key: const ValueKey('consent-required'),
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.colors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               PrimaryButton(
                 key: const ValueKey('registration-continue'),
@@ -308,70 +340,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: context.colors.ink.withValues(alpha: 0.08),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      context.l10n.or,
-                      style: context.text.bodySmall?.copyWith(
-                        color: context.colors.muted,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: context.colors.ink.withValues(alpha: 0.08),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: _SocialButton(
-                      key: const ValueKey('social-google'),
-                      semanticLabel: context.l10n.signInWithGoogle,
-                      mark: const GoogleMark(),
-                      onTap: _stubSocial,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SocialButton(
-                      key: const ValueKey('social-vk'),
-                      semanticLabel: context.l10n.signInWithVk,
-                      mark: const VkMark(),
-                      onTap: _stubSocial,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SocialButton(
-                      key: const ValueKey('social-apple'),
-                      semanticLabel: context.l10n.signInWithApple,
-                      mark: const AppleMark(),
-                      onTap: _stubSocial,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                context.l10n.termsFooter,
-                textAlign: TextAlign.center,
-                style: context.text.bodySmall?.copyWith(
-                  color: context.colors.ink.withValues(alpha: 0.28),
-                  height: 1.4,
-                ),
-              ),
             ],
           ),
         ),
@@ -379,11 +347,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  void _stubSocial() {
-    showAppSnack(context, context.l10n.socialLater);
-  }
-
   Future<void> _continue() async {
+    if (!_accepted) {
+      // Answering the press, rather than refusing it: the reason is put on
+      // the row that holds the answer.
+      setState(() => _consentMissing = true);
+      return;
+    }
     setState(() {
       _submitting = true;
       _errorText = null;
@@ -723,41 +693,6 @@ class _RussianFlag extends StatelessWidget {
             Expanded(child: ColoredBox(color: Color(0xFF0039A6))),
             Expanded(child: ColoredBox(color: Color(0xFFD52B1E))),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    super.key,
-    required this.mark,
-    required this.semanticLabel,
-    required this.onTap,
-  });
-
-  final Widget mark;
-
-  /// The mark carries no text, so the button says out loud what it does.
-  final String semanticLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      // The VK mark carries its own lettering; without this it is read out
-      // a second time after the label.
-      excludeSemantics: true,
-      child: Material(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(height: 54, child: Center(child: mark)),
         ),
       ),
     );

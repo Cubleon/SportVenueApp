@@ -31,12 +31,11 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
   late final Set<String> _selected = Set<String>.from(widget.initialSelection);
   bool _saving = false;
 
-  bool get _canContinue {
-    return widget.sports.isNotEmpty &&
-        _selected.isNotEmpty &&
-        _selected.length <= 6 &&
-        !_saving;
-  }
+  /// Nothing selected is a legitimate answer — it means "show me
+  /// everything" — so the button changes its word rather than greying out.
+  /// A disabled primary answers "may I continue" and never "why not".
+  bool get _canContinue =>
+      widget.sports.isNotEmpty && _selected.length <= 6 && !_saving;
 
   @override
   Widget build(BuildContext context) {
@@ -50,25 +49,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.l10n.sportStep,
-                    style: context.text.labelSmall?.copyWith(
-                      color: context.colors.muted,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(99),
-                    child: LinearProgressIndicator(
-                      value: 0.5,
-                      minHeight: 3,
-                      backgroundColor: context.colors.border,
-                      valueColor: AlwaysStoppedAnimation(context.colors.accent),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 10),
                   Text(
                     context.l10n.sportQuestion,
                     style: context.text.headlineMedium?.copyWith(
@@ -138,8 +119,11 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                 child: PrimaryButton(
                   key: const ValueKey('sports-continue'),
                   label: _selected.isEmpty
-                      ? context.l10n.continueLabel
+                      ? context.l10n.skipSports
                       : context.l10n.continueWithSports(_selected.length),
+                  tone: _selected.isEmpty
+                      ? ButtonTone.neutral
+                      : ButtonTone.accent,
                   isLoading: _saving,
                   onPressed: _canContinue ? _save : null,
                 ),
