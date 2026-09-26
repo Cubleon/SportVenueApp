@@ -247,8 +247,9 @@ class _BookingScreenState extends State<BookingScreen> {
   /// The club's own first sport, which is what [VenueHero] above draws. Two
   /// pictures of the same club disagreeing reads as a mistake.
   Sport? _sportOf(Venue venue) {
+    final id = primarySportId(venue);
     for (final sport in widget.controller.sports) {
-      if (sport.id == venue.sportIds.first) {
+      if (sport.id == id) {
         return sport;
       }
     }

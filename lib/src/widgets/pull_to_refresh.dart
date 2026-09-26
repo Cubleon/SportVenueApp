@@ -19,15 +19,25 @@ class PullToRefresh extends StatelessWidget {
     super.key,
     required this.controller,
     required this.child,
+    this.also,
   });
 
   final AppController controller;
   final Widget child;
 
+  /// Anything the screen itself holds that the controller does not know
+  /// about — the home's per-club free-hour counts, for one. Without this the
+  /// gesture refreshed everything except the numbers the reader was
+  /// looking at.
+  final Future<void> Function()? also;
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => refreshAndReport(context, controller),
+      onRefresh: () async {
+        await refreshAndReport(context, controller);
+        await also?.call();
+      },
       color: context.colors.accent,
       backgroundColor: context.colors.surface,
       // Clear of the screen's own title, which the pull drags down with it.

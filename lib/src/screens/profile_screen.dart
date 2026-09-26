@@ -145,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: AppIcons.history,
                       title: context.l10n.history,
                       subtitle: context.l10n.historySummary(
-                        controller.bookings.length,
+                        controller.activeBookings.length,
                         _myGamesCount(controller),
                       ),
                       onTap: () => Navigator.of(context).push(
@@ -214,7 +214,7 @@ class _Stats extends StatelessWidget {
         children: [
           Expanded(
             child: _Stat(
-              value: '${controller.bookings.length}',
+              value: '${controller.activeBookings.length}',
               label: context.l10n.statBookings,
             ),
           ),

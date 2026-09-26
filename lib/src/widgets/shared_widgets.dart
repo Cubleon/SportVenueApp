@@ -648,7 +648,7 @@ class VenueHero extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
-      child: SportSurface(sportId: venue.sportIds.first),
+      child: SportSurface(sportId: primarySportId(venue)),
     );
     return flies ? Hero(tag: venueHeroTag(venue), child: picture) : picture;
   }
@@ -954,16 +954,25 @@ class BookingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A cancelled booking used to look exactly like a live one — same white
+    // card, same blue date block — with the word «отменена» tucked into the
+    // grey line beside the time. The row steps back instead: a quiet card,
+    // a grey date block, the name in muted ink, and the status said as a
+    // status rather than as an aside.
+    final over = !booking.isActive;
     return AppCard(
       key: ValueKey('booking-row-${booking.id}'),
       onTap: onTap,
+      color: over ? context.colors.bgAlt : null,
       child: Row(
         children: [
           Container(
             width: context.scaled(56),
             height: context.scaled(62),
             decoration: BoxDecoration(
-              color: context.colors.accentSoft,
+              color: over
+                  ? context.colors.surfaceRaised
+                  : context.colors.accentSoft,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -972,7 +981,7 @@ class BookingRow extends StatelessWidget {
                 Text(
                   AppFormatters.weekdayShort(booking.draft.date).toUpperCase(),
                   style: context.text.labelSmall?.copyWith(
-                    color: context.colors.accent,
+                    color: over ? context.colors.dim : context.colors.accent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -980,6 +989,7 @@ class BookingRow extends StatelessWidget {
                   '${booking.draft.date.day}',
                   style: context.text.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
+                    color: over ? context.colors.muted : null,
                   ),
                 ),
               ],
@@ -990,20 +1000,33 @@ class BookingRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  booking.draft.venue.name.capitalized,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        booking.draft.venue.name.capitalized,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: over ? context.colors.muted : null,
+                        ),
+                      ),
+                    ),
+                    if (over) ...[
+                      const SizedBox(width: 8),
+                      StatusChip(label: bookingStatusText(context, booking)),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  context.l10n.bookingRowSubtitle(
-                    booking.draft.timeRange,
-                    bookingStatusText(context, booking),
-                  ),
+                  over
+                      ? booking.draft.timeRange
+                      : context.l10n.bookingRowSubtitle(
+                          booking.draft.timeRange,
+                          bookingStatusText(context, booking),
+                        ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodySmall?.copyWith(
@@ -1016,6 +1039,32 @@ class BookingRow extends StatelessWidget {
           if (onTap != null)
             Icon(AppIcons.chevronRight, color: context.colors.dim),
         ],
+      ),
+    );
+  }
+}
+
+/// A state said as a state: a word on its own ground, not an aside in a
+/// grey line that the eye reads as part of the time.
+class StatusChip extends StatelessWidget {
+  const StatusChip({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: context.colors.error.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        label,
+        style: context.text.labelSmall?.copyWith(
+          color: context.colors.danger,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

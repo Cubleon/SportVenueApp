@@ -83,6 +83,12 @@ class LRu extends L {
   }
 
   @override
+  String get openMap => 'Открыть карту';
+
+  @override
+  String get perHourSuffix => '/час';
+
+  @override
   String pricePerHour(String price) {
     return '$price/час';
   }
@@ -301,7 +307,12 @@ class LRu extends L {
 
   @override
   String get noVenuesForSportHint =>
-      'В Москве пока нет клубов с этим покрытием.';
+      'В Москве пока нет клубов для этого вида спорта.';
+
+  @override
+  String noVenuesForQueryHint(String query) {
+    return 'По запросу «$query» ничего не нашлось. Проверьте написание или сбросьте фильтры.';
+  }
 
   @override
   String get resetSearch => 'Сбросить поиск';

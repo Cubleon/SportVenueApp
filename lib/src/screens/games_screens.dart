@@ -45,6 +45,7 @@ class GamesScreen extends StatefulWidget {
 
 class _GamesScreenState extends State<GamesScreen> {
   String _sportId = 'all';
+
   /// Everything, until the reader narrows it.
   ///
   /// This opened on «Вечер», which is a filter the reader did not set and

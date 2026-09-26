@@ -336,6 +336,34 @@ void main() {
     expect(find.text('Вы присоединились к игре'), findsOneWidget);
   });
 
+  testWidgets('a cancelled booking stops being counted', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+    final booking = controller.bookings.first;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: HistoryScreen(
+          controller: controller,
+          focus: HistoryFocus.bookings,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('1 бронь'), findsOneWidget);
+
+    await controller.cancelBooking(booking);
+    await tester.pumpAndSettle();
+
+    // The row stays — a history keeps what happened — but the count above
+    // it is of bookings that are still going to happen.
+    expect(find.text('0 броней'), findsOneWidget);
+    expect(find.byKey(ValueKey('booking-row-${booking.id}')), findsOneWidget);
+    expect(find.byType(StatusChip), findsOneWidget);
+    expect(controller.activeBookings, isEmpty);
+  });
+
   testWidgets('a booking is cancelled from «мои брони», and asks first', (
     tester,
   ) async {

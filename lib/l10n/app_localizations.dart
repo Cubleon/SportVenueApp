@@ -237,6 +237,18 @@ abstract class L {
   /// **'{address} · {km} км'**
   String venueAddressDistance(String address, String km);
 
+  /// No description provided for @openMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть карту'**
+  String get openMap;
+
+  /// No description provided for @perHourSuffix.
+  ///
+  /// In ru, this message translates to:
+  /// **'/час'**
+  String get perHourSuffix;
+
   /// No description provided for @pricePerHour.
   ///
   /// In ru, this message translates to:
@@ -588,8 +600,14 @@ abstract class L {
   /// No description provided for @noVenuesForSportHint.
   ///
   /// In ru, this message translates to:
-  /// **'В Москве пока нет клубов с этим покрытием.'**
+  /// **'В Москве пока нет клубов для этого вида спорта.'**
   String get noVenuesForSportHint;
+
+  /// No description provided for @noVenuesForQueryHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'По запросу «{query}» ничего не нашлось. Проверьте написание или сбросьте фильтры.'**
+  String noVenuesForQueryHint(String query);
 
   /// No description provided for @resetSearch.
   ///

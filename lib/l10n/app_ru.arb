@@ -37,6 +37,8 @@
       }
     }
   },
+  "openMap": "Открыть карту",
+  "perHourSuffix": "/час",
   "pricePerHour": "{price}/час",
   "@pricePerHour": {
     "placeholders": {
@@ -150,7 +152,11 @@
     }
   },
   "noVenuesForSport": "Площадок этого вида нет",
-  "noVenuesForSportHint": "В Москве пока нет клубов с этим покрытием.",
+  "noVenuesForSportHint": "В Москве пока нет клубов для этого вида спорта.",
+  "noVenuesForQueryHint": "По запросу «{query}» ничего не нашлось. Проверьте написание или сбросьте фильтры.",
+  "@noVenuesForQueryHint": {
+    "placeholders": { "query": { "type": "String" } }
+  },
   "resetSearch": "Сбросить поиск",
   "skipSplash": "Пропустить заставку",
   "signInTitle": "Войти или\nзарегистрироваться",

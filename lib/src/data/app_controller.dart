@@ -93,6 +93,15 @@ class AppController extends ChangeNotifier {
   List<Sport> sports = [];
   List<Venue> venues = [];
   List<Booking> bookings = [];
+
+  /// The ones that are still going to happen.
+  ///
+  /// Every counter in the app read [bookings] and so went on counting a
+  /// booking after it was cancelled: the home said «Мои брони 1» over an
+  /// empty evening, and the list it opened said «1 бронь» above a row
+  /// marked отменена.
+  List<Booking> get activeBookings =>
+      bookings.where((booking) => booking.isActive).toList();
   List<Game> games = [];
   String? _phoneChallengeId;
 

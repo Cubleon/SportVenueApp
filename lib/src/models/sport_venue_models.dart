@@ -31,6 +31,22 @@ class Sport {
   }
 }
 
+/// Which of a club's sports to draw for it.
+///
+/// The home read `venue.sportIds.first` and the search walked the sport
+/// catalogue in its own order, so «Арена север» was a hockey rink on one
+/// screen and a football pitch on the other — the same club, and no way for
+/// a reader to know it was the same club. Under a filter the filtered sport
+/// wins, because a club listed under hockey drawing a football pitch is
+/// just as wrong; with no filter, the club's own first sport decides, and
+/// it decides everywhere.
+String primarySportId(Venue venue, {String? filterId}) {
+  if (filterId != null && venue.sportIds.contains(filterId)) {
+    return filterId;
+  }
+  return venue.sportIds.first;
+}
+
 class Venue {
   const Venue({
     required this.id,

@@ -143,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: PullToRefresh(
             controller: widget.controller,
+            also: _loadSlots,
             child: CustomScrollView(
               key: const ValueKey('home-screen'),
               // A short list still has to be draggable, or there is nothing
@@ -195,7 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 if (venues.isEmpty)
-                  SliverToBoxAdapter(child: _NothingFound(onReset: _reset))
+                  SliverToBoxAdapter(
+                    child: _NothingFound(query: _query, onReset: _reset),
+                  )
                 else ...[
                   SliverToBoxAdapter(
                     child: SectionHeader(
@@ -222,15 +225,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                   sportId: _sportOf(venue),
                                   freeSlots: _freeSlots[venue.id],
                                   divided: index > 0,
-                                  onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => BookingScreen(
-                                        controller: widget.controller,
-                                        venue: venue,
-                                        date: _date,
+                                  // Coming back from a booking, the hours
+                                  // this club has left are one fewer than
+                                  // the chip says. They were loaded once, on
+                                  // the way in, and never again.
+                                  onTap: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => BookingScreen(
+                                          controller: widget.controller,
+                                          venue: venue,
+                                          date: _date,
+                                        ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                    await _loadSlots();
+                                  },
                                 ),
                             ],
                           ),
@@ -649,20 +659,27 @@ class _SearchField extends StatelessWidget {
           ),
           Semantics(
             button: true,
-            label: context.l10n.search,
-            child: Material(
-              color: colors.accentSoft,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onOpenSearch,
-                child: SizedBox(
-                  width: context.scaled(40, max: 1.2),
-                  height: context.scaled(40, max: 1.2),
-                  child: Icon(
-                    AppIcons.slidersHorizontal,
-                    size: 19,
-                    color: colors.accent,
+            label: context.l10n.openMap,
+            child: Tooltip(
+              message: context.l10n.openMap,
+              child: Material(
+                color: colors.accentSoft,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onOpenSearch,
+                  child: SizedBox(
+                    width: context.scaled(44, max: 1.2),
+                    height: context.scaled(44, max: 1.2),
+                    // Sliders mean filters in every app of this kind, and
+                    // this button opens the map. The app has no filters to
+                    // open yet, so the icon follows the action instead of
+                    // promising one that isn't there.
+                    child: Icon(
+                      AppIcons.mapPin,
+                      size: 19,
+                      color: colors.accent,
+                    ),
                   ),
                 ),
               ),
@@ -818,7 +835,7 @@ class _MineRow extends StatelessWidget {
           Expanded(
             child: _MineCard(
               icon: AppIcons.calendarCheck,
-              count: controller.bookings.length,
+              count: controller.activeBookings.length,
               label: context.l10n.myBookings,
               onTap: onBookings,
             ),
@@ -1007,13 +1024,30 @@ class _VenueRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      AppFormatters.money(venue.pricePerHour),
+                    // The unit rides with the number. Without it «₽1 600»
+                    // reads as the price of a visit, and the search screen
+                    // two taps away says «₽1 600/час» for the same club.
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: AppFormatters.money(venue.pricePerHour),
+                            style: AppTheme.numeric(
+                              context.text.titleMedium,
+                            ).copyWith(fontWeight: FontWeight.w900),
+                          ),
+                          TextSpan(
+                            text: context.l10n.perHourSuffix,
+                            style: context.text.bodySmall?.copyWith(
+                              color: colors.muted,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTheme.numeric(
-                        context.text.titleMedium,
-                      ).copyWith(fontWeight: FontWeight.w900),
+                      textAlign: TextAlign.end,
                     ),
                     const SizedBox(height: 3),
                     Row(
@@ -1091,8 +1125,12 @@ class _Tag extends StatelessWidget {
 }
 
 class _NothingFound extends StatelessWidget {
-  const _NothingFound({required this.onReset});
+  const _NothingFound({required this.query, required this.onReset});
 
+  /// What was typed, if anything. The message used to name a covering the
+  /// reader had never filtered by — «В Москве пока нет клубов с этим
+  /// покрытием» in answer to a misspelled club name.
+  final String query;
   final VoidCallback onReset;
 
   @override
@@ -1102,7 +1140,9 @@ class _NothingFound extends StatelessWidget {
       child: EmptyState(
         icon: AppIcons.searchX,
         title: context.l10n.nothingFound,
-        description: context.l10n.noVenuesForSportHint,
+        description: query.isEmpty
+            ? context.l10n.noVenuesForSportHint
+            : context.l10n.noVenuesForQueryHint(query),
         actionLabel: context.l10n.reset,
         onAction: onReset,
       ),

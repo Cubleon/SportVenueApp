@@ -234,13 +234,9 @@ class _SearchScreenState extends State<SearchScreen> {
   /// a club listed under "хоккей" drawing a football pitch reads as the
   /// wrong club.
   Sport? _sportForVenue(Venue venue) {
+    final id = primarySportId(venue, filterId: _sportId);
     for (final sport in widget.controller.sports) {
-      if (sport.id == _sportId && venue.sportIds.contains(sport.id)) {
-        return sport;
-      }
-    }
-    for (final sport in widget.controller.sports) {
-      if (venue.sportIds.contains(sport.id)) {
+      if (sport.id == id) {
         return sport;
       }
     }

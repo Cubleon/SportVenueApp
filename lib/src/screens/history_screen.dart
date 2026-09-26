@@ -52,6 +52,7 @@ class HistoryScreen extends StatelessWidget {
       builder: (context, _) {
         final bookings = [...controller.bookings]
           ..sort((a, b) => b.startsAt.compareTo(a.startsAt));
+        final active = bookings.where((booking) => booking.isActive).length;
         final games =
             controller.games
                 .where(
@@ -83,11 +84,10 @@ class HistoryScreen extends StatelessWidget {
           HistoryFocus.games => context.l10n.myGames,
         };
         final subtitle = switch (focus) {
-          HistoryFocus.all => context.l10n.historySummary(
-            bookings.length,
-            games.length,
-          ),
-          HistoryFocus.bookings => context.l10n.bookingsCount(bookings.length),
+          // The rows still show what was cancelled — that is what a history
+          // is for — but the count above them is of bookings still standing.
+          HistoryFocus.all => context.l10n.historySummary(active, games.length),
+          HistoryFocus.bookings => context.l10n.bookingsCount(active),
           HistoryFocus.games => context.l10n.gamesCount(games.length),
         };
 
