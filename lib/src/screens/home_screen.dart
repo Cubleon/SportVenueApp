@@ -188,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => HistoryScreen(
                           controller: widget.controller,
                           focus: HistoryFocus.games,
+                          onFindGames: widget.onOpenGames,
                         ),
                       ),
                     ),

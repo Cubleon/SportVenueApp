@@ -453,6 +453,30 @@ abstract class L {
   /// **'Здесь появятся ваши брони и игры'**
   String get historyEmpty;
 
+  /// No description provided for @historyEmptyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока пусто'**
+  String get historyEmptyTitle;
+
+  /// No description provided for @noBookingsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Броней пока нет'**
+  String get noBookingsTitle;
+
+  /// No description provided for @noGamesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игр пока нет'**
+  String get noGamesTitle;
+
+  /// No description provided for @findGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти игру'**
+  String get findGame;
+
   /// No description provided for @bookingsSection.
   ///
   /// In ru, this message translates to:
@@ -1089,11 +1113,23 @@ abstract class L {
   /// **'Выйти из игры'**
   String get leaveGame;
 
-  /// No description provided for @requestAfterApproval.
+  /// No description provided for @sendRequest.
   ///
   /// In ru, this message translates to:
-  /// **'Заявка и оплата после одобрения'**
-  String get requestAfterApproval;
+  /// **'Подать заявку'**
+  String get sendRequest;
+
+  /// No description provided for @requestSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отправлена, ждём ответа организатора'**
+  String get requestSent;
+
+  /// No description provided for @game.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра'**
+  String get game;
 
   /// No description provided for @joinGame.
   ///
@@ -1143,11 +1179,11 @@ abstract class L {
   /// **'Вечер'**
   String get evening;
 
-  /// No description provided for @anyDay.
+  /// No description provided for @anyTime.
   ///
   /// In ru, this message translates to:
-  /// **'Любой день'**
-  String get anyDay;
+  /// **'В любое время'**
+  String get anyTime;
 
   /// No description provided for @rating.
   ///

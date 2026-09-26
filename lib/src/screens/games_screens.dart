@@ -45,7 +45,12 @@ class GamesScreen extends StatefulWidget {
 
 class _GamesScreenState extends State<GamesScreen> {
   String _sportId = 'all';
-  String _timeFilter = 'evening';
+  /// Everything, until the reader narrows it.
+  ///
+  /// This opened on «Вечер», which is a filter the reader did not set and
+  /// cannot see the effect of: games in the morning simply were not there,
+  /// and the screen looked like a city with nothing going on.
+  String _timeFilter = 'all';
 
   /// The screen opens on the evening filter, so an empty list is far more
   /// often a filter than an empty city.
@@ -377,7 +382,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: _DetailHeader(
-                        title: _gameTypeTitle(context, current.type),
+                        title: context.l10n.game,
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
@@ -388,7 +393,25 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SportBadge(sport: sport),
+                              Row(
+                                children: [
+                                  SportBadge(sport: sport),
+                                  if (current.type != GameType.open) ...[
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        _gameTypeTitle(context, current.type),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTheme.eyebrow(
+                                          context,
+                                          context.colors.muted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 current.venue.name.capitalized,
@@ -431,7 +454,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                   value: format,
                                 ),
                               SummaryRow(
-                                label: context.l10n.price,
+                                label: context.l10n.pricePerPerson,
                                 value: AppFormatters.money(
                                   current.pricePerPerson,
                                 ),
@@ -491,21 +514,10 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(20, 0, 20, _barHeight),
-                        child: AppCard(
-                          borderColor: context.colors.accent.withValues(
-                            alpha: 0.2,
-                          ),
-                          child: SummaryRow(
-                            label: context.l10n.price,
-                            value: AppFormatters.money(current.pricePerPerson),
-                            accent: true,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // The same price was printed twice on one screen, seven
+                    // hundred pixels apart. The card above says it; this
+                    // leaves only the room the pinned bar needs.
+                    SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
                   ],
                 ),
                 Positioned(
@@ -532,7 +544,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         : PrimaryButton(
                             key: const ValueKey('detail-join-game'),
                             label: current.type == GameType.approval
-                                ? context.l10n.requestAfterApproval
+                                ? context.l10n.sendRequest
                                 : context.l10n.joinGame,
                             isLoading: _joining,
                             onPressed: current.isFull || _joining
@@ -595,9 +607,22 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       if (!mounted) {
         return;
       }
+      // A game «по одобрению» used to promise a request and then put the
+      // reader straight into the roster. Rather than trusting either story,
+      // this reads the game back: in the list of players means joined, and
+      // anything else means the request is with the organiser.
+      final after = widget.controller.games.firstWhere(
+        (item) => item.id == game.id,
+        orElse: () => game,
+      );
+      final inside = after.participants.any((p) => p.isCurrentUser);
       showAppSnack(
         context,
-        joined ? context.l10n.joined : context.l10n.alreadyJoined,
+        !joined
+            ? context.l10n.alreadyJoined
+            : inside
+            ? context.l10n.joined
+            : context.l10n.requestSent,
         // Only a join that took anything is worth a knock.
         tone: joined ? SnackTone.done : SnackTone.plain,
       );
@@ -665,8 +690,8 @@ class _TimeFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = {
+      'all': context.l10n.anyTime,
       'evening': context.l10n.evening,
-      'all': context.l10n.anyDay,
     };
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -674,7 +699,7 @@ class _TimeFilter extends StatelessWidget {
         children: options.entries.map((entry) {
           return Expanded(
             child: Padding(
-              padding: EdgeInsets.only(right: entry.key == 'evening' ? 8 : 0),
+              padding: EdgeInsets.only(right: entry.key == 'all' ? 8 : 0),
               child: SelectableChip(
                 label: entry.value,
                 selected: value == entry.key,

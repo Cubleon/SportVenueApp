@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/l10n.dart';
 
 import '../data/app_controller.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_icons.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import 'booking_screens.dart';
@@ -35,10 +35,15 @@ class HistoryScreen extends StatelessWidget {
     super.key,
     required this.controller,
     this.focus = HistoryFocus.all,
+    this.onFindGames,
   });
 
   final AppController controller;
   final HistoryFocus focus;
+
+  /// Where an empty list can send the reader. Without it this screen is a
+  /// dead end: a sentence saying there is nothing, and the back button.
+  final VoidCallback? onFindGames;
 
   @override
   Widget build(BuildContext context) {
@@ -107,18 +112,34 @@ class HistoryScreen extends StatelessWidget {
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: AppCard(
-                          child: Text(
-                            switch (focus) {
-                              HistoryFocus.all => context.l10n.historyEmpty,
-                              HistoryFocus.bookings =>
-                                context.l10n.noUpcomingBookings,
-                              HistoryFocus.games => context.l10n.noMyGames,
-                            },
-                            style: context.text.bodyMedium?.copyWith(
-                              color: context.colors.muted,
-                            ),
-                          ),
+                        // The same empty state the games list uses: a mark,
+                        // a reason, and somewhere to go.
+                        child: EmptyState(
+                          key: const ValueKey('history-empty'),
+                          icon: focus == HistoryFocus.games
+                              ? AppIcons.volleyball
+                              : AppIcons.calendarCheck,
+                          title: switch (focus) {
+                            HistoryFocus.all => context.l10n.historyEmptyTitle,
+                            HistoryFocus.bookings =>
+                              context.l10n.noBookingsTitle,
+                            HistoryFocus.games => context.l10n.noGamesTitle,
+                          },
+                          description: switch (focus) {
+                            HistoryFocus.all => context.l10n.historyEmpty,
+                            HistoryFocus.bookings =>
+                              context.l10n.noUpcomingBookings,
+                            HistoryFocus.games => context.l10n.noMyGames,
+                          },
+                          actionLabel: onFindGames == null
+                              ? null
+                              : context.l10n.findGame,
+                          onAction: onFindGames == null
+                              ? null
+                              : () {
+                                  Navigator.of(context).pop();
+                                  onFindGames!();
+                                },
                         ),
                       ),
                     ),

@@ -213,6 +213,12 @@ class PrimaryButton extends StatelessWidget {
           disabledBackgroundColor: background,
           foregroundColor: foreground,
           disabledForegroundColor: foreground,
+          // A white button on a white card is a paragraph. The outline is
+          // what separates «Забронировать целиком» and «Отменить бронь»
+          // from the cards they sit among.
+          side: neutral && enabled
+              ? BorderSide(color: context.colors.borderStrong, width: 1.5)
+              : BorderSide.none,
           shape: AppTheme.pill,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -226,7 +232,10 @@ class PrimaryButton extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
-                    color: context.colors.onAccent,
+                    // The label's colour, not the accent's: on a neutral
+                    // button both the fill and this were white, so a slow
+                    // request left an empty pill.
+                    color: foreground,
                   ),
                 )
               : Row(

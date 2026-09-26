@@ -207,6 +207,18 @@ class LRu extends L {
   String get historyEmpty => 'Здесь появятся ваши брони и игры';
 
   @override
+  String get historyEmptyTitle => 'Пока пусто';
+
+  @override
+  String get noBookingsTitle => 'Броней пока нет';
+
+  @override
+  String get noGamesTitle => 'Игр пока нет';
+
+  @override
+  String get findGame => 'Найти игру';
+
+  @override
   String get bookingsSection => 'Брони';
 
   @override
@@ -630,7 +642,13 @@ class LRu extends L {
   String get leaveGame => 'Выйти из игры';
 
   @override
-  String get requestAfterApproval => 'Заявка и оплата после одобрения';
+  String get sendRequest => 'Подать заявку';
+
+  @override
+  String get requestSent => 'Заявка отправлена, ждём ответа организатора';
+
+  @override
+  String get game => 'Игра';
 
   @override
   String get joinGame => 'Присоединиться к игре';
@@ -659,7 +677,7 @@ class LRu extends L {
   String get evening => 'Вечер';
 
   @override
-  String get anyDay => 'Любой день';
+  String get anyTime => 'В любое время';
 
   @override
   String rating(String value) {

@@ -167,7 +167,7 @@ class MockData {
         capacity: 4,
         pricePerPerson: 750,
         level: 'с опытом',
-        format: 'коньки свои',
+        format: '2×2',
         type: GameType.open,
         genderFilter: GenderFilter.any,
         organizer: const Participant(
@@ -201,7 +201,7 @@ class MockData {
         capacity: 2,
         pricePerPerson: 900,
         level: 'любой уровень',
-        format: 'ракетки в прокате',
+        format: '1×1',
         type: GameType.open,
         genderFilter: GenderFilter.any,
         organizer: const Participant(

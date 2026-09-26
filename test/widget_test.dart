@@ -308,6 +308,34 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('a request says what actually happened', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+    final game = controller.games.firstWhere(
+      (item) => item.type == GameType.approval,
+    );
+
+    await tester.pumpWidget(
+      _Harness(
+        child: GameDetailScreen(controller: controller, game: game),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The button is a verb, and the screen is titled by what it is rather
+    // than by how one gets in.
+    expect(find.text('Игра'), findsOneWidget);
+    expect(find.text('Подать заявку'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('detail-join-game')));
+    await tester.pumpAndSettle();
+
+    // This backend puts the reader straight into the roster, so that is
+    // what is reported — never "заявка отправлена" over a completed join.
+    expect(find.text('Вы присоединились к игре'), findsOneWidget);
+  });
+
   testWidgets('a booking is cancelled from «мои брони», and asks first', (
     tester,
   ) async {
