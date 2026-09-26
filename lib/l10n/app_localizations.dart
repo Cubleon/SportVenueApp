@@ -333,6 +333,72 @@ abstract class L {
   /// **'Свободно'**
   String get freeLabel;
 
+  /// No description provided for @filtersTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фильтры'**
+  String get filtersTitle;
+
+  /// No description provided for @filterPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'ЦЕНА ЗА ЧАС'**
+  String get filterPrice;
+
+  /// No description provided for @filterAnyPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'любая'**
+  String get filterAnyPrice;
+
+  /// No description provided for @filterDistance.
+  ///
+  /// In ru, this message translates to:
+  /// **'РАССТОЯНИЕ'**
+  String get filterDistance;
+
+  /// No description provided for @filterAnyDistance.
+  ///
+  /// In ru, this message translates to:
+  /// **'любое'**
+  String get filterAnyDistance;
+
+  /// No description provided for @filterAmenities.
+  ///
+  /// In ru, this message translates to:
+  /// **'ЧТО ДОЛЖНО БЫТЬ'**
+  String get filterAmenities;
+
+  /// No description provided for @upTo.
+  ///
+  /// In ru, this message translates to:
+  /// **'до {value}'**
+  String upTo(String value);
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In ru, this message translates to:
+  /// **'{km} км'**
+  String distanceKm(String km);
+
+  /// No description provided for @filterShow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать {count, plural, one{{count} клуб} few{{count} клуба} other{{count} клубов}}'**
+  String filterShow(int count);
+
+  /// No description provided for @filterNoMatches.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничего не подходит'**
+  String get filterNoMatches;
+
+  /// No description provided for @filtersOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фильтры'**
+  String get filtersOpen;
+
   /// No description provided for @hoursCount.
   ///
   /// In ru, this message translates to:

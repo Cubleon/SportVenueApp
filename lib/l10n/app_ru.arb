@@ -62,6 +62,26 @@
   },
   "loading": "считаем…",
   "freeLabel": "Свободно",
+  "filtersTitle": "Фильтры",
+  "filterPrice": "ЦЕНА ЗА ЧАС",
+  "filterAnyPrice": "любая",
+  "filterDistance": "РАССТОЯНИЕ",
+  "filterAnyDistance": "любое",
+  "filterAmenities": "ЧТО ДОЛЖНО БЫТЬ",
+  "upTo": "до {value}",
+  "@upTo": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "distanceKm": "{km} км",
+  "@distanceKm": {
+    "placeholders": { "km": { "type": "String" } }
+  },
+  "filterShow": "Показать {count, plural, one{{count} клуб} few{{count} клуба} other{{count} клубов}}",
+  "@filterShow": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "filterNoMatches": "Ничего не подходит",
+  "filtersOpen": "Фильтры",
   "hoursCount": "{count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
   "@hoursCount": {
     "placeholders": { "count": { "type": "int" } }

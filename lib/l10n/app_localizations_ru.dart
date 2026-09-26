@@ -144,6 +144,52 @@ class LRu extends L {
   String get freeLabel => 'Свободно';
 
   @override
+  String get filtersTitle => 'Фильтры';
+
+  @override
+  String get filterPrice => 'ЦЕНА ЗА ЧАС';
+
+  @override
+  String get filterAnyPrice => 'любая';
+
+  @override
+  String get filterDistance => 'РАССТОЯНИЕ';
+
+  @override
+  String get filterAnyDistance => 'любое';
+
+  @override
+  String get filterAmenities => 'ЧТО ДОЛЖНО БЫТЬ';
+
+  @override
+  String upTo(String value) {
+    return 'до $value';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km км';
+  }
+
+  @override
+  String filterShow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count клубов',
+      few: '$count клуба',
+      one: '$count клуб',
+    );
+    return 'Показать $_temp0';
+  }
+
+  @override
+  String get filterNoMatches => 'Ничего не подходит';
+
+  @override
+  String get filtersOpen => 'Фильтры';
+
+  @override
   String hoursCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

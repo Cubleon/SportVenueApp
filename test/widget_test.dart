@@ -319,6 +319,46 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('filters narrow the club list, and say they are on', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+    final dearest = controller.venues
+        .map((venue) => venue.pricePerHour)
+        .reduce((a, b) => a > b ? a : b);
+    final priciest = controller.venues.firstWhere(
+      (venue) => venue.pricePerHour == dearest,
+    );
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: HomeScreen(
+          controller: controller,
+          onOpenSearch: () {},
+          onOpenGames: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(priciest.name.capitalized), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('open-filters')));
+    await tester.pumpAndSettle();
+    expect(find.text('Фильтры'), findsOneWidget);
+
+    // Drag the price ceiling to its floor: the dearest club drops out, and
+    // the sheet says how many are left before it is applied.
+    await tester.drag(find.byType(Slider).first, const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('filters-apply')));
+    await tester.pumpAndSettle();
+
+    expect(find.text(priciest.name.capitalized), findsNothing);
+  });
+
   testWidgets('a club is read before it is booked', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);

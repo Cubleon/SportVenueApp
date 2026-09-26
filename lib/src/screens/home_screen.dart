@@ -12,6 +12,7 @@ import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_filters.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/sport_surface.dart';
 
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late DateTime _date = DateUtils.dateOnly(widget.controller.now);
   String _sportId = 'all';
   String _query = '';
+  VenueFilters _filters = VenueFilters.none;
 
   /// How many hours each club still has free on [_date], by club id. Empty
   /// until the first answer arrives, and reloaded whenever the day changes.
@@ -141,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       .where(
         (venue) =>
             (_sportId == 'all' || venue.sportIds.contains(_sportId)) &&
+            _filters.allows(venue) &&
             (_matches(venue.name) || _matches(venue.address)),
       )
       .toList();
@@ -161,8 +164,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return venue.sportIds.first;
   }
 
+  Future<void> _openFilters() async {
+    final picked = await showVenueFilters(
+      context,
+      current: _filters,
+      venues: widget.controller.venues,
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() => _filters = picked);
+  }
+
   void _reset() {
     setState(() {
+      _filters = VenueFilters.none;
       _sportId = 'all';
       _query = '';
       _search.clear();
@@ -203,7 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     search: _search,
                     onQuery: (value) =>
                         setState(() => _query = value.trim().toLowerCase()),
-                    onOpenSearch: widget.onOpenSearch,
+                    onOpenFilters: _openFilters,
+                    filterCount: _filters.count,
                     gamesToday: games.length,
                     venuesToday: venues.length,
                   ),
@@ -288,7 +305,8 @@ class _SkyHeader extends StatefulWidget {
     required this.onPickDate,
     required this.search,
     required this.onQuery,
-    required this.onOpenSearch,
+    required this.onOpenFilters,
+    required this.filterCount,
     required this.gamesToday,
     required this.venuesToday,
   });
@@ -298,7 +316,8 @@ class _SkyHeader extends StatefulWidget {
   final ValueChanged<DateTime> onPickDate;
   final TextEditingController search;
   final ValueChanged<String> onQuery;
-  final VoidCallback onOpenSearch;
+  final VoidCallback onOpenFilters;
+  final int filterCount;
   final int gamesToday;
   final int venuesToday;
 
@@ -436,7 +455,8 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 _SearchField(
                   controller: widget.search,
                   onChanged: widget.onQuery,
-                  onOpenSearch: widget.onOpenSearch,
+                  onOpenFilters: widget.onOpenFilters,
+                  filterCount: widget.filterCount,
                 ),
               ],
             ),
@@ -627,12 +647,16 @@ class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
     required this.onChanged,
-    required this.onOpenSearch,
+    required this.onOpenFilters,
+    required this.filterCount,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
-  final VoidCallback onOpenSearch;
+  final VoidCallback onOpenFilters;
+
+  /// How many filters are on, for the dot on the button.
+  final int filterCount;
 
   @override
   Widget build(BuildContext context) {
@@ -674,28 +698,52 @@ class _SearchField extends StatelessWidget {
               ),
             ),
           ),
+          // Sliders again, now that there are filters behind them. The
+          // icon meant filters and opened the map, which is the one thing
+          // it could not be allowed to mean.
           Semantics(
             button: true,
-            label: context.l10n.openMap,
+            label: context.l10n.filtersOpen,
             child: Tooltip(
-              message: context.l10n.openMap,
+              message: context.l10n.filtersOpen,
               child: Material(
                 color: colors.accentSoft,
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: onOpenSearch,
+                  key: const ValueKey('open-filters'),
+                  onTap: onOpenFilters,
                   child: SizedBox(
                     width: context.scaled(44, max: 1.2),
                     height: context.scaled(44, max: 1.2),
-                    // Sliders mean filters in every app of this kind, and
-                    // this button opens the map. The app has no filters to
-                    // open yet, so the icon follows the action instead of
-                    // promising one that isn't there.
-                    child: Icon(
-                      AppIcons.mapPin,
-                      size: 19,
-                      color: colors.accent,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          AppIcons.slidersHorizontal,
+                          size: 19,
+                          color: colors.accent,
+                        ),
+                        // A filter left on is a filter the reader has to be
+                        // able to see from the list it is hiding things from.
+                        if (filterCount > 0)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 9,
+                              height: 9,
+                              decoration: BoxDecoration(
+                                color: colors.accent,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colors.surface,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
