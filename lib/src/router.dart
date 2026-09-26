@@ -14,6 +14,7 @@ import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/sport_selection_screen.dart';
+import 'screens/venue_screen.dart';
 import 'theme/app_icons.dart';
 import 'widgets/shared_widgets.dart';
 
@@ -38,13 +39,16 @@ abstract final class Routes {
       : '/create?date=${date.toIso8601String().substring(0, 10)}';
 
   static String game(String id) => '/game/$id';
-  static String venue(String id, {DateTime? date}) {
-    final path = '/venue/$id';
-    if (date == null) {
-      return path;
-    }
-    return '$path?date=${date.toIso8601String().substring(0, 10)}';
-  }
+  static String venue(String id, {DateTime? date}) =>
+      _withDate('/venue/$id', date);
+
+  /// Booking an hour at a club, which is a step past looking at it.
+  static String book(String id, {DateTime? date}) =>
+      _withDate('/venue/$id/book', date);
+
+  static String _withDate(String path, DateTime? date) => date == null
+      ? path
+      : '$path?date=${date.toIso8601String().substring(0, 10)}';
 
   static String booking(String id) => '/booking/$id';
 }
@@ -279,19 +283,32 @@ List<RouteBase> shellRoutes(AppController controller) => [
   GoRoute(
     path: 'venue/:id',
     builder: (context, state) {
-      final id = state.pathParameters['id']!;
-      final venue = controller.venues
-          .where((item) => item.id == id)
-          .firstOrNull;
+      final venue = _venueById(controller, state);
       if (venue == null) {
         return _NotFound(what: context.l10n.venueNotFound);
       }
-      return BookingScreen(
+      return VenueScreen(
         controller: controller,
         venue: venue,
-        date: DateTime.tryParse(state.uri.queryParameters['date'] ?? ''),
+        date: _dateOf(state),
       );
     },
+    routes: [
+      GoRoute(
+        path: 'book',
+        builder: (context, state) {
+          final venue = _venueById(controller, state);
+          if (venue == null) {
+            return _NotFound(what: context.l10n.venueNotFound);
+          }
+          return BookingScreen(
+            controller: controller,
+            venue: venue,
+            date: _dateOf(state),
+          );
+        },
+      ),
+    ],
   ),
   GoRoute(
     path: 'booking/:id',
@@ -332,6 +349,14 @@ List<RouteBase> shellRoutes(AppController controller) => [
     ),
   ),
 ];
+
+Venue? _venueById(AppController controller, GoRouterState state) => controller
+    .venues
+    .where((item) => item.id == state.pathParameters['id'])
+    .firstOrNull;
+
+DateTime? _dateOf(GoRouterState state) =>
+    DateTime.tryParse(state.uri.queryParameters['date'] ?? '');
 
 /// Comes back to the shell with the games tab up.
 void openGamesTab(BuildContext context) {

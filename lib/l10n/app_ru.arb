@@ -44,6 +44,28 @@
   "notFoundHint": "Возможно, ссылка устарела или запись удалили.",
   "toHome": "На главную",
   "shareGame": "Поделиться игрой",
+  "shareVenue": "Поделиться клубом",
+  "venueSports": "ВИДЫ СПОРТА",
+  "venueAmenities": "ЧТО ЕСТЬ",
+  "venueCapacity": "Сколько играет",
+  "capacityRange": "от {min} до {max}",
+  "@capacityRange": {
+    "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "reviewsCount": "{count, plural, one{{count} отзыв} few{{count} отзыва} other{{count} отзывов}}",
+  "@reviewsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ratingOnly": "Рейтинг {rating}",
+  "@ratingOnly": {
+    "placeholders": { "rating": { "type": "String" } }
+  },
+  "loading": "считаем…",
+  "freeLabel": "Свободно",
+  "hoursCount": "{count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
+  "@hoursCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "invitePlayers": "Позвать игроков — скопировать ссылку",
   "linkCopied": "Ссылка скопирована",
   "perHourSuffix": "/час",

@@ -104,6 +104,58 @@ class LRu extends L {
   String get shareGame => 'Поделиться игрой';
 
   @override
+  String get shareVenue => 'Поделиться клубом';
+
+  @override
+  String get venueSports => 'ВИДЫ СПОРТА';
+
+  @override
+  String get venueAmenities => 'ЧТО ЕСТЬ';
+
+  @override
+  String get venueCapacity => 'Сколько играет';
+
+  @override
+  String capacityRange(int min, int max) {
+    return 'от $min до $max';
+  }
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count отзывов',
+      few: '$count отзыва',
+      one: '$count отзыв',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ratingOnly(String rating) {
+    return 'Рейтинг $rating';
+  }
+
+  @override
+  String get loading => 'считаем…';
+
+  @override
+  String get freeLabel => 'Свободно';
+
+  @override
+  String hoursCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count часов',
+      few: '$count часа',
+      one: '$count час',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get invitePlayers => 'Позвать игроков — скопировать ссылку';
 
   @override

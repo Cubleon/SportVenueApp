@@ -279,6 +279,66 @@ abstract class L {
   /// **'Поделиться игрой'**
   String get shareGame;
 
+  /// No description provided for @shareVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поделиться клубом'**
+  String get shareVenue;
+
+  /// No description provided for @venueSports.
+  ///
+  /// In ru, this message translates to:
+  /// **'ВИДЫ СПОРТА'**
+  String get venueSports;
+
+  /// No description provided for @venueAmenities.
+  ///
+  /// In ru, this message translates to:
+  /// **'ЧТО ЕСТЬ'**
+  String get venueAmenities;
+
+  /// No description provided for @venueCapacity.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сколько играет'**
+  String get venueCapacity;
+
+  /// No description provided for @capacityRange.
+  ///
+  /// In ru, this message translates to:
+  /// **'от {min} до {max}'**
+  String capacityRange(int min, int max);
+
+  /// No description provided for @reviewsCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} отзыв} few{{count} отзыва} other{{count} отзывов}}'**
+  String reviewsCount(int count);
+
+  /// No description provided for @ratingOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рейтинг {rating}'**
+  String ratingOnly(String rating);
+
+  /// No description provided for @loading.
+  ///
+  /// In ru, this message translates to:
+  /// **'считаем…'**
+  String get loading;
+
+  /// No description provided for @freeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободно'**
+  String get freeLabel;
+
+  /// No description provided for @hoursCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
+  String hoursCount(int count);
+
   /// No description provided for @invitePlayers.
   ///
   /// In ru, this message translates to:

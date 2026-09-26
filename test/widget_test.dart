@@ -319,6 +319,38 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('a club is read before it is booked', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+    final venue = controller.venues.first;
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: HomeScreen(
+          controller: controller,
+          onOpenSearch: () {},
+          onOpenGames: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(venue.name.capitalized).first);
+    await tester.pumpAndSettle();
+
+    // The club, not the payment screen: what it offers, what is there, and
+    // what it costs, before an hour of it is bought.
+    expect(find.text(venue.description.capitalized), findsOneWidget);
+    expect(find.byKey(const ValueKey('venue-book')), findsOneWidget);
+    expect(find.byKey(const ValueKey('pay-share')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('venue-book')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
+  });
+
   testWidgets('a link to a game opens that game', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);

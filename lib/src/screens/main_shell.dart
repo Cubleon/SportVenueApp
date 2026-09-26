@@ -123,7 +123,9 @@ class _MainShellState extends State<MainShell> {
     if (!context.mounted) {
       return;
     }
-    context.go(Routes.venue(venue.id));
+    // Picked from «Забронировать площадку», so the club has already been
+    // chosen and looked at: straight to the hours.
+    context.go(Routes.book(venue.id, date: _homeDate));
   }
 
   void _showCreateSheet() {
