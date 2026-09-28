@@ -52,10 +52,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                   const SizedBox(height: 10),
                   Text(
                     context.l10n.sportQuestion,
-                    style: context.text.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                    ),
+                    style: context.text.headlineMedium,
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -242,7 +239,6 @@ class _SportCard extends StatelessWidget {
                       style: context.text.titleSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: -0.1,
                       ),
                     ),
                   ),

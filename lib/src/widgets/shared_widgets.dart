@@ -834,13 +834,7 @@ class ScreenTitleBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: context.text.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.25,
-                  ),
-                ),
+                Text(title, style: context.text.headlineSmall),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(

@@ -201,11 +201,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 32),
               Text(
                 context.l10n.signInTitle,
-                style: context.text.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  height: 1.12,
-                  letterSpacing: -0.3,
-                ),
+                // Weight and tracking come from the scale. Only the line
+                // height is set here, because this is the one title in the
+                // app that runs to two lines.
+                style: context.text.headlineSmall?.copyWith(height: 1.12),
               ),
               const SizedBox(height: 28),
               TextField(
@@ -445,13 +444,7 @@ class _OtpScreenState extends State<OtpScreen>
                 ],
               ),
               const SizedBox(height: 36),
-              Text(
-                context.l10n.enterCode,
-                style: context.text.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
+              Text(context.l10n.enterCode, style: context.text.headlineMedium),
               const SizedBox(height: 8),
               Text(
                 context.l10n.codeHint(widget.phone),
