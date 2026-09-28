@@ -267,10 +267,25 @@ class AppTheme {
 
   /// The small type that says what kind of thing follows: a date over a
   /// title, a section over a list.
+  /// The small label that names a thing above it — a sport over a card, a
+  /// section over a list.
+  ///
+  /// Set in sentence case. The wide tracking these carried was there to
+  /// space out capitals; on ordinary words it just pulls the letters apart.
   static TextStyle eyebrow(BuildContext context, Color color) => context
       .text
       .labelSmall!
-      .copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 1.4);
+      .copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 0.2);
+
+  /// The heading over a block of content: «Организатор», «Условия отмены».
+  /// Three screens had written the same thing out by hand, each with the
+  /// tracking of capitals on words that were not capitals.
+  static TextStyle sectionLabel(BuildContext context) =>
+      context.text.labelLarge!.copyWith(
+        color: context.colors.muted,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.1,
+      );
 
   static TextStyle _face(TextStyle? style) =>
       (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);

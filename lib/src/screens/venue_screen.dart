@@ -266,7 +266,7 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: AppTheme.eyebrow(context, context.colors.muted));
+    return Text(text, style: AppTheme.sectionLabel(context));
   }
 }
 

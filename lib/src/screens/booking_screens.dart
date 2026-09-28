@@ -838,11 +838,7 @@ class _PaymentExplainerCard extends StatelessWidget {
         children: [
           Text(
             context.l10n.howPaymentWorks,
-            style: context.text.labelLarge?.copyWith(
-              color: context.colors.muted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-            ),
+            style: AppTheme.sectionLabel(context),
           ),
           const SizedBox(height: 12),
           _ExplainerRow(
@@ -906,11 +902,7 @@ class _CancellationTermsCard extends StatelessWidget {
         children: [
           Text(
             context.l10n.cancellationTerms,
-            style: context.text.labelLarge?.copyWith(
-              color: context.colors.muted,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-            ),
+            style: AppTheme.sectionLabel(context),
           ),
           const SizedBox(height: 12),
           _Bullet(text: context.l10n.cancellationTermAuto),

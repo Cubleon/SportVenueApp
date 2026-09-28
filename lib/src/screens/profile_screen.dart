@@ -113,11 +113,7 @@ class ProfileScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             context.l10n.sportPreferences,
-                            style: context.text.labelLarge?.copyWith(
-                              color: context.colors.muted,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
-                            ),
+                            style: AppTheme.sectionLabel(context),
                           ),
                         ),
                         TextButton(

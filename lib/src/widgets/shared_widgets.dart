@@ -489,11 +489,10 @@ class SportBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            sport.name.toUpperCase(),
+            sport.name.capitalized,
             style: context.text.labelSmall?.copyWith(
               color: context.colors.muted,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
             ),
           ),
         ],
@@ -977,7 +976,7 @@ class BookingRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  AppFormatters.weekdayShort(booking.draft.date).toUpperCase(),
+                  AppFormatters.weekdayShort(booking.draft.date),
                   style: context.text.labelSmall?.copyWith(
                     color: over ? context.colors.dim : context.colors.accent,
                     fontWeight: FontWeight.w700,

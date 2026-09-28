@@ -221,7 +221,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             if (_amenities.isNotEmpty) ...[
               Text(
                 context.l10n.filterAmenities,
-                style: AppTheme.eyebrow(context, context.colors.muted),
+                style: AppTheme.sectionLabel(context),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -280,12 +280,7 @@ class _SliderBlock extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(
-              child: Text(
-                title,
-                style: AppTheme.eyebrow(context, context.colors.muted),
-              ),
-            ),
+            Expanded(child: Text(title, style: AppTheme.sectionLabel(context))),
             Text(
               value,
               style: context.text.bodyMedium?.copyWith(

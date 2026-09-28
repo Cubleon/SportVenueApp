@@ -907,14 +907,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Text(
-        text.toUpperCase(),
-        style: context.text.labelSmall?.copyWith(
-          color: context.colors.muted,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
-        ),
-      ),
+      child: Text(text, style: AppTheme.sectionLabel(context)),
     );
   }
 }

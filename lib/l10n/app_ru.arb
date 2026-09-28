@@ -45,8 +45,8 @@
   "toHome": "На главную",
   "shareGame": "Поделиться игрой",
   "shareVenue": "Поделиться клубом",
-  "venueSports": "ВИДЫ СПОРТА",
-  "venueAmenities": "ЧТО ЕСТЬ",
+  "venueSports": "Виды спорта",
+  "venueAmenities": "Что есть",
   "venueCapacity": "Сколько играет",
   "capacityRange": "от {min} до {max}",
   "@capacityRange": {
@@ -63,11 +63,11 @@
   "loading": "считаем…",
   "freeLabel": "Свободно",
   "filtersTitle": "Фильтры",
-  "filterPrice": "ЦЕНА ЗА ЧАС",
+  "filterPrice": "Цена за час",
   "filterAnyPrice": "любая",
-  "filterDistance": "РАССТОЯНИЕ",
+  "filterDistance": "Расстояние",
   "filterAnyDistance": "любое",
-  "filterAmenities": "ЧТО ДОЛЖНО БЫТЬ",
+  "filterAmenities": "Что должно быть",
   "upTo": "до {value}",
   "@upTo": {
     "placeholders": { "value": { "type": "String" } }
@@ -323,7 +323,7 @@
   },
   "keepBooking": "Оставить",
   "bookingCancelled": "Бронь отменена",
-  "howPaymentWorks": "КАК ЭТО РАБОТАЕТ",
+  "howPaymentWorks": "Как это работает",
   "payShareTitle": "Своя часть · {price}",
   "@payShareTitle": {
     "placeholders": { "price": { "type": "String" } }
@@ -386,7 +386,7 @@
   "alreadyJoined": "Вы уже в этой игре",
   "price": "Стоимость",
   "organizer": "Организатор",
-  "players": "игроки",
+  "players": "Игроки",
   "leaveGame": "Выйти из игры",
   "sendRequest": "Подать заявку",
   "requestSent": "Заявка отправлена, ждём ответа организатора",

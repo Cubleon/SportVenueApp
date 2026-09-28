@@ -288,13 +288,13 @@ abstract class L {
   /// No description provided for @venueSports.
   ///
   /// In ru, this message translates to:
-  /// **'ВИДЫ СПОРТА'**
+  /// **'Виды спорта'**
   String get venueSports;
 
   /// No description provided for @venueAmenities.
   ///
   /// In ru, this message translates to:
-  /// **'ЧТО ЕСТЬ'**
+  /// **'Что есть'**
   String get venueAmenities;
 
   /// No description provided for @venueCapacity.
@@ -342,7 +342,7 @@ abstract class L {
   /// No description provided for @filterPrice.
   ///
   /// In ru, this message translates to:
-  /// **'ЦЕНА ЗА ЧАС'**
+  /// **'Цена за час'**
   String get filterPrice;
 
   /// No description provided for @filterAnyPrice.
@@ -354,7 +354,7 @@ abstract class L {
   /// No description provided for @filterDistance.
   ///
   /// In ru, this message translates to:
-  /// **'РАССТОЯНИЕ'**
+  /// **'Расстояние'**
   String get filterDistance;
 
   /// No description provided for @filterAnyDistance.
@@ -366,7 +366,7 @@ abstract class L {
   /// No description provided for @filterAmenities.
   ///
   /// In ru, this message translates to:
-  /// **'ЧТО ДОЛЖНО БЫТЬ'**
+  /// **'Что должно быть'**
   String get filterAmenities;
 
   /// No description provided for @upTo.
@@ -1134,7 +1134,7 @@ abstract class L {
   /// No description provided for @howPaymentWorks.
   ///
   /// In ru, this message translates to:
-  /// **'КАК ЭТО РАБОТАЕТ'**
+  /// **'Как это работает'**
   String get howPaymentWorks;
 
   /// No description provided for @payShareTitle.
@@ -1296,7 +1296,7 @@ abstract class L {
   /// No description provided for @players.
   ///
   /// In ru, this message translates to:
-  /// **'игроки'**
+  /// **'Игроки'**
   String get players;
 
   /// No description provided for @leaveGame.

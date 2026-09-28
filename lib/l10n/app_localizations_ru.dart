@@ -107,10 +107,10 @@ class LRu extends L {
   String get shareVenue => 'Поделиться клубом';
 
   @override
-  String get venueSports => 'ВИДЫ СПОРТА';
+  String get venueSports => 'Виды спорта';
 
   @override
-  String get venueAmenities => 'ЧТО ЕСТЬ';
+  String get venueAmenities => 'Что есть';
 
   @override
   String get venueCapacity => 'Сколько играет';
@@ -147,19 +147,19 @@ class LRu extends L {
   String get filtersTitle => 'Фильтры';
 
   @override
-  String get filterPrice => 'ЦЕНА ЗА ЧАС';
+  String get filterPrice => 'Цена за час';
 
   @override
   String get filterAnyPrice => 'любая';
 
   @override
-  String get filterDistance => 'РАССТОЯНИЕ';
+  String get filterDistance => 'Расстояние';
 
   @override
   String get filterAnyDistance => 'любое';
 
   @override
-  String get filterAmenities => 'ЧТО ДОЛЖНО БЫТЬ';
+  String get filterAmenities => 'Что должно быть';
 
   @override
   String upTo(String value) {
@@ -640,7 +640,7 @@ class LRu extends L {
   String get bookingCancelled => 'Бронь отменена';
 
   @override
-  String get howPaymentWorks => 'КАК ЭТО РАБОТАЕТ';
+  String get howPaymentWorks => 'Как это работает';
 
   @override
   String payShareTitle(String price) {
@@ -759,7 +759,7 @@ class LRu extends L {
   String get organizer => 'Организатор';
 
   @override
-  String get players => 'игроки';
+  String get players => 'Игроки';
 
   @override
   String get leaveGame => 'Выйти из игры';

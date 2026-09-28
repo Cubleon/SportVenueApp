@@ -81,7 +81,7 @@ class SkyHeader extends StatelessWidget {
                             // about, and it should read as a poster rather
                             // than as a row of navigation.
                             Text(
-                              title.toUpperCase(),
+                              title,
                               style: context.text.headlineMedium?.copyWith(
                                 color: Colors.white,
                               ),
