@@ -940,29 +940,37 @@ class _MineCard extends StatelessWidget {
       child: AppCard(
         onTap: onTap,
         padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+        // The name of the thing leads, beside its mark; the number follows
+        // it. A card that opens «мои брони» is answering "what is this" long
+        // before "how many", and the count set large made the label read as
+        // its caption.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, size: 18, color: colors.accent),
-                const Spacer(),
+                Icon(icon, size: 20, color: colors.accent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
                 Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
               ],
             ),
-            SizedBox(height: context.scaled(14, max: 1.3)),
+            SizedBox(height: context.scaled(10, max: 1.3)),
             Text(
               '$count',
               style: AppTheme.numeric(
-                context.text.headlineMedium,
-              ).copyWith(color: colors.ink),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.text.bodySmall?.copyWith(color: colors.muted),
+                context.text.titleLarge,
+              ).copyWith(color: colors.muted, fontWeight: FontWeight.w700),
             ),
           ],
         ),
