@@ -213,24 +213,6 @@ abstract class L {
   /// **'Отмена'**
   String get cancel;
 
-  /// No description provided for @durationHour.
-  ///
-  /// In ru, this message translates to:
-  /// **'1 час'**
-  String get durationHour;
-
-  /// No description provided for @durationHourAndHalf.
-  ///
-  /// In ru, this message translates to:
-  /// **'1.5 часа'**
-  String get durationHourAndHalf;
-
-  /// No description provided for @durationTwoHours.
-  ///
-  /// In ru, this message translates to:
-  /// **'2 часа'**
-  String get durationTwoHours;
-
   /// No description provided for @venueAddressDistance.
   ///
   /// In ru, this message translates to:
@@ -332,6 +314,30 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Свободно'**
   String get freeLabel;
+
+  /// No description provided for @durationShorter.
+  ///
+  /// In ru, this message translates to:
+  /// **'Короче'**
+  String get durationShorter;
+
+  /// No description provided for @durationLonger.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дольше'**
+  String get durationLonger;
+
+  /// No description provided for @hoursAndHalf.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours},5 часа'**
+  String hoursAndHalf(int hours);
+
+  /// No description provided for @minutesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} минута} few{{count} минуты} other{{count} минут}}'**
+  String minutesCount(int count);
 
   /// No description provided for @filtersTitle.
   ///

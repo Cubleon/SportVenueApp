@@ -1072,7 +1072,7 @@ class _CounterRow extends StatelessWidget {
             ),
           ),
         ),
-        _CounterButton(
+        StepperButton(
           key: const ValueKey('players-minus'),
           icon: AppIcons.minus,
           label: context.l10n.removePlayer,
@@ -1080,7 +1080,7 @@ class _CounterRow extends StatelessWidget {
           onTap: withSelectionFeedback(() => onChanged(value - 1))!,
         ),
         const SizedBox(width: 10),
-        _CounterButton(
+        StepperButton(
           key: const ValueKey('players-plus'),
           icon: AppIcons.plus,
           label: context.l10n.addPlayer,
@@ -1088,40 +1088,6 @@ class _CounterRow extends StatelessWidget {
           onTap: withSelectionFeedback(() => onChanged(value + 1))!,
         ),
       ],
-    );
-  }
-}
-
-class _CounterButton extends StatelessWidget {
-  const _CounterButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final IconData icon;
-
-  /// An icon on its own says nothing out loud.
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filled(
-      tooltip: label,
-      onPressed: enabled ? onTap : null,
-      icon: Icon(icon),
-      style: IconButton.styleFrom(
-        backgroundColor: enabled
-            ? context.colors.accent
-            : context.colors.surfaceRaised,
-        disabledBackgroundColor: context.colors.surfaceRaised,
-        foregroundColor: context.colors.onAccent,
-        disabledForegroundColor: context.colors.dim,
-      ),
     );
   }
 }

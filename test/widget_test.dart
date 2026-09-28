@@ -319,6 +319,45 @@ void main() {
     expect(tapped, 1);
   });
 
+  testWidgets('a game can be any length the club sells', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: CreateGameScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Two hours to start with, and half an hour either way — the old three
+    // chips could not say two and a half at all.
+    expect(find.text('2 часа'), findsOneWidget);
+
+    // Scrolled into the middle of the screen: the pinned «Создать игру» bar
+    // floats over the foot of the list and swallows taps aimed under it.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -260));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('duration-plus')));
+    await tester.pumpAndSettle();
+    expect(find.text('2,5 часа'), findsOneWidget);
+
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const ValueKey('duration-minus')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('1 час'), findsOneWidget);
+
+    // And it stops there: an hour is the shortest a club will sell.
+    final minus = tester.widget<StepperButton>(
+      find.byKey(const ValueKey('duration-minus')),
+    );
+    expect(minus.enabled, isFalse);
+  });
+
   testWidgets('filters narrow the club list, and say they are on', (
     tester,
   ) async {

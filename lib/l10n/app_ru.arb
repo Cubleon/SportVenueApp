@@ -23,9 +23,6 @@
   "summaryYourShare": "Ваша часть",
   "back": "Назад",
   "cancel": "Отмена",
-  "durationHour": "1 час",
-  "durationHourAndHalf": "1.5 часа",
-  "durationTwoHours": "2 часа",
   "venueAddressDistance": "{address} · {km} км",
   "@venueAddressDistance": {
     "placeholders": {
@@ -62,6 +59,16 @@
   },
   "loading": "считаем…",
   "freeLabel": "Свободно",
+  "durationShorter": "Короче",
+  "durationLonger": "Дольше",
+  "hoursAndHalf": "{hours},5 часа",
+  "@hoursAndHalf": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "minutesCount": "{count, plural, one{{count} минута} few{{count} минуты} other{{count} минут}}",
+  "@minutesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "filtersTitle": "Фильтры",
   "filterPrice": "Цена за час",
   "filterAnyPrice": "любая",

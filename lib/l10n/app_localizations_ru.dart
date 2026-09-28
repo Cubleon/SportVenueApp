@@ -69,15 +69,6 @@ class LRu extends L {
   String get cancel => 'Отмена';
 
   @override
-  String get durationHour => '1 час';
-
-  @override
-  String get durationHourAndHalf => '1.5 часа';
-
-  @override
-  String get durationTwoHours => '2 часа';
-
-  @override
   String venueAddressDistance(String address, String km) {
     return '$address · $km км';
   }
@@ -142,6 +133,29 @@ class LRu extends L {
 
   @override
   String get freeLabel => 'Свободно';
+
+  @override
+  String get durationShorter => 'Короче';
+
+  @override
+  String get durationLonger => 'Дольше';
+
+  @override
+  String hoursAndHalf(int hours) {
+    return '$hours,5 часа';
+  }
+
+  @override
+  String minutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count минут',
+      few: '$count минуты',
+      one: '$count минута',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get filtersTitle => 'Фильтры';

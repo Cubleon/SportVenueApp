@@ -286,28 +286,26 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           ),
                         ),
                       ),
-                      IconButton.filled(
-                        tooltip: context.l10n.removePlace,
+                      StepperButton(
                         key: const ValueKey('create-capacity-minus'),
-                        onPressed:
-                            selectedVenue != null && _capacity > minCapacity
-                            ? withSelectionFeedback(
-                                () => setState(() => _capacity--),
-                              )
-                            : null,
-                        icon: const Icon(AppIcons.minus),
+                        icon: AppIcons.minus,
+                        label: context.l10n.removePlace,
+                        enabled:
+                            selectedVenue != null && _capacity > minCapacity,
+                        onTap: withSelectionFeedback(
+                          () => setState(() => _capacity--),
+                        )!,
                       ),
                       const SizedBox(width: 10),
-                      IconButton.filled(
-                        tooltip: context.l10n.addPlace,
+                      StepperButton(
                         key: const ValueKey('create-capacity-plus'),
-                        onPressed:
-                            selectedVenue != null && _capacity < maxCapacity
-                            ? withSelectionFeedback(
-                                () => setState(() => _capacity++),
-                              )
-                            : null,
-                        icon: const Icon(AppIcons.plus),
+                        icon: AppIcons.plus,
+                        label: context.l10n.addPlace,
+                        enabled:
+                            selectedVenue != null && _capacity < maxCapacity,
+                        onTap: withSelectionFeedback(
+                          () => setState(() => _capacity++),
+                        )!,
                       ),
                     ],
                   ),

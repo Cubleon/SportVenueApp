@@ -1369,6 +1369,12 @@ class _DayCard extends StatelessWidget {
   }
 }
 
+/// How long the court is wanted for, in half-hour steps.
+///
+/// It used to be three chips — an hour, an hour and a half, two hours — and
+/// anyone wanting two and a half could not say so. Clubs sell in half-hour
+/// blocks, so that is the step; the range runs to four hours, which is
+/// longer than anything gets played.
 class DurationPicker extends StatelessWidget {
   const DurationPicker({
     super.key,
@@ -1379,26 +1385,76 @@ class DurationPicker extends StatelessWidget {
   final int value;
   final ValueChanged<int> onChanged;
 
+  static const _step = 30;
+  static const _min = 60;
+  static const _max = 240;
+
   @override
   Widget build(BuildContext context) {
-    final values = {
-      60: context.l10n.durationHour,
-      90: context.l10n.durationHourAndHalf,
-      120: context.l10n.durationTwoHours,
-    };
+    // The same shape as «сколько игроков» below it: the value on the left,
+    // the pair of buttons together on the right, within a thumb of each other.
     return Row(
-      children: values.entries.map((entry) {
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: entry.key == 120 ? 0 : 8),
-            child: SelectableChip(
-              label: entry.value,
-              selected: value == entry.key,
-              onTap: () => onChanged(entry.key),
+      children: [
+        Expanded(
+          child: Text(
+            durationText(context, value),
+            style: context.text.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
-        );
-      }).toList(),
+        ),
+        StepperButton(
+          key: const ValueKey('duration-minus'),
+          icon: AppIcons.minus,
+          label: context.l10n.durationShorter,
+          enabled: value > _min,
+          onTap: withSelectionFeedback(() => onChanged(value - _step))!,
+        ),
+        const SizedBox(width: 10),
+        StepperButton(
+          key: const ValueKey('duration-plus'),
+          icon: AppIcons.plus,
+          label: context.l10n.durationLonger,
+          enabled: value < _max,
+          onTap: withSelectionFeedback(() => onChanged(value + _step))!,
+        ),
+      ],
+    );
+  }
+}
+
+/// The round − and + of a stepper. Three screens drew their own; this is
+/// the one they share.
+class StepperButton extends StatelessWidget {
+  const StepperButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+
+  /// An icon on its own says nothing out loud.
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filled(
+      tooltip: label,
+      onPressed: enabled ? onTap : null,
+      icon: Icon(icon),
+      style: IconButton.styleFrom(
+        backgroundColor: enabled
+            ? context.colors.accent
+            : context.colors.surfaceRaised,
+        disabledBackgroundColor: context.colors.surfaceRaised,
+        foregroundColor: context.colors.onAccent,
+        disabledForegroundColor: context.colors.dim,
+      ),
     );
   }
 }

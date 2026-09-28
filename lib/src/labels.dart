@@ -87,3 +87,20 @@ String? countdownText(BuildContext context, DateTime startsAt, DateTime now) {
   }
   return null;
 }
+
+/// A length of time, in the words a person would use for it.
+///
+/// Whole hours take the plural the number asks for — час, часа, часов — and
+/// a half hour is written into the number itself: «1,5 часа», «2,5 часа»,
+/// which in Russian always takes the same form.
+String durationText(BuildContext context, int minutes) {
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  if (rest == 0) {
+    return context.l10n.hoursCount(hours);
+  }
+  if (hours == 0) {
+    return context.l10n.minutesCount(rest);
+  }
+  return context.l10n.hoursAndHalf(hours);
+}
