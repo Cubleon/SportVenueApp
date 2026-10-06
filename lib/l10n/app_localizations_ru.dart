@@ -503,6 +503,22 @@ class LRu extends L {
       'Для выбранного спорта площадок пока нет';
 
   @override
+  String get chooseVenue => 'Выберите площадку';
+
+  @override
+  String venuesToChoose(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count площадки рядом',
+      many: '$count площадок рядом',
+      few: '$count площадки рядом',
+      one: '$count площадка рядом',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String moreVenues(int count) {
     return 'ещё $count';
   }

@@ -272,6 +272,44 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
+/// A step that is not there until the one before it has been answered.
+///
+/// A form that shows everything at once asks the reader to hold the whole
+/// thing in their head before they have decided anything. Each block waits
+/// for its turn and arrives in place rather than appearing under the thumb.
+class RevealStep extends StatelessWidget {
+  const RevealStep({super.key, required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: context.motion(const Duration(milliseconds: 260)),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: visible
+          ? TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: 1),
+              duration: context.motion(const Duration(milliseconds: 240)),
+              curve: Curves.easeOut,
+              child: child,
+              builder: (context, t, child) => Opacity(
+                opacity: t,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - t) * 10),
+                  child: child,
+                ),
+              ),
+            )
+          // Full width even when empty, so the column it sits in does not
+          // change shape as steps arrive.
+          : const SizedBox(width: double.infinity),
+    );
+  }
+}
+
 /// A tap target the keyboard can reach, and can be seen to have reached.
 ///
 /// Seven of the app's controls were a bare [GestureDetector] — the date
@@ -1247,7 +1285,10 @@ class DateStrip extends StatelessWidget {
   });
 
   final DateTime now;
-  final DateTime selected;
+
+  /// The chosen day, or null while the reader has not chosen one. Nothing is
+  /// highlighted then, so the strip asks a question instead of answering it.
+  final DateTime? selected;
   final ValueChanged<DateTime> onSelect;
   final int days;
 
@@ -1262,7 +1303,7 @@ class DateStrip extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            AppFormatters.monthGenitive(selected),
+            AppFormatters.monthGenitive(selected ?? now),
             style: context.text.labelSmall?.copyWith(color: context.colors.dim),
           ),
         ),
@@ -1273,8 +1314,10 @@ class DateStrip extends StatelessWidget {
             itemBuilder: (context, index) {
               final date = start.add(Duration(days: index));
               return _DayCard(
+                key: ValueKey('day-${date.toIso8601String().substring(0, 10)}'),
                 date: date,
-                isSelected: DateUtils.isSameDay(date, selected),
+                isSelected:
+                    selected != null && DateUtils.isSameDay(date, selected),
                 isToday: index == 0,
                 onTap: withSelectionFeedback(() => onSelect(date)),
               );
@@ -1293,6 +1336,7 @@ class DateStrip extends StatelessWidget {
 /// lands on first.
 class _DayCard extends StatelessWidget {
   const _DayCard({
+    super.key,
     required this.date,
     required this.isSelected,
     required this.isToday,

@@ -243,6 +243,15 @@
   "sportKind": "Вид спорта",
   "venueStep": "Площадка",
   "noVenuesForChosenSport": "Для выбранного спорта площадок пока нет",
+  "chooseVenue": "Выберите площадку",
+  "venuesToChoose": "{count, plural, one{{count} площадка рядом} few{{count} площадки рядом} many{{count} площадок рядом} other{{count} площадки рядом}}",
+  "@venuesToChoose": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "moreVenues": "ещё {count}",
   "@moreVenues": {
     "placeholders": {

@@ -41,15 +41,14 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
   String? _sportId;
   Venue? _venue;
-  late DateTime _date =
-      widget.date ??
-      DateTime(
-        widget.controller.now.year,
-        widget.controller.now.month,
-        widget.controller.now.day,
-      ).add(const Duration(days: 1));
 
-  int _hour = 19;
+  /// The day, once it is chosen — or the one the reader came in with, when
+  /// they arrived from a screen that was already showing a day.
+  late DateTime? _date = widget.date;
+
+  /// The kick-off hour, once it is picked. It used to start at seven in the
+  /// evening, so a game could be created at an hour nobody had said.
+  int? _hour;
 
   /// Set by the slot picker: whether the hour on screen is one the chosen
   /// club will actually take.
@@ -64,30 +63,28 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   void initState() {
     super.initState();
     _sportId = _initialSportId();
-    final venue = _selectedVenue;
-    if (venue != null) {
-      if (_capacity > venue.capacityMax) {
-        _capacity = venue.capacityMax;
-      }
-      if (_capacity < venue.capacityMin) {
-        _capacity = venue.capacityMin;
-      }
-    }
   }
 
+  /// The sport the reader plays, when there is only one it can be: a single
+  /// sport chosen at sign-up is an answer they have already given. Two or
+  /// more and the screen asks, rather than guessing and then hiding the
+  /// guess behind the steps that follow it.
   String? _initialSportId() {
+    final chosen = <String>[];
     for (final selectedId in widget.controller.selectedSportIds) {
       for (final sport in widget.controller.sports) {
         if (sport.id == selectedId) {
-          return selectedId;
+          chosen.add(selectedId);
         }
       }
     }
-    for (final sport in widget.controller.sports) {
-      return sport.id;
-    }
-    return null;
+    return chosen.length == 1 ? chosen.first : null;
   }
+
+  bool get _sportChosen => _selectedSport != null;
+  bool get _venueChosen => _selectedVenue != null;
+  bool get _dateChosen => _date != null;
+  bool get _timeChosen => _hour != null && _slotReady;
 
   List<Venue> get _availableVenues {
     final sportId = _sportId;
@@ -99,15 +96,15 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         .toList();
   }
 
+  /// The club the reader picked, and only that one. It used to fall back to
+  /// the first club in the catalogue, so the screen answered the question on
+  /// their behalf and the answer was whichever club happened to be first.
   Venue? get _selectedVenue {
     final selectedId = _venue?.id;
     for (final venue in _availableVenues) {
       if (venue.id == selectedId) {
         return venue;
       }
-    }
-    for (final venue in _availableVenues) {
-      return venue;
     }
     return null;
   }
@@ -136,14 +133,16 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
   int? get _pricePerPerson {
     final venue = _selectedVenue;
-    if (venue == null) {
+    final date = _date;
+    final hour = _hour;
+    if (venue == null || date == null || hour == null) {
       return null;
     }
     return (BookingDraft(
       venue: venue,
-      date: _date,
+      date: date,
       durationMinutes: _duration,
-      startHour: _hour,
+      startHour: hour,
       players: _capacity,
       mode: PaymentMode.split,
     ).sharePrice);
@@ -160,13 +159,22 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     // A game cannot be held at an hour the club has already let go, so the
     // button waits for the picker to say the chosen one is free.
     final canCreate =
-        !_loading && sport != null && selectedVenue != null && _slotReady;
+        !_loading &&
+        sport != null &&
+        selectedVenue != null &&
+        _dateChosen &&
+        _timeChosen;
     return Scaffold(
       body: SafeArea(
         child: Stack(
           children: [
             ListView(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                _timeChosen ? _barHeight : 24,
+              ),
               children: [
                 _CreateHeader(onBack: () => Navigator.of(context).pop()),
                 _Block(
@@ -191,258 +199,306 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           }).toList(),
                         ),
                 ),
-                _Block(
-                  step: 2,
-                  title: context.l10n.venueStep,
-                  child: availableVenues.isEmpty
-                      ? Text(
-                          context.l10n.noVenuesForChosenSport,
-                          style: context.text.bodyMedium?.copyWith(
-                            color: context.colors.muted,
-                          ),
-                        )
-                      // One line, whatever the catalogue grows to. The list
-                      // and its search live in the sheet this opens.
-                      : VenueRow(
-                          key: const ValueKey('create-venue-field'),
-                          venue: selectedVenue!,
-                          sport: sport,
-                          selected: false,
-                          onTap: () => _pickVenue(availableVenues, sport),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (availableVenues.length > 1)
-                                Text(
-                                  context.l10n.moreVenues(
-                                    availableVenues.length - 1,
+                RevealStep(
+                  visible: _sportChosen,
+                  child: 
+                    _Block(
+                      step: 2,
+                      title: context.l10n.venueStep,
+                      child: availableVenues.isEmpty
+                          ? Text(
+                              context.l10n.noVenuesForChosenSport,
+                              style: context.text.bodyMedium?.copyWith(
+                                color: context.colors.muted,
+                              ),
+                            )
+                          // Nothing is picked for the reader: an unanswered
+                          // step says so and opens the list.
+                          : selectedVenue == null
+                          ? _ChooseVenueRow(
+                              key: const ValueKey('create-venue-empty'),
+                              count: availableVenues.length,
+                              onTap: () => _pickVenue(availableVenues, sport),
+                            )
+                          // One line, whatever the catalogue grows to. The list
+                          // and its search live in the sheet this opens.
+                          : VenueRow(
+                              key: const ValueKey('create-venue-field'),
+                              venue: selectedVenue,
+                              sport: sport,
+                              selected: false,
+                              onTap: () => _pickVenue(availableVenues, sport),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (availableVenues.length > 1)
+                                    Text(
+                                      context.l10n.moreVenues(
+                                        availableVenues.length - 1,
+                                      ),
+                                      style: context.text.labelSmall?.copyWith(
+                                        color: context.colors.muted,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  Icon(
+                                    AppIcons.chevronDown,
+                                    color: context.colors.dim,
                                   ),
-                                  style: context.text.labelSmall?.copyWith(
+                                ],
+                              ),
+                            ),
+                    ),
+                ),
+                RevealStep(
+                  visible: _venueChosen,
+                  child: 
+                    _Block(
+                      step: 3,
+                      title: context.l10n.dateStep,
+                      child: DateStrip(
+                        now: widget.controller.now,
+                        selected: _date,
+                        onSelect: (date) => setState(() {
+                          _date = date;
+                          // Another day, other free hours: the hour chosen on the
+                          // day before this one is not an answer for this one.
+                          _hour = null;
+                          _slotReady = false;
+                        }),
+                      ),
+                    ),
+                ),
+                RevealStep(
+                  visible: _dateChosen,
+                  child: 
+                    _Block(
+                      step: 4,
+                      title: context.l10n.durationStep,
+                      child: DurationPicker(
+                        value: _duration,
+                        onChanged: (value) => setState(() => _duration = value),
+                      ),
+                    ),
+                ),
+                RevealStep(
+                  visible: _dateChosen,
+                  child: 
+                    _Block(
+                      step: 5,
+                      title: context.l10n.startStep,
+                      child: selectedVenue == null
+                          ? Text(
+                              context.l10n.pickVenueFirst,
+                              style: context.text.bodyMedium?.copyWith(
+                                color: context.colors.muted,
+                              ),
+                            )
+                          : VenueSlotPicker(
+                              key: ValueKey(
+                                'create-slots-${selectedVenue.id}-'
+                                '${_date?.toIso8601String()}',
+                              ),
+                              controller: widget.controller,
+                              venue: selectedVenue,
+                              date: _date ?? widget.controller.now,
+                              durationMinutes: _duration,
+                              selectedHour: _hour,
+                              onHourChanged: (hour) => setState(() => _hour = hour),
+                              onReadyChanged: (ready) {
+                                if (ready != _slotReady) {
+                                  setState(() => _slotReady = ready);
+                                }
+                              },
+                            ),
+                    ),
+                ),
+                // Everything that describes the game rather than the slot.
+                // It waits for the hour, so the page is a short question at
+                // first and grows as it is answered.
+                RevealStep(
+                  visible: _timeChosen,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Block(
+                        step: 6,
+                        title: context.l10n.placesStep,
+                        // Same shape as the booking screen's: the value on the
+                        // left, the pair of buttons together on the right.
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                context.l10n.playersCount(_capacity),
+                                style: context.text.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            StepperButton(
+                              key: const ValueKey('create-capacity-minus'),
+                              icon: AppIcons.minus,
+                              label: context.l10n.removePlace,
+                              enabled:
+                                  selectedVenue != null && _capacity > minCapacity,
+                              onTap: withSelectionFeedback(
+                                () => setState(() => _capacity--),
+                              )!,
+                            ),
+                            const SizedBox(width: 10),
+                            StepperButton(
+                              key: const ValueKey('create-capacity-plus'),
+                              icon: AppIcons.plus,
+                              label: context.l10n.addPlace,
+                              enabled:
+                                  selectedVenue != null && _capacity < maxCapacity,
+                              onTap: withSelectionFeedback(
+                                () => setState(() => _capacity++),
+                              )!,
+                            ),
+                          ],
+                        ),
+                      ),
+                      _Block(
+                        step: 7,
+                        title: context.l10n.whoCanJoin,
+                        // "Закрытая · только по ссылке" stood here, and there are
+                        // no links: nothing in the app produces one, sends one or
+                        // opens one, and nothing hides such a game from the public
+                        // list either. It was an option that made a game harder to
+                        // join and no harder to find. It comes back with the
+                        // sharing it names.
+                        child: Column(
+                          children: [
+                            SwitchListTile.adaptive(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              activeThumbColor: context.colors.accent,
+                              activeTrackColor: context.colors.accent.withValues(
+                                alpha: 0.28,
+                              ),
+                              title: Text(
+                                context.l10n.approveManually,
+                                style: context.text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                context.l10n.approveManuallyHint,
+                                style: context.text.bodySmall?.copyWith(
+                                  color: context.colors.muted,
+                                ),
+                              ),
+                              value: _type == GameType.approval,
+                              onChanged: (value) => setState(
+                                () =>
+                                    _type = value ? GameType.approval : GameType.open,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _Block(
+                        step: 8,
+                        title: context.l10n.participantFilter,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _GenderChip(
+                                label: context.l10n.genderAny,
+                                value: GenderFilter.any,
+                                selected: _gender,
+                                onTap: _setGender,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _GenderChip(
+                                label: context.l10n.genderMen,
+                                value: GenderFilter.men,
+                                selected: _gender,
+                                onTap: _setGender,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _GenderChip(
+                                label: context.l10n.genderWomen,
+                                value: GenderFilter.women,
+                                selected: _gender,
+                                onTap: _setGender,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Three bare chips let anyone shut half the city out of a
+                      // game with one tap and no thought. The line does not forbid
+                      // it — women's and men's sessions are a real thing people
+                      // organise — it just says what the option is for.
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          context.l10n.participantFilterHint,
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.colors.muted,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      // The running total, set apart by a tinted fill rather than a
+                      // border, and given the same top gap as a numbered block so it
+                      // does not touch the filter chips above it.
+                      Padding(
+                        padding: const EdgeInsets.only(top: 18),
+                        child: AppCard(
+                          color: context.colors.accentSoft,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  context.l10n.pricePerPerson,
+                                  style: context.text.bodyMedium?.copyWith(
                                     color: context.colors.muted,
-                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              Icon(
-                                AppIcons.chevronDown,
-                                color: context.colors.dim,
+                              ),
+                              Text(
+                                pricePerPerson == null
+                                    ? context.l10n.emptyValue
+                                    : AppFormatters.money(pricePerPerson),
+                                style: context.text.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                ),
-                _Block(
-                  step: 3,
-                  title: context.l10n.dateStep,
-                  child: DateStrip(
-                    now: widget.controller.now,
-                    selected: _date,
-                    onSelect: (date) => setState(() => _date = date),
-                  ),
-                ),
-                _Block(
-                  step: 4,
-                  title: context.l10n.startStep,
-                  child: selectedVenue == null
-                      ? Text(
-                          context.l10n.pickVenueFirst,
-                          style: context.text.bodyMedium?.copyWith(
-                            color: context.colors.muted,
-                          ),
-                        )
-                      : VenueSlotPicker(
-                          controller: widget.controller,
-                          venue: selectedVenue,
-                          date: _date,
-                          durationMinutes: _duration,
-                          selectedHour: _hour,
-                          onHourChanged: (hour) => setState(() => _hour = hour),
-                          onReadyChanged: (ready) {
-                            if (ready != _slotReady) {
-                              setState(() => _slotReady = ready);
-                            }
-                          },
-                        ),
-                ),
-                _Block(
-                  step: 5,
-                  title: context.l10n.durationStep,
-                  child: DurationPicker(
-                    value: _duration,
-                    onChanged: (value) => setState(() => _duration = value),
-                  ),
-                ),
-                _Block(
-                  step: 6,
-                  title: context.l10n.placesStep,
-                  // Same shape as the booking screen's: the value on the
-                  // left, the pair of buttons together on the right.
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          context.l10n.playersCount(_capacity),
-                          style: context.text.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      StepperButton(
-                        key: const ValueKey('create-capacity-minus'),
-                        icon: AppIcons.minus,
-                        label: context.l10n.removePlace,
-                        enabled:
-                            selectedVenue != null && _capacity > minCapacity,
-                        onTap: withSelectionFeedback(
-                          () => setState(() => _capacity--),
-                        )!,
-                      ),
-                      const SizedBox(width: 10),
-                      StepperButton(
-                        key: const ValueKey('create-capacity-plus'),
-                        icon: AppIcons.plus,
-                        label: context.l10n.addPlace,
-                        enabled:
-                            selectedVenue != null && _capacity < maxCapacity,
-                        onTap: withSelectionFeedback(
-                          () => setState(() => _capacity++),
-                        )!,
                       ),
                     ],
-                  ),
-                ),
-                _Block(
-                  step: 7,
-                  title: context.l10n.whoCanJoin,
-                  // "Закрытая · только по ссылке" stood here, and there are
-                  // no links: nothing in the app produces one, sends one or
-                  // opens one, and nothing hides such a game from the public
-                  // list either. It was an option that made a game harder to
-                  // join and no harder to find. It comes back with the
-                  // sharing it names.
-                  child: Column(
-                    children: [
-                      SwitchListTile.adaptive(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                        ),
-                        activeThumbColor: context.colors.accent,
-                        activeTrackColor: context.colors.accent.withValues(
-                          alpha: 0.28,
-                        ),
-                        title: Text(
-                          context.l10n.approveManually,
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        subtitle: Text(
-                          context.l10n.approveManuallyHint,
-                          style: context.text.bodySmall?.copyWith(
-                            color: context.colors.muted,
-                          ),
-                        ),
-                        value: _type == GameType.approval,
-                        onChanged: (value) => setState(
-                          () =>
-                              _type = value ? GameType.approval : GameType.open,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _Block(
-                  step: 8,
-                  title: context.l10n.participantFilter,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _GenderChip(
-                          label: context.l10n.genderAny,
-                          value: GenderFilter.any,
-                          selected: _gender,
-                          onTap: _setGender,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _GenderChip(
-                          label: context.l10n.genderMen,
-                          value: GenderFilter.men,
-                          selected: _gender,
-                          onTap: _setGender,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _GenderChip(
-                          label: context.l10n.genderWomen,
-                          value: GenderFilter.women,
-                          selected: _gender,
-                          onTap: _setGender,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Three bare chips let anyone shut half the city out of a
-                // game with one tap and no thought. The line does not forbid
-                // it — women's and men's sessions are a real thing people
-                // organise — it just says what the option is for.
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    context.l10n.participantFilterHint,
-                    style: context.text.bodySmall?.copyWith(
-                      color: context.colors.muted,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-                // The running total, set apart by a tinted fill rather than a
-                // border, and given the same top gap as a numbered block so it
-                // does not touch the filter chips above it.
-                Padding(
-                  padding: const EdgeInsets.only(top: 18),
-                  child: AppCard(
-                    color: context.colors.accentSoft,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            context.l10n.pricePerPerson,
-                            style: context.text.bodyMedium?.copyWith(
-                              color: context.colors.muted,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          pricePerPerson == null
-                              ? context.l10n.emptyValue
-                              : AppFormatters.money(pricePerPerson),
-                          style: context.text.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: PinnedActionBar(
-                onHeight: _onBarHeight,
-                child: PrimaryButton(
-                  key: const ValueKey('create-game-submit'),
-                  label: context.l10n.createGame,
-                  isLoading: _loading,
-                  onPressed: canCreate ? _create : null,
+            // No button over a game that has no time yet: it could only
+            // say no, and a button that is dead on arrival reads as a fault.
+            if (_timeChosen)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: PinnedActionBar(
+                  onHeight: _onBarHeight,
+                  child: PrimaryButton(
+                    key: const ValueKey('create-game-submit'),
+                    label: context.l10n.createGame,
+                    isLoading: _loading,
+                    onPressed: canCreate ? _create : null,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -484,7 +540,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   Future<void> _create() async {
     final sportId = _sportId;
     final venue = _selectedVenue;
-    if (sportId == null || venue == null) {
+    final date = _date;
+    final hour = _hour;
+    if (sportId == null || venue == null || date == null || hour == null) {
       showAppSnack(context, context.l10n.pickSportAndVenue);
       return;
     }
@@ -494,8 +552,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       final game = await widget.controller.createGame(
         sportId: sportId,
         venue: venue,
-        date: _date,
-        startHour: _hour,
+        date: date,
+        startHour: hour,
         durationMinutes: _duration,
         capacity: _capacity,
         type: _type,
@@ -548,6 +606,62 @@ class _CreateHeader extends StatelessWidget {
         ),
         const SizedBox(width: 48),
       ],
+    );
+  }
+}
+
+/// The club step before it is answered: a row that looks like the row that
+/// replaces it, so the step does not change shape when it is filled in.
+class _ChooseVenueRow extends StatelessWidget {
+  const _ChooseVenueRow({super.key, required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: context.scaled(44),
+              height: context.scaled(44),
+              decoration: BoxDecoration(
+                color: colors.accentSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(AppIcons.search, color: colors.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.chooseVenue,
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    context.l10n.venuesToChoose(count),
+                    style: context.text.bodySmall?.copyWith(
+                      color: colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(AppIcons.chevronRight, color: colors.dim),
+          ],
+        ),
+      ),
     );
   }
 }

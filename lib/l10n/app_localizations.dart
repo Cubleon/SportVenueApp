@@ -879,6 +879,18 @@ abstract class L {
   /// **'Для выбранного спорта площадок пока нет'**
   String get noVenuesForChosenSport;
 
+  /// No description provided for @chooseVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите площадку'**
+  String get chooseVenue;
+
+  /// No description provided for @venuesToChoose.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} площадка рядом} few{{count} площадки рядом} many{{count} площадок рядом} other{{count} площадки рядом}}'**
+  String venuesToChoose(int count);
+
   /// No description provided for @moreVenues.
   ///
   /// In ru, this message translates to:

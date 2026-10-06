@@ -137,13 +137,17 @@ void main() {
         ),
       );
 
+      // The page opens on a club and a day and nothing else; the price and
+      // the players appear once there is an hour to price.
+      expect(find.byKey(const ValueKey('players-plus')), findsNothing);
+      await _answerBookingSteps(tester, day: fixedNow);
+
       expect(find.textContaining('₽400'), findsWidgets);
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('players-plus')),
         250,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, -220));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('players-plus')));
       await tester.pumpAndSettle();
@@ -330,6 +334,16 @@ void main() {
         child: CreateGameScreen(controller: controller),
       ),
     );
+    // The length of the game is asked after the day, because it decides
+    // which hours are still whole.
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Футбол'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('venue-option-luzhniki')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey(_dayKey(fixedNow))));
     await tester.pumpAndSettle();
 
     // Two hours to start with, and half an hour either way — the old three
@@ -427,6 +441,9 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('venue-book')));
     await tester.pumpAndSettle();
+    // Booking asks the day and the hour before it asks for money.
+    expect(find.byKey(const ValueKey('pay-share')), findsNothing);
+    await _answerBookingSteps(tester, day: fixedNow);
     expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
   });
 
@@ -610,9 +627,10 @@ void main() {
         child: CreateGameScreen(controller: controller),
       ),
     );
-    // The hours belong to the chosen club, so the button waits for them.
+    // The steps arrive one at a time, and the button with the last of them.
     await tester.pumpAndSettle();
-    expect(find.text('20:00'), findsOneWidget);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsNothing);
+    await _answerCreateSteps(tester, day: fixedNow);
 
     await tester.tap(find.byKey(const ValueKey('create-game-submit')));
     await tester.pump(const Duration(milliseconds: 600));
@@ -724,7 +742,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _answerBookingSteps(tester, day: fixedNow);
     expect(find.textContaining('₽400'), findsWidgets);
 
     await tester.tap(find.byKey(const ValueKey('booking-venue-field')));
@@ -756,8 +774,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The step shows one club, not the whole catalogue.
-    final field = find.byKey(const ValueKey('create-venue-field'));
+    // Nothing is chosen for the reader: the step asks, and the catalogue
+    // lives in the sheet it opens.
+    await tester.tap(find.text('Футбол'));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const ValueKey('create-venue-empty'));
     expect(field, findsOneWidget);
     expect(find.text('Арена север'), findsNothing);
 
@@ -770,8 +791,6 @@ void main() {
       'север',
     );
     await tester.pumpAndSettle();
-    // The field underneath still names the current club, so the check is on
-    // the options inside the sheet.
     expect(find.byKey(const ValueKey('venue-option-luzhniki')), findsNothing);
     expect(find.byKey(const ValueKey('venue-option-north')), findsOneWidget);
 
@@ -848,6 +867,53 @@ List<String> _recordHaptics() {
         .setMockMethodCallHandler(SystemChannels.platform, null),
   );
   return felt;
+}
+
+String _dayKey(DateTime day) => 'day-${day.toIso8601String().substring(0, 10)}';
+
+/// Taps the first hour the club will actually take.
+///
+/// Which hours are free belongs to the club and the day, so a fixed one
+/// would make these tests depend on the mock calendar staying still.
+Future<void> _pickFreeHour(WidgetTester tester) async {
+  final tile = find
+      .byWidgetPredicate((widget) => widget is TimeTile && widget.available)
+      .first;
+  await tester.ensureVisible(tile);
+  await tester.pumpAndSettle();
+  await tester.tap(tile);
+  await tester.pumpAndSettle();
+}
+
+/// Answers the two steps the booking screen opens with — the day, then the
+/// hour — which is what brings the steps below them onto the page.
+Future<void> _answerBookingSteps(
+  WidgetTester tester, {
+  required DateTime day,
+}) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(_dayKey(day))));
+  await tester.pumpAndSettle();
+  await _pickFreeHour(tester);
+}
+
+/// The same for creating a game, which asks for a sport and a club first.
+Future<void> _answerCreateSteps(
+  WidgetTester tester, {
+  required DateTime day,
+  String sport = 'Футбол',
+  String venueKey = 'venue-option-luzhniki',
+}) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(sport));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(venueKey)));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(_dayKey(day))));
+  await tester.pumpAndSettle();
+  await _pickFreeHour(tester);
 }
 
 void _setPhoneSize(WidgetTester tester) {

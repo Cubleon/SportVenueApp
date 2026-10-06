@@ -48,27 +48,32 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  late DateTime _date =
-      widget.date ??
-      DateTime(
-        widget.controller.now.year,
-        widget.controller.now.month,
-        widget.controller.now.day,
-      );
+  /// The day, if one has been chosen. A reader arriving from the home
+  /// brings the day its calendar was showing; one arriving from the tab bar
+  /// has not said yet, and the steps below wait for them.
+  late DateTime? _date = widget.date;
   late Venue _venue = widget.venue;
   int _duration = 60;
-  int _hour = 20;
+
+  /// The hour, once it is picked. It used to start at eight in the evening
+  /// with the pay button already live above it, so the screen could be paid
+  /// for an hour nobody had chosen.
+  int? _hour;
   int _players = 4;
 
   /// Set by the slot picker, which is the only thing that knows whether the
   /// hour on screen is one the club will take.
   bool _slotReady = false;
 
+  bool get _dateChosen => _date != null;
+  bool get _timeChosen => _hour != null && _slotReady;
+
+  /// Only makes sense once a day and an hour exist.
   BookingDraft get _draft => BookingDraft(
     venue: _venue,
-    date: _date,
+    date: _date!,
     durationMinutes: _duration,
-    startHour: _hour,
+    startHour: _hour!,
     players: _players,
     mode: PaymentMode.split,
   );
@@ -119,75 +124,107 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: DateStrip(
                       now: widget.controller.now,
                       selected: _date,
-                      onSelect: (date) => setState(() => _date = date),
+                      onSelect: (date) => setState(() {
+                        _date = date;
+                        // A different day has different free hours; the one
+                        // that was picked on the old day is not a choice on
+                        // this one.
+                        _hour = null;
+                        _slotReady = false;
+                      }),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _StepBlock(
-                    step: 3,
-                    title: context.l10n.durationStep,
-                    child: DurationPicker(
-                      value: _duration,
-                      onChanged: (value) => setState(() => _duration = value),
+                  child: RevealStep(
+                    visible: _dateChosen,
+                    child: _StepBlock(
+                      step: 3,
+                      title: context.l10n.durationStep,
+                      child: DurationPicker(
+                        value: _duration,
+                        onChanged: (value) => setState(() => _duration = value),
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _StepBlock(
-                    step: 4,
-                    title: context.l10n.timeStep,
-                    child: VenueSlotPicker(
-                      controller: widget.controller,
-                      venue: _venue,
-                      date: _date,
-                      durationMinutes: _duration,
-                      selectedHour: _hour,
-                      onHourChanged: (hour) => setState(() => _hour = hour),
-                      onReadyChanged: (ready) {
-                        if (ready != _slotReady) {
-                          setState(() => _slotReady = ready);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _StepBlock(
-                    step: 5,
-                    title: context.l10n.playersStep,
-                    child: Column(
-                      children: [
-                        _CounterRow(
-                          value: _players,
-                          min: _venue.capacityMin,
-                          max: _venue.capacityMax,
-                          onChanged: (value) =>
-                              setState(() => _players = value),
+                  child: RevealStep(
+                    visible: _dateChosen,
+                    child: _StepBlock(
+                      step: 4,
+                      title: context.l10n.timeStep,
+                      child: VenueSlotPicker(
+                        key: ValueKey(
+                          'slots-${_venue.id}-${_date?.toIso8601String()}',
                         ),
-                        const SizedBox(height: 14),
-                        AppCard(child: BookingSummaryRows(draft: _draft)),
-                      ],
+                        controller: widget.controller,
+                        venue: _venue,
+                        date: _date ?? widget.controller.now,
+                        durationMinutes: _duration,
+                        selectedHour: _hour,
+                        onHourChanged: (hour) => setState(() => _hour = hour),
+                        onReadyChanged: (ready) {
+                          if (ready != _slotReady) {
+                            setState(() => _slotReady = ready);
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                    child: _PaymentExplainerCard(draft: _draft),
+                  child: RevealStep(
+                    visible: _timeChosen,
+                    child: _StepBlock(
+                      step: 5,
+                      title: context.l10n.playersStep,
+                      child: Column(
+                        children: [
+                          _CounterRow(
+                            value: _players,
+                            min: _venue.capacityMin,
+                            max: _venue.capacityMax,
+                            onChanged: (value) =>
+                                setState(() => _players = value),
+                          ),
+                          const SizedBox(height: 14),
+                          if (_timeChosen)
+                            AppCard(child: BookingSummaryRows(draft: _draft)),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: _CancellationTermsCard(),
+                SliverToBoxAdapter(
+                  child: RevealStep(
+                    visible: _timeChosen,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                      child: _timeChosen
+                          ? _PaymentExplainerCard(draft: _draft)
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: RevealStep(
+                    visible: _timeChosen,
+                    child: const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: _CancellationTermsCard(),
+                    ),
                   ),
                 ),
                 // Room for the pinned bar, which floats over the content.
-                SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
+                SliverToBoxAdapter(
+                  child: SizedBox(height: _timeChosen ? _barHeight : 24),
+                ),
               ],
             ),
-            Positioned(
+            // No bar until there is an hour to pay for: the price of a
+            // booking nobody has finished describing is not a price.
+            if (_timeChosen) Positioned(
               left: 0,
               right: 0,
               bottom: 0,
@@ -202,7 +239,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
-                        '${AppFormatters.dateShort(_date)} · '
+                        '${AppFormatters.dateShort(_date!)} · '
                         '${_draft.timeRange} · ${_venue.name.capitalized}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
