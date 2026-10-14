@@ -22,10 +22,15 @@ void main() {
             return _jsonResponse({
               'challenge_id': 'challenge-1',
               'expires_at': '2030-01-01T00:00:00Z',
+              'call_phone': '+78005008275',
+              'call_phone_pretty': '+7 (800) 500-8275',
             }, request);
           }
-          if (path.endsWith('/auth/call/verify')) {
-            return _jsonResponse(_tokens, request);
+          if (path.endsWith('/auth/call/status')) {
+            return _jsonResponse({
+              'status': 'confirmed',
+              'tokens': _tokens,
+            }, request);
           }
           if (path.endsWith('/sports')) {
             return _jsonResponse([_sport], request);
@@ -67,7 +72,7 @@ void main() {
       addTearDown(controller.dispose);
 
       await controller.startPhoneVerification('+7 (900) 000-00-00');
-      await controller.signIn('+7 (900) 000-00-00', '1234');
+      await controller.checkPhoneVerification();
 
       expect(controller.isSignedIn, isTrue);
       expect(controller.userId, _user['id']);

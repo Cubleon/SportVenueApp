@@ -47,57 +47,72 @@ void main() {
   });
 
   group('authentication', () {
-    test(
-      'call challenge starts and verification stores the token pair',
-      () async {
-        late http.Request capturedRequest;
-        ApiTokenPair? changedTokens;
-        final client = SportVenueApiClient(
-          baseUrl: 'https://api.example.test/api/v1',
-          httpClient: MockClient((request) async {
-            capturedRequest = request;
-            if (request.url.path.endsWith('/call/start')) {
-              return _jsonResponse({
-                'challenge_id': 'challenge-1',
-                'expires_at': '2030-01-01T00:00:00Z',
-              }, request);
-            }
-            return _jsonResponse(_tokenJson('access-1', 'refresh-1'), request);
-          }),
-          onTokensChanged: (tokens) => changedTokens = tokens,
-        );
-        addTearDown(client.close);
+    test('call challenge returns destination and polls without a code', () async {
+      late http.Request captured;
+      var status = 'pending';
+      final client = SportVenueApiClient(
+        baseUrl: 'https://api.example.test/api/v1',
+        httpClient: MockClient((request) async {
+          captured = request;
+          if (request.url.path.endsWith('/call/start')) {
+            return _jsonResponse({
+              'challenge_id': 'challenge-1',
+              'expires_at': '2030-01-01T00:00:00Z',
+              'call_phone': '+78005008275',
+              'call_phone_pretty': '+7 (800) 500-8275',
+            }, request);
+          }
+          return _jsonResponse({
+            'status': status,
+            'tokens': status == 'confirmed'
+                ? _tokenJson('access-1', 'refresh-1')
+                : null,
+          }, request);
+        }),
+      );
+      addTearDown(client.close);
+      final challenge = await client.startPhoneCall(
+        phone: '+7 900 000-00-00',
+        consentAccepted: true,
+      );
+      expect(challenge.id, 'challenge-1');
+      expect(challenge.callPhone, '+78005008275');
+      expect(challenge.callPhonePretty, '+7 (800) 500-8275');
+      expect(captured.url.path, '/api/v1/auth/call/start');
+      expect(jsonDecode(captured.body), {
+        'phone': '+7 900 000-00-00',
+        'consent_accepted': true,
+      });
+      final pending = await client.checkPhoneCall(challengeId: challenge.id);
+      expect(pending.status, PhoneCallStatus.pending);
+      expect(pending.tokens, isNull);
+      expect(client.isAuthenticated, isFalse);
+      expect(captured.method, 'POST');
+      expect(captured.url.path, '/api/v1/auth/call/status');
+      expect(captured.headers['authorization'], isNull);
+      expect(jsonDecode(captured.body), {'challenge_id': 'challenge-1'});
+      status = 'confirmed';
+      final confirmed = await client.checkPhoneCall(challengeId: challenge.id);
+      expect(confirmed.tokens!.accessToken, 'access-1');
+      // Accepting a result is the controller's job, after a cancellation check.
+      expect(client.isAuthenticated, isFalse);
+      status = 'expired';
+      expect(
+        (await client.checkPhoneCall(challengeId: challenge.id)).status,
+        PhoneCallStatus.expired,
+      );
+    });
 
-        final challenge = await client.startPhoneCall(
-          phone: '+7 900 000-00-00',
-          consentAccepted: true,
-        );
-
-        expect(challenge.id, 'challenge-1');
-        expect(capturedRequest.url.path, '/api/v1/auth/call/start');
-        expect(jsonDecode(capturedRequest.body), {
-          'phone': '+7 900 000-00-00',
-          'consent_accepted': true,
-        });
-
-        final pair = await client.verifyPhoneCall(
-          challengeId: challenge.id,
-          code: '1234',
-        );
-
-        expect(capturedRequest.method, 'POST');
-        expect(capturedRequest.url.path, '/api/v1/auth/call/verify');
-        expect(capturedRequest.headers['authorization'], isNull);
-        expect(jsonDecode(capturedRequest.body), {
-          'challenge_id': 'challenge-1',
-          'code': '1234',
-        });
-        expect(pair.accessToken, 'access-1');
-        expect(pair.refreshToken, 'refresh-1');
-        expect(client.tokens, same(pair));
-        expect(changedTokens, same(pair));
-      },
-    );
+    test('malformed or unconfirmed status cannot supply credentials', () {
+      for (final json in <ApiJsonObject>[
+        {'status': 'confirmed'},
+        {'status': 'unknown'},
+        {'status': 'pending', 'tokens': _tokenJson('a', 'r')},
+        {'status': 'expired', 'tokens': _tokenJson('a', 'r')},
+      ]) {
+        expect(() => ApiPhoneCallStatus.fromJson(json), throwsFormatException);
+      }
+    });
 
     test('authenticated calls attach the bearer token', () async {
       late http.Request capturedRequest;

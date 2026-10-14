@@ -8,6 +8,7 @@ import 'data/app_controller.dart';
 import 'labels.dart';
 import 'models/sport_venue_models.dart';
 import 'screens/auth_screens.dart';
+import 'screens/email_auth_screens.dart';
 import 'screens/booking_screens.dart';
 import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
@@ -28,7 +29,9 @@ import 'widgets/shared_widgets.dart';
 abstract final class Routes {
   static const splash = '/splash';
   static const signIn = '/signin';
-  static const code = '/signin/code';
+  static const call = '/signin/call';
+  static const email = '/signin/email';
+  static const emailCode = '/signin/email/code';
   static const onboarding = '/onboarding';
   static const home = '/';
   static const bookings = '/bookings';
@@ -141,10 +144,18 @@ GoRouter buildRouter({
       }
       final authArea =
           here == Routes.signIn ||
-          here == Routes.code ||
+          here == Routes.call ||
+          here == Routes.email ||
+          here == Routes.emailCode ||
           here == Routes.onboarding ||
           here == Routes.splash;
       if (!controller.isSignedIn) {
+        if (here == Routes.call && controller.phoneChallenge == null) {
+          return Routes.signIn;
+        }
+        if (here == Routes.emailCode && controller.emailChallenge == null) {
+          return Routes.email;
+        }
         if (authArea) {
           return null;
         }
@@ -156,7 +167,7 @@ GoRouter buildRouter({
       // answered, after which it is a door like the others.
       if (authArea && !(here == Routes.onboarding && !boot.onboarded)) {
         // Only the far side of onboarding gets to spend the parked link.
-        // Signing in fires this guard while the code screen is still on
+        // Signing in fires this guard while the call screen is still on
         // its way to onboarding, and taking the link here would hand it to
         // a redirect that onboarding then overwrites with the home screen —
         // which is how a link to a game ended at «Главная».
@@ -190,43 +201,61 @@ GoRouter buildRouter({
       GoRoute(
         path: Routes.signIn,
         builder: (context, state) => RegistrationScreen(
+          onEmail: () => context.go(Routes.email),
           onContinue: (phone) async {
+            final l10n = context.l10n;
             try {
               await controller.startPhoneVerification(phone);
               if (!context.mounted) return null;
               boot.pendingPhone = phone;
-              context.go(Routes.code);
+              context.go(Routes.call);
               return null;
             } catch (error) {
-              return errorTextFor(context.l10n, error);
+              return errorTextFor(l10n, error);
             }
           },
         ),
       ),
       GoRoute(
-        path: Routes.code,
-        builder: (context, state) => OtpScreen(
-          phone: boot.pendingPhone,
-          // Read before any await: these callbacks report failures long
-          // after this context stopped being theirs to use.
-          onBack: () => context.go(Routes.signIn),
-          onVerified: (code) async {
+        path: Routes.email,
+        builder: (context, state) => EmailSignInScreen(
+          onBack: () {
+            controller.cancelEmailVerification();
+            context.go(Routes.signIn);
+          },
+          onContinue: (email) async {
+            final l10n = context.l10n;
             try {
-              await controller.signIn(boot.pendingPhone, code);
-              if (!context.mounted) return null;
-              context.go(Routes.onboarding);
+              await controller.startEmailVerification(email);
+              if (context.mounted) context.go(Routes.emailCode);
               return null;
             } catch (error) {
-              return errorTextFor(context.l10n, error);
+              return errorTextFor(l10n, error);
             }
           },
-          onResend: () {
-            final l10n = context.l10n;
-            return controller
-                .startPhoneVerification(boot.pendingPhone)
-                .then<String?>((_) => null)
-                .catchError((Object error) => errorTextFor(l10n, error));
-          },
+        ),
+      ),
+      GoRoute(
+        path: Routes.emailCode,
+        builder: (context, state) => EmailVerificationScreen(
+          email: controller.email,
+          challenge: controller.emailChallenge!,
+          onVerify: controller.verifyEmailCode,
+          onResend: () => controller.startEmailVerification(controller.email),
+          onBack: () => context.go(Routes.email),
+          onCancel: controller.cancelEmailVerification,
+          codeAccepted: () => controller.emailCodeAccepted,
+        ),
+      ),
+      GoRoute(
+        path: Routes.call,
+        builder: (context, state) => CallVerificationScreen(
+          phone: boot.pendingPhone,
+          challenge: controller.phoneChallenge!,
+          onBack: () => context.go(Routes.signIn),
+          onCheck: controller.checkPhoneVerification,
+          onCancel: controller.cancelPhoneVerification,
+          onRestart: () => controller.startPhoneVerification(boot.pendingPhone),
         ),
       ),
       GoRoute(

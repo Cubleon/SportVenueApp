@@ -67,7 +67,7 @@ void main() {
     addTearDown(controller.dispose);
 
     await controller.startPhoneVerification('+7 (900) 000-00-00');
-    await controller.signIn('+7 (900) 000-00-00', '1234');
+    await controller.checkPhoneVerification();
 
     expect(store.tokens?.accessToken, 'access-token');
     expect(store.writes, greaterThan(0));
@@ -92,13 +92,17 @@ AppController _controllerWith(
       }
       if (path.endsWith('/auth/call/start')) {
         return http.Response(
-          '{"challenge_id":"c1","expires_at":"2030-01-01T00:00:00Z"}',
+          '{"challenge_id":"c1","expires_at":"2030-01-01T00:00:00Z", "call_phone":"+78005008275","call_phone_pretty":"+7 (800) 500-8275"}',
           200,
           headers: _json,
         );
       }
-      if (path.endsWith('/auth/call/verify')) {
-        return http.Response(_tokensJson, 200, headers: _json);
+      if (path.endsWith('/auth/call/status')) {
+        return http.Response(
+          '{"status":"confirmed","tokens":$_tokensJson}',
+          200,
+          headers: _json,
+        );
       }
       if (path.endsWith('/auth/refresh')) {
         return http.Response('{"detail":"expired"}', 401, headers: _json);

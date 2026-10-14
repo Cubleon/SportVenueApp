@@ -94,9 +94,13 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  controller.phone.isEmpty
+                                  controller.email.isNotEmpty
+                                      ? controller.email
+                                      : controller.phone.isEmpty
                                       ? context.l10n.noPhone
                                       : controller.phone,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: context.text.bodySmall?.copyWith(
                                     color: context.colors.muted,
                                   ),

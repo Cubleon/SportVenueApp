@@ -460,37 +460,83 @@ class LRu extends L {
   String get signInTitle => 'Войти или\nзарегистрироваться';
 
   @override
+  String get signInWithEmail => 'Войти по почте';
+
+  @override
+  String get emailSignInTitle => 'Вход по коду из письма';
+
+  @override
+  String get emailSignInHint =>
+      'Введите вашу электронную почту. Мы отправим шестизначный код для входа.';
+
+  @override
+  String get emailLabel => 'Электронная почта';
+
+  @override
+  String get sendEmailCode => 'Получить код';
+
+  @override
+  String get emailCodeTitle => 'Введите код из письма';
+
+  @override
+  String get emailCodeLabel => 'Код из 6 цифр';
+
+  @override
+  String emailCodeSent(String email) {
+    return 'Отправили код на $email';
+  }
+
+  @override
+  String emailCodeExpiresIn(String time) {
+    return 'Код действителен ещё $time';
+  }
+
+  @override
+  String get verifyEmailCode => 'Войти';
+
+  @override
+  String get emailCheckSpam => 'Если письма нет, проверьте папку «Спам».';
+
+  @override
+  String get resendEmailCode => 'Отправить код повторно';
+
+  @override
+  String resendEmailCodeIn(int seconds) {
+    return 'Повторная отправка через $seconds сек.';
+  }
+
+  @override
+  String get changeEmail => 'Изменить почту';
+
+  @override
+  String get errorBadEmail => 'Проверьте адрес электронной почты';
+
+  @override
+  String get errorInvalidEmailCode =>
+      'Неверный код. Проверьте 6 цифр в последнем письме.';
+
+  @override
+  String get errorEmailChallengeExpired =>
+      'Код больше не действует. Запросите новый код.';
+
+  @override
+  String get errorEmailAttemptsExceeded =>
+      'Слишком много неверных попыток. Запросите новый код.';
+
+  @override
+  String get errorEmailUnavailable =>
+      'Не удалось отправить письмо. Попробуйте позже.';
+
+  @override
+  String get errorEmailTooManyRequests =>
+      'Слишком частая отправка кодов. Попробуйте позже.';
+
+  @override
   String get consent =>
       'Согласен с обработкой персональных данных и условиями сервиса';
 
   @override
   String get consentRequired => 'Отметьте согласие, чтобы продолжить';
-
-  @override
-  String get wrongCode => 'Неверный код, попробуйте ещё раз';
-
-  @override
-  String get enterCode => 'Введите код';
-
-  @override
-  String codeHint(String phone) {
-    return 'Мы звоним на $phone';
-  }
-
-  @override
-  String get resend => 'Отправить повторно';
-
-  @override
-  String resendIn(int seconds) {
-    return 'Отправить повторно через $seconds с';
-  }
-
-  @override
-  String get doNotAnswer =>
-      'Не отвечайте на звонок — введите последние 4 цифры входящего номера.';
-
-  @override
-  String get callRequestedAgain => 'Звонок запрошен повторно';
 
   @override
   String get sportKind => 'Вид спорта';
@@ -862,15 +908,11 @@ class LRu extends L {
   String get errorBadPhone => 'проверьте номер телефона';
 
   @override
-  String get errorInvalidCode => 'Неверный код, попробуйте ещё раз';
-
-  @override
   String get errorChallengeExpired =>
-      'время проверки истекло — запросите новый звонок';
+      'Время проверки истекло — получите новый номер для звонка';
 
   @override
-  String get errorTooManyAttempts =>
-      'слишком много попыток — запросите новый звонок';
+  String get errorTooManyAttempts => 'Подождите минуту перед новой попыткой';
 
   @override
   String get errorTimeout => 'сервер не ответил вовремя';
@@ -1057,4 +1099,49 @@ class LRu extends L {
 
   @override
   String get gameFormat => 'Формат';
+
+  @override
+  String get callToSignIn => 'Позвоните для входа';
+
+  @override
+  String callFromPhone(String phone) {
+    return 'Позвоните с вашего номера $phone на номер ниже. Если у вас две SIM-карты, выберите нужную.';
+  }
+
+  @override
+  String get callInstructions =>
+      'Звонок бесплатный и автоматически сбросится. После звонка вернитесь в приложение — вход произойдёт автоматически.';
+
+  @override
+  String get callPhone => 'Позвонить';
+
+  @override
+  String get copyPhoneNumber => 'Скопировать номер';
+
+  @override
+  String get phoneCopied => 'Номер скопирован';
+
+  @override
+  String get waitingForCall => 'Ждём ваш звонок';
+
+  @override
+  String get callConfirmed => 'Номер подтверждён';
+
+  @override
+  String callExpiresIn(String time) {
+    return 'Осталось времени: $time';
+  }
+
+  @override
+  String get checkCall => 'Я уже позвонил — проверить';
+
+  @override
+  String get restartCall => 'Получить новый номер';
+
+  @override
+  String get changePhone => 'Изменить свой номер';
+
+  @override
+  String get dialerUnavailable =>
+      'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.';
 }

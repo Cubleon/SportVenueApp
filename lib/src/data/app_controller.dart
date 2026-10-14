@@ -16,7 +16,12 @@ enum AppErrorKind {
   gameFull,
   cancelNotOrganizer,
   badPhone,
-  invalidCode,
+  badEmail,
+  invalidEmailCode,
+  emailChallengeExpired,
+  emailAttemptsExceeded,
+  emailUnavailable,
+  emailTooManyRequests,
   challengeExpired,
   tooManyAttempts,
   timeout,
@@ -86,6 +91,7 @@ class AppController extends ChangeNotifier {
   final SessionStore _session;
 
   String phone = '';
+  String email = '';
   String? userId;
   String? userName;
   bool isSignedIn = false;
@@ -103,7 +109,12 @@ class AppController extends ChangeNotifier {
   List<Booking> get activeBookings =>
       bookings.where((booking) => booking.isActive).toList();
   List<Game> games = [];
-  String? _phoneChallengeId;
+  ApiPhoneChallenge? phoneChallenge;
+  String? _confirmedChallengeId;
+  int _phoneVerificationVersion = 0;
+  ApiEmailChallenge? emailChallenge;
+  String? _confirmedEmailChallengeId;
+  int _emailVerificationVersion = 0;
 
   DateTime get now => _now;
   bool get isConnected => _api != null;
@@ -154,53 +165,117 @@ class AppController extends ChangeNotifier {
         .toList();
   }
 
-  Future<void> startPhoneVerification(String newPhone) async {
+  Future<ApiPhoneChallenge> startPhoneVerification(String newPhone) async {
     final api = _api;
-    phone = newPhone;
     if (api == null) {
-      _phoneChallengeId = 'demo';
-      return;
+      throw StateError('Phone verification requires a server connection');
     }
+    cancelPhoneVerification();
+    cancelEmailVerification();
+    final version = _phoneVerificationVersion;
     final challenge = await api.startPhoneCall(
       phone: newPhone,
       consentAccepted: true,
     );
-    _phoneChallengeId = challenge.id;
+    if (version == _phoneVerificationVersion) {
+      phone = newPhone;
+      phoneChallenge = challenge;
+    }
+    return challenge;
   }
 
-  Future<void> signIn(String newPhone, String code) async {
+  void cancelPhoneVerification() {
+    _phoneVerificationVersion++;
+    phoneChallenge = null;
+    if (_confirmedChallengeId != null && !isSignedIn) {
+      _api?.clearTokens();
+    }
+    _confirmedChallengeId = null;
+  }
+
+  Future<PhoneCallStatus> checkPhoneVerification() async {
+    final api = _api;
+    final challenge = phoneChallenge;
+    if (api == null || challenge == null) {
+      throw StateError('Phone verification has not been started');
+    }
+    final version = _phoneVerificationVersion;
+    bool stillCurrent() => version == _phoneVerificationVersion;
+    if (_confirmedChallengeId != challenge.id) {
+      final result = await api.checkPhoneCall(challengeId: challenge.id);
+      if (!stillCurrent()) return PhoneCallStatus.pending;
+      if (result.status != PhoneCallStatus.confirmed) {
+        return result.status;
+      }
+      api.setTokens(result.tokens!);
+      _confirmedChallengeId = challenge.id;
+    }
+    // A failed catalog load can retry with the issued tokens; the server
+    // challenge is single-use and must not be redeemed a second time.
+    await _loadRemoteState(api, stillCurrent: stillCurrent);
+    if (!stillCurrent()) return PhoneCallStatus.pending;
+    isSignedIn = true;
+    notifyListeners();
+    return PhoneCallStatus.confirmed;
+  }
+
+  bool get emailCodeAccepted => _confirmedEmailChallengeId != null;
+
+  Future<ApiEmailChallenge> startEmailVerification(String newEmail) async {
     final api = _api;
     if (api == null) {
-      if (_phoneChallengeId != 'demo' || code != '1111') {
-        throw const ApiException(
-          kind: ApiExceptionKind.authentication,
-          message: 'invalid call code',
-          statusCode: 400,
-        );
-      }
-      phone = newPhone;
-      isSignedIn = true;
-      notifyListeners();
-      return;
+      throw StateError('Email verification requires a server connection');
     }
-
-    try {
-      final challengeId = _phoneChallengeId;
-      if (challengeId == null) {
-        throw StateError('Phone verification has not been started');
-      }
-      await api.verifyPhoneCall(challengeId: challengeId, code: code);
-      await _loadRemoteState(api);
-      phone = newPhone;
-      isSignedIn = true;
-      notifyListeners();
-    } catch (_) {
-      api.clearTokens();
-      rethrow;
+    cancelPhoneVerification();
+    final version = ++_emailVerificationVersion;
+    final challenge = await api.startEmailLogin(
+      email: newEmail.trim(),
+      consentAccepted: true,
+    );
+    if (version == _emailVerificationVersion) {
+      if (_confirmedEmailChallengeId != null && !isSignedIn) api.clearTokens();
+      _confirmedEmailChallengeId = null;
+      email = newEmail.trim().toLowerCase();
+      emailChallenge = challenge;
     }
+    return challenge;
   }
 
-  Future<void> _loadRemoteState(SportVenueApiClient api) async {
+  void cancelEmailVerification() {
+    _emailVerificationVersion++;
+    emailChallenge = null;
+    if (_confirmedEmailChallengeId != null && !isSignedIn) _api?.clearTokens();
+    _confirmedEmailChallengeId = null;
+  }
+
+  Future<void> verifyEmailCode(String code) async {
+    final api = _api;
+    final challenge = emailChallenge;
+    if (api == null || challenge == null) {
+      throw StateError('Email verification has not been started');
+    }
+    final version = _emailVerificationVersion;
+    bool stillCurrent() => version == _emailVerificationVersion;
+    if (_confirmedEmailChallengeId != challenge.id) {
+      final tokens = await api.verifyEmailCode(
+        challengeId: challenge.id,
+        code: code,
+      );
+      if (!stillCurrent()) return;
+      api.setTokens(tokens);
+      _confirmedEmailChallengeId = challenge.id;
+    }
+    // Catalog failures retry with the issued tokens; the code is single-use.
+    await _loadRemoteState(api, stillCurrent: stillCurrent);
+    if (!stillCurrent()) return;
+    isSignedIn = true;
+    notifyListeners();
+  }
+
+  Future<void> _loadRemoteState(
+    SportVenueApiClient api, {
+    bool Function()? stillCurrent,
+  }) async {
     final responses = await Future.wait<Object>([
       api.listSports(),
       api.listVenues(),
@@ -235,11 +310,13 @@ class AppController extends ChangeNotifier {
         ? validDefaults
         : nextSports.take(3).map((sport) => sport.id).toSet();
 
+    if (stillCurrent != null && !stillCurrent()) return;
     sports = nextSports;
     venues = nextVenues;
     userId = nextUserId;
     userName = _userDisplayName(user);
-    phone = user['phone'] as String? ?? phone;
+    phone = user['phone'] as String? ?? '';
+    email = user['email'] as String? ?? '';
     selectedSportIds = nextSelectedIds;
     bookings = bookingRows
         .map(
@@ -585,8 +662,11 @@ class AppController extends ChangeNotifier {
   }
 
   void logout() {
+    cancelPhoneVerification();
+    cancelEmailVerification();
     _api?.clearTokens();
     phone = '';
+    email = '';
     userId = null;
     userName = null;
     isSignedIn = false;
@@ -618,6 +698,26 @@ class AppController extends ChangeNotifier {
       if (error.isUnauthorized) {
         return AppErrorKind.sessionExpired;
       }
+      if (error.statusCode == 422 &&
+          error.uri?.path.contains('/auth/email/') == true) {
+        return error.uri?.path.endsWith('/verify') == true
+            ? AppErrorKind.invalidEmailCode
+            : AppErrorKind.badEmail;
+      }
+      if (message.contains('email')) {
+        if (message.contains('delivery')) return AppErrorKind.emailUnavailable;
+        if (message.contains('attempts exceeded')) {
+          return AppErrorKind.emailAttemptsExceeded;
+        }
+        if (message.contains('challenge')) {
+          return AppErrorKind.emailChallengeExpired;
+        }
+        if (message.contains('code is invalid')) {
+          return AppErrorKind.invalidEmailCode;
+        }
+        if (error.statusCode == 429) return AppErrorKind.emailTooManyRequests;
+        return AppErrorKind.badEmail;
+      }
       if (message.contains('slot is unavailable') ||
           message.contains('slot is locked')) {
         return AppErrorKind.slotTaken;
@@ -631,13 +731,11 @@ class AppController extends ChangeNotifier {
       if (message.contains('phone')) {
         return AppErrorKind.badPhone;
       }
-      if (message.contains('invalid call code')) {
-        return AppErrorKind.invalidCode;
-      }
-      if (message.contains('challenge has expired')) {
+      if (message.contains('challenge has expired') ||
+          message.contains('challenge is invalid')) {
         return AppErrorKind.challengeExpired;
       }
-      if (message.contains('too many code attempts')) {
+      if (error.statusCode == 429) {
         return AppErrorKind.tooManyAttempts;
       }
       // Something the server explained in its own words, which is better
@@ -652,6 +750,8 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    cancelPhoneVerification();
+    cancelEmailVerification();
     if (_closeApiOnDispose) {
       _api?.close();
     }

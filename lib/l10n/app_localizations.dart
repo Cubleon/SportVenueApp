@@ -807,6 +807,126 @@ abstract class L {
   /// **'Войти или\nзарегистрироваться'**
   String get signInTitle;
 
+  /// No description provided for @signInWithEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти по почте'**
+  String get signInWithEmail;
+
+  /// No description provided for @emailSignInTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход по коду из письма'**
+  String get emailSignInTitle;
+
+  /// No description provided for @emailSignInHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите вашу электронную почту. Мы отправим шестизначный код для входа.'**
+  String get emailSignInHint;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Электронная почта'**
+  String get emailLabel;
+
+  /// No description provided for @sendEmailCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получить код'**
+  String get sendEmailCode;
+
+  /// No description provided for @emailCodeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите код из письма'**
+  String get emailCodeTitle;
+
+  /// No description provided for @emailCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код из 6 цифр'**
+  String get emailCodeLabel;
+
+  /// No description provided for @emailCodeSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправили код на {email}'**
+  String emailCodeSent(String email);
+
+  /// No description provided for @emailCodeExpiresIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код действителен ещё {time}'**
+  String emailCodeExpiresIn(String time);
+
+  /// No description provided for @verifyEmailCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти'**
+  String get verifyEmailCode;
+
+  /// No description provided for @emailCheckSpam.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если письма нет, проверьте папку «Спам».'**
+  String get emailCheckSpam;
+
+  /// No description provided for @resendEmailCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить код повторно'**
+  String get resendEmailCode;
+
+  /// No description provided for @resendEmailCodeIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторная отправка через {seconds} сек.'**
+  String resendEmailCodeIn(int seconds);
+
+  /// No description provided for @changeEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить почту'**
+  String get changeEmail;
+
+  /// No description provided for @errorBadEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте адрес электронной почты'**
+  String get errorBadEmail;
+
+  /// No description provided for @errorInvalidEmailCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный код. Проверьте 6 цифр в последнем письме.'**
+  String get errorInvalidEmailCode;
+
+  /// No description provided for @errorEmailChallengeExpired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код больше не действует. Запросите новый код.'**
+  String get errorEmailChallengeExpired;
+
+  /// No description provided for @errorEmailAttemptsExceeded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много неверных попыток. Запросите новый код.'**
+  String get errorEmailAttemptsExceeded;
+
+  /// No description provided for @errorEmailUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось отправить письмо. Попробуйте позже.'**
+  String get errorEmailUnavailable;
+
+  /// No description provided for @errorEmailTooManyRequests.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком частая отправка кодов. Попробуйте позже.'**
+  String get errorEmailTooManyRequests;
+
   /// No description provided for @consent.
   ///
   /// In ru, this message translates to:
@@ -818,48 +938,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Отметьте согласие, чтобы продолжить'**
   String get consentRequired;
-
-  /// No description provided for @wrongCode.
-  ///
-  /// In ru, this message translates to:
-  /// **'Неверный код, попробуйте ещё раз'**
-  String get wrongCode;
-
-  /// No description provided for @enterCode.
-  ///
-  /// In ru, this message translates to:
-  /// **'Введите код'**
-  String get enterCode;
-
-  /// No description provided for @codeHint.
-  ///
-  /// In ru, this message translates to:
-  /// **'Мы звоним на {phone}'**
-  String codeHint(String phone);
-
-  /// No description provided for @resend.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отправить повторно'**
-  String get resend;
-
-  /// No description provided for @resendIn.
-  ///
-  /// In ru, this message translates to:
-  /// **'Отправить повторно через {seconds} с'**
-  String resendIn(int seconds);
-
-  /// No description provided for @doNotAnswer.
-  ///
-  /// In ru, this message translates to:
-  /// **'Не отвечайте на звонок — введите последние 4 цифры входящего номера.'**
-  String get doNotAnswer;
-
-  /// No description provided for @callRequestedAgain.
-  ///
-  /// In ru, this message translates to:
-  /// **'Звонок запрошен повторно'**
-  String get callRequestedAgain;
 
   /// No description provided for @sportKind.
   ///
@@ -1467,22 +1545,16 @@ abstract class L {
   /// **'проверьте номер телефона'**
   String get errorBadPhone;
 
-  /// No description provided for @errorInvalidCode.
-  ///
-  /// In ru, this message translates to:
-  /// **'Неверный код, попробуйте ещё раз'**
-  String get errorInvalidCode;
-
   /// No description provided for @errorChallengeExpired.
   ///
   /// In ru, this message translates to:
-  /// **'время проверки истекло — запросите новый звонок'**
+  /// **'Время проверки истекло — получите новый номер для звонка'**
   String get errorChallengeExpired;
 
   /// No description provided for @errorTooManyAttempts.
   ///
   /// In ru, this message translates to:
-  /// **'слишком много попыток — запросите новый звонок'**
+  /// **'Подождите минуту перед новой попыткой'**
   String get errorTooManyAttempts;
 
   /// No description provided for @errorTimeout.
@@ -1706,6 +1778,84 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Формат'**
   String get gameFormat;
+
+  /// No description provided for @callToSignIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвоните для входа'**
+  String get callToSignIn;
+
+  /// No description provided for @callFromPhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвоните с вашего номера {phone} на номер ниже. Если у вас две SIM-карты, выберите нужную.'**
+  String callFromPhone(String phone);
+
+  /// No description provided for @callInstructions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Звонок бесплатный и автоматически сбросится. После звонка вернитесь в приложение — вход произойдёт автоматически.'**
+  String get callInstructions;
+
+  /// No description provided for @callPhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвонить'**
+  String get callPhone;
+
+  /// No description provided for @copyPhoneNumber.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать номер'**
+  String get copyPhoneNumber;
+
+  /// No description provided for @phoneCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер скопирован'**
+  String get phoneCopied;
+
+  /// No description provided for @waitingForCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ждём ваш звонок'**
+  String get waitingForCall;
+
+  /// No description provided for @callConfirmed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер подтверждён'**
+  String get callConfirmed;
+
+  /// No description provided for @callExpiresIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осталось времени: {time}'**
+  String callExpiresIn(String time);
+
+  /// No description provided for @checkCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я уже позвонил — проверить'**
+  String get checkCall;
+
+  /// No description provided for @restartCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получить новый номер'**
+  String get restartCall;
+
+  /// No description provided for @changePhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить свой номер'**
+  String get changePhone;
+
+  /// No description provided for @dialerUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.'**
+  String get dialerUnavailable;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
