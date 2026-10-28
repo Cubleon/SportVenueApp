@@ -475,6 +475,47 @@
   },
   "sharesTitle": "Оплата долей",
   "sharePaid": "оплачено",
+  "payShareTitle": "Оплата доли",
+  "payYourShare": "Ваша доля",
+  "payRecipient": "Получатель: {name}, {bank}",
+  "@payRecipient": {
+    "placeholders": { "name": { "type": "String" }, "bank": { "type": "String" } }
+  },
+  "payTestBanner": "Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.",
+  "payCodeLabel": "Код доли",
+  "payCodeHint": "Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.",
+  "payCopyCode": "Скопировать",
+  "payCodeCopied": "Код скопирован",
+  "payViaBank": "Оплатить через банк",
+  "payBankFailed": "Не получилось открыть банк. Отсканируйте QR с другого телефона.",
+  "payQrHint": "Или отсканируйте QR с другого телефона",
+  "payIPaid": "Я оплатил",
+  "payDeadline": "Все доли нужно оплатить до {when}",
+  "@payDeadline": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "payPendingTitle": "Проверяем оплату",
+  "payPendingBody": "Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.",
+  "payPaidTitle": "Оплата получена",
+  "payPaidBody": "Ваша доля оплачена. Бронь подтвердится, когда оплатят все.",
+  "payNotFoundTitle": "Не нашли перевод",
+  "payNotFoundBody": "Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.",
+  "payAdminNote": "Комментарий: {note}",
+  "@payAdminNote": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "payRefundDue": "Бронь отменена. Деньги вернутся в течение 1 рабочего дня.",
+  "payRefunded": "Деньги за эту долю вернули.",
+  "payNothing": "У вас нет доли в этой брони.",
+  "payMyShare": "Оплатить свою долю · {price}",
+  "@payMyShare": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payMyPlace": "Оплатить своё место · {price}",
+  "@payMyPlace": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payToBooking": "Открыть бронь",
   "bookingStatusAwaiting": "проверяем оплату",
   "shareOpenSeat": "Свободное место",
   "shareStatusOpen": "свободно",

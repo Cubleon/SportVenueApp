@@ -1635,6 +1635,162 @@ abstract class L {
   /// **'оплачено'**
   String get sharePaid;
 
+  /// No description provided for @payShareTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата доли'**
+  String get payShareTitle;
+
+  /// No description provided for @payYourShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваша доля'**
+  String get payYourShare;
+
+  /// No description provided for @payRecipient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получатель: {name}, {bank}'**
+  String payRecipient(String name, String bank);
+
+  /// No description provided for @payTestBanner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.'**
+  String get payTestBanner;
+
+  /// No description provided for @payCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код доли'**
+  String get payCodeLabel;
+
+  /// No description provided for @payCodeHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.'**
+  String get payCodeHint;
+
+  /// No description provided for @payCopyCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать'**
+  String get payCopyCode;
+
+  /// No description provided for @payCodeCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код скопирован'**
+  String get payCodeCopied;
+
+  /// No description provided for @payViaBank.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить через банк'**
+  String get payViaBank;
+
+  /// No description provided for @payBankFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось открыть банк. Отсканируйте QR с другого телефона.'**
+  String get payBankFailed;
+
+  /// No description provided for @payQrHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Или отсканируйте QR с другого телефона'**
+  String get payQrHint;
+
+  /// No description provided for @payIPaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я оплатил'**
+  String get payIPaid;
+
+  /// No description provided for @payDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все доли нужно оплатить до {when}'**
+  String payDeadline(String when);
+
+  /// No description provided for @payPendingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверяем оплату'**
+  String get payPendingTitle;
+
+  /// No description provided for @payPendingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.'**
+  String get payPendingBody;
+
+  /// No description provided for @payPaidTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата получена'**
+  String get payPaidTitle;
+
+  /// No description provided for @payPaidBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.'**
+  String get payPaidBody;
+
+  /// No description provided for @payNotFoundTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не нашли перевод'**
+  String get payNotFoundTitle;
+
+  /// No description provided for @payNotFoundBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.'**
+  String get payNotFoundBody;
+
+  /// No description provided for @payAdminNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Комментарий: {note}'**
+  String payAdminNote(String note);
+
+  /// No description provided for @payRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.'**
+  String get payRefundDue;
+
+  /// No description provided for @payRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги за эту долю вернули.'**
+  String get payRefunded;
+
+  /// No description provided for @payNothing.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас нет доли в этой брони.'**
+  String get payNothing;
+
+  /// No description provided for @payMyShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить свою долю · {price}'**
+  String payMyShare(String price);
+
+  /// No description provided for @payMyPlace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить своё место · {price}'**
+  String payMyPlace(String price);
+
+  /// No description provided for @payToBooking.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть бронь'**
+  String get payToBooking;
+
   /// No description provided for @bookingStatusAwaiting.
   ///
   /// In ru, this message translates to:

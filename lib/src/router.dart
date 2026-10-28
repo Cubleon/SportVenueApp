@@ -14,6 +14,7 @@ import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/share_payment_screen.dart';
 import 'screens/sport_selection_screen.dart';
 import 'screens/venue_screen.dart';
 import 'theme/app_icons.dart';
@@ -54,6 +55,11 @@ abstract final class Routes {
       : '$path?date=${date.toIso8601String().substring(0, 10)}';
 
   static String booking(String id) => '/booking/$id';
+
+  /// Paying the reader's share of a booking. [created] says the booking
+  /// was made a moment ago, which the screen opens by saying so.
+  static String pay(String id, {bool created = false}) =>
+      '/booking/$id/pay${created ? '?new=1' : ''}';
 }
 
 /// A link to somewhere in the app, ready to be pasted into a chat.
@@ -361,6 +367,22 @@ List<RouteBase> shellRoutes(AppController controller) => [
       }
       return BookingDetailsScreen(controller: controller, booking: booking);
     },
+    routes: [
+      GoRoute(
+        path: 'pay',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          if (controller.bookingById(id) == null) {
+            return _NotFound(what: context.l10n.bookingNotFound);
+          }
+          return SharePaymentScreen(
+            controller: controller,
+            bookingId: id,
+            justCreated: state.uri.queryParameters['new'] == '1',
+          );
+        },
+      ),
+    ],
   ),
   GoRoute(
     path: 'bookings',

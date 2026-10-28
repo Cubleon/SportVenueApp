@@ -966,6 +966,94 @@ class LRu extends L {
   String get sharePaid => 'оплачено';
 
   @override
+  String get payShareTitle => 'Оплата доли';
+
+  @override
+  String get payYourShare => 'Ваша доля';
+
+  @override
+  String payRecipient(String name, String bank) {
+    return 'Получатель: $name, $bank';
+  }
+
+  @override
+  String get payTestBanner => 'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.';
+
+  @override
+  String get payCodeLabel => 'Код доли';
+
+  @override
+  String get payCodeHint => 'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.';
+
+  @override
+  String get payCopyCode => 'Скопировать';
+
+  @override
+  String get payCodeCopied => 'Код скопирован';
+
+  @override
+  String get payViaBank => 'Оплатить через банк';
+
+  @override
+  String get payBankFailed => 'Не получилось открыть банк. Отсканируйте QR с другого телефона.';
+
+  @override
+  String get payQrHint => 'Или отсканируйте QR с другого телефона';
+
+  @override
+  String get payIPaid => 'Я оплатил';
+
+  @override
+  String payDeadline(String when) {
+    return 'Все доли нужно оплатить до $when';
+  }
+
+  @override
+  String get payPendingTitle => 'Проверяем оплату';
+
+  @override
+  String get payPendingBody => 'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.';
+
+  @override
+  String get payPaidTitle => 'Оплата получена';
+
+  @override
+  String get payPaidBody => 'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.';
+
+  @override
+  String get payNotFoundTitle => 'Не нашли перевод';
+
+  @override
+  String get payNotFoundBody => 'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.';
+
+  @override
+  String payAdminNote(String note) {
+    return 'Комментарий: $note';
+  }
+
+  @override
+  String get payRefundDue => 'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.';
+
+  @override
+  String get payRefunded => 'Деньги за эту долю вернули.';
+
+  @override
+  String get payNothing => 'У вас нет доли в этой брони.';
+
+  @override
+  String payMyShare(String price) {
+    return 'Оплатить свою долю · $price';
+  }
+
+  @override
+  String payMyPlace(String price) {
+    return 'Оплатить своё место · $price';
+  }
+
+  @override
+  String get payToBooking => 'Открыть бронь';
+
+  @override
   String get bookingStatusAwaiting => 'проверяем оплату';
 
   @override

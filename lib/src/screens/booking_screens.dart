@@ -442,14 +442,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
       // channel never answers, awaiting it holds the screen on a payment
       // that has already gone through.
       unawaited(HapticFeedback.mediumImpact());
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => BookingSuccessScreen(
-            controller: widget.controller,
-            booking: booking,
-          ),
-        ),
-      );
+      // Straight on to paying the reader's own share: the booking exists,
+      // but nothing is paid until that is done. The screen says the booking
+      // was made, and what the others still owe.
+      context.go(Routes.pay(booking.id, created: true));
     } catch (error) {
       if (!mounted) {
         return;
@@ -457,104 +453,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
       setState(() => _loading = false);
       showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
-  }
-}
-
-/// The end of the payment, given a screen of its own.
-///
-/// It used to be a toast over the home screen: the one moment the reader
-/// has just paid for, and the app said it in two lines that disappeared,
-/// with no way back to the thing that had just been created. A booking
-/// that collects shares also has a next step, and this is where it is said.
-class BookingSuccessScreen extends StatelessWidget {
-  const BookingSuccessScreen({
-    super.key,
-    required this.controller,
-    required this.booking,
-  });
-
-  final AppController controller;
-  final Booking booking;
-
-  @override
-  Widget build(BuildContext context) {
-    final split = booking.draft.mode == PaymentMode.split;
-    // What the others still owe: the reader's own share is theirs to pay
-    // on the next screen, not something to call friends about.
-    final left = booking.shares.isEmpty
-        ? booking.draft.players - 1
-        : booking.othersUnpaid;
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-                children: [
-                  Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: context.colors.success.withValues(alpha: 0.12),
-                      ),
-                      child: Icon(
-                        AppIcons.check,
-                        size: 34,
-                        color: context.colors.success,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    context.l10n.bookingCreated,
-                    textAlign: TextAlign.center,
-                    style: context.text.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    split && left > 0
-                        ? context.l10n.bookingCreatedShares(left)
-                        : context.l10n.bookingCreatedFull,
-                    textAlign: TextAlign.center,
-                    style: context.text.bodyMedium?.copyWith(
-                      color: context.colors.muted,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  _BookingDetailsCard(draft: booking.draft),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                children: [
-                  PrimaryButton(
-                    key: const ValueKey('open-created-booking'),
-                    label: context.l10n.openBooking,
-                    onPressed: () => context.go(Routes.booking(booking.id)),
-                  ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    key: const ValueKey('close-booking-success'),
-                    label: context.l10n.bookingSuccessDone,
-                    tone: ButtonTone.neutral,
-                    onPressed: () =>
-                        Navigator.of(context).popUntil((r) => r.isFirst),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -584,9 +482,34 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   bool _loading = false;
 
+  /// The booking as it stands now: paying, a confirmation or the deadline
+  /// change it while the screen is open, and the copy it was opened with
+  /// would go on showing the old shares.
+  Booking get _booking =>
+      widget.controller.bookingById(widget.booking.id) ?? widget.booking;
+
   @override
   Widget build(BuildContext context) {
-    final canCancel = widget.controller.canCancelBooking(widget.booking);
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (context, _) => _build(context, _booking),
+    );
+  }
+
+  Widget _build(BuildContext context, Booking booking) {
+    // A booking that is over has nothing left to cancel.
+    final canCancel =
+        booking.isActive && widget.controller.canCancelBooking(booking);
+    final mine = booking.myShare;
+    // The reader's own share is the one thing on this screen they can do
+    // something about; it gets the button, and the cancel goes under it.
+    final canPay =
+        booking.isActive &&
+        mine != null &&
+        (mine.status == ShareStatus.unpaid ||
+            mine.status == ShareStatus.notFound ||
+            mine.status == ShareStatus.pendingConfirmation);
+    final hasBar = canCancel || canPay;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -596,7 +519,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 20,
                 12,
                 20,
-                canCancel ? _barHeight : 24,
+                hasBar ? _barHeight : 24,
               ),
               children: [
                 _BookingNav(
@@ -605,12 +528,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ),
                 const SizedBox(height: 12),
                 _BookingDetailsCard(
-                  draft: widget.booking.draft,
-                  status: bookingStatusText(context, widget.booking),
+                  draft: booking.draft,
+                  status: bookingStatusText(context, booking),
                 ),
-                if (widget.booking.shares.isNotEmpty) ...[
+                if (booking.shares.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  _SharesCard(booking: widget.booking),
+                  _SharesCard(booking: booking),
                 ],
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
@@ -627,19 +550,39 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
               ],
             ),
-            if (canCancel)
+            if (hasBar)
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 child: PinnedActionBar(
                   onHeight: _onBarHeight,
-                  child: PrimaryButton(
-                    key: const ValueKey('cancel-booking'),
-                    label: context.l10n.cancelBooking,
-                    tone: ButtonTone.neutral,
-                    isLoading: _loading,
-                    onPressed: _loading ? null : _cancel,
+                  child: Column(
+                    children: [
+                      if (canPay)
+                        PrimaryButton(
+                          key: const ValueKey('pay-my-share'),
+                          label:
+                              mine.status == ShareStatus.pendingConfirmation
+                              ? context.l10n.payPendingTitle
+                              : context.l10n.payMyShare(
+                                  AppFormatters.money(
+                                    mine.amount ?? booking.draft.sharePrice,
+                                  ),
+                                ),
+                          tone: ButtonTone.commit,
+                          onPressed: () => context.go(Routes.pay(booking.id)),
+                        ),
+                      if (canPay && canCancel) const SizedBox(height: 10),
+                      if (canCancel)
+                        PrimaryButton(
+                          key: const ValueKey('cancel-booking'),
+                          label: context.l10n.cancelBooking,
+                          tone: ButtonTone.neutral,
+                          isLoading: _loading,
+                          onPressed: _loading ? null : _cancel,
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -650,7 +593,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _cancel() async {
-    final draft = widget.booking.draft;
+    final draft = _booking.draft;
     final confirmed = await confirmAction(
       context,
       title: context.l10n.cancelBookingQuestion,
@@ -668,7 +611,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
     setState(() => _loading = true);
     try {
-      await widget.controller.cancelBooking(widget.booking);
+      await widget.controller.cancelBooking(_booking);
       if (!mounted) {
         return;
       }
