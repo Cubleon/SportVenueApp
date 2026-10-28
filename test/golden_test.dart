@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
+import 'package:sport_venue_app/src/data/api_client.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/screens/auth_screens.dart';
+import 'package:sport_venue_app/src/screens/email_auth_screens.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
 import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
@@ -51,7 +53,55 @@ void main() {
         'sign-in',
         theme,
         now: fixedNow,
-        build: (_) => RegistrationScreen(onContinue: (_) async => null),
+        build: (_) =>
+            RegistrationScreen(onContinue: (_) async => null, onEmail: () {}),
+      );
+
+      _golden(
+        'email-sign-in',
+        theme,
+        now: fixedNow,
+        build: (_) =>
+            EmailSignInScreen(onContinue: (_) async => null, onBack: () {}),
+      );
+
+      _golden(
+        'email-code',
+        theme,
+        now: fixedNow,
+        build: (_) => EmailVerificationScreen(
+          email: 'sportvenue@gmail.com',
+          challenge: ApiEmailChallenge(
+            id: 'email',
+            expiresAt: fixedNow.add(const Duration(minutes: 5)),
+            resendAvailableAt: fixedNow.add(const Duration(seconds: 60)),
+          ),
+          onVerify: (_) async {},
+          onResend: () async => throw StateError('Not used by golden'),
+          onBack: () {},
+          onCancel: () {},
+          now: () => fixedNow,
+        ),
+      );
+
+      _golden(
+        'call-verification',
+        theme,
+        now: fixedNow,
+        build: (_) => CallVerificationScreen(
+          phone: '+7 (900) 000-00-00',
+          challenge: ApiPhoneChallenge(
+            id: 'challenge',
+            expiresAt: fixedNow.add(const Duration(minutes: 5)),
+            callPhone: '+78005008275',
+            callPhonePretty: '+7 (800) 500-8275',
+          ),
+          now: () => fixedNow,
+          onCheck: () async => PhoneCallStatus.pending,
+          onRestart: () async => throw StateError('Not used by golden'),
+          onBack: () {},
+          onCancel: () {},
+        ),
       );
 
       _golden(
@@ -151,6 +201,7 @@ void _golden(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/${theme.name}-$name.png'),
     );
+    await tester.pumpWidget(const SizedBox());
   });
 }
 

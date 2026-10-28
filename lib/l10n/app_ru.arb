@@ -217,29 +217,31 @@
   "resetSearch": "Сбросить поиск",
   "skipSplash": "Пропустить заставку",
   "signInTitle": "Войти или\nзарегистрироваться",
+  "signInWithEmail": "Войти по почте",
+  "emailSignInTitle": "Вход по коду из письма",
+  "emailSignInHint": "Введите вашу электронную почту. Мы отправим шестизначный код для входа.",
+  "emailLabel": "Электронная почта",
+  "sendEmailCode": "Получить код",
+  "emailCodeTitle": "Введите код из письма",
+  "emailCodeLabel": "Код из 6 цифр",
+  "emailCodeSent": "Отправили код на {email}",
+  "@emailCodeSent": { "placeholders": { "email": { "type": "String" } } },
+  "emailCodeExpiresIn": "Код действителен ещё {time}",
+  "@emailCodeExpiresIn": { "placeholders": { "time": { "type": "String" } } },
+  "verifyEmailCode": "Войти",
+  "emailCheckSpam": "Если письма нет, проверьте папку «Спам».",
+  "resendEmailCode": "Отправить код повторно",
+  "resendEmailCodeIn": "Повторная отправка через {seconds} сек.",
+  "@resendEmailCodeIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "changeEmail": "Изменить почту",
+  "errorBadEmail": "Проверьте адрес электронной почты",
+  "errorInvalidEmailCode": "Неверный код. Проверьте 6 цифр в последнем письме.",
+  "errorEmailChallengeExpired": "Код больше не действует. Запросите новый код.",
+  "errorEmailAttemptsExceeded": "Слишком много неверных попыток. Запросите новый код.",
+  "errorEmailUnavailable": "Не удалось отправить письмо. Попробуйте позже.",
+  "errorEmailTooManyRequests": "Слишком частая отправка кодов. Попробуйте позже.",
   "consent": "Согласен с обработкой персональных данных и условиями сервиса",
   "consentRequired": "Отметьте согласие, чтобы продолжить",
-  "wrongCode": "Неверный код, попробуйте ещё раз",
-  "enterCode": "Введите код",
-  "codeHint": "Мы звоним на {phone}",
-  "@codeHint": {
-    "placeholders": {
-      "phone": {
-        "type": "String"
-      }
-    }
-  },
-  "resend": "Отправить повторно",
-  "resendIn": "Отправить повторно через {seconds} с",
-  "@resendIn": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "doNotAnswer": "Не отвечайте на звонок — введите последние 4 цифры входящего номера.",
-  "callRequestedAgain": "Звонок запрошен повторно",
   "sportKind": "Вид спорта",
   "venueStep": "Площадка",
   "noVenuesForChosenSport": "Для выбранного спорта площадок пока нет",
@@ -450,9 +452,8 @@
   "errorGameFull": "в игре больше нет свободных мест",
   "errorCancelNotOrganizer": "отменить бронь может только организатор",
   "errorBadPhone": "проверьте номер телефона",
-  "errorInvalidCode": "Неверный код, попробуйте ещё раз",
-  "errorChallengeExpired": "время проверки истекло — запросите новый звонок",
-  "errorTooManyAttempts": "слишком много попыток — запросите новый звонок",
+  "errorChallengeExpired": "Время проверки истекло — получите новый номер для звонка",
+  "errorTooManyAttempts": "Подождите минуту перед новой попыткой",
   "errorTimeout": "сервер не ответил вовремя",
   "errorUnknown": "не удалось выполнить запрос",
   "bookingStatusCollecting": "ожидает участников",
@@ -630,5 +631,32 @@
   "gameFormat": "Формат",
   "@gameFormat": {
     "description": "Строка «Формат» в карточке игры"
-  }
+  },
+  "callToSignIn": "Позвоните для входа",
+  "callFromPhone": "Позвоните с вашего номера {phone} на номер ниже. Если у вас две SIM-карты, выберите нужную.",
+  "@callFromPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "callInstructions": "Звонок бесплатный и автоматически сбросится. После звонка вернитесь в приложение — вход произойдёт автоматически.",
+  "callPhone": "Позвонить",
+  "copyPhoneNumber": "Скопировать номер",
+  "phoneCopied": "Номер скопирован",
+  "waitingForCall": "Ждём ваш звонок",
+  "callConfirmed": "Номер подтверждён",
+  "callExpiresIn": "Осталось времени: {time}",
+  "@callExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "checkCall": "Я уже позвонил — проверить",
+  "restartCall": "Получить новый номер",
+  "changePhone": "Изменить свой номер",
+  "dialerUnavailable": "Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона."
 }

@@ -7,7 +7,12 @@ import '../theme/app_icons.dart';
 import '../../l10n/l10n.dart';
 import 'package:flutter/services.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
+import '../data/api_client.dart';
+import '../data/app_controller.dart';
 import '../data/formatters.dart';
+import '../labels.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -159,9 +164,10 @@ class _SplashScreenState extends State<SplashScreen>
 }
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key, required this.onContinue});
+  const RegistrationScreen({super.key, required this.onContinue, this.onEmail});
 
   final Future<String?> Function(String phone) onContinue;
+  final VoidCallback? onEmail;
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -192,7 +198,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -325,6 +331,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 label: context.l10n.continueLabel,
                 onPressed: _isValid && !_submitting ? _continue : null,
               ),
+              if (widget.onEmail != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  key: const ValueKey('email-sign-in'),
+                  onPressed: _submitting ? null : widget.onEmail,
+                  child: Text(context.l10n.signInWithEmail),
+                ),
+              ],
               if (_submitting)
                 const Padding(
                   padding: EdgeInsets.only(top: 14),
@@ -368,279 +382,305 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 }
 
-class OtpScreen extends StatefulWidget {
-  const OtpScreen({
+class CallVerificationScreen extends StatefulWidget {
+  const CallVerificationScreen({
     super.key,
     required this.phone,
-    required this.onVerified,
-    required this.onResend,
+    required this.challenge,
+    required this.onCheck,
+    required this.onRestart,
     required this.onBack,
+    required this.onCancel,
+    this.openDialer,
+    this.now,
   });
 
   final String phone;
-  final Future<String?> Function(String code) onVerified;
-  final Future<String?> Function() onResend;
+  final ApiPhoneChallenge challenge;
+  final Future<PhoneCallStatus> Function() onCheck;
+  final Future<ApiPhoneChallenge> Function() onRestart;
   final VoidCallback onBack;
+  final VoidCallback onCancel;
+  final Future<bool> Function(Uri)? openDialer;
+  final DateTime Function()? now;
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  State<CallVerificationScreen> createState() => _CallVerificationScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen>
-    with SingleTickerProviderStateMixin {
-  final _controllers = List.generate(4, (_) => TextEditingController());
-  final _nodes = List.generate(4, (_) => FocusNode());
-  late final AnimationController _shake = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 420),
+class _CallVerificationScreenState extends State<CallVerificationScreen>
+    with WidgetsBindingObserver {
+  late ApiPhoneChallenge _challenge = widget.challenge;
+  Timer? _countdown;
+  Timer? _poll;
+  bool _checking = false;
+  bool _restarting = false;
+  bool _launching = false;
+  bool _background = false;
+  bool _finished = false;
+  bool _serverExpired = false;
+  bool _dialerUnavailable = false;
+  String? _error;
+
+  DateTime get _now => widget.now?.call() ?? DateTime.now();
+  int get _seconds => math.max(
+    0,
+    (_challenge.expiresAt.difference(_now).inMilliseconds / 1000).ceil(),
   );
-  Timer? _timer;
-  int _seconds = 59;
-  bool _error = false;
-  bool _submitting = false;
-  String? _errorText;
+  bool get _expired => _serverExpired || _seconds == 0;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_seconds == 0) {
-        timer.cancel();
-      } else if (mounted) {
-        setState(() => _seconds--);
+    WidgetsBinding.instance.addObserver(this);
+    _startTimers();
+  }
+
+  void _startTimers() {
+    _countdown?.cancel();
+    _countdown = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _background || _finished) return;
+      setState(() {});
+      if (_expired) {
+        _countdown?.cancel();
+        _poll?.cancel();
       }
     });
+    _scheduleCheck();
+  }
+
+  void _scheduleCheck() {
+    _poll?.cancel();
+    if (_expired || _finished) _countdown?.cancel();
+    if (!_background && !_expired && !_finished) {
+      _poll = Timer(const Duration(seconds: 3), _check);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _background = state != AppLifecycleState.resumed;
+    if (_background) {
+      _poll?.cancel();
+      _countdown?.cancel();
+    } else {
+      setState(() {});
+      _startTimers();
+      _check();
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _shake.dispose();
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    for (final node in _nodes) {
-      node.dispose();
-    }
+    WidgetsBinding.instance.removeObserver(this);
+    _countdown?.cancel();
+    _poll?.cancel();
+    widget.onCancel();
     super.dispose();
+  }
+
+  Future<void> _check() async {
+    if (_checking || _restarting || _expired || _finished || _background) {
+      return;
+    }
+    _poll?.cancel();
+    setState(() => _checking = true);
+    final l10n = context.l10n;
+    try {
+      final status = await widget.onCheck();
+      if (!mounted) return;
+      setState(() {
+        _error = null;
+        _serverExpired = status == PhoneCallStatus.expired;
+        _finished = status == PhoneCallStatus.confirmed;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _serverExpired =
+            AppController.kindOf(error) == AppErrorKind.challengeExpired;
+        _error = _serverExpired ? null : errorTextFor(l10n, error);
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _checking = false);
+        _scheduleCheck();
+      }
+    }
+  }
+
+  Future<void> _restart() async {
+    if (_restarting || _checking) return;
+    setState(() => _restarting = true);
+    final l10n = context.l10n;
+    try {
+      final challenge = await widget.onRestart();
+      if (!mounted) return;
+      setState(() {
+        _challenge = challenge;
+        _serverExpired = false;
+        _error = null;
+        _dialerUnavailable = false;
+      });
+      _startTimers();
+    } catch (error) {
+      if (mounted) setState(() => _error = errorTextFor(l10n, error));
+    } finally {
+      if (mounted) setState(() => _restarting = false);
+    }
+  }
+
+  Future<void> _call() async {
+    if (_launching || _expired) return;
+    setState(() => _launching = true);
+    try {
+      final uri = Uri(scheme: 'tel', path: _challenge.callPhone);
+      final opened = await (widget.openDialer?.call(uri) ?? launchUrl(uri));
+      if (mounted) setState(() => _dialerUnavailable = !opened);
+    } catch (_) {
+      if (mounted) setState(() => _dialerUnavailable = true);
+    } finally {
+      if (mounted) setState(() => _launching = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final remaining =
+        '${_seconds ~/ 60}:${(_seconds % 60).toString().padLeft(2, '0')}';
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  _IconBox(icon: AppIcons.chevronLeft, onTap: widget.onBack),
-                  const Spacer(),
-                  const AppLogo(size: 38),
-                  const Spacer(),
-                  const SizedBox(width: 40),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _IconBox(
+                  icon: AppIcons.chevronLeft,
+                  onTap: widget.onBack,
+                ),
               ),
-              const SizedBox(height: 36),
-              Text(context.l10n.enterCode, style: context.text.headlineMedium),
-              const SizedBox(height: 8),
+              const SizedBox(height: 38),
               Text(
-                context.l10n.codeHint(widget.phone),
+                l10n.callToSignIn,
+                textAlign: TextAlign.center,
+                style: context.text.headlineMedium,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                l10n.callFromPhone(widget.phone),
+                textAlign: TextAlign.center,
+                style: context.text.bodyLarge?.copyWith(
+                  color: context.colors.muted,
+                ),
+              ),
+              const SizedBox(height: 28),
+              SelectableText(
+                _challenge.callPhonePretty,
+                key: const ValueKey('call-number'),
+                textAlign: TextAlign.center,
+                style: context.text.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: _challenge.callPhone),
+                  );
+                  if (context.mounted) showAppSnack(context, l10n.phoneCopied);
+                },
+                child: Text(l10n.copyPhoneNumber),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.callInstructions,
+                textAlign: TextAlign.center,
                 style: context.text.bodyMedium?.copyWith(
                   color: context.colors.muted,
                 ),
               ),
-              const SizedBox(height: 34),
-              AnimatedBuilder(
-                animation: _shake,
-                builder: (context, child) {
-                  final offset = math.sin(_shake.value * math.pi * 6) * 8;
-                  return Transform.translate(
-                    offset: Offset(offset, 0),
-                    child: child,
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    4,
-                    (index) => Padding(
-                      padding: EdgeInsets.only(right: index == 3 ? 0 : 10),
-                      child: SizedBox(
-                        width: 66,
-                        child: TextField(
-                          key: ValueKey('otp-$index'),
-                          controller: _controllers[index],
-                          focusNode: _nodes[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          maxLength: 1,
-                          enabled: !_submitting,
-                          style: context.text.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: InputDecoration(
-                            counterText: '',
-                            errorText: null,
-                            filled: true,
-                            fillColor: _error
-                                ? context.colors.error.withValues(alpha: 0.08)
-                                : context.colors.surface,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: _error
-                                    ? context.colors.error
-                                    : context.colors.borderStrong,
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: context.colors.accent,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          onChanged: (value) => _onOtpChanged(index, value),
-                        ),
-                      ),
-                    ),
+              const SizedBox(height: 24),
+              if (!_expired) ...[
+                PrimaryButton(
+                  key: const ValueKey('call-phone'),
+                  label: l10n.callPhone,
+                  onPressed: _launching || _finished ? null : _call,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  _finished ? l10n.callConfirmed : l10n.waitingForCall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.callExpiresIn(remaining),
+                  textAlign: TextAlign.center,
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.colors.muted,
                   ),
                 ),
-              ),
-              AnimatedOpacity(
-                opacity: _error ? 1 : 0,
-                duration: context.motion(const Duration(milliseconds: 160)),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 14),
+                TextButton(
+                  key: const ValueKey('check-call'),
+                  onPressed: _checking || _finished ? null : _check,
+                  child: Text(l10n.checkCall),
+                ),
+              ] else ...[
+                Text(
+                  l10n.errorChallengeExpired,
+                  key: const ValueKey('call-expired'),
+                  textAlign: TextAlign.center,
+                  style: context.text.bodyMedium?.copyWith(
+                    color: context.colors.error,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                PrimaryButton(
+                  key: const ValueKey('restart-call'),
+                  label: l10n.restartCall,
+                  onPressed: _checking || _restarting ? null : _restart,
+                ),
+              ],
+              if (_checking || _restarting)
+                const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              if (_dialerUnavailable)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
                   child: Text(
-                    _errorText ?? context.l10n.wrongCode,
+                    l10n.dialerUnavailable,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    _error!,
                     textAlign: TextAlign.center,
                     style: context.text.bodySmall?.copyWith(
                       color: context.colors.error,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              // The one thing a reader has to know about a flash call, said
-              // where the code is typed. It used to sit pinned to the bottom
-              // of the screen, half a phone away from the boxes it explains,
-              // and people answered the call.
-              Text(
-                context.l10n.doNotAnswer,
-                textAlign: TextAlign.center,
-                style: context.text.bodySmall?.copyWith(
-                  color: context.colors.muted,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 6),
-              if (_submitting)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 18),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+              const SizedBox(height: 12),
               TextButton(
-                key: const ValueKey('resend-otp'),
-                onPressed: _seconds == 0 ? _resend : null,
-                child: Text(
-                  _seconds == 0
-                      ? context.l10n.resend
-                      : context.l10n.resendIn(_seconds),
-                ),
+                onPressed: widget.onBack,
+                child: Text(l10n.changePhone),
               ),
-              const Spacer(),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _onOtpChanged(int index, String value) {
-    if (value.length > 1) {
-      final chars = value.characters.take(4).toList();
-      for (var i = 0; i < chars.length; i++) {
-        _controllers[i].text = chars[i];
-      }
-    }
-
-    setState(() => _error = false);
-    if (value.isNotEmpty && index < 3) {
-      _nodes[index + 1].requestFocus();
-    }
-
-    final code = _controllers.map((controller) => controller.text).join();
-    if (code.length == 4) {
-      FocusScope.of(context).unfocus();
-      _verify(code);
-    }
-  }
-
-  Future<void> _verify(String code) async {
-    setState(() {
-      _submitting = true;
-      _error = false;
-    });
-    final error = await widget.onVerified(code);
-    if (!mounted || error == null) {
-      return;
-    }
-    setState(() => _submitting = false);
-    _showError(error);
-  }
-
-  Future<void> _resend() async {
-    setState(() => _submitting = true);
-    final error = await widget.onResend();
-    if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      if (error == null) _seconds = 59;
-    });
-    _timer?.cancel();
-    if (error != null) {
-      _showError(error);
-      return;
-    }
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_seconds == 0) {
-        timer.cancel();
-      } else if (mounted) {
-        setState(() => _seconds--);
-      }
-    });
-    showAppSnack(context, context.l10n.callRequestedAgain);
-  }
-
-  void _showError(String message) {
-    setState(() {
-      _error = true;
-      _errorText = message;
-    });
-    // The red border and the message say it too; the shake is the part a
-    // reader can ask not to have.
-    if (!MediaQuery.disableAnimationsOf(context)) {
-      _shake.forward(from: 0);
-    }
-    Future<void>.delayed(const Duration(milliseconds: 650), () {
-      if (!mounted) {
-        return;
-      }
-      for (final controller in _controllers) {
-        controller.clear();
-      }
-      _nodes.first.requestFocus();
-    });
   }
 }
 

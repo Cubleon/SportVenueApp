@@ -21,51 +21,61 @@ import 'package:sport_venue_app/src/widgets/shared_widgets.dart';
 import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 
+import 'support/call_auth_fixture.dart';
+
 void main() {
   final fixedNow = DateTime(2026, 5, 24);
 
   setUpAll(() {});
 
-  testWidgets('registration, otp and sport onboarding reach main screen', (
+  testWidgets(
+    'registration, confirmed call and sport onboarding reach main screen',
+    (tester) async {
+      _setPhoneSize(tester);
+      final auth = CallAuthFixture();
+      final controller = AppController(now: fixedNow, api: auth.client);
+      addTearDown(controller.dispose);
+      addTearDown(auth.client.close);
+
+      await tester.pumpWidget(SportVenueApp(controller: controller));
+      await tester.pump(const Duration(milliseconds: 2700));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('зарегистрироваться'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('phone-field')),
+        '9000000000',
+      );
+      await tester.tap(find.textContaining('Согласен'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('registration-continue')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Позвоните для входа'), findsOneWidget);
+      expect(find.byKey(const ValueKey('otp-0')), findsNothing);
+      expect(controller.isSignedIn, isFalse);
+      auth.status = 'confirmed';
+      await tester.tap(find.byKey(const ValueKey('check-call')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Какой спорт?'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('sports-continue')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+      expect(controller.isSignedIn, isTrue);
+    },
+  );
+
+  testWidgets('pending call stays signed out without code fields', (
     tester,
   ) async {
     _setPhoneSize(tester);
-    final controller = AppController(now: fixedNow);
-
-    await tester.pumpWidget(SportVenueApp(controller: controller));
-    await tester.pump(const Duration(milliseconds: 2700));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('зарегистрироваться'), findsOneWidget);
-
-    await tester.enterText(
-      find.byKey(const ValueKey('phone-field')),
-      '9000000000',
-    );
-    await tester.tap(find.textContaining('Согласен'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('registration-continue')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Введите код'), findsOneWidget);
-    for (var i = 0; i < 4; i++) {
-      await tester.enterText(find.byKey(ValueKey('otp-$i')), '1');
-      await tester.pump();
-    }
-    await tester.pumpAndSettle();
-
-    expect(find.text('Какой спорт?'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('sports-continue')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
-    expect(controller.isSignedIn, isTrue);
-  });
-
-  testWidgets('otp rejects non-demo code with error text', (tester) async {
-    _setPhoneSize(tester);
-    final controller = AppController(now: fixedNow);
-
+    final auth = CallAuthFixture();
+    final controller = AppController(now: fixedNow, api: auth.client);
+    addTearDown(controller.dispose);
+    addTearDown(auth.client.close);
     await tester.pumpWidget(SportVenueApp(controller: controller));
     await tester.pump(const Duration(milliseconds: 2700));
     await tester.pumpAndSettle();
@@ -77,16 +87,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('registration-continue')));
     await tester.pumpAndSettle();
-
-    for (var i = 0; i < 4; i++) {
-      await tester.enterText(find.byKey(ValueKey('otp-$i')), '${i + 1}');
-      await tester.pump();
-    }
-    await tester.pump(const Duration(milliseconds: 120));
-
-    expect(find.text('Неверный код, попробуйте ещё раз'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Ждём ваш звонок'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
     expect(controller.isSignedIn, isFalse);
-    await tester.pump(const Duration(milliseconds: 700));
+    expect(auth.checks, 1);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('sport selection lets a reader say "anything"', (tester) async {

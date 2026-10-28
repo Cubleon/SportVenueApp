@@ -104,7 +104,12 @@ class ApiTokenPair {
 }
 
 class ApiPhoneChallenge {
-  const ApiPhoneChallenge({required this.id, required this.expiresAt});
+  const ApiPhoneChallenge({
+    required this.id,
+    required this.expiresAt,
+    required this.callPhone,
+    required this.callPhonePretty,
+  });
 
   factory ApiPhoneChallenge.fromJson(ApiJsonObject json) {
     final id = _requiredString(json, 'challenge_id');
@@ -112,11 +117,81 @@ class ApiPhoneChallenge {
     if (expiresAt == null) {
       throw const FormatException('expires_at must be an ISO-8601 date-time');
     }
-    return ApiPhoneChallenge(id: id, expiresAt: expiresAt);
+    final callPhone = _requiredString(json, 'call_phone');
+    if (!RegExp(r'^\+[1-9][0-9]{6,14}$').hasMatch(callPhone)) {
+      throw const FormatException('call_phone must be an international number');
+    }
+    return ApiPhoneChallenge(
+      id: id,
+      expiresAt: expiresAt,
+      callPhone: callPhone,
+      callPhonePretty: _requiredString(json, 'call_phone_pretty'),
+    );
   }
 
   final String id;
   final DateTime expiresAt;
+  final String callPhone;
+  final String callPhonePretty;
+}
+
+class ApiEmailChallenge {
+  const ApiEmailChallenge({
+    required this.id,
+    required this.expiresAt,
+    required this.resendAvailableAt,
+  });
+
+  factory ApiEmailChallenge.fromJson(ApiJsonObject json) {
+    final expiresAt = DateTime.tryParse(_requiredString(json, 'expires_at'));
+    final resendAt = DateTime.tryParse(
+      _requiredString(json, 'resend_available_at'),
+    );
+    if (expiresAt == null || resendAt == null) {
+      throw const FormatException('Email challenge dates must be ISO-8601');
+    }
+    return ApiEmailChallenge(
+      id: _requiredString(json, 'challenge_id'),
+      expiresAt: expiresAt,
+      resendAvailableAt: resendAt,
+    );
+  }
+
+  final String id;
+  final DateTime expiresAt;
+  final DateTime resendAvailableAt;
+}
+
+enum PhoneCallStatus { pending, confirmed, expired }
+
+class ApiPhoneCallStatus {
+  const ApiPhoneCallStatus({required this.status, this.tokens});
+
+  factory ApiPhoneCallStatus.fromJson(ApiJsonObject json) {
+    final status = switch (json['status']) {
+      'pending' => PhoneCallStatus.pending,
+      'confirmed' => PhoneCallStatus.confirmed,
+      'expired' => PhoneCallStatus.expired,
+      _ => throw const FormatException('Unknown call status'),
+    };
+    final tokens = json['tokens'];
+    if (status == PhoneCallStatus.confirmed) {
+      if (tokens is! ApiJsonObject) {
+        throw const FormatException('Confirmed call must include tokens');
+      }
+      return ApiPhoneCallStatus(
+        status: status,
+        tokens: ApiTokenPair.fromJson(tokens),
+      );
+    }
+    if (tokens != null) {
+      throw const FormatException('Unconfirmed call must not include tokens');
+    }
+    return ApiPhoneCallStatus(status: status);
+  }
+
+  final PhoneCallStatus status;
+  final ApiTokenPair? tokens;
 }
 
 /// HTTP transport for the SportVenue FastAPI service.
@@ -172,18 +247,41 @@ class SportVenueApiClient {
     return ApiPhoneChallenge.fromJson(_parseObject(response));
   }
 
-  Future<ApiTokenPair> verifyPhoneCall({
+  Future<ApiPhoneCallStatus> checkPhoneCall({
+    required String challengeId,
+  }) async {
+    final response = await _send(
+      'POST',
+      const ['auth', 'call', 'status'],
+      body: {'challenge_id': challengeId},
+    );
+    // The controller accepts tokens only while this challenge is still active.
+    return ApiPhoneCallStatus.fromJson(_parseObject(response));
+  }
+
+  Future<ApiEmailChallenge> startEmailLogin({
+    required String email,
+    required bool consentAccepted,
+  }) async {
+    final response = await _send(
+      'POST',
+      const ['auth', 'email', 'start'],
+      body: {'email': email, 'consent_accepted': consentAccepted},
+    );
+    return ApiEmailChallenge.fromJson(_parseObject(response));
+  }
+
+  Future<ApiTokenPair> verifyEmailCode({
     required String challengeId,
     required String code,
   }) async {
     final response = await _send(
       'POST',
-      const ['auth', 'call', 'verify'],
+      const ['auth', 'email', 'verify'],
       body: {'challenge_id': challengeId, 'code': code},
     );
-    final pair = _parseTokenPair(response);
-    _replaceTokens(pair);
-    return pair;
+    // The controller accepts tokens only while this challenge is active.
+    return ApiTokenPair.fromJson(_parseObject(response));
   }
 
   /// Rotates both tokens. A failed refresh with a 401 clears local tokens.
