@@ -1,0 +1,76 @@
+# Builds the demo on every push to payments-pilot and publishes it to
+# GitHub Pages, so each step of the payments work can be opened by link,
+# from a phone, without installing anything.
+#
+# The built site is pushed to the gh-pages branch, which holds nothing but
+# the build. master and mikhail-ui are never touched.
+#
+# One-time setup: Settings → Pages → Source: «Deploy from a branch»,
+# branch gh-pages, folder / (root). The link is then
+# https://cubleon.github.io/SportVenueApp/
+
+name: Demo preview
+
+on:
+  push:
+    branches: [payments-pilot]
+  workflow_dispatch:
+
+# A newer push makes an older build pointless; only the latest is published.
+concurrency:
+  group: demo-preview
+  cancel-in-progress: true
+
+jobs:
+  # Checks run beside the build rather than before it: a failing test is
+  # worth seeing, but it should not hide the screen that is being discussed.
+  checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      # Screenshots are made on one machine and compared there; on this one
+      # they would differ by font rendering alone.
+      - name: Test
+        run: flutter test --exclude-tags golden
+
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build the demo
+        run: >
+          flutter build web --release --no-web-resources-cdn
+          --dart-define=DEMO=true
+          --base-href "/${{ github.event.repository.name }}/"
+      - name: Publish to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd build/web
+          touch .nojekyll
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Demo preview of ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+      - name: Link
+        run: echo "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${{ github.event.repository.name }}/" >> "$GITHUB_STEP_SUMMARY"
