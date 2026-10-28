@@ -39,6 +39,11 @@ class _VenueScreenState extends State<VenueScreen> {
   /// Free hours on [_day], or null while they are being counted.
   int? _freeHours;
 
+  /// Set when the count could not be had. The row used to say «считаем…»
+  /// for ever when the network dropped, which reads as an app still
+  /// thinking rather than one that has given up and can be asked again.
+  bool _freeHoursFailed = false;
+
   DateTime get _day => widget.date ?? DateUtils.dateOnly(widget.controller.now);
 
   @override
@@ -48,17 +53,27 @@ class _VenueScreenState extends State<VenueScreen> {
   }
 
   Future<void> _loadFreeHours() async {
-    final slots = await widget.controller.loadSlots(
-      venue: widget.venue,
-      day: _day,
-      durationMinutes: 60,
-    );
-    if (!mounted) {
-      return;
+    if (_freeHoursFailed) {
+      setState(() => _freeHoursFailed = false);
     }
-    setState(() {
-      _freeHours = slots.where((slot) => slot.isAvailable).length;
-    });
+    try {
+      final slots = await widget.controller.loadSlots(
+        venue: widget.venue,
+        day: _day,
+        durationMinutes: 60,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _freeHours = slots.where((slot) => slot.isAvailable).length;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _freeHoursFailed = true);
+    }
   }
 
   Sport? _sportOf(String id) {
@@ -181,11 +196,16 @@ class _VenueScreenState extends State<VenueScreen> {
                         // one, and the column stops looking like a column.
                         SummaryRow(
                           label: context.l10n.freeLabel,
-                          value: _freeHours == null
+                          value: _freeHoursFailed
+                              ? context.l10n.freeHoursUnknown
+                              : _freeHours == null
                               ? context.l10n.loading
                               : '${context.l10n.hoursCount(_freeHours!)} · '
                                     '${AppFormatters.dateShort(_day)}',
-                          accent: _freeHours != null && _freeHours! > 0,
+                          accent:
+                              !_freeHoursFailed &&
+                              _freeHours != null &&
+                              _freeHours! > 0,
                         ),
                         const SizedBox(height: 10),
                         SummaryRow(
@@ -198,6 +218,14 @@ class _VenueScreenState extends State<VenueScreen> {
                       ],
                     ),
                   ),
+                  if (_freeHoursFailed) ...[
+                    const SizedBox(height: 12),
+                    RetryNotice(
+                      key: const ValueKey('venue-free-hours-failed'),
+                      message: context.l10n.freeHoursFailed,
+                      onRetry: _loadFreeHours,
+                    ),
+                  ],
                 ],
               ),
             ),

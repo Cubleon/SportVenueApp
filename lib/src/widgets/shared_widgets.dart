@@ -1125,6 +1125,37 @@ class BackCircleButton extends StatelessWidget {
   }
 }
 
+/// Something the screen could not load, said once, with a way to ask again.
+///
+/// Without it a failed request looked like one still in progress: a count
+/// that read «считаем…» and placeholders that shimmered for ever.
+class RetryNotice extends StatelessWidget {
+  const RetryNotice({super.key, required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              message,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+        ],
+      ),
+    );
+  }
+}
+
 /// What a screen shows when a list comes back empty.
 ///
 /// Always says why it is empty and, when a filter caused it, offers the way

@@ -315,6 +315,18 @@ abstract class L {
   /// **'Свободно'**
   String get freeLabel;
 
+  /// No description provided for @freeHoursUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'нет данных'**
+  String get freeHoursUnknown;
+
+  /// No description provided for @freeHoursFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось узнать свободные часы'**
+  String get freeHoursFailed;
+
   /// No description provided for @durationShorter.
   ///
   /// In ru, this message translates to:

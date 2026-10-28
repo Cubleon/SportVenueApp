@@ -59,6 +59,8 @@
   },
   "loading": "считаем…",
   "freeLabel": "Свободно",
+  "freeHoursUnknown": "нет данных",
+  "freeHoursFailed": "Не удалось узнать свободные часы",
   "durationShorter": "Короче",
   "durationLonger": "Дольше",
   "hoursAndHalf": "{hours},5 часа",

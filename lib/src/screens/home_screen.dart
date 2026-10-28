@@ -59,6 +59,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, int> _freeSlots = const {};
   int _slotsToken = 0;
 
+  /// Clubs whose free hours could not be had on [_date]. Their rows drop the
+  /// placeholder, which otherwise shimmered for ever after a network error,
+  /// and the list says once that the counts are missing.
+  Set<String> _slotsFailed = const {};
+
   /// How many bookings existed last time the free hours were counted.
   ///
   /// Coming back from a booking, the hours this club has left are one fewer
@@ -94,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _date = date;
       _freeSlots = const {};
+      _slotsFailed = const {};
     });
     widget.onDateChanged?.call(date);
     _loadSlots();
@@ -113,27 +119,48 @@ class _HomeScreenState extends State<HomeScreen> {
     final day = _date;
     final venues = widget.controller.venues;
     final counts = <String, int>{};
+    final failed = <String>{};
+    if (_slotsFailed.isNotEmpty) {
+      // Asking again: the rows go back to waiting, not to "no data".
+      setState(() => _slotsFailed = const {});
+    }
     for (var start = 0; start < venues.length; start += _slotBatch) {
       final batch = venues.skip(start).take(_slotBatch).toList();
       final answers = await Future.wait([
-        for (final venue in batch)
-          widget.controller.loadSlots(
-            venue: venue,
-            day: day,
-            durationMinutes: 60,
-          ),
+        for (final venue in batch) _countFree(venue, day),
       ]);
       // A newer day was asked for while this batch was in the air; its
       // answers are about yesterday's question.
       if (!mounted || token != _slotsToken) return;
       for (var i = 0; i < batch.length; i++) {
-        counts[batch[i].id] = answers[i]
-            .where((slot) => slot.isAvailable)
-            .length;
+        final count = answers[i];
+        if (count == null) {
+          failed.add(batch[i].id);
+        } else {
+          counts[batch[i].id] = count;
+        }
       }
     }
     if (!mounted || token != _slotsToken) return;
-    setState(() => _freeSlots = counts);
+    setState(() {
+      _freeSlots = counts;
+      _slotsFailed = failed;
+    });
+  }
+
+  /// One club's free hours, or null when they could not be had. Each club
+  /// answers for itself, so one that fails does not take the others with it.
+  Future<int?> _countFree(Venue venue, DateTime day) async {
+    try {
+      final slots = await widget.controller.loadSlots(
+        venue: venue,
+        day: day,
+        durationMinutes: 60,
+      );
+      return slots.where((slot) => slot.isAvailable).length;
+    } catch (_) {
+      return null;
+    }
   }
 
   bool _matches(String text) =>
@@ -254,6 +281,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  if (_slotsFailed.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                        child: RetryNotice(
+                          key: const ValueKey('home-free-hours-failed'),
+                          message: context.l10n.freeHoursFailed,
+                          onRetry: _loadSlots,
+                        ),
+                      ),
+                    ),
                   // A list, not a carousel: three clubs read in less room
                   // than one and a half cards did, and nothing is hidden
                   // off the right edge.
@@ -271,6 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   venue: venue,
                                   sportId: _sportOf(venue),
                                   freeSlots: _freeSlots[venue.id],
+                                  freeSlotsFailed: _slotsFailed.contains(
+                                    venue.id,
+                                  ),
                                   divided: index > 0,
                                   onTap: () => context.go(
                                     Routes.venue(venue.id, date: _date),
@@ -986,6 +1027,7 @@ class _VenueRow extends StatelessWidget {
     required this.onTap,
     required this.divided,
     this.freeSlots,
+    this.freeSlotsFailed = false,
   });
 
   final Venue venue;
@@ -999,6 +1041,10 @@ class _VenueRow extends StatelessWidget {
   /// Free hours on the day the calendar is showing, or null while the answer
   /// is still on its way.
   final int? freeSlots;
+
+  /// Whether the free hours could not be had, so the row stops waiting for
+  /// them; the list above says so once for every row.
+  final bool freeSlotsFailed;
 
   @override
   Widget build(BuildContext context) {
@@ -1073,7 +1119,7 @@ class _VenueRow extends StatelessWidget {
                             label: context.l10n.freeHoursToday(free),
                             tone: _TagTone.live,
                           )
-                        else
+                        else if (!freeSlotsFailed)
                           const Skeleton.line(width: 96, height: 18, radius: 6),
                         // One more tag after the free-hours chip, and one
                         // only: a second wraps the row onto a new line and

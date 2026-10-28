@@ -135,6 +135,12 @@ class LRu extends L {
   String get freeLabel => 'Свободно';
 
   @override
+  String get freeHoursUnknown => 'нет данных';
+
+  @override
+  String get freeHoursFailed => 'Не удалось узнать свободные часы';
+
+  @override
   String get durationShorter => 'Короче';
 
   @override
