@@ -201,117 +201,114 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 ),
                 RevealStep(
                   visible: _sportChosen,
-                  child: 
-                    _Block(
-                      step: 2,
-                      title: context.l10n.venueStep,
-                      child: availableVenues.isEmpty
-                          ? Text(
-                              context.l10n.noVenuesForChosenSport,
-                              style: context.text.bodyMedium?.copyWith(
-                                color: context.colors.muted,
-                              ),
-                            )
-                          // Nothing is picked for the reader: an unanswered
-                          // step says so and opens the list.
-                          : selectedVenue == null
-                          ? _ChooseVenueRow(
-                              key: const ValueKey('create-venue-empty'),
-                              count: availableVenues.length,
-                              onTap: () => _pickVenue(availableVenues, sport),
-                            )
-                          // One line, whatever the catalogue grows to. The list
-                          // and its search live in the sheet this opens.
-                          : VenueRow(
-                              key: const ValueKey('create-venue-field'),
-                              venue: selectedVenue,
-                              sport: sport,
-                              selected: false,
-                              onTap: () => _pickVenue(availableVenues, sport),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (availableVenues.length > 1)
-                                    Text(
-                                      context.l10n.moreVenues(
-                                        availableVenues.length - 1,
-                                      ),
-                                      style: context.text.labelSmall?.copyWith(
-                                        color: context.colors.muted,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  Icon(
-                                    AppIcons.chevronDown,
-                                    color: context.colors.dim,
-                                  ),
-                                ],
-                              ),
+                  child: _Block(
+                    step: 2,
+                    title: context.l10n.venueStep,
+                    child: availableVenues.isEmpty
+                        ? Text(
+                            context.l10n.noVenuesForChosenSport,
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.muted,
                             ),
-                    ),
+                          )
+                        // Nothing is picked for the reader: an unanswered
+                        // step says so and opens the list.
+                        : selectedVenue == null
+                        ? _ChooseVenueRow(
+                            key: const ValueKey('create-venue-empty'),
+                            count: availableVenues.length,
+                            onTap: () => _pickVenue(availableVenues, sport),
+                          )
+                        // One line, whatever the catalogue grows to. The list
+                        // and its search live in the sheet this opens.
+                        : VenueRow(
+                            key: const ValueKey('create-venue-field'),
+                            venue: selectedVenue,
+                            sport: sport,
+                            selected: false,
+                            onTap: () => _pickVenue(availableVenues, sport),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (availableVenues.length > 1)
+                                  Text(
+                                    context.l10n.moreVenues(
+                                      availableVenues.length - 1,
+                                    ),
+                                    style: context.text.labelSmall?.copyWith(
+                                      color: context.colors.muted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                Icon(
+                                  AppIcons.chevronDown,
+                                  color: context.colors.dim,
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
                 ),
                 RevealStep(
                   visible: _venueChosen,
-                  child: 
-                    _Block(
-                      step: 3,
-                      title: context.l10n.dateStep,
-                      child: DateStrip(
-                        now: widget.controller.now,
-                        selected: _date,
-                        onSelect: (date) => setState(() {
-                          _date = date;
-                          // Another day, other free hours: the hour chosen on the
-                          // day before this one is not an answer for this one.
-                          _hour = null;
-                          _slotReady = false;
-                        }),
-                      ),
+                  child: _Block(
+                    step: 3,
+                    title: context.l10n.dateStep,
+                    child: DateStrip(
+                      now: widget.controller.now,
+                      selected: _date,
+                      onSelect: (date) => setState(() {
+                        _date = date;
+                        // Another day, other free hours: the hour chosen on the
+                        // day before this one is not an answer for this one.
+                        _hour = null;
+                        _slotReady = false;
+                      }),
                     ),
+                  ),
                 ),
                 RevealStep(
                   visible: _dateChosen,
-                  child: 
-                    _Block(
-                      step: 4,
-                      title: context.l10n.durationStep,
-                      child: DurationPicker(
-                        value: _duration,
-                        onChanged: (value) => setState(() => _duration = value),
-                      ),
+                  child: _Block(
+                    step: 4,
+                    title: context.l10n.durationStep,
+                    child: DurationPicker(
+                      value: _duration,
+                      onChanged: (value) => setState(() => _duration = value),
                     ),
+                  ),
                 ),
                 RevealStep(
                   visible: _dateChosen,
-                  child: 
-                    _Block(
-                      step: 5,
-                      title: context.l10n.startStep,
-                      child: selectedVenue == null
-                          ? Text(
-                              context.l10n.pickVenueFirst,
-                              style: context.text.bodyMedium?.copyWith(
-                                color: context.colors.muted,
-                              ),
-                            )
-                          : VenueSlotPicker(
-                              key: ValueKey(
-                                'create-slots-${selectedVenue.id}-'
-                                '${_date?.toIso8601String()}',
-                              ),
-                              controller: widget.controller,
-                              venue: selectedVenue,
-                              date: _date ?? widget.controller.now,
-                              durationMinutes: _duration,
-                              selectedHour: _hour,
-                              onHourChanged: (hour) => setState(() => _hour = hour),
-                              onReadyChanged: (ready) {
-                                if (ready != _slotReady) {
-                                  setState(() => _slotReady = ready);
-                                }
-                              },
+                  child: _Block(
+                    step: 5,
+                    title: context.l10n.startStep,
+                    child: selectedVenue == null
+                        ? Text(
+                            context.l10n.pickVenueFirst,
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.muted,
                             ),
-                    ),
+                          )
+                        : VenueSlotPicker(
+                            key: ValueKey(
+                              'create-slots-${selectedVenue.id}-'
+                              '${_date?.toIso8601String()}',
+                            ),
+                            controller: widget.controller,
+                            venue: selectedVenue,
+                            date: _date ?? widget.controller.now,
+                            durationMinutes: _duration,
+                            selectedHour: _hour,
+                            onHourChanged: (hour) =>
+                                setState(() => _hour = hour),
+                            onReadyChanged: (ready) {
+                              if (ready != _slotReady) {
+                                setState(() => _slotReady = ready);
+                              }
+                            },
+                          ),
+                  ),
                 ),
                 // Everything that describes the game rather than the slot.
                 // It waits for the hour, so the page is a short question at
@@ -341,7 +338,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                               icon: AppIcons.minus,
                               label: context.l10n.removePlace,
                               enabled:
-                                  selectedVenue != null && _capacity > minCapacity,
+                                  selectedVenue != null &&
+                                  _capacity > minCapacity,
                               onTap: withSelectionFeedback(
                                 () => setState(() => _capacity--),
                               )!,
@@ -352,7 +350,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                               icon: AppIcons.plus,
                               label: context.l10n.addPlace,
                               enabled:
-                                  selectedVenue != null && _capacity < maxCapacity,
+                                  selectedVenue != null &&
+                                  _capacity < maxCapacity,
                               onTap: withSelectionFeedback(
                                 () => setState(() => _capacity++),
                               )!,
@@ -376,9 +375,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                 horizontal: 4,
                               ),
                               activeThumbColor: context.colors.accent,
-                              activeTrackColor: context.colors.accent.withValues(
-                                alpha: 0.28,
-                              ),
+                              activeTrackColor: context.colors.accent
+                                  .withValues(alpha: 0.28),
                               title: Text(
                                 context.l10n.approveManually,
                                 style: context.text.titleSmall?.copyWith(
@@ -393,8 +391,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                               ),
                               value: _type == GameType.approval,
                               onChanged: (value) => setState(
-                                () =>
-                                    _type = value ? GameType.approval : GameType.open,
+                                () => _type = value
+                                    ? GameType.approval
+                                    : GameType.open,
                               ),
                             ),
                           ],

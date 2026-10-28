@@ -224,57 +224,58 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
             // No bar until there is an hour to pay for: the price of a
             // booking nobody has finished describing is not a price.
-            if (_timeChosen) Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: PinnedActionBar(
-                onHeight: _onBarHeight,
-                child: Column(
-                  children: [
-                    // What the money is for. The hour is chosen four steps
-                    // up the page and the button used to carry only a price,
-                    // so the one part of the deal that changes was the one
-                    // part the reader could not see while paying.
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        '${AppFormatters.dateShort(_date!)} · '
-                        '${_draft.timeRange} · ${_venue.name.capitalized}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: context.text.bodySmall?.copyWith(
-                          color: context.colors.muted,
-                          fontWeight: FontWeight.w600,
+            if (_timeChosen)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: PinnedActionBar(
+                  onHeight: _onBarHeight,
+                  child: Column(
+                    children: [
+                      // What the money is for. The hour is chosen four steps
+                      // up the page and the button used to carry only a price,
+                      // so the one part of the deal that changes was the one
+                      // part the reader could not see while paying.
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          '${AppFormatters.dateShort(_date!)} · '
+                          '${_draft.timeRange} · ${_venue.name.capitalized}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.colors.muted,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    PrimaryButton(
-                      key: const ValueKey('pay-share'),
-                      label: context.l10n.paySharePrice(
-                        AppFormatters.money(_draft.sharePrice),
+                      PrimaryButton(
+                        key: const ValueKey('pay-share'),
+                        label: context.l10n.paySharePrice(
+                          AppFormatters.money(_draft.sharePrice),
+                        ),
+                        tone: ButtonTone.commit,
+                        onPressed: _canContinue
+                            ? () => _goToConfirm(PaymentMode.split)
+                            : null,
                       ),
-                      tone: ButtonTone.commit,
-                      onPressed: _canContinue
-                          ? () => _goToConfirm(PaymentMode.split)
-                          : null,
-                    ),
-                    const SizedBox(height: 10),
-                    PrimaryButton(
-                      key: const ValueKey('pay-full'),
-                      label: context.l10n.payFullPrice(
-                        AppFormatters.money(_draft.totalPrice),
+                      const SizedBox(height: 10),
+                      PrimaryButton(
+                        key: const ValueKey('pay-full'),
+                        label: context.l10n.payFullPrice(
+                          AppFormatters.money(_draft.totalPrice),
+                        ),
+                        tone: ButtonTone.neutral,
+                        onPressed: _canContinue
+                            ? () => _goToConfirm(PaymentMode.full)
+                            : null,
                       ),
-                      tone: ButtonTone.neutral,
-                      onPressed: _canContinue
-                          ? () => _goToConfirm(PaymentMode.full)
-                          : null,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
