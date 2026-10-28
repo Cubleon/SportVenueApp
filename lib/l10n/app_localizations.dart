@@ -1158,7 +1158,7 @@ abstract class L {
   /// No description provided for @bookingCreatedShares.
   ///
   /// In ru, this message translates to:
-  /// **'Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.'**
+  /// **'Позовите игроков: им осталось оплатить {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}}. Если за 2 часа до начала оплачены не все доли, бронь отменится, а деньги вернутся.'**
   String bookingCreatedShares(int count);
 
   /// No description provided for @bookingCreatedFull.
@@ -1212,7 +1212,7 @@ abstract class L {
   /// No description provided for @cancelBookingMessage.
   ///
   /// In ru, this message translates to:
-  /// **'{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.'**
+  /// **'{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги вернутся в течение 1 рабочего дня.'**
   String cancelBookingMessage(String venue, String date, String time);
 
   /// No description provided for @keepBooking.
@@ -1242,7 +1242,7 @@ abstract class L {
   /// No description provided for @payShareExplainer.
   ///
   /// In ru, this message translates to:
-  /// **'Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.'**
+  /// **'Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется, а деньги возвращаются в течение 1 рабочего дня.'**
   String payShareExplainer(int others, String total);
 
   /// No description provided for @payFullTitle.
@@ -1266,13 +1266,13 @@ abstract class L {
   /// No description provided for @cancellationTermAuto.
   ///
   /// In ru, this message translates to:
-  /// **'Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически'**
+  /// **'Если за 2 часа до начала оплачены не все доли, бронь отменяется автоматически'**
   String get cancellationTermAuto;
 
   /// No description provided for @cancellationTermRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней'**
+  /// **'Если бронь отменена, деньги возвращаются в течение 1 рабочего дня'**
   String get cancellationTermRefund;
 
   /// No description provided for @removePlayer.

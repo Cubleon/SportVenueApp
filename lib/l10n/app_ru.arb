@@ -313,7 +313,7 @@
   },
   "goBack": "Вернуться назад",
   "bookingCreated": "Бронь создана",
-  "bookingCreatedShares": "Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.",
+  "bookingCreatedShares": "Позовите игроков: им осталось оплатить {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}}. Если за 2 часа до начала оплачены не все доли, бронь отменится, а деньги вернутся.",
   "@bookingCreatedShares": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -325,7 +325,7 @@
   "onlyOrganizerCancels": "Отменить бронь может только организатор",
   "cancelBooking": "Отменить бронь",
   "cancelBookingQuestion": "Отменить бронь?",
-  "cancelBookingMessage": "{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.",
+  "cancelBookingMessage": "{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги вернутся в течение 1 рабочего дня.",
   "@cancelBookingMessage": {
     "placeholders": {
       "venue": {
@@ -346,7 +346,7 @@
   "@payShareTitle": {
     "placeholders": { "price": { "type": "String" } }
   },
-  "payShareExplainer": "Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.",
+  "payShareExplainer": "Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется, а деньги возвращаются в течение 1 рабочего дня.",
   "@payShareExplainer": {
     "placeholders": {
       "others": { "type": "int" },
@@ -359,8 +359,8 @@
   },
   "payFullExplainer": "Площадка ваша сразу, искать игроков не нужно.",
   "cancellationTerms": "Условия отмены",
-  "cancellationTermAuto": "Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически",
-  "cancellationTermRefund": "Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней",
+  "cancellationTermAuto": "Если за 2 часа до начала оплачены не все доли, бронь отменяется автоматически",
+  "cancellationTermRefund": "Если бронь отменена, деньги возвращаются в течение 1 рабочего дня",
   "removePlayer": "Убрать игрока",
   "addPlayer": "Добавить игрока",
   "playersCount": "{count, plural, one{{count} игрок} few{{count} игрока} other{{count} игроков}}",

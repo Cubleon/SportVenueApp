@@ -300,7 +300,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.bookings.length, before + 1);
     expect(find.text('Бронь создана'), findsOneWidget);
-    expect(find.textContaining('Осталось собрать'), findsOneWidget);
+    // No money has moved yet, so the screen does not say any has; it says
+    // what the others still owe and what happens if they do not pay.
+    expect(find.textContaining('им осталось оплатить 3 доли'), findsOneWidget);
+    expect(find.textContaining('Ваша часть оплачена'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('open-created-booking')));
     await tester.pumpAndSettle();
