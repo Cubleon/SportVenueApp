@@ -27,7 +27,8 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # Write, so formatting can be committed back to the branch.
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -35,8 +36,22 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      # Formats instead of failing: the branch is edited where no Dart is
+      # installed, so the machine that has one does the formatting and
+      # commits it. A push made with the workflow's own token does not start
+      # another run, so this cannot loop.
       - name: Format
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          if git diff --quiet; then
+            echo "Already formatted."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -am "style: dart format"
+          git push -q origin "HEAD:${GITHUB_REF_NAME}"
+          echo "Formatted and committed: $(git diff --stat HEAD~1 | tail -1)" >> "$GITHUB_STEP_SUMMARY"
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       # Screenshots are made on one machine and compared there; on this one
