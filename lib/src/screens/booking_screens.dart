@@ -479,9 +479,11 @@ class BookingSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final split = booking.draft.mode == PaymentMode.split;
+    // What the others still owe: the reader's own share is theirs to pay
+    // on the next screen, not something to call friends about.
     final left = booking.shares.isEmpty
         ? booking.draft.players - 1
-        : booking.shares.length - booking.paidShares;
+        : booking.othersUnpaid;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -802,7 +804,7 @@ class _SharesCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      share.name,
+                      share.isOpen ? context.l10n.shareOpenSeat : share.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.text.bodyMedium?.copyWith(
@@ -824,9 +826,7 @@ class _SharesCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    share.isPaid
-                        ? context.l10n.sharePaid
-                        : context.l10n.shareUnpaid,
+                    shareStatusText(context, share.status),
                     style: context.text.bodySmall?.copyWith(
                       color: share.isPaid
                           ? context.colors.success

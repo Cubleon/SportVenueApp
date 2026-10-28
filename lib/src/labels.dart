@@ -29,6 +29,8 @@ String errorTextFor(L l10n, Object error) {
     AppErrorKind.sessionExpired => l10n.errorSessionExpired,
     AppErrorKind.slotTaken => l10n.errorSlotTaken,
     AppErrorKind.gameFull => l10n.errorGameFull,
+    AppErrorKind.sharePaid => l10n.errorSharePaid,
+    AppErrorKind.deadlinePassed => l10n.errorDeadlinePassed,
     AppErrorKind.cancelNotOrganizer => l10n.errorCancelNotOrganizer,
     AppErrorKind.badPhone => l10n.errorBadPhone,
     AppErrorKind.badEmail => l10n.errorBadEmail,
@@ -59,6 +61,7 @@ String bookingStatusText(BuildContext context, Booking booking) {
   }
   return switch (booking.statusCode) {
     'collecting_shares' => context.l10n.bookingStatusCollecting,
+    'awaiting_confirmation' => context.l10n.bookingStatusAwaiting,
     'confirmed' => context.l10n.bookingStatusConfirmed,
     'cancelled' => context.l10n.bookingStatusCancelled,
     'expired' => context.l10n.bookingStatusExpired,
@@ -108,4 +111,18 @@ String durationText(BuildContext context, int minutes) {
     return context.l10n.minutesCount(rest);
   }
   return context.l10n.hoursAndHalf(hours);
+}
+
+/// Where one share stands, in a few words beside its owner's name.
+String shareStatusText(BuildContext context, ShareStatus status) {
+  final l10n = context.l10n;
+  return switch (status) {
+    ShareStatus.open => l10n.shareStatusOpen,
+    ShareStatus.unpaid => l10n.shareUnpaid,
+    ShareStatus.pendingConfirmation => l10n.shareStatusPending,
+    ShareStatus.paid => l10n.sharePaid,
+    ShareStatus.notFound => l10n.shareStatusNotFound,
+    ShareStatus.refundDue => l10n.shareStatusRefundDue,
+    ShareStatus.refunded => l10n.shareStatusRefunded,
+  };
 }

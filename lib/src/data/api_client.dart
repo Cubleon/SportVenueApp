@@ -457,6 +457,93 @@ class SportVenueApiClient {
     return _parseObject(response);
   }
 
+  /// «Я оплатил»: puts the share in the payments admin's queue.
+  ///
+  /// [payerName] is the sender's name as the player's bank shows it, which
+  /// is what the admin looks for in the statement.
+  Future<ApiJsonObject> claimSharePaid(
+    String bookingId,
+    String shareId, {
+    String? payerName,
+  }) async {
+    final response = await _send(
+      'POST',
+      ['bookings', bookingId, 'shares', shareId, 'claim'],
+      authenticated: true,
+      body: {'payer_name': ?payerName},
+    );
+    return _parseObject(response);
+  }
+
+  /// Gives back a share nobody has paid for, so someone else can take it.
+  Future<ApiJsonObject> releaseShare(String bookingId, String shareId) async {
+    final response = await _send('POST', [
+      'bookings',
+      bookingId,
+      'shares',
+      shareId,
+      'release',
+    ], authenticated: true);
+    return _parseObject(response);
+  }
+
+  /// Where the money for a share goes: the SBP link and the QR to show.
+  Future<ApiJsonObject> getPaymentInfo() async {
+    final response = await _send('GET', const [
+      'payment-info',
+    ], authenticated: true);
+    return _parseObject(response);
+  }
+
+  /// The payments admin's lists: the queue to check, or the refunds to make.
+  Future<ApiJsonList> listAdminShares({required String status}) async {
+    final response = await _send(
+      'GET',
+      const ['admin', 'shares'],
+      query: {'status': status},
+      authenticated: true,
+    );
+    return _parseObjectList(response);
+  }
+
+  Future<ApiJsonObject> confirmShare(String shareId) async {
+    final response = await _send('POST', [
+      'admin',
+      'shares',
+      shareId,
+      'confirm',
+    ], authenticated: true);
+    return _parseObject(response);
+  }
+
+  Future<ApiJsonObject> rejectShare(String shareId, {String? note}) async {
+    final response = await _send(
+      'POST',
+      ['admin', 'shares', shareId, 'reject'],
+      authenticated: true,
+      body: {'note': ?note},
+    );
+    return _parseObject(response);
+  }
+
+  Future<ApiJsonObject> markShareRefunded(
+    String shareId, {
+    String? note,
+  }) async {
+    final response = await _send(
+      'POST',
+      ['admin', 'shares', shareId, 'refunded'],
+      authenticated: true,
+      body: {'note': ?note},
+    );
+    return _parseObject(response);
+  }
+
+  /// Deletes the account. The server answers with no body.
+  Future<void> deleteMe() async {
+    await _send('DELETE', const ['me'], authenticated: true);
+  }
+
   Future<ApiJsonList> listGames({
     String? sportId,
     DateTime? dateFrom,
@@ -493,6 +580,7 @@ class SportVenueApiClient {
     required int capacity,
     required String gameType,
     String genderFilter = 'any',
+    String payment = 'shares',
   }) async {
     final response = await _send(
       'POST',
@@ -506,6 +594,7 @@ class SportVenueApiClient {
         'capacity': capacity,
         'type': gameType,
         'gender_filter': genderFilter,
+        'payment': payment,
       },
     );
     return _parseObject(response);

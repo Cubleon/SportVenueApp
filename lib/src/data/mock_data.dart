@@ -95,6 +95,17 @@ class MockData {
     ),
   ];
 
+  /// What the server will send while there is no bank account yet: a
+  /// payment that is visibly not real, so nobody sends money to it.
+  static const paymentInfo = PaymentInfo(
+    method: 'test',
+    sbpLink: 'https://qr.nspk.ru/demo',
+    qrPayload: 'https://qr.nspk.ru/demo',
+    recipientName: 'ИП (тестовые реквизиты)',
+    bankName: 'тестовый банк',
+    commentHint: 'Укажите код доли в комментарии к переводу',
+  );
+
   static List<TimeSlot> timeSlots() {
     return const [
       TimeSlot(hour: 8, isAvailable: true),
@@ -234,33 +245,47 @@ class MockData {
       ),
       statusCode: 'collecting_shares',
       createdAt: now,
-      // Two of the four have paid, so the demo can show what a half-collected
-      // booking looks like rather than only that one exists.
+      // One of each state a split booking passes through on its way to
+      // being collected, so the demo shows them all: the reader has paid,
+      // one friend says they have and waits for the check, one has taken a
+      // place and not paid, and one place is still free.
+      myShareId: 'share-demo-1',
       shares: const [
         BookingShare(
-          id: 'me',
+          id: 'share-demo-1',
+          userId: 'me',
           name: 'Вы',
           initial: 'В',
-          isPaid: true,
+          status: ShareStatus.paid,
+          amount: 525,
+          code: 'SV-4821',
           isCurrentUser: true,
         ),
         BookingShare(
-          id: 'orlov',
+          id: 'share-demo-2',
+          userId: 'orlov',
           name: 'Максим Орлов',
           initial: 'М',
-          isPaid: true,
+          status: ShareStatus.pendingConfirmation,
+          amount: 525,
+          code: 'SV-4822',
         ),
         BookingShare(
-          id: 'fedorov',
+          id: 'share-demo-3',
+          userId: 'fedorov',
           name: 'Даниил Фёдоров',
           initial: 'Д',
-          isPaid: false,
+          status: ShareStatus.unpaid,
+          amount: 525,
+          code: 'SV-4823',
         ),
         BookingShare(
-          id: 'volkova',
-          name: 'Ника Волкова',
-          initial: 'Н',
-          isPaid: false,
+          id: 'share-demo-4',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 525,
+          code: 'SV-4824',
         ),
       ],
     );

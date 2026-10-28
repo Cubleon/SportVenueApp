@@ -1635,6 +1635,60 @@ abstract class L {
   /// **'оплачено'**
   String get sharePaid;
 
+  /// No description provided for @bookingStatusAwaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'проверяем оплату'**
+  String get bookingStatusAwaiting;
+
+  /// No description provided for @shareOpenSeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободное место'**
+  String get shareOpenSeat;
+
+  /// No description provided for @shareStatusOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'свободно'**
+  String get shareStatusOpen;
+
+  /// No description provided for @shareStatusPending.
+  ///
+  /// In ru, this message translates to:
+  /// **'проверяем оплату'**
+  String get shareStatusPending;
+
+  /// No description provided for @shareStatusNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'не нашли оплату'**
+  String get shareStatusNotFound;
+
+  /// No description provided for @shareStatusRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'вернём деньги'**
+  String get shareStatusRefundDue;
+
+  /// No description provided for @shareStatusRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'деньги вернули'**
+  String get shareStatusRefunded;
+
+  /// No description provided for @errorSharePaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.'**
+  String get errorSharePaid;
+
+  /// No description provided for @errorDeadlinePassed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок оплаты уже прошёл.'**
+  String get errorDeadlinePassed;
+
   /// No description provided for @shareUnpaid.
   ///
   /// In ru, this message translates to:

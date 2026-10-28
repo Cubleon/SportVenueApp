@@ -966,6 +966,33 @@ class LRu extends L {
   String get sharePaid => 'оплачено';
 
   @override
+  String get bookingStatusAwaiting => 'проверяем оплату';
+
+  @override
+  String get shareOpenSeat => 'Свободное место';
+
+  @override
+  String get shareStatusOpen => 'свободно';
+
+  @override
+  String get shareStatusPending => 'проверяем оплату';
+
+  @override
+  String get shareStatusNotFound => 'не нашли оплату';
+
+  @override
+  String get shareStatusRefundDue => 'вернём деньги';
+
+  @override
+  String get shareStatusRefunded => 'деньги вернули';
+
+  @override
+  String get errorSharePaid => 'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.';
+
+  @override
+  String get errorDeadlinePassed => 'Срок оплаты уже прошёл.';
+
+  @override
   String get shareUnpaid => 'ждём оплату';
 
   @override
