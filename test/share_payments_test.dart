@@ -10,10 +10,7 @@ void main() {
   final now = DateTime(2026, 5, 24, 12);
   final tomorrow = DateTime(2026, 5, 25);
 
-  BookingDraft draft({
-    int players = 4,
-    PaymentMode mode = PaymentMode.split,
-  }) {
+  BookingDraft draft({int players = 4, PaymentMode mode = PaymentMode.split}) {
     return BookingDraft(
       venue: MockData.venues.first,
       date: tomorrow,
@@ -64,51 +61,60 @@ void main() {
     expect(splitIntoShares(100, 0), isEmpty);
   });
 
-  test('a split booking is one share per place, the first the reader\'s', () async {
-    final app = controller();
-    final booking = await app.addBooking(draft(players: 3));
+  test(
+    'a split booking is one share per place, the first the reader\'s',
+    () async {
+      final app = controller();
+      final booking = await app.addBooking(draft(players: 3));
 
-    expect(booking.statusCode, 'collecting_shares');
-    expect(booking.shares, hasLength(3));
-    expect(booking.myShare, same(booking.shares.first));
-    expect(booking.myShare!.status, ShareStatus.unpaid);
-    expect(booking.shares.skip(1).every((share) => share.isOpen), isTrue);
-    expect(
-      booking.shares.map((share) => share.amount).reduce((a, b) => a! + b!),
-      booking.draft.totalPrice,
-    );
-    expect(booking.shares.map((share) => share.code).toSet(), hasLength(3));
-    expect(booking.othersUnpaid, 2);
-    expect(booking.deadline, DateTime(2026, 5, 25, 18));
-  });
+      expect(booking.statusCode, 'collecting_shares');
+      expect(booking.shares, hasLength(3));
+      expect(booking.myShare, same(booking.shares.first));
+      expect(booking.myShare!.status, ShareStatus.unpaid);
+      expect(booking.shares.skip(1).every((share) => share.isOpen), isTrue);
+      expect(
+        booking.shares.map((share) => share.amount).reduce((a, b) => a! + b!),
+        booking.draft.totalPrice,
+      );
+      expect(booking.shares.map((share) => share.code).toSet(), hasLength(3));
+      expect(booking.othersUnpaid, 2);
+      expect(booking.deadline, DateTime(2026, 5, 25, 18));
+    },
+  );
 
-  test('a booking paid by the organiser is one share for the whole sum', () async {
-    final app = controller();
-    final booking = await app.addBooking(draft(mode: PaymentMode.full));
+  test(
+    'a booking paid by the organiser is one share for the whole sum',
+    () async {
+      final app = controller();
+      final booking = await app.addBooking(draft(mode: PaymentMode.full));
 
-    expect(booking.shares, hasLength(1));
-    expect(booking.shares.single.amount, booking.draft.totalPrice);
-  });
+      expect(booking.shares, hasLength(1));
+      expect(booking.shares.single.amount, booking.draft.totalPrice);
+    },
+  );
 
-  test('«Я оплатил» queues the share; the admin decides whether it is paid', () async {
-    final app = controller(admin: true);
-    var booking = await app.addBooking(draft());
+  test(
+    '«Я оплатил» queues the share; the admin decides whether it is paid',
+    () async {
+      final app = controller(admin: true);
+      var booking = await app.addBooking(draft());
 
-    booking = await app.claimSharePaid(booking, booking.myShare!);
-    expect(booking.myShare!.status, ShareStatus.pendingConfirmation);
-    expect(booking.myShare!.claimedAt, now);
-    expect(booking.myShare!.isPaid, isFalse);
+      booking = await app.claimSharePaid(booking, booking.myShare!);
+      expect(booking.myShare!.status, ShareStatus.pendingConfirmation);
+      expect(booking.myShare!.claimedAt, now);
+      expect(booking.myShare!.isPaid, isFalse);
 
-    final queue = await app.loadPaymentQueue(ShareStatus.pendingConfirmation);
-    final item = queue.singleWhere((row) => row.bookingId == booking.id);
-    expect(item.code, booking.myShare!.code);
-    expect(item.amount, booking.myShare!.amount);
+      final queue = await app.loadPaymentQueue(ShareStatus.pendingConfirmation);
+      final item = queue.singleWhere((row) => row.bookingId == booking.id);
+      expect(item.code, booking.myShare!.code);
+      expect(item.amount, booking.myShare!.amount);
 
-    await app.confirmShare(item.shareId);
-    booking = app.bookingById(booking.id)!;
-    expect(booking.myShare!.status, ShareStatus.paid);
-    expect(booking.myShare!.confirmedAt, now);
-  });
+      await app.confirmShare(item.shareId);
+      booking = app.bookingById(booking.id)!;
+      expect(booking.myShare!.status, ShareStatus.paid);
+      expect(booking.myShare!.confirmedAt, now);
+    },
+  );
 
   test('a transfer not found can be claimed again', () async {
     final app = controller(admin: true);
@@ -135,78 +141,87 @@ void main() {
     expect(app.bookingById(booking.id)!.statusCode, 'confirmed');
   });
 
-  test('unpaid at the deadline: the booking falls through, money is owed back', () async {
-    final app = controller(admin: true);
-    var booking = await app.addBooking(draft());
-    await app.confirmShare(booking.myShare!.id!);
+  test(
+    'unpaid at the deadline: the booking falls through, money is owed back',
+    () async {
+      final app = controller(admin: true);
+      var booking = await app.addBooking(draft());
+      await app.confirmShare(booking.myShare!.id!);
 
-    app.applyDeadlines(DateTime(2026, 5, 25, 17, 59));
-    expect(app.bookingById(booking.id)!.statusCode, 'collecting_shares');
+      app.applyDeadlines(DateTime(2026, 5, 25, 17, 59));
+      expect(app.bookingById(booking.id)!.statusCode, 'collecting_shares');
 
-    app.applyDeadlines(DateTime(2026, 5, 25, 18));
-    booking = app.bookingById(booking.id)!;
-    expect(booking.statusCode, 'expired');
-    expect(booking.isActive, isFalse);
-    expect(booking.myShare!.status, ShareStatus.refundDue);
-    expect(booking.shares.skip(1).every((share) => share.isOpen), isTrue);
+      app.applyDeadlines(DateTime(2026, 5, 25, 18));
+      booking = app.bookingById(booking.id)!;
+      expect(booking.statusCode, 'expired');
+      expect(booking.isActive, isFalse);
+      expect(booking.myShare!.status, ShareStatus.refundDue);
+      expect(booking.shares.skip(1).every((share) => share.isOpen), isTrue);
 
-    // The demo booking the fixtures start with falls through at the same
-    // hour, so the list holds its refunds too.
-    final refunds = await app.loadPaymentQueue(ShareStatus.refundDue);
-    final mine = refunds.singleWhere((row) => row.bookingId == booking.id);
-    await app.markShareRefunded(mine.shareId, note: 'СБП 25.05');
-    booking = app.bookingById(booking.id)!;
-    expect(booking.myShare!.status, ShareStatus.refunded);
-    expect(booking.myShare!.refundedAt, now);
-  });
+      // The demo booking the fixtures start with falls through at the same
+      // hour, so the list holds its refunds too.
+      final refunds = await app.loadPaymentQueue(ShareStatus.refundDue);
+      final mine = refunds.singleWhere((row) => row.bookingId == booking.id);
+      await app.markShareRefunded(mine.shareId, note: 'СБП 25.05');
+      booking = app.bookingById(booking.id)!;
+      expect(booking.myShare!.status, ShareStatus.refunded);
+      expect(booking.myShare!.refundedAt, now);
+    },
+  );
 
-  test('claims still unchecked at the deadline wait for the admin, then fall through', () async {
-    final app = controller(admin: true);
-    var booking = fillOpenPlaces(app, await app.addBooking(draft()));
-    for (final share in booking.shares.skip(1)) {
-      await app.confirmShare(share.id!);
-    }
-    booking = await app.claimSharePaid(
-      app.bookingById(booking.id)!,
-      booking.myShare!,
-    );
+  test(
+    'claims still unchecked at the deadline wait for the admin, then fall through',
+    () async {
+      final app = controller(admin: true);
+      var booking = fillOpenPlaces(app, await app.addBooking(draft()));
+      for (final share in booking.shares.skip(1)) {
+        await app.confirmShare(share.id!);
+      }
+      booking = await app.claimSharePaid(
+        app.bookingById(booking.id)!,
+        booking.myShare!,
+      );
 
-    app.applyDeadlines(DateTime(2026, 5, 25, 18));
-    booking = app.bookingById(booking.id)!;
-    expect(booking.statusCode, 'awaiting_confirmation');
-    expect(booking.isActive, isTrue);
+      app.applyDeadlines(DateTime(2026, 5, 25, 18));
+      booking = app.bookingById(booking.id)!;
+      expect(booking.statusCode, 'awaiting_confirmation');
+      expect(booking.isActive, isTrue);
 
-    // Nobody checked by an hour before the start: everything goes back.
-    app.applyDeadlines(DateTime(2026, 5, 25, 19));
-    booking = app.bookingById(booking.id)!;
-    expect(booking.statusCode, 'expired');
-    expect(
-      booking.shares.every((share) => share.status == ShareStatus.refundDue),
-      isTrue,
-    );
-  });
+      // Nobody checked by an hour before the start: everything goes back.
+      app.applyDeadlines(DateTime(2026, 5, 25, 19));
+      booking = app.bookingById(booking.id)!;
+      expect(booking.statusCode, 'expired');
+      expect(
+        booking.shares.every((share) => share.status == ShareStatus.refundDue),
+        isTrue,
+      );
+    },
+  );
 
-  test('a claim not found while waiting for the admin ends the booking', () async {
-    final app = controller(admin: true);
-    var booking = fillOpenPlaces(app, await app.addBooking(draft()));
-    for (final share in booking.shares.skip(1)) {
-      await app.confirmShare(share.id!);
-    }
-    booking = await app.claimSharePaid(
-      app.bookingById(booking.id)!,
-      booking.myShare!,
-    );
-    app.applyDeadlines(DateTime(2026, 5, 25, 18));
+  test(
+    'a claim not found while waiting for the admin ends the booking',
+    () async {
+      final app = controller(admin: true);
+      var booking = fillOpenPlaces(app, await app.addBooking(draft()));
+      for (final share in booking.shares.skip(1)) {
+        await app.confirmShare(share.id!);
+      }
+      booking = await app.claimSharePaid(
+        app.bookingById(booking.id)!,
+        booking.myShare!,
+      );
+      app.applyDeadlines(DateTime(2026, 5, 25, 18));
 
-    await app.rejectShare(booking.myShare!.id!);
+      await app.rejectShare(booking.myShare!.id!);
 
-    booking = app.bookingById(booking.id)!;
-    expect(booking.statusCode, 'expired');
-    expect(
-      booking.shares.skip(1).every((s) => s.status == ShareStatus.refundDue),
-      isTrue,
-    );
-  });
+      booking = app.bookingById(booking.id)!;
+      expect(booking.statusCode, 'expired');
+      expect(
+        booking.shares.skip(1).every((s) => s.status == ShareStatus.refundDue),
+        isTrue,
+      );
+    },
+  );
 
   test('cancelling owes back every share that holds money', () async {
     final app = controller(admin: true);
@@ -221,10 +236,9 @@ void main() {
 
   test('a free place is taken by following the link, and given back', () async {
     final app = controller();
-    final theirs = (await app.addBooking(draft())).copyWith(
-      clearMyShare: true,
-      shares: const [],
-    );
+    final theirs = (await app.addBooking(
+      draft(),
+    )).copyWith(clearMyShare: true, shares: const []);
     // Somebody else's booking: their share paid, one place free.
     final booking = theirs.copyWith(
       shares: const [
@@ -274,10 +288,7 @@ void main() {
     final booking = app.bookingById(game.bookingId!)!;
 
     // The organiser cancels; they do not leave.
-    await expectLater(
-      app.releaseShare(booking),
-      throwsA(isA<ApiException>()),
-    );
+    await expectLater(app.releaseShare(booking), throwsA(isA<ApiException>()));
 
     // A player who has claimed payment does not leave either.
     app.bookings = [
@@ -305,31 +316,34 @@ void main() {
     expect(AppController.kindOf(refusal!), AppErrorKind.sharePaid);
   });
 
-  test('a paid game stands on a booking, and its organiser holds a share', () async {
-    final app = controller();
-    final game = await app.createGame(
-      sportId: 'football',
-      venue: MockData.venues.first,
-      date: tomorrow,
-      startHour: 20,
-      durationMinutes: 60,
-      capacity: 4,
-      type: GameType.open,
-      genderFilter: GenderFilter.any,
-    );
+  test(
+    'a paid game stands on a booking, and its organiser holds a share',
+    () async {
+      final app = controller();
+      final game = await app.createGame(
+        sportId: 'football',
+        venue: MockData.venues.first,
+        date: tomorrow,
+        startHour: 20,
+        durationMinutes: 60,
+        capacity: 4,
+        type: GameType.open,
+        genderFilter: GenderFilter.any,
+      );
 
-    expect(game.payment, GamePayment.shares);
-    final booking = app.bookingById(game.bookingId!)!;
-    expect(booking.gameId, game.id);
-    expect(booking.shares, hasLength(4));
-    expect(game.myShare!.id, booking.myShare!.id);
-    expect(game.pricePerPerson, booking.shares.first.amount);
+      expect(game.payment, GamePayment.shares);
+      final booking = app.bookingById(game.bookingId!)!;
+      expect(booking.gameId, game.id);
+      expect(booking.shares, hasLength(4));
+      expect(game.myShare!.id, booking.myShare!.id);
+      expect(game.pricePerPerson, booking.shares.first.amount);
 
-    // Claiming payment on the booking shows on the game as well.
-    await app.claimSharePaid(booking, booking.myShare!);
-    final current = app.games.firstWhere((item) => item.id == game.id);
-    expect(current.myShare!.status, ShareStatus.pendingConfirmation);
-  });
+      // Claiming payment on the booking shows on the game as well.
+      await app.claimSharePaid(booking, booking.myShare!);
+      final current = app.games.firstWhere((item) => item.id == game.id);
+      expect(current.myShare!.status, ShareStatus.pendingConfirmation);
+    },
+  );
 
   test('a game the organiser pays for costs the players nothing', () async {
     final app = controller();

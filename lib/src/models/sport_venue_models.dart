@@ -427,9 +427,8 @@ class Booking {
 
   /// Shares someone else still has to pay for: free places included, the
   /// reader's own left out. This is what "позовите игроков" is about.
-  int get othersUnpaid => shares
-      .where((share) => !share.isCurrentUser && !share.isPaid)
-      .length;
+  int get othersUnpaid =>
+      shares.where((share) => !share.isCurrentUser && !share.isPaid).length;
 
   final String id;
   final BookingDraft draft;

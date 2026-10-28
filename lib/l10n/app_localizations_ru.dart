@@ -987,7 +987,8 @@ class LRu extends L {
   String get shareStatusRefunded => 'деньги вернули';
 
   @override
-  String get errorSharePaid => 'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.';
+  String get errorSharePaid =>
+      'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.';
 
   @override
   String get errorDeadlinePassed => 'Срок оплаты уже прошёл.';
