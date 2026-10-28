@@ -204,6 +204,12 @@ GoRouter buildRouter({
           onEmail: () => context.go(Routes.email),
           onContinue: (phone) async {
             final l10n = context.l10n;
+            // The demo has no server to call back. Signing in moves the
+            // guard, which takes the reader on from here.
+            if (controller.isDemo) {
+              controller.signInDemo(phone: phone);
+              return null;
+            }
             try {
               await controller.startPhoneVerification(phone);
               if (!context.mounted) return null;
@@ -225,6 +231,10 @@ GoRouter buildRouter({
           },
           onContinue: (email) async {
             final l10n = context.l10n;
+            if (controller.isDemo) {
+              controller.signInDemo(email: email);
+              return null;
+            }
             try {
               await controller.startEmailVerification(email);
               if (context.mounted) context.go(Routes.emailCode);

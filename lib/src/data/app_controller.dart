@@ -44,11 +44,24 @@ class AppController extends ChangeNotifier {
     );
   }
 
+  /// The demo build: no server, the fixtures as data, and a way in that
+  /// asks for nothing.
+  ///
+  /// The demo used to be made by editing [SportVenueApp] to build a plain
+  /// controller and editing it back after the build. Once sign-in became a
+  /// real phone call there was no way in without a server at all, so the
+  /// demo stopped at the phone field. A build flag chooses this instead,
+  /// and only a build made with it has the door.
+  factory AppController.demo({DateTime? now}) {
+    return AppController._(now: now, isDemo: true);
+  }
+
   AppController._({
     DateTime? now,
     this._api,
     this._closeApiOnDispose = false,
     this._session = const NoSessionStore(),
+    this.isDemo = false,
   }) : _now = now ?? DateTime.now() {
     sports = List<Sport>.from(MockData.sports);
     venues = List<Venue>.from(MockData.venues);
@@ -89,6 +102,9 @@ class AppController extends ChangeNotifier {
   final SportVenueApiClient? _api;
   final bool _closeApiOnDispose;
   final SessionStore _session;
+
+  /// Whether this is the demo build, which signs in without a server.
+  final bool isDemo;
 
   String phone = '';
   String email = '';
@@ -217,6 +233,21 @@ class AppController extends ChangeNotifier {
     isSignedIn = true;
     notifyListeners();
     return PhoneCallStatus.confirmed;
+  }
+
+  /// Signs in the demo build with whatever was typed, and asks for no call
+  /// and no code: there is nobody on the other end to confirm them.
+  ///
+  /// Refused outside the demo build, so the real app cannot be walked into
+  /// without the server saying yes.
+  void signInDemo({String phone = '', String email = ''}) {
+    if (!isDemo) {
+      throw StateError('Demo sign-in exists only in the demo build');
+    }
+    this.phone = phone;
+    this.email = email.trim().toLowerCase();
+    isSignedIn = true;
+    notifyListeners();
   }
 
   bool get emailCodeAccepted => _confirmedEmailChallengeId != null;
@@ -626,6 +657,14 @@ class AppController extends ChangeNotifier {
   Future<bool> restoreSession() async {
     final api = _api;
     if (api == null) {
+      // The demo opens already signed in, the way a returning reader's
+      // phone does: whoever is shown the demo is shown the app, not the
+      // phone field. Signing out still leads back to it.
+      if (isDemo) {
+        isSignedIn = true;
+        notifyListeners();
+        return true;
+      }
       return false;
     }
     final tokens = await _session.read();

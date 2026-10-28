@@ -6,6 +6,10 @@ import 'data/app_controller.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
 
+/// Set by `--dart-define=DEMO=true`: the build runs on the fixtures, with no
+/// server, and lets anyone in. Nothing else turns it on.
+const bool kDemoBuild = bool.fromEnvironment('DEMO');
+
 class SportVenueApp extends StatefulWidget {
   const SportVenueApp({super.key, this.controller});
 
@@ -17,7 +21,8 @@ class SportVenueApp extends StatefulWidget {
 
 class _SportVenueAppState extends State<SportVenueApp> {
   late final AppController _controller =
-      widget.controller ?? AppController.connected();
+      widget.controller ??
+      (kDemoBuild ? AppController.demo() : AppController.connected());
   final AppBoot _boot = AppBoot();
 
   /// Started with the app, awaited by the splash. A reader who signed in

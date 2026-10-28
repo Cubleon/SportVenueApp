@@ -96,6 +96,38 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('the demo build opens on the app and lets anyone back in', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController.demo(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(SportVenueApp(controller: controller));
+    await tester.pump(const Duration(milliseconds: 2700));
+    await tester.pumpAndSettle();
+
+    // Straight past the phone field: there is no call to wait for.
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+
+    controller.logout();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('phone-field')), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('phone-field')),
+      '9000000000',
+    );
+    await tester.tap(find.textContaining('Согласен'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('registration-continue')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Позвоните для входа'), findsNothing);
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+    expect(controller.isSignedIn, isTrue);
+  });
+
   testWidgets('sport selection lets a reader say "anything"', (tester) async {
     _setPhoneSize(tester);
     Set<String>? saved;

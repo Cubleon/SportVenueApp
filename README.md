@@ -42,6 +42,20 @@ polling and ignores late confirmation responses.
 Deploy this client with the updated backend; the old `/auth/call/verify`
 endpoint is no longer used. See the server README for the database migration.
 
+## Demo build
+
+The demo runs on built-in fixtures, needs no server, and opens already
+signed in. Signing out leads to the phone field, where any number (or any
+email) signs straight back in — there is no call and no code.
+
+```bash
+flutter run --dart-define=DEMO=true
+flutter build web --release --no-web-resources-cdn --dart-define=DEMO=true
+```
+
+Without the flag the app is the real one: the demo sign-in is refused, and
+nothing needs editing before or after a build.
+
 ## Verification
 
 Email sign-in is available from «Войти по почте». Enter an address, accept
