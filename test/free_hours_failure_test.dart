@@ -76,10 +76,7 @@ void main() {
     await tester.tap(find.text('Повторить'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('venue-free-hours-failed')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('venue-free-hours-failed')), findsNothing);
     expect(find.textContaining('0 часов'), findsOneWidget);
   });
 
