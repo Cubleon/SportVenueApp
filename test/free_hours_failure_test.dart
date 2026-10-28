@@ -65,14 +65,18 @@ void main() {
     // Not «считаем…» for ever: the row gives up, and says how to try again.
     expect(find.text('считаем…'), findsNothing);
     expect(find.text('нет данных'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('venue-free-hours-failed')),
-      findsOneWidget,
+    // The notice sits under the club's card, below the fold of a phone, and
+    // the list only builds what is scrolled to — so scroll, as a reader would.
+    final notice = find.byKey(const ValueKey('venue-free-hours-failed'));
+    await tester.scrollUntilVisible(
+      notice,
+      200,
+      scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
+    expect(notice, findsOneWidget);
 
     server.down = false;
-    await tester.ensureVisible(find.text('Повторить'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Повторить'));
     await tester.pumpAndSettle();
 
