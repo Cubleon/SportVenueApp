@@ -1248,7 +1248,7 @@ abstract class L {
   /// No description provided for @payShareTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Своя часть · {price}'**
+  /// **'Оплата доли'**
   String payShareTitle(String price);
 
   /// No description provided for @payShareExplainer.
@@ -1634,12 +1634,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'оплачено'**
   String get sharePaid;
-
-  /// No description provided for @payShareTitle.
-  ///
-  /// In ru, this message translates to:
-  /// **'Оплата доли'**
-  String get payShareTitle;
 
   /// No description provided for @payYourShare.
   ///

@@ -726,7 +726,7 @@ class LRu extends L {
 
   @override
   String payShareTitle(String price) {
-    return 'Своя часть · $price';
+    return 'Оплата доли';
   }
 
   @override
@@ -966,9 +966,6 @@ class LRu extends L {
   String get sharePaid => 'оплачено';
 
   @override
-  String get payShareTitle => 'Оплата доли';
-
-  @override
   String get payYourShare => 'Ваша доля';
 
   @override
@@ -977,13 +974,15 @@ class LRu extends L {
   }
 
   @override
-  String get payTestBanner => 'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.';
+  String get payTestBanner =>
+      'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.';
 
   @override
   String get payCodeLabel => 'Код доли';
 
   @override
-  String get payCodeHint => 'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.';
+  String get payCodeHint =>
+      'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.';
 
   @override
   String get payCopyCode => 'Скопировать';
@@ -995,7 +994,8 @@ class LRu extends L {
   String get payViaBank => 'Оплатить через банк';
 
   @override
-  String get payBankFailed => 'Не получилось открыть банк. Отсканируйте QR с другого телефона.';
+  String get payBankFailed =>
+      'Не получилось открыть банк. Отсканируйте QR с другого телефона.';
 
   @override
   String get payQrHint => 'Или отсканируйте QR с другого телефона';
@@ -1012,19 +1012,22 @@ class LRu extends L {
   String get payPendingTitle => 'Проверяем оплату';
 
   @override
-  String get payPendingBody => 'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.';
+  String get payPendingBody =>
+      'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.';
 
   @override
   String get payPaidTitle => 'Оплата получена';
 
   @override
-  String get payPaidBody => 'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.';
+  String get payPaidBody =>
+      'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.';
 
   @override
   String get payNotFoundTitle => 'Не нашли перевод';
 
   @override
-  String get payNotFoundBody => 'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.';
+  String get payNotFoundBody =>
+      'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.';
 
   @override
   String payAdminNote(String note) {
@@ -1032,7 +1035,8 @@ class LRu extends L {
   }
 
   @override
-  String get payRefundDue => 'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.';
+  String get payRefundDue =>
+      'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.';
 
   @override
   String get payRefunded => 'Деньги за эту долю вернули.';

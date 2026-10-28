@@ -562,8 +562,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       if (canPay)
                         PrimaryButton(
                           key: const ValueKey('pay-my-share'),
-                          label:
-                              mine.status == ShareStatus.pendingConfirmation
+                          label: mine.status == ShareStatus.pendingConfirmation
                               ? context.l10n.payPendingTitle
                               : context.l10n.payMyShare(
                                   AppFormatters.money(

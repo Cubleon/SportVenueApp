@@ -85,10 +85,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
                     _Header(onBack: () => Navigator.of(context).maybePop()),
                     const SizedBox(height: 12),
                     if (booking == null || share == null)
-                      _Notice(
-                        icon: AppIcons.x,
-                        title: context.l10n.payNothing,
-                      )
+                      _Notice(icon: AppIcons.x, title: context.l10n.payNothing)
                     else
                       ..._body(context, booking, share, needsPayment),
                   ],
@@ -309,7 +306,11 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
       info = await _info;
     } catch (error) {
       if (mounted) {
-        showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+        showAppSnack(
+          context,
+          errorText(context, error),
+          tone: SnackTone.failed,
+        );
       }
       return;
     }
@@ -317,8 +318,9 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
     var opened = false;
     if (uri != null) {
       try {
-        opened = await (widget.openLink?.call(uri) ??
-            launchUrl(uri, mode: LaunchMode.externalApplication));
+        opened =
+            await (widget.openLink?.call(uri) ??
+                launchUrl(uri, mode: LaunchMode.externalApplication));
       } catch (_) {
         opened = false;
       }
@@ -337,7 +339,11 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
       unawaited(HapticFeedback.mediumImpact());
     } catch (error) {
       if (mounted) {
-        showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+        showAppSnack(
+          context,
+          errorText(context, error),
+          tone: SnackTone.failed,
+        );
       }
     } finally {
       if (mounted) {
@@ -402,7 +408,10 @@ class _CodeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.payCodeLabel, style: AppTheme.sectionLabel(context)),
+          Text(
+            context.l10n.payCodeLabel,
+            style: AppTheme.sectionLabel(context),
+          ),
           const SizedBox(height: 6),
           Row(
             children: [
@@ -410,10 +419,9 @@ class _CodeCard extends StatelessWidget {
                 child: SelectableText(
                   value ?? context.l10n.emptyValue,
                   key: const ValueKey('pay-code'),
-                  style: AppTheme.numeric(context.text.headlineSmall).copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
+                  style: AppTheme.numeric(
+                    context.text.headlineSmall,
+                  ).copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.2),
                 ),
               ),
               if (value != null)
