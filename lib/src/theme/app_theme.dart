@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -417,8 +418,8 @@ class AppTheme {
           TargetPlatform.fuchsia: _RiseFadeTransitions(),
           TargetPlatform.linux: _RiseFadeTransitions(),
           TargetPlatform.windows: _RiseFadeTransitions(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: _RiseFadeTransitions(),
+          TargetPlatform.macOS: _RiseFadeTransitions(),
         },
       ),
       appBarTheme: AppBarTheme(
@@ -503,6 +504,19 @@ class _RiseFadeTransitions extends PageTransitionsBuilder {
   ) {
     if (MediaQuery.disableAnimationsOf(context)) {
       return child;
+    }
+    // Apple's own slide, which carries the swipe back from the left edge.
+    // Asked of the route rather than of a builder class, which Flutter no
+    // longer ships with the material library.
+    final platform = Theme.of(context).platform;
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      return CupertinoPageRoute.buildPageTransitions(
+        route,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
     }
     final incoming = CurvedAnimation(
       parent: animation,
