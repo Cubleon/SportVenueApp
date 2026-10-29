@@ -256,9 +256,11 @@ class PrimaryButton extends StatelessWidget {
                         maxLines: 2,
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
+                        // Bold, so the one thing to press reads before the
+                        // words around it.
                         style: context.text.titleSmall?.copyWith(
                           color: foreground,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: -0.05,
                           height: 1.15,
                         ),

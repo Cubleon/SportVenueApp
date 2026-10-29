@@ -468,7 +468,7 @@ class _ResultsSheet extends StatelessWidget {
         return DecoratedBox(
           decoration: BoxDecoration(
             color: context.colors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
                 color: context.colors.ink.withValues(alpha: 0.16),
@@ -483,7 +483,7 @@ class _ResultsSheet extends StatelessWidget {
             children: [
               Center(
                 child: Container(
-                  width: 40,
+                  width: 44,
                   height: 4,
                   decoration: BoxDecoration(
                     color: context.colors.ink.withValues(alpha: 0.18),

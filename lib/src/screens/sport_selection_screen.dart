@@ -45,7 +45,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -80,7 +80,7 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                     )
                   : GridView.builder(
                       key: const ValueKey('sports-grid'),
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,

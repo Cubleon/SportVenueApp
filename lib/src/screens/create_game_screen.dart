@@ -674,8 +674,9 @@ class _Block extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The same gap as the booking screen's steps, which this mirrors.
     return Padding(
-      padding: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

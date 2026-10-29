@@ -317,11 +317,11 @@ class _MenuItem extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 46,
+              width: context.scaled(44),
+              height: context.scaled(44),
               decoration: BoxDecoration(
-                color: context.colors.accent.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(13),
+                color: context.colors.accentSoft,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: context.colors.accent),
             ),

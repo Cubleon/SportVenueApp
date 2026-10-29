@@ -199,7 +199,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -552,7 +552,7 @@ class _CallVerificationScreenState extends State<CallVerificationScreen>
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

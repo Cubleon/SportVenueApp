@@ -69,7 +69,7 @@ class _EmailSignInScreenState extends State<EmailSignInScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -274,7 +274,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       appBar: AppBar(leading: BackButton(onPressed: widget.onBack)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

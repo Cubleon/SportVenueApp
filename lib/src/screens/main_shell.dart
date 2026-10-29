@@ -439,15 +439,15 @@ class _SheetAction extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: context.scaled(44),
+            height: context.scaled(44),
             decoration: BoxDecoration(
-              color: context.colors.accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
+              color: context.colors.accentSoft,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: context.colors.accent),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

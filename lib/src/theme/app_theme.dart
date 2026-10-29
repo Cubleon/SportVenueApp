@@ -422,7 +422,7 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: colors.accent,
           textStyle: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

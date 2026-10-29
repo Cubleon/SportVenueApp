@@ -1240,7 +1240,6 @@ class _Tag extends StatelessWidget {
       child: Text(
         label,
         style: context.text.labelSmall?.copyWith(
-          fontSize: 10.5,
           color: live ? colors.accent : colors.muted,
           fontWeight: FontWeight.w700,
         ),
