@@ -66,6 +66,7 @@ class _GamesScreenState extends State<GamesScreen> {
       animation: widget.controller,
       builder: (context, _) {
         final games = widget.controller.games
+            .where(widget.controller.gameIsListed)
             .where((game) => _sportId == 'all' || game.sportId == _sportId)
             .where((game) => _timeFilter == 'all' || game.startHour >= 18)
             .toList();
@@ -618,6 +619,11 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   /// a button (the server refuses that; the organiser cancels the booking).
   Widget? _actions(BuildContext context, Game game) {
     final l10n = context.l10n;
+    // A game whose booking is off has nothing left to do here: the status
+    // card above says what happened and what happens to the money.
+    if (widget.controller.gameIsOff(game)) {
+      return null;
+    }
     final inGame = game.readerPlays;
     if (game.readerRequested) {
       // Waiting for the organiser: nothing to pay yet, only a way to
@@ -680,7 +686,21 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
               tone: ButtonTone.neutral,
               onPressed: () => context.go(Routes.booking(bookingId)),
             );
-      return _stack([?pay, ?open]);
+      // Cancelling the game is cancelling the booking it stands on; the
+      // server refunds everyone who paid.
+      final booking = bookingId == null
+          ? null
+          : widget.controller.bookingById(bookingId);
+      final cancel = booking == null
+          ? null
+          : PrimaryButton(
+              key: const ValueKey('detail-cancel-game'),
+              label: l10n.cancelGame,
+              tone: ButtonTone.neutral,
+              isLoading: _joining,
+              onPressed: _joining ? null : () => _cancelGame(game, booking),
+            );
+      return _stack([?pay, ?open, ?cancel]);
     }
 
     // Money that has gone, or may have, keeps the place: no leave button.
@@ -743,6 +763,40 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     } finally {
       if (mounted) {
         setState(() => _answering = null);
+      }
+    }
+  }
+
+  Future<void> _cancelGame(Game game, Booking booking) async {
+    final confirmed = await confirmAction(
+      context,
+      title: context.l10n.cancelGameQuestion,
+      message: context.l10n.cancelGameMessage(
+        game.venue.name.capitalized,
+        AppFormatters.dateShort(game.date),
+        game.timeRange,
+      ),
+      confirmLabel: context.l10n.cancelGame,
+      cancelLabel: context.l10n.keepGame,
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+    setState(() => _joining = true);
+    try {
+      await widget.controller.cancelBooking(booking);
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, context.l10n.gameCancelled, tone: SnackTone.done);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _joining = false);
       }
     }
   }

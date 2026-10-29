@@ -496,16 +496,15 @@ class AppController extends ChangeNotifier {
             currentUserId: userId,
           );
 
-    bookings = [
-      for (final item in bookings)
-        if (item.id == updated.id) updated else item,
-    ];
+    _replaceBooking(updated);
     notifyListeners();
     return updated;
   }
 
   Future<bool> joinGame(Game game) async {
-    if (game.isFull || game.participants.any((p) => p.isCurrentUser)) {
+    if (game.isFull ||
+        gameIsOff(game) ||
+        game.participants.any((p) => p.isCurrentUser)) {
       return false;
     }
 
@@ -772,6 +771,21 @@ class AppController extends ChangeNotifier {
   Booking? bookingById(String id) =>
       bookings.where((booking) => booking.id == id).firstOrNull ??
       _linkedBookings[id];
+
+  /// Whether the booking under this game has fallen through or been
+  /// cancelled. Known only when this phone has the booking; the server
+  /// takes such games off the feed by itself.
+  bool gameIsOff(Game game) {
+    final id = game.bookingId;
+    final booking = id == null ? null : bookingById(id);
+    return booking != null && !booking.isActive;
+  }
+
+  /// Games someone can still join: what the feeds show. A game that is off
+  /// stays visible only to the people in it, who need to know.
+  bool gameIsListed(Game game) =>
+      !gameIsOff(game) ||
+      game.participants.any((player) => player.isCurrentUser);
 
   /// The game with this id, if it is loaded.
   Game? gameById(String id) => games.where((game) => game.id == id).firstOrNull;

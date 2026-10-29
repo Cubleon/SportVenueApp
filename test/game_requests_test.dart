@@ -76,4 +76,34 @@ void main() {
     expect(current().players.any((p) => p.sameAs(ivan)), isTrue);
     expect(current().participants.any((p) => p.sameAs(olga)), isFalse);
   });
+
+  test('a game whose booking is cancelled leaves the feed', () async {
+    final app = controller();
+    final game = await app.createGame(
+      sportId: 'football',
+      venue: MockData.venues.first,
+      date: tomorrow,
+      startHour: 20,
+      durationMinutes: 60,
+      capacity: 4,
+      type: GameType.open,
+      genderFilter: GenderFilter.any,
+    );
+    expect(app.gameIsOff(game), isFalse);
+
+    await app.cancelBooking(app.bookingById(game.bookingId!)!);
+
+    final current = app.games.firstWhere((item) => item.id == game.id);
+    expect(app.gameIsOff(current), isTrue);
+    // The organiser still sees it: they need to know it is off.
+    expect(app.gameIsListed(current), isTrue);
+    // Someone not in it does not, and cannot join it.
+    final stranger = current.copyWith(
+      participants: current.participants
+          .where((player) => !player.isCurrentUser)
+          .toList(),
+    );
+    expect(app.gameIsListed(stranger), isFalse);
+    expect(await app.joinGame(stranger), isFalse);
+  });
 }

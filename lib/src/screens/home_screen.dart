@@ -178,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Game> get _games => widget.controller.games
       .where(
         (game) =>
+            widget.controller.gameIsListed(game) &&
             DateUtils.isSameDay(game.date, _date) &&
             (_sportId == 'all' || game.sportId == _sportId) &&
             (_matches(game.venue.name) || _matches(game.venue.address)),

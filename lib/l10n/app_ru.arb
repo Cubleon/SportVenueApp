@@ -806,5 +806,13 @@
   "gamesOnDate": "Игры {date}",
   "@gamesOnDate": {
     "placeholders": { "date": { "type": "String" } }
-  }
+  },
+  "cancelGame": "Отменить игру",
+  "cancelGameQuestion": "Отменить игру?",
+  "cancelGameMessage": "{venue}, {date}, {time}. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.",
+  "@cancelGameMessage": {
+    "placeholders": { "venue": { "type": "String" }, "date": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "gameCancelled": "Игра отменена",
+  "keepGame": "Не отменять"
 }

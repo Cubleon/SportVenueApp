@@ -2450,6 +2450,36 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Игры {date}'**
   String gamesOnDate(String date);
+
+  /// No description provided for @cancelGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить игру'**
+  String get cancelGame;
+
+  /// No description provided for @cancelGameQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить игру?'**
+  String get cancelGameQuestion;
+
+  /// No description provided for @cancelGameMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{venue}, {date}, {time}. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.'**
+  String cancelGameMessage(String venue, String date, String time);
+
+  /// No description provided for @gameCancelled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра отменена'**
+  String get gameCancelled;
+
+  /// No description provided for @keepGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не отменять'**
+  String get keepGame;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

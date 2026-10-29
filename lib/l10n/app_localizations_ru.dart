@@ -1499,4 +1499,21 @@ class LRu extends L {
   String gamesOnDate(String date) {
     return 'Игры $date';
   }
+
+  @override
+  String get cancelGame => 'Отменить игру';
+
+  @override
+  String get cancelGameQuestion => 'Отменить игру?';
+
+  @override
+  String cancelGameMessage(String venue, String date, String time) {
+    return '$venue, $date, $time. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.';
+  }
+
+  @override
+  String get gameCancelled => 'Игра отменена';
+
+  @override
+  String get keepGame => 'Не отменять';
 }
