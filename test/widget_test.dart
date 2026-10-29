@@ -233,17 +233,33 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
-      findsOneWidget,
-    );
     expect(find.text('1 игра · 4 клуба рядом'), findsOneWidget);
+    // The page itself, not the date strip or the sports row inside it.
+    final page = find
+        .descendant(
+          of: find.byKey(const ValueKey('home-screen')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
     // And the game the header counts is on the page, not only counted.
+    await tester.scrollUntilVisible(
+      find.byKey(ValueKey('home-game-${game.id}')),
+      200,
+      scrollable: page,
+    );
     expect(
       find.text('Игры ${AppFormatters.dateShort(game.date)}'),
       findsOneWidget,
     );
-    expect(find.byKey(ValueKey('home-game-${game.id}')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
+      200,
+      scrollable: page,
+    );
+    expect(
+      find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the home survives the reader doubling the text', (tester) async {
