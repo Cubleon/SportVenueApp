@@ -35,11 +35,11 @@ void main() {
     return controller;
   }
 
-  ShareStatus statusOf(AppController controller, String shareId) =>
-      controller.bookings
-          .expand((booking) => booking.shares)
-          .firstWhere((share) => share.id == shareId)
-          .status;
+  ShareStatus statusOf(AppController controller, String shareId) => controller
+      .bookings
+      .expand((booking) => booking.shares)
+      .firstWhere((share) => share.id == shareId)
+      .status;
 
   testWidgets('a found transfer makes the share paid', (tester) async {
     final controller = await admin(tester);
@@ -59,9 +59,7 @@ void main() {
     expect(find.byKey(const ValueKey('admin-empty')), findsOneWidget);
   });
 
-  testWidgets('a missing transfer is sent back with a reason', (
-    tester,
-  ) async {
+  testWidgets('a missing transfer is sent back with a reason', (tester) async {
     final controller = await admin(tester);
 
     await tester.tap(

@@ -140,7 +140,8 @@ class _PaymentAdminScreenState extends State<PaymentAdminScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     sliver: SliverList.separated(
                       itemCount: items.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) => _QueueCard(
                         item: items[index],
                         now: DateTime.now(),
@@ -398,7 +399,10 @@ class _QueueCard extends StatelessWidget {
               ),
             ),
           if (claimed != null)
-            Text(l10n.adminClaimed(AppFormatters.moment(claimed)), style: muted),
+            Text(
+              l10n.adminClaimed(AppFormatters.moment(claimed)),
+              style: muted,
+            ),
           if (note != null && note.isNotEmpty) Text(note, style: muted),
           const SizedBox(height: 12),
           if (refund)
