@@ -95,6 +95,27 @@ void main() {
     final booking = await booked();
     await show(tester, withShares(booking, 'cancelled', ShareStatus.unpaid));
 
+    // The reader holds an unpaid share: the line is about their own money.
+    expect(
+      find.text('Вы не платили за это место, возвращать нечего.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('someone with no share hears that nobody paid', (tester) async {
+    final booking = await booked();
+    final cancelled = withShares(booking, 'cancelled', ShareStatus.unpaid);
+    await show(
+      tester,
+      cancelled.copyWith(
+        clearMyShare: true,
+        shares: [
+          for (final share in cancelled.shares)
+            share.copyWith(isCurrentUser: false),
+        ],
+      ),
+    );
+
     expect(find.text('Оплат не было, возвращать нечего.'), findsOneWidget);
   });
 }
