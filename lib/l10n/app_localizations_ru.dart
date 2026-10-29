@@ -701,7 +701,8 @@ class LRu extends L {
   }
 
   @override
-  String get successFullBody => 'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.';
+  String get successFullBody =>
+      'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.';
 
   @override
   String get bookingDetails => 'Бронь';

@@ -115,8 +115,7 @@ class BookingSuccessScreen extends StatelessWidget {
                         key: const ValueKey('success-open-booking'),
                         label: context.l10n.openBooking,
                         tone: ButtonTone.neutral,
-                        onPressed: () =>
-                            context.go(Routes.booking(booking.id)),
+                        onPressed: () => context.go(Routes.booking(booking.id)),
                       ),
                     ],
                   ),
