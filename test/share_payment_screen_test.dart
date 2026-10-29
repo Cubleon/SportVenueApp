@@ -77,6 +77,40 @@ void main() {
     expect(find.byKey(const ValueKey('pay-via-bank')), findsNothing);
   });
 
+  testWidgets('a booking that fell through asks for no money', (tester) async {
+    phone(tester);
+    final (controller, booking) = await booked();
+    // The deadline passed with the reader's share unpaid.
+    controller.bookings = [
+      for (final item in controller.bookings)
+        item.id == booking.id
+            ? item.copyWith(
+                statusCode: 'expired',
+                shares: [
+                  for (final share in item.shares)
+                    share.isCurrentUser
+                        ? share.copyWith(status: ShareStatus.unpaid)
+                        : share,
+                ],
+              )
+            : item,
+    ];
+
+    await tester.pumpWidget(
+      app(SharePaymentScreen(controller: controller, bookingId: booking.id)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Не собрали вовремя'), findsOneWidget);
+    expect(
+      find.text('Вы не платили за это место, возвращать нечего.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('pay-via-bank')), findsNothing);
+    expect(find.byKey(const ValueKey('claim-paid')), findsNothing);
+    expect(find.byKey(const ValueKey('book-again')), findsOneWidget);
+  });
+
   testWidgets('the QR unfolds for paying from another device', (tester) async {
     phone(tester);
     final (controller, booking) = await booked();

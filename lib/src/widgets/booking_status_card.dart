@@ -144,6 +144,18 @@ class BookingStatusCard extends StatelessWidget {
       return null;
     }
     final l10n = context.l10n;
+    // A player reads about their own money: «оплат не было» is wrong for
+    // someone who did not pay while the others did, and the other way round.
+    final mine = booking.myShare;
+    if (mine != null) {
+      return switch (mine.status) {
+        ShareStatus.refundDue ||
+        ShareStatus.paid ||
+        ShareStatus.pendingConfirmation => l10n.bookingStateRefundDue,
+        ShareStatus.refunded => l10n.bookingStateRefunded,
+        _ => l10n.bookingStateYouDidNotPay,
+      };
+    }
     if (shares.any((share) => share.status == ShareStatus.refundDue)) {
       return l10n.bookingStateRefundDue;
     }

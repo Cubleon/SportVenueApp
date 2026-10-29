@@ -14,6 +14,7 @@ import '../models/sport_venue_models.dart';
 import '../router.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
+import '../widgets/booking_status_card.dart';
 import '../widgets/shared_widgets.dart';
 
 /// Paying the reader's share of a booking.
@@ -66,8 +67,13 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
       builder: (context, _) {
         final booking = widget.controller.bookingById(widget.bookingId);
         final share = booking?.myShare;
+        // Only while the booking is still collecting: after the deadline an
+        // unpaid share is not a debt but a booking that did not happen, and
+        // a «pay» button there would take money for nothing.
         final needsPayment =
             share != null &&
+            booking != null &&
+            booking.isCollectingShares &&
             (share.status == ShareStatus.unpaid ||
                 share.status == ShareStatus.notFound);
         return Scaffold(
@@ -117,7 +123,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
                             isLoading: _claiming,
                             onPressed: _claiming
                                 ? null
-                                : () => _claim(booking!, share),
+                                : () => _claim(booking, share),
                           ),
                         ],
                       ),
@@ -183,7 +189,9 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
                 color: context.colors.muted,
               ),
             ),
-            if (needsPayment || share.status == ShareStatus.pendingConfirmation)
+            if (booking.isActive &&
+                (needsPayment ||
+                    share.status == ShareStatus.pendingConfirmation))
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
@@ -228,8 +236,21 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
         ),
       ),
       const SizedBox(height: 12),
-      ..._status(context, share),
-      if (needsPayment || share.status == ShareStatus.pendingConfirmation) ...[
+      // A booking that is off says so, with what happens to the money,
+      // in place of the share's own state.
+      if (!booking.isActive) ...[
+        BookingStatusCard(booking: booking),
+        const SizedBox(height: 12),
+        PrimaryButton(
+          key: const ValueKey('book-again'),
+          label: context.l10n.bookAgain,
+          onPressed: () => context.go(Routes.venue(draft.venue.id)),
+        ),
+      ] else
+        ..._status(context, share),
+      if (booking.isActive &&
+          (needsPayment ||
+              share.status == ShareStatus.pendingConfirmation)) ...[
         _CodeCard(code: share.code),
         const SizedBox(height: 12),
       ],
