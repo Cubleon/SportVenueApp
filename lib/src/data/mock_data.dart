@@ -290,4 +290,63 @@ class MockData {
       ],
     );
   }
+
+  /// A friend's booking, reachable only by its link: what the demo shows
+  /// someone who follows an invite. Orlov has paid, Fedorov has taken a
+  /// place, two places are free.
+  static Booking friendBooking(DateTime now) {
+    final date = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 2));
+    return Booking(
+      id: 'booking-friend',
+      draft: BookingDraft(
+        venue: venues.first,
+        date: date,
+        durationMinutes: 60,
+        startHour: 19,
+        players: 4,
+        mode: PaymentMode.split,
+      ),
+      statusCode: 'collecting_shares',
+      createdAt: now,
+      organizerId: 'orlov',
+      shares: const [
+        BookingShare(
+          id: 'share-friend-1',
+          userId: 'orlov',
+          name: 'Максим Орлов',
+          initial: 'М',
+          status: ShareStatus.paid,
+          amount: 600,
+        ),
+        BookingShare(
+          id: 'share-friend-2',
+          userId: 'fedorov',
+          name: 'Даниил Фёдоров',
+          initial: 'Д',
+          status: ShareStatus.unpaid,
+          amount: 600,
+        ),
+        BookingShare(
+          id: 'share-friend-3',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 600,
+          code: 'SV-4831',
+        ),
+        BookingShare(
+          id: 'share-friend-4',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 600,
+          code: 'SV-4832',
+        ),
+      ],
+    );
+  }
 }

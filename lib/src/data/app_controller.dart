@@ -167,7 +167,11 @@ class AppController extends ChangeNotifier {
   }
 
   bool canCancelBooking(Booking booking) {
-    return _api == null || (userId != null && booking.organizerId == userId);
+    if (_api == null) {
+      // The demo's own bookings carry no organiser; a friend's does.
+      return booking.organizerId == null || booking.organizerId == userId;
+    }
+    return userId != null && booking.organizerId == userId;
   }
 
   Sport sportById(String id) {
@@ -689,9 +693,106 @@ class AppController extends ChangeNotifier {
     return game;
   }
 
-  /// The booking with this id, if the reader has it.
+  /// Bookings opened by a link that the reader has no place in yet. Kept
+  /// apart so a friend's booking does not show up under «Мои брони» until
+  /// the reader takes a place in it.
+  final Map<String, Booking> _linkedBookings = {};
+
+  /// The booking with this id: the reader's own, or one opened by a link.
   Booking? bookingById(String id) =>
-      bookings.where((booking) => booking.id == id).firstOrNull;
+      bookings.where((booking) => booking.id == id).firstOrNull ??
+      _linkedBookings[id];
+
+  /// The game with this id, if it is loaded.
+  Game? gameById(String id) =>
+      games.where((game) => game.id == id).firstOrNull;
+
+  /// Finds a booking that may not be the reader's: what a link from a
+  /// friend arrives at. Asks the server even when the booking is known, so
+  /// the shares shown are the current ones; a known booking survives a
+  /// failed request. Null when there is no such booking.
+  Future<Booking?> openBooking(String id) async {
+    final known = bookingById(id);
+    final api = _api;
+    if (api == null) {
+      if (known != null) {
+        return known;
+      }
+      final linked = MockData.friendBooking(_now);
+      if (linked.id != id) {
+        return null;
+      }
+      _linkedBookings[id] = linked;
+      notifyListeners();
+      return linked;
+    }
+    try {
+      final booking = _bookingFromJson(
+        await api.getBooking(id),
+        venueCatalog: venues,
+        currentUserId: userId,
+      );
+      final mine =
+          bookings.any((item) => item.id == id) ||
+          booking.myShare != null ||
+          (userId != null && booking.organizerId == userId);
+      if (mine) {
+        _replaceBooking(booking);
+      } else {
+        _linkedBookings[id] = booking;
+      }
+      notifyListeners();
+      return booking;
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return null;
+      }
+      if (known != null) {
+        return known;
+      }
+      rethrow;
+    }
+  }
+
+  /// Finds a game by its id, the way [openBooking] finds a booking, and the
+  /// booking under it as well, so the game screen can say where it stands.
+  Future<Game?> openGame(String id) async {
+    final known = gameById(id);
+    final api = _api;
+    if (api == null) {
+      return known;
+    }
+    final Game game;
+    try {
+      game = _gameFromJson(
+        await api.getGame(id),
+        venueCatalog: venues,
+        currentUserId: userId,
+      );
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return null;
+      }
+      if (known != null) {
+        return known;
+      }
+      rethrow;
+    }
+    games = known == null
+        ? [game, ...games]
+        : [for (final item in games) item.id == id ? game : item];
+    notifyListeners();
+    final bookingId = game.bookingId;
+    if (bookingId != null) {
+      // The status card is a nicety on this screen; the game opens without it.
+      try {
+        await openBooking(bookingId);
+      } on Object {
+        // Nothing to say: the card simply does not appear.
+      }
+    }
+    return gameById(id);
+  }
 
   /// Takes a free place in a split booking: what following an invite link
   /// to a booking ends in.
@@ -1034,6 +1135,10 @@ class AppController extends ChangeNotifier {
     if (booking.myShare != null) {
       throw _refusal('already in booking', 409);
     }
+    if (!bookings.any((item) => item.id == bookingId)) {
+      // Taking a place makes a friend's booking the reader's own.
+      _replaceBooking(booking);
+    }
     final open = booking.shares
         .where((share) => share.isOpen && share.id != null)
         .firstOrNull;
@@ -1115,6 +1220,7 @@ class AppController extends ChangeNotifier {
   /// Puts the booking in the list, and the reader's share of it into the
   /// game it carries, so the two screens never disagree.
   void _replaceBooking(Booking booking) {
+    _linkedBookings.remove(booking.id);
     final known = bookings.any((item) => item.id == booking.id);
     bookings = known
         ? [
@@ -1201,6 +1307,7 @@ class AppController extends ChangeNotifier {
     isSignedIn = false;
     isPaymentAdmin = isDemo;
     paymentInfo = null;
+    _linkedBookings.clear();
     selectedSportIds = {'football', 'padel', 'tennis'};
     if (_api == null) {
       bookings = [MockData.initialBooking(_now)];

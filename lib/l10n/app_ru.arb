@@ -734,5 +734,11 @@
   "bookingStateCancelledTitle": "Бронь отменена",
   "bookingStateRefundDue": "Деньги вернём в течение 1 рабочего дня.",
   "bookingStateRefunded": "Деньги вернули.",
-  "bookingStateNoMoney": "Оплат не было, возвращать нечего."
+  "bookingStateNoMoney": "Оплат не было, возвращать нечего.",
+  "takeShareButton": "Занять место · {price}",
+  "@takeShareButton": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "takeShareNoPlaces": "Свободных мест в этой брони нет.",
+  "takeShareClosed": "Места в этой брони больше не раздают."
 }

@@ -322,11 +322,15 @@ List<RouteBase> shellRoutes(AppController controller) => [
     path: 'game/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
-      final game = controller.games.where((item) => item.id == id).firstOrNull;
-      if (game == null) {
-        return _NotFound(what: context.l10n.gameNotFound);
-      }
-      return GameDetailScreen(controller: controller, game: game);
+      // A friend's link: the game may not be in the feed this phone has.
+      return _OpenByLink<Game>(
+        key: ValueKey('open-game-$id'),
+        title: context.l10n.game,
+        missing: context.l10n.gameNotFound,
+        known: () => controller.gameById(id),
+        load: () => controller.openGame(id),
+        found: (game) => GameDetailScreen(controller: controller, game: game),
+      );
     },
   ),
   GoRoute(
@@ -363,13 +367,17 @@ List<RouteBase> shellRoutes(AppController controller) => [
     path: 'booking/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
-      final booking = controller.bookings
-          .where((item) => item.id == id)
-          .firstOrNull;
-      if (booking == null) {
-        return _NotFound(what: context.l10n.bookingNotFound);
-      }
-      return BookingDetailsScreen(controller: controller, booking: booking);
+      // An invite to pay a share: the booking is usually someone else's,
+      // so it is fetched by its id rather than looked up in «Мои брони».
+      return _OpenByLink<Booking>(
+        key: ValueKey('open-booking-$id'),
+        title: context.l10n.bookingDetails,
+        missing: context.l10n.bookingNotFound,
+        known: () => controller.bookingById(id),
+        load: () => controller.openBooking(id),
+        found: (booking) =>
+            BookingDetailsScreen(controller: controller, booking: booking),
+      );
     },
     routes: [
       GoRoute(
@@ -437,6 +445,122 @@ DateTime? _dateOf(GoRouterState state) =>
 void openGamesTab(BuildContext context) {
   MainShell.requestedTab.value = 2;
   context.go(Routes.home);
+}
+
+/// Opens what a link points at: at once when this phone already has it,
+/// after asking the server when it does not.
+///
+/// Before it, a link to a friend's booking always ended at «Бронь не
+/// найдена»: the route only looked in the reader's own list.
+class _OpenByLink<T extends Object> extends StatefulWidget {
+  const _OpenByLink({
+    super.key,
+    required this.title,
+    required this.missing,
+    required this.known,
+    required this.load,
+    required this.found,
+  });
+
+  final String title;
+  final String missing;
+  final T? Function() known;
+  final Future<T?> Function() load;
+  final Widget Function(T value) found;
+
+  @override
+  State<_OpenByLink<T>> createState() => _OpenByLinkState<T>();
+}
+
+class _OpenByLinkState<T extends Object> extends State<_OpenByLink<T>> {
+  late Future<T?> _loading;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  void _start() {
+    // Asked even when the thing is known, so what is shown is fresh; a
+    // failure then is not worth an error, so it is marked as handled.
+    _loading = widget.load()..ignore();
+  }
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(Routes.home);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final known = widget.known();
+    if (known != null) {
+      return widget.found(known);
+    }
+    return FutureBuilder<T?>(
+      future: _loading,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _LinkWaiting(title: widget.title, onBack: _back);
+        }
+        final error = snapshot.error;
+        if (error != null) {
+          return _LinkWaiting(
+            title: widget.title,
+            onBack: _back,
+            failure: RetryNotice(
+              key: const ValueKey('link-retry'),
+              message: errorText(context, error),
+              onRetry: () => setState(_start),
+            ),
+          );
+        }
+        final value = snapshot.data;
+        if (value == null) {
+          return _NotFound(what: widget.missing);
+        }
+        return widget.found(value);
+      },
+    );
+  }
+}
+
+/// The screen a link stands on while it loads, or after it could not.
+class _LinkWaiting extends StatelessWidget {
+  const _LinkWaiting({required this.title, required this.onBack, this.failure});
+
+  final String title;
+  final VoidCallback onBack;
+  final Widget? failure;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            ScreenTitleBar(title: title, onBack: onBack),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child:
+                      failure ??
+                      const CircularProgressIndicator(
+                        key: ValueKey('link-loading'),
+                      ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// What a link to something that is gone, or not loaded yet, arrives at.

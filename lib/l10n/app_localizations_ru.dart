@@ -1344,4 +1344,15 @@ class LRu extends L {
 
   @override
   String get bookingStateNoMoney => 'Оплат не было, возвращать нечего.';
+
+  @override
+  String takeShareButton(String price) {
+    return 'Занять место · $price';
+  }
+
+  @override
+  String get takeShareNoPlaces => 'Свободных мест в этой брони нет.';
+
+  @override
+  String get takeShareClosed => 'Места в этой брони больше не раздают.';
 }

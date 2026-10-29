@@ -513,7 +513,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         (mine.status == ShareStatus.unpaid ||
             mine.status == ShareStatus.notFound ||
             mine.status == ShareStatus.pendingConfirmation);
-    final hasBar = canCancel || canPay;
+    // Someone who came by a friend's link and has no place yet: the one
+    // thing to do here is to take one.
+    final outsider = mine == null && !canCancel;
+    final canTake =
+        outsider && booking.isCollectingShares && booking.openShares > 0;
+    final hasBar = canCancel || canPay || canTake;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -542,11 +547,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
-                if (!canCancel) ...[
+                if (!canCancel && !canTake) ...[
                   const SizedBox(height: 12),
                   AppCard(
                     child: Text(
-                      context.l10n.onlyOrganizerCancels,
+                      mine != null
+                          ? context.l10n.onlyOrganizerCancels
+                          : booking.isCollectingShares
+                          ? context.l10n.takeShareNoPlaces
+                          : context.l10n.takeShareClosed,
                       style: context.text.bodyMedium?.copyWith(
                         color: context.colors.muted,
                       ),
@@ -564,6 +573,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   onHeight: _onBarHeight,
                   child: Column(
                     children: [
+                      if (canTake)
+                        PrimaryButton(
+                          key: const ValueKey('take-share'),
+                          label: context.l10n.takeShareButton(
+                            AppFormatters.money(_openShareAmount(booking)),
+                          ),
+                          tone: ButtonTone.commit,
+                          isLoading: _taking,
+                          onPressed: _taking ? null : _take,
+                        ),
                       if (canPay)
                         PrimaryButton(
                           key: const ValueKey('pay-my-share'),
@@ -594,6 +613,36 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ),
       ),
     );
+  }
+
+  bool _taking = false;
+
+  int _openShareAmount(Booking booking) =>
+      booking.shares
+          .where((share) => share.isOpen)
+          .map((share) => share.amount)
+          .nonNulls
+          .firstOrNull ??
+      booking.draft.sharePrice;
+
+  /// Takes a free place and goes straight to paying for it: the place is
+  /// held only until the deadline, and paying is why the link was sent.
+  Future<void> _take() async {
+    setState(() => _taking = true);
+    try {
+      final booking = await widget.controller.takeShare(_booking);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _taking = false);
+      context.go(Routes.pay(booking.id));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _taking = false);
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    }
   }
 
   Future<void> _cancel() async {

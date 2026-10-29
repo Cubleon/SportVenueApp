@@ -2180,6 +2180,24 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Оплат не было, возвращать нечего.'**
   String get bookingStateNoMoney;
+
+  /// No description provided for @takeShareButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Занять место · {price}'**
+  String takeShareButton(String price);
+
+  /// No description provided for @takeShareNoPlaces.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободных мест в этой брони нет.'**
+  String get takeShareNoPlaces;
+
+  /// No description provided for @takeShareClosed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Места в этой брони больше не раздают.'**
+  String get takeShareClosed;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
