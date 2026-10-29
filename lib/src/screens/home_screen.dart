@@ -1146,9 +1146,7 @@ class _GameRow extends StatelessWidget {
                       children: [
                         state,
                         if (game.pricePerPerson > 0)
-                          _Tag(
-                            label: AppFormatters.money(game.pricePerPerson),
-                          ),
+                          _Tag(label: AppFormatters.money(game.pricePerPerson)),
                       ],
                     ),
                   ],
