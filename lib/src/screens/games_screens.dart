@@ -227,14 +227,14 @@ class MiniGameCard extends StatelessWidget {
                               // for: the list used to look identical whether
                               // the reader had joined or not, so checking
                               // meant opening every one of them.
-                              text:
-                                  game.participants.any((p) => p.isCurrentUser)
+                              text: game.readerPlays
                                   ? context.l10n.youAreIn
+                                  : game.readerRequested
+                                  ? context.l10n.requestWaiting
                                   : game.isFull
                                   ? context.l10n.gameFull
                                   : context.l10n.freePlaces(game.freePlaces),
-                              background:
-                                  game.participants.any((p) => p.isCurrentUser)
+                              background: game.readerPlays
                                   ? context.colors.success
                                   : Colors.black.withValues(alpha: 0.5),
                               foreground: Colors.white,
@@ -286,7 +286,7 @@ class MiniGameCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: _AvatarStack(
-                          participants: game.participants,
+                          participants: game.players,
                           capacity: game.capacity,
                         ),
                       ),
@@ -479,7 +479,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               SummaryRow(
                                 label: context.l10n.playersStep,
                                 value: context.l10n.playersOfCapacity(
-                                  current.participants.length,
+                                  current.players.length,
                                   current.capacity,
                                 ),
                               ),
@@ -537,15 +537,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             children: [
                               for (var i = 0; i < current.capacity; i++)
                                 _PlayerSlot(
-                                  participant: i < current.participants.length
-                                      ? current.participants[i]
+                                  participant: i < current.players.length
+                                      ? current.players[i]
                                       : null,
                                   isLast: i == current.capacity - 1,
-                                  onTap: i < current.participants.length
+                                  onTap: i < current.players.length
                                       ? () => _openPlayer(
                                           context,
                                           widget.controller,
-                                          current.participants[i],
+                                          current.players[i],
                                         )
                                       : null,
                                 ),
@@ -554,6 +554,32 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         ),
                       ),
                     ),
+                    // Requests to a game «по одобрению» wait here for the
+                    // organiser. They used to arrive as players, with a seat
+                    // and nobody having said yes.
+                    if (current.organizer.isCurrentUser &&
+                        current.requests.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: _SectionLabel(text: context.l10n.gameRequests),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                        sliver: SliverList.separated(
+                          itemCount: current.requests.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final player = current.requests[index];
+                            return _RequestCard(
+                              player: player,
+                              busy: _answering?.sameAs(player) ?? false,
+                              onApprove: () => _answer(current, player, true),
+                              onReject: () => _answer(current, player, false),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     // The same price was printed twice on one screen, seven
                     // hundred pixels apart. The card above says it; this
                     // leaves only the room the pinned bar needs.
@@ -592,7 +618,18 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   /// a button (the server refuses that; the organiser cancels the booking).
   Widget? _actions(BuildContext context, Game game) {
     final l10n = context.l10n;
-    final inGame = game.participants.any((player) => player.isCurrentUser);
+    final inGame = game.readerPlays;
+    if (game.readerRequested) {
+      // Waiting for the organiser: nothing to pay yet, only a way to
+      // take the request back.
+      return PrimaryButton(
+        key: const ValueKey('detail-withdraw-request'),
+        label: l10n.withdrawRequest,
+        tone: ButtonTone.neutral,
+        isLoading: _joining,
+        onPressed: _joining ? null : () => _leave(game),
+      );
+    }
     final bookingId = game.bookingId;
     final share = game.myShare;
     final paidGame = game.payment == GamePayment.shares && bookingId != null;
@@ -679,6 +716,37 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
+  /// The request being answered, so only its card waits.
+  Participant? _answering;
+
+  Future<void> _answer(Game game, Participant player, bool approve) async {
+    setState(() => _answering = player);
+    try {
+      if (approve) {
+        await widget.controller.approveParticipant(game, player);
+      } else {
+        await widget.controller.rejectParticipant(game, player);
+      }
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(
+        context,
+        approve ? context.l10n.requestApproved : context.l10n.requestRejected,
+        tone: SnackTone.done,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _answering = null);
+      }
+    }
+  }
+
   Future<void> _leave(Game game) async {
     final confirmed = await confirmAction(
       context,
@@ -733,7 +801,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         (item) => item.id == game.id,
         orElse: () => game,
       );
-      final inside = after.participants.any((p) => p.isCurrentUser);
+      final inside = after.readerPlays;
       final bookingId = after.bookingId;
       if (joined &&
           inside &&
@@ -952,6 +1020,71 @@ class _Avatar extends StatelessWidget {
             fontSize: size * 0.42,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One request to join, with the organiser's two answers.
+class _RequestCard extends StatelessWidget {
+  const _RequestCard({
+    required this.player,
+    required this.busy,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  final Participant player;
+  final bool busy;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      key: ValueKey('request-${player.id ?? player.name}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _Avatar(participant: player, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  player.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  key: const ValueKey('request-approve'),
+                  label: context.l10n.requestApprove,
+                  isLoading: busy,
+                  onPressed: busy ? null : onApprove,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: PrimaryButton(
+                  key: const ValueKey('request-reject'),
+                  label: context.l10n.requestReject,
+                  tone: ButtonTone.neutral,
+                  onPressed: busy ? null : onReject,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

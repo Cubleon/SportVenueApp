@@ -1470,4 +1470,28 @@ class LRu extends L {
 
   @override
   String get deleteAccountConfirm => 'Удалить навсегда';
+
+  @override
+  String get mapFailed => 'Карта не загрузилась. Список клубов ниже работает.';
+
+  @override
+  String get requestWaiting => 'заявка отправлена';
+
+  @override
+  String get withdrawRequest => 'Отозвать заявку';
+
+  @override
+  String get gameRequests => 'Заявки';
+
+  @override
+  String get requestApprove => 'Принять';
+
+  @override
+  String get requestReject => 'Отклонить';
+
+  @override
+  String get requestApproved => 'Игрок принят в игру';
+
+  @override
+  String get requestRejected => 'Заявка отклонена';
 }

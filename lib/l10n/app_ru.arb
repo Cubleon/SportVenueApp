@@ -794,5 +794,13 @@
   "deleteAccount": "Удалить аккаунт",
   "deleteAccountQuestion": "Удалить аккаунт?",
   "deleteAccountMessage": "Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.",
-  "deleteAccountConfirm": "Удалить навсегда"
+  "deleteAccountConfirm": "Удалить навсегда",
+  "mapFailed": "Карта не загрузилась. Список клубов ниже работает.",
+  "requestWaiting": "заявка отправлена",
+  "withdrawRequest": "Отозвать заявку",
+  "gameRequests": "Заявки",
+  "requestApprove": "Принять",
+  "requestReject": "Отклонить",
+  "requestApproved": "Игрок принят в игру",
+  "requestRejected": "Заявка отклонена"
 }

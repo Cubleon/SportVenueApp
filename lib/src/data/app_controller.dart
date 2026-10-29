@@ -514,7 +514,10 @@ class AppController extends ChangeNotifier {
       // Joining a paid game is taking one of its booking's shares. The
       // fixtures' own games were made before bookings carried them, so they
       // still let anyone in for nothing.
-      final share = game.bookingId == null
+      // A game «по одобрению» takes a request, not a seat: no share until
+      // the organiser says yes.
+      final approval = game.type == GameType.approval;
+      final share = approval || game.bookingId == null
           ? null
           : _takeOpenShare(game.bookingId!);
       games = [
@@ -524,10 +527,11 @@ class AppController extends ChangeNotifier {
                 .copyWith(
                   participants: [
                     ...item.participants,
-                    const Participant(
+                    Participant(
                       name: 'Вы',
                       initial: 'В',
                       rating: 4.7,
+                      status: approval ? 'pending' : 'joined',
                       isCurrentUser: true,
                     ),
                   ],
@@ -562,6 +566,62 @@ class AppController extends ChangeNotifier {
       }
     }
     return true;
+  }
+
+  /// The organiser lets a request in. Joining a paid game takes a share, so
+  /// the player then pays as anyone else does.
+  Future<void> approveParticipant(Game game, Participant player) =>
+      _answerRequest(game, player, approve: true);
+
+  /// The organiser turns a request down.
+  Future<void> rejectParticipant(Game game, Participant player) =>
+      _answerRequest(game, player, approve: false);
+
+  Future<void> _answerRequest(
+    Game game,
+    Participant player, {
+    required bool approve,
+  }) async {
+    final api = _api;
+    if (api == null) {
+      if (!game.organizer.isCurrentUser) {
+        throw _refusal('organizer only', 403);
+      }
+      games = [
+        for (final item in games)
+          if (item.id == game.id)
+            item.copyWith(
+              participants: [
+                for (final other in item.participants)
+                  if (!other.sameAs(player))
+                    other
+                  else if (approve)
+                    other.withStatus('joined'),
+              ],
+            )
+          else
+            item,
+      ];
+      notifyListeners();
+      return;
+    }
+    final id = player.id;
+    if (id == null) {
+      throw _refusal('participant has no id', 409);
+    }
+    final row = approve
+        ? await api.approveGameParticipant(game.id, id)
+        : await api.rejectGameParticipant(game.id, id);
+    final updated = _gameFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
+    games = [
+      for (final item in games)
+        if (item.id == updated.id) updated else item,
+    ];
+    notifyListeners();
   }
 
   /// Gives up a place in a game. Answers false when there was none to give.

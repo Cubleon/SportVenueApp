@@ -2396,6 +2396,54 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Удалить навсегда'**
   String get deleteAccountConfirm;
+
+  /// No description provided for @mapFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карта не загрузилась. Список клубов ниже работает.'**
+  String get mapFailed;
+
+  /// No description provided for @requestWaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'заявка отправлена'**
+  String get requestWaiting;
+
+  /// No description provided for @withdrawRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать заявку'**
+  String get withdrawRequest;
+
+  /// No description provided for @gameRequests.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявки'**
+  String get gameRequests;
+
+  /// No description provided for @requestApprove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять'**
+  String get requestApprove;
+
+  /// No description provided for @requestReject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить'**
+  String get requestReject;
+
+  /// No description provided for @requestApproved.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игрок принят в игру'**
+  String get requestApproved;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отклонена'**
+  String get requestRejected;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

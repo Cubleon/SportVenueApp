@@ -559,6 +559,19 @@ class Participant {
 
   bool get hasRating => rating > 0;
 
+  /// Asked to join a game «по одобрению» and not answered yet. Not a player
+  /// until the organiser says so: no seat, no share.
+  bool get isPending => status == 'pending';
+
+  Participant withStatus(String next) => Participant(
+    id: id,
+    name: name,
+    initial: initial,
+    rating: rating,
+    status: next,
+    isCurrentUser: isCurrentUser,
+  );
+
   /// Whether this is the same player as [other], by id where there is one.
   bool sameAs(Participant other) {
     if (id != null && other.id != null) {
@@ -753,7 +766,21 @@ class Game {
   /// the hour are stored apart.
   DateTime get startsAt => DateTime(date.year, date.month, date.day, startHour);
 
-  int get freePlaces => capacity - participants.length;
+  /// Who is playing: everyone in the list except requests still waiting.
+  List<Participant> get players =>
+      participants.where((player) => !player.isPending).toList();
+
+  /// Requests the organiser has not answered yet.
+  List<Participant> get requests =>
+      participants.where((player) => player.isPending).toList();
+
+  /// The reader has a seat, as opposed to a request.
+  bool get readerPlays => players.any((player) => player.isCurrentUser);
+
+  /// The reader has asked to join and is waiting for the organiser.
+  bool get readerRequested => requests.any((player) => player.isCurrentUser);
+
+  int get freePlaces => capacity - players.length;
 
   bool get isFull => freePlaces <= 0;
 
