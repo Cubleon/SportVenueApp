@@ -12,6 +12,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
+import '../widgets/booking_status_card.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
 import '../widgets/sport_surface.dart';
@@ -382,6 +383,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
           orElse: () => widget.game,
         );
         final sport = _sportById(widget.controller.sports, current.sportId);
+        // The game stands on a booking, and the booking is what can fall
+        // through. Shown when the reader has it; a friend who came by a
+        // link gets it once bookings open by link.
+        final booking = switch (current.bookingId) {
+          final String id => widget.controller.bookingById(id),
+          null => null,
+        };
         return Scaffold(
           body: SafeArea(
             child: Stack(
@@ -410,6 +418,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             : null,
                       ),
                     ),
+                    if (booking != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: BookingStatusCard(booking: booking),
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),

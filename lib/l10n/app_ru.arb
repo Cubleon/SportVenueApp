@@ -717,5 +717,22 @@
   "checkCall": "Я уже позвонил — проверить",
   "restartCall": "Получить новый номер",
   "changePhone": "Изменить свой номер",
-  "dialerUnavailable": "Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона."
+  "dialerUnavailable": "Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.",
+  "bookingStateCollectingTitle": "Собираем оплату",
+  "bookingStateCollectingBody": "Все доли нужно оплатить до {when}. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.",
+  "@bookingStateCollectingBody": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "bookingStateAwaitingBody": "Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.",
+  "bookingStateConfirmedTitle": "Бронь подтверждена",
+  "bookingStateConfirmedBody": "Время за вами: {when}.",
+  "@bookingStateConfirmedBody": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "bookingStateExpiredTitle": "Не собрали вовремя",
+  "bookingStateExpiredBody": "Доли не оплатили до срока, поэтому бронь снята.",
+  "bookingStateCancelledTitle": "Бронь отменена",
+  "bookingStateRefundDue": "Деньги вернём в течение 1 рабочего дня.",
+  "bookingStateRefunded": "Деньги вернули.",
+  "bookingStateNoMoney": "Оплат не было, возвращать нечего."
 }

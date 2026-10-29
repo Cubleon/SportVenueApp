@@ -2114,6 +2114,72 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.'**
   String get dialerUnavailable;
+
+  /// No description provided for @bookingStateCollectingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираем оплату'**
+  String get bookingStateCollectingTitle;
+
+  /// No description provided for @bookingStateCollectingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все доли нужно оплатить до {when}. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.'**
+  String bookingStateCollectingBody(String when);
+
+  /// No description provided for @bookingStateAwaitingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.'**
+  String get bookingStateAwaitingBody;
+
+  /// No description provided for @bookingStateConfirmedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь подтверждена'**
+  String get bookingStateConfirmedTitle;
+
+  /// No description provided for @bookingStateConfirmedBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время за вами: {when}.'**
+  String bookingStateConfirmedBody(String when);
+
+  /// No description provided for @bookingStateExpiredTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собрали вовремя'**
+  String get bookingStateExpiredTitle;
+
+  /// No description provided for @bookingStateExpiredBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доли не оплатили до срока, поэтому бронь снята.'**
+  String get bookingStateExpiredBody;
+
+  /// No description provided for @bookingStateCancelledTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь отменена'**
+  String get bookingStateCancelledTitle;
+
+  /// No description provided for @bookingStateRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернём в течение 1 рабочего дня.'**
+  String get bookingStateRefundDue;
+
+  /// No description provided for @bookingStateRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернули.'**
+  String get bookingStateRefunded;
+
+  /// No description provided for @bookingStateNoMoney.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплат не было, возвращать нечего.'**
+  String get bookingStateNoMoney;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

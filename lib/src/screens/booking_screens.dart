@@ -14,6 +14,7 @@ import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../router.dart';
+import '../widgets/booking_status_card.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
@@ -531,10 +532,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   onBack: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 12),
-                _BookingDetailsCard(
-                  draft: booking.draft,
-                  status: bookingStatusText(context, booking),
-                ),
+                BookingStatusCard(booking: booking),
+                const SizedBox(height: 12),
+                // The state is said once, by the card above.
+                _BookingDetailsCard(draft: booking.draft),
                 if (booking.shares.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _SharesCard(booking: booking),
@@ -636,47 +637,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 }
 
 class _BookingDetailsCard extends StatelessWidget {
-  const _BookingDetailsCard({required this.draft, this.status});
+  const _BookingDetailsCard({required this.draft});
 
   final BookingDraft draft;
-  final String? status;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          BookingSummaryRows(draft: draft),
-          if (status != null) ...[
-            const SizedBox(height: 14),
-            Divider(height: 1, color: context.colors.border),
-            const SizedBox(height: 12),
-            // A status, said as a status. In the accent it read as a link
-            // that never went anywhere — and the accent in this app means
-            // "tap me" or "this is the price".
-            Row(
-              children: [
-                Text(
-                  context.l10n.statusLabel,
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  status!,
-                  style: context.text.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
+    return AppCard(child: BookingSummaryRows(draft: draft));
   }
 }
 

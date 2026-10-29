@@ -187,7 +187,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  context.l10n.payDeadline(_moment(booking.deadline)),
+                  context.l10n.payDeadline(AppFormatters.moment(booking.deadline)),
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                     fontWeight: FontWeight.w600,
@@ -355,13 +355,6 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
       }
     }
   }
-}
-
-/// A day and an hour, the way the rest of the app writes them.
-String _moment(DateTime value) {
-  final hours = value.hour.toString().padLeft(2, '0');
-  final minutes = value.minute.toString().padLeft(2, '0');
-  return '${AppFormatters.dateShort(value)}, $hours:$minutes';
 }
 
 /// The share's code, set large enough to copy by eye, with a button that

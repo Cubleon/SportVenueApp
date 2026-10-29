@@ -1305,4 +1305,41 @@ class LRu extends L {
   @override
   String get dialerUnavailable =>
       'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.';
+
+  @override
+  String get bookingStateCollectingTitle => 'Собираем оплату';
+
+  @override
+  String bookingStateCollectingBody(String when) {
+    return 'Все доли нужно оплатить до $when. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.';
+  }
+
+  @override
+  String get bookingStateAwaitingBody => 'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.';
+
+  @override
+  String get bookingStateConfirmedTitle => 'Бронь подтверждена';
+
+  @override
+  String bookingStateConfirmedBody(String when) {
+    return 'Время за вами: $when.';
+  }
+
+  @override
+  String get bookingStateExpiredTitle => 'Не собрали вовремя';
+
+  @override
+  String get bookingStateExpiredBody => 'Доли не оплатили до срока, поэтому бронь снята.';
+
+  @override
+  String get bookingStateCancelledTitle => 'Бронь отменена';
+
+  @override
+  String get bookingStateRefundDue => 'Деньги вернём в течение 1 рабочего дня.';
+
+  @override
+  String get bookingStateRefunded => 'Деньги вернули.';
+
+  @override
+  String get bookingStateNoMoney => 'Оплат не было, возвращать нечего.';
 }

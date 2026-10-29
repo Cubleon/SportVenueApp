@@ -40,6 +40,14 @@ class AppFormatters {
     return '${weekdayShort(date)} ${date.day} ${_months[date.month - 1].substring(0, 3)}';
   }
 
+  /// A day and an hour, the way the rest of the app writes a deadline:
+  /// «пт 30 окт, 18:00».
+  static String moment(DateTime value) {
+    final hours = value.hour.toString().padLeft(2, '0');
+    final minutes = value.minute.toString().padLeft(2, '0');
+    return '${dateShort(value)}, $hours:$minutes';
+  }
+
   static String dateFull(DateTime date) {
     return '${_fullWeekdays[date.weekday - 1]}, ${date.day} ${_months[date.month - 1]} ${date.year}';
   }
