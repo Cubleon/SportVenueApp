@@ -704,8 +704,7 @@ class AppController extends ChangeNotifier {
       _linkedBookings[id];
 
   /// The game with this id, if it is loaded.
-  Game? gameById(String id) =>
-      games.where((game) => game.id == id).firstOrNull;
+  Game? gameById(String id) => games.where((game) => game.id == id).firstOrNull;
 
   /// Finds a booking that may not be the reader's: what a link from a
   /// friend arrives at. Asks the server even when the booking is known, so
