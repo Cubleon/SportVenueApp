@@ -113,7 +113,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
                             isLoading: _claiming,
                             onPressed: _claiming
                                 ? null
-                                : () => _claim(booking!, share!),
+                                : () => _claim(booking!, share),
                           ),
                         ],
                       ),
@@ -380,7 +380,7 @@ class _Header extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            context.l10n.payShareTitle,
+            context.l10n.paymentScreenTitle,
             textAlign: TextAlign.center,
             style: context.text.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,

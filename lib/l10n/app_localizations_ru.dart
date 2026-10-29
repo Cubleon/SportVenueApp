@@ -966,6 +966,9 @@ class LRu extends L {
   String get sharePaid => 'оплачено';
 
   @override
+  String get paymentScreenTitle => 'Оплата доли';
+
+  @override
   String get payYourShare => 'Ваша доля';
 
   @override

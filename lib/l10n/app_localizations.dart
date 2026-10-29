@@ -1635,6 +1635,12 @@ abstract class L {
   /// **'оплачено'**
   String get sharePaid;
 
+  /// No description provided for @paymentScreenTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата доли'**
+  String get paymentScreenTitle;
+
   /// No description provided for @payYourShare.
   ///
   /// In ru, this message translates to:

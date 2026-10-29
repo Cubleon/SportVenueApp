@@ -475,7 +475,7 @@
   },
   "sharesTitle": "Оплата долей",
   "sharePaid": "оплачено",
-  "payShareTitle": "Оплата доли",
+  "paymentScreenTitle": "Оплата доли",
   "payYourShare": "Ваша доля",
   "payRecipient": "Получатель: {name}, {bank}",
   "@payRecipient": {
