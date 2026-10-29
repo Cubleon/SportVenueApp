@@ -740,5 +740,9 @@
     "placeholders": { "price": { "type": "String" } }
   },
   "takeShareNoPlaces": "Свободных мест в этой брони нет.",
-  "takeShareClosed": "Места в этой брони больше не раздают."
+  "takeShareClosed": "Места в этой брони больше не раздают.",
+  "joinGamePaid": "Присоединиться · {price}",
+  "@joinGamePaid": {
+    "placeholders": { "price": { "type": "String" } }
+  }
 }

@@ -390,6 +390,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
           final String id => widget.controller.bookingById(id),
           null => null,
         };
+        final actions = _actions(context, current);
         return Scaffold(
           body: SafeArea(
             child: Stack(
@@ -556,47 +557,125 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                     // The same price was printed twice on one screen, seven
                     // hundred pixels apart. The card above says it; this
                     // leaves only the room the pinned bar needs.
-                    SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: actions == null ? 24 : _barHeight,
+                      ),
+                    ),
                   ],
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  // The button used to float with nothing under it, so the
-                  // cards slid through it on the way past.
-                  // Someone already in the game is not offered a way in; a
-                  // place nobody can give back is a place nobody can take.
-                  child: PinnedActionBar(
-                    onHeight: _onBarHeight,
-                    child:
-                        current.participants.any(
-                          (player) => player.isCurrentUser,
-                        )
-                        ? PrimaryButton(
-                            key: const ValueKey('detail-leave-game'),
-                            label: context.l10n.leaveGame,
-                            tone: ButtonTone.neutral,
-                            isLoading: _joining,
-                            onPressed: _joining ? null : () => _leave(current),
-                          )
-                        : PrimaryButton(
-                            key: const ValueKey('detail-join-game'),
-                            label: current.type == GameType.approval
-                                ? context.l10n.sendRequest
-                                : context.l10n.joinGame,
-                            isLoading: _joining,
-                            onPressed: current.isFull || _joining
-                                ? null
-                                : () => _join(current),
-                          ),
+                if (actions != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // The buttons used to float with nothing under them, so
+                    // the cards slid through them on the way past.
+                    child: PinnedActionBar(
+                      onHeight: _onBarHeight,
+                      child: actions,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  /// What the reader can do here, which depends on who they are in the
+  /// game and where their share stands. Null when there is nothing to do.
+  ///
+  /// A paid place is a share of the booking: joining takes one and goes on
+  /// to paying for it, and a place already paid for is not given back with
+  /// a button (the server refuses that; the organiser cancels the booking).
+  Widget? _actions(BuildContext context, Game game) {
+    final l10n = context.l10n;
+    final inGame = game.participants.any((player) => player.isCurrentUser);
+    final bookingId = game.bookingId;
+    final share = game.myShare;
+    final paidGame = game.payment == GamePayment.shares && bookingId != null;
+
+    if (!inGame) {
+      return PrimaryButton(
+        key: const ValueKey('detail-join-game'),
+        label: game.type == GameType.approval
+            ? l10n.sendRequest
+            : paidGame
+            ? l10n.joinGamePaid(AppFormatters.money(game.pricePerPerson))
+            : l10n.joinGame,
+        tone: paidGame && game.type != GameType.approval
+            ? ButtonTone.commit
+            : ButtonTone.accent,
+        isLoading: _joining,
+        onPressed: game.isFull || _joining ? null : () => _join(game),
+      );
+    }
+
+    final owes =
+        paidGame &&
+        share != null &&
+        (share.status == ShareStatus.unpaid ||
+            share.status == ShareStatus.notFound ||
+            share.status == ShareStatus.pendingConfirmation);
+    final pay = owes && share != null && bookingId != null
+        ? PrimaryButton(
+            key: const ValueKey('detail-pay-share'),
+            label: share.status == ShareStatus.pendingConfirmation
+                ? l10n.payPendingTitle
+                : l10n.payMyShare(
+                    AppFormatters.money(share.amount ?? game.pricePerPerson),
+                  ),
+            tone: ButtonTone.commit,
+            onPressed: () => context.go(Routes.pay(bookingId)),
+          )
+        : null;
+
+    // The organiser holds the booking: leaving would leave it without an
+    // owner, so the way out is cancelling it, on the booking's screen.
+    if (game.organizer.isCurrentUser) {
+      final open = bookingId == null
+          ? null
+          : PrimaryButton(
+              key: const ValueKey('detail-open-booking'),
+              label: l10n.openBooking,
+              tone: ButtonTone.neutral,
+              onPressed: () => context.go(Routes.booking(bookingId)),
+            );
+      return _stack([?pay, ?open]);
+    }
+
+    // Money that has gone, or may have, keeps the place: no leave button.
+    final canLeave =
+        !paidGame ||
+        share == null ||
+        share.status == ShareStatus.unpaid ||
+        share.status == ShareStatus.notFound;
+    final leave = canLeave
+        ? PrimaryButton(
+            key: const ValueKey('detail-leave-game'),
+            label: l10n.leaveGame,
+            tone: ButtonTone.neutral,
+            isLoading: _joining,
+            onPressed: _joining ? null : () => _leave(game),
+          )
+        : null;
+    return _stack([?pay, ?leave]);
+  }
+
+  Widget? _stack(List<Widget> buttons) {
+    if (buttons.isEmpty) {
+      return null;
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < buttons.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          buttons[i],
+        ],
+      ],
     );
   }
 
@@ -655,6 +734,16 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         orElse: () => game,
       );
       final inside = after.participants.any((p) => p.isCurrentUser);
+      final bookingId = after.bookingId;
+      if (joined &&
+          inside &&
+          bookingId != null &&
+          after.myShare != null &&
+          widget.controller.bookingById(bookingId) != null) {
+        // The place is held, not paid: paying is the rest of joining.
+        context.go(Routes.pay(bookingId));
+        return;
+      }
       showAppSnack(
         context,
         !joined

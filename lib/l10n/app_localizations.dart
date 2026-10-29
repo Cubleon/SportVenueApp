@@ -2198,6 +2198,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Места в этой брони больше не раздают.'**
   String get takeShareClosed;
+
+  /// No description provided for @joinGamePaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Присоединиться · {price}'**
+  String joinGamePaid(String price);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

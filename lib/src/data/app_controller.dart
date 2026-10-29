@@ -551,6 +551,16 @@ class AppController extends ChangeNotifier {
         if (item.id == updated.id) updated else item,
     ];
     notifyListeners();
+    // Joining took a share of the booking; the payment screen reads the
+    // booking, so it is fetched now rather than on the next refresh.
+    final bookingId = updated.bookingId;
+    if (bookingId != null && updated.myShare != null) {
+      try {
+        await openBooking(bookingId);
+      } on Object {
+        // The game is joined either way; paying waits for the next look.
+      }
+    }
     return true;
   }
 

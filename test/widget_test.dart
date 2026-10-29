@@ -685,8 +685,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.games.length, before + 1);
-    // The organiser is in their own game, so it offers the way out.
-    expect(find.byKey(const ValueKey('detail-leave-game')), findsOneWidget);
+    // The organiser holds the booking: no «Выйти», which the server would
+    // refuse. Their own share is to pay, and cancelling lives on the
+    // booking's screen.
+    expect(find.byKey(const ValueKey('detail-leave-game')), findsNothing);
+    expect(find.byKey(const ValueKey('detail-pay-share')), findsOneWidget);
+    expect(find.byKey(const ValueKey('detail-open-booking')), findsOneWidget);
   });
 
   testWidgets('signing out asks first, and the avatar never shows a digit', (

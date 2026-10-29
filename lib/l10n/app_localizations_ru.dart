@@ -1355,4 +1355,9 @@ class LRu extends L {
 
   @override
   String get takeShareClosed => 'Места в этой брони больше не раздают.';
+
+  @override
+  String joinGamePaid(String price) {
+    return 'Присоединиться · $price';
+  }
 }
