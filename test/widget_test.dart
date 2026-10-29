@@ -238,6 +238,12 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('1 игра · 4 клуба рядом'), findsOneWidget);
+    // And the game the header counts is on the page, not only counted.
+    expect(
+      find.text('Игры ${AppFormatters.dateShort(game.date)}'),
+      findsOneWidget,
+    );
+    expect(find.byKey(ValueKey('home-game-${game.id}')), findsOneWidget);
   });
 
   testWidgets('the home survives the reader doubling the text', (tester) async {

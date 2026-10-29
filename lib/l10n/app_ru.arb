@@ -802,5 +802,9 @@
   "requestApprove": "Принять",
   "requestReject": "Отклонить",
   "requestApproved": "Игрок принят в игру",
-  "requestRejected": "Заявка отклонена"
+  "requestRejected": "Заявка отклонена",
+  "gamesOnDate": "Игры {date}",
+  "@gamesOnDate": {
+    "placeholders": { "date": { "type": "String" } }
+  }
 }

@@ -2444,6 +2444,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Заявка отклонена'**
   String get requestRejected;
+
+  /// No description provided for @gamesOnDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры {date}'**
+  String gamesOnDate(String date);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

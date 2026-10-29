@@ -1494,4 +1494,9 @@ class LRu extends L {
 
   @override
   String get requestRejected => 'Заявка отклонена';
+
+  @override
+  String gamesOnDate(String date) {
+    return 'Игры $date';
+  }
 }

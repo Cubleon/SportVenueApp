@@ -269,6 +269,52 @@ class _HomeScreenState extends State<HomeScreen> {
                     onGames: () => context.go(Routes.myGames),
                   ),
                 ),
+                // The header counted the day's games and the page never
+                // showed them. The first few, soonest first, and the rest
+                // behind «Все».
+                if (games.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: SectionHeader(
+                      title: context.l10n.gamesOnDate(
+                        AppFormatters.dateShort(_date),
+                      ),
+                      action: games.length > _gamesShown
+                          ? context.l10n.seeAll
+                          : null,
+                      onAction: widget.onOpenGames,
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radius),
+                        child: ColoredBox(
+                          color: colors.surface,
+                          child: Column(
+                            children: [
+                              for (final (index, game)
+                                  in (games.toList()..sort(
+                                        (a, b) =>
+                                            a.startHour.compareTo(b.startHour),
+                                      ))
+                                      .take(_gamesShown)
+                                      .indexed)
+                                _GameRow(
+                                  game: game,
+                                  sport: widget.controller.sportById(
+                                    game.sportId,
+                                  ),
+                                  divided: index > 0,
+                                  onTap: () => context.go(Routes.game(game.id)),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 if (venues.isEmpty)
                   SliverToBoxAdapter(
                     child: _NothingFound(query: _query, onReset: _reset),
@@ -1014,6 +1060,102 @@ class _MineCard extends StatelessWidget {
               ).copyWith(color: colors.muted, fontWeight: FontWeight.w700),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How many of the day's games the home shows before «Все».
+const _gamesShown = 3;
+
+/// One game of the day, in the same row as the clubs below it: when, where,
+/// and whether there is room — or whether the reader is already in.
+class _GameRow extends StatelessWidget {
+  const _GameRow({
+    required this.game,
+    required this.sport,
+    required this.divided,
+    required this.onTap,
+  });
+
+  final Game game;
+  final Sport sport;
+  final bool divided;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = context.l10n;
+    final state = game.readerPlays
+        ? _Tag(label: l10n.youAreIn, tone: _TagTone.live)
+        : game.readerRequested
+        ? _Tag(label: l10n.requestWaiting)
+        : game.isFull
+        ? _Tag(label: l10n.gameFull)
+        : _Tag(label: l10n.freePlaces(game.freePlaces), tone: _TagTone.live);
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: ValueKey('home-game-${game.id}'),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            border: divided
+                ? Border(top: BorderSide(color: colors.border))
+                : null,
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: context.scaled(56, max: 1.2),
+                  height: context.scaled(56, max: 1.2),
+                  child: SportSurface(sportId: game.sportId),
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${game.timeRange} · ${sport.name.capitalized}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      game.venue.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.labelSmall?.copyWith(
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        state,
+                        if (game.pricePerPerson > 0)
+                          _Tag(
+                            label: AppFormatters.money(game.pricePerPerson),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
