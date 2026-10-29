@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -418,8 +417,10 @@ class AppTheme {
           TargetPlatform.fuchsia: _RiseFadeTransitions(),
           TargetPlatform.linux: _RiseFadeTransitions(),
           TargetPlatform.windows: _RiseFadeTransitions(),
-          TargetPlatform.iOS: _RiseFadeTransitions(),
           TargetPlatform.macOS: _RiseFadeTransitions(),
+          // iOS is left out on purpose: with no builder named for it, Flutter
+          // uses Apple's own slide, which carries the swipe back from the
+          // edge, wherever this Flutter keeps that builder.
         },
       ),
       appBarTheme: AppBarTheme(
@@ -487,7 +488,8 @@ extension TextThemeX on BuildContext {
 }
 
 /// The new screen fades in while rising a few pixels; the one it covers
-/// dims a little underneath, so the eye follows the one that arrived.
+/// dims a little underneath, so the eye follows the one that arrived. Used
+/// everywhere but iOS, which keeps its own slide.
 ///
 /// Leaving runs the same curve backwards. With «уменьшение движения» on,
 /// the screens simply swap.
@@ -504,19 +506,6 @@ class _RiseFadeTransitions extends PageTransitionsBuilder {
   ) {
     if (MediaQuery.disableAnimationsOf(context)) {
       return child;
-    }
-    // Apple's own slide, which carries the swipe back from the left edge.
-    // Asked of the route rather than of a builder class, which Flutter no
-    // longer ships with the material library.
-    final platform = Theme.of(context).platform;
-    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
-      return CupertinoPageRoute.buildPageTransitions(
-        route,
-        context,
-        animation,
-        secondaryAnimation,
-        child,
-      );
     }
     final incoming = CurvedAnimation(
       parent: animation,
