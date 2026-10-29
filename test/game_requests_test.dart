@@ -13,23 +13,26 @@ void main() {
     return app;
   }
 
-  test('asking to join a game «по одобрению» is a request, not a seat', () async {
-    final app = controller();
-    final open = app.games.first;
-    app.games = [
-      open.copyWith(type: GameType.approval),
-      ...app.games.skip(1),
-    ];
-    final before = app.games.first.players.length;
+  test(
+    'asking to join a game «по одобрению» is a request, not a seat',
+    () async {
+      final app = controller();
+      final open = app.games.first;
+      app.games = [
+        open.copyWith(type: GameType.approval),
+        ...app.games.skip(1),
+      ];
+      final before = app.games.first.players.length;
 
-    await app.joinGame(app.games.first);
+      await app.joinGame(app.games.first);
 
-    final game = app.games.first;
-    expect(game.readerRequested, isTrue);
-    expect(game.readerPlays, isFalse);
-    expect(game.players.length, before);
-    expect(game.myShare, isNull);
-  });
+      final game = app.games.first;
+      expect(game.readerRequested, isTrue);
+      expect(game.readerPlays, isFalse);
+      expect(game.players.length, before);
+      expect(game.myShare, isNull);
+    },
+  );
 
   test('the organiser lets a request in, or turns it down', () async {
     final app = controller();
@@ -60,9 +63,7 @@ void main() {
     app.games = [
       for (final item in app.games)
         item.id == game.id
-            ? item.copyWith(
-                participants: [...item.participants, ivan, olga],
-              )
+            ? item.copyWith(participants: [...item.participants, ivan, olga])
             : item,
     ];
     Game current() => app.games.firstWhere((item) => item.id == game.id);
