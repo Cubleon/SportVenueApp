@@ -726,7 +726,7 @@ class LRu extends L {
 
   @override
   String payShareTitle(String price) {
-    return 'Оплата доли';
+    return 'Своя часть · $price';
   }
 
   @override
