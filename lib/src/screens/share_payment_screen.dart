@@ -187,7 +187,9 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  context.l10n.payDeadline(AppFormatters.moment(booking.deadline)),
+                  context.l10n.payDeadline(
+                    AppFormatters.moment(booking.deadline),
+                  ),
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                     fontWeight: FontWeight.w600,

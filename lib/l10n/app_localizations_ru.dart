@@ -1315,7 +1315,8 @@ class LRu extends L {
   }
 
   @override
-  String get bookingStateAwaitingBody => 'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.';
+  String get bookingStateAwaitingBody =>
+      'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.';
 
   @override
   String get bookingStateConfirmedTitle => 'Бронь подтверждена';
@@ -1329,7 +1330,8 @@ class LRu extends L {
   String get bookingStateExpiredTitle => 'Не собрали вовремя';
 
   @override
-  String get bookingStateExpiredBody => 'Доли не оплатили до срока, поэтому бронь снята.';
+  String get bookingStateExpiredBody =>
+      'Доли не оплатили до срока, поэтому бронь снята.';
 
   @override
   String get bookingStateCancelledTitle => 'Бронь отменена';

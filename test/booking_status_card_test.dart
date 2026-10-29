@@ -70,10 +70,7 @@ void main() {
 
   testWidgets('expired with money owed promises the refund', (tester) async {
     final booking = await booked();
-    await show(
-      tester,
-      withShares(booking, 'expired', ShareStatus.refundDue),
-    );
+    await show(tester, withShares(booking, 'expired', ShareStatus.refundDue));
 
     expect(find.text('Не собрали вовремя'), findsOneWidget);
     expect(
@@ -86,10 +83,7 @@ void main() {
     tester,
   ) async {
     final booking = await booked();
-    await show(
-      tester,
-      withShares(booking, 'cancelled', ShareStatus.refunded),
-    );
+    await show(tester, withShares(booking, 'cancelled', ShareStatus.refunded));
 
     expect(find.text('Бронь отменена'), findsOneWidget);
     expect(find.text('Деньги вернули.'), findsOneWidget);
