@@ -1698,8 +1698,20 @@ abstract class L {
   /// No description provided for @payQrHint.
   ///
   /// In ru, this message translates to:
-  /// **'Или отсканируйте QR с другого телефона'**
+  /// **'Отсканируйте камерой телефона или в приложении банка'**
   String get payQrHint;
+
+  /// No description provided for @payQrShow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать QR для другого устройства'**
+  String get payQrShow;
+
+  /// No description provided for @payQrHide.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть QR'**
+  String get payQrHide;
 
   /// No description provided for @payIPaid.
   ///

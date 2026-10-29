@@ -242,7 +242,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
             }
             final info = snapshot.data;
             if (info == null) {
-              return const SizedBox(height: 240);
+              return const SizedBox(height: 48);
             }
             return _QrCard(payload: info.qrPayload);
           },
@@ -455,49 +455,72 @@ class _CodeCard extends StatelessWidget {
   }
 }
 
-/// The QR, for paying from another phone. Drawn dark on white in both
-/// themes: bank scanners read that, and a light code on a dark page is
-/// not something every one of them will.
-class _QrCard extends StatelessWidget {
+/// The QR, folded away under one quiet line.
+///
+/// On the phone that holds the app the bank button is the way to pay, and
+/// the code it encodes is the same link. The QR is for the other cases: the
+/// app open in a browser on a computer, or someone paying from another
+/// phone. Drawn dark on white in both themes, since bank scanners read
+/// that and not every one of them reads a light code on a dark page.
+class _QrCard extends StatefulWidget {
   const _QrCard({required this.payload});
 
   final String payload;
 
   @override
+  State<_QrCard> createState() => _QrCardState();
+}
+
+class _QrCardState extends State<_QrCard> {
+  bool _shown = false;
+
+  @override
   Widget build(BuildContext context) {
     return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusInner),
-            ),
-            child: QrImageView(
-              key: const ValueKey('pay-qr'),
-              data: payload,
-              size: 188,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
-              semanticsLabel: context.l10n.payQrHint,
+          TextButton.icon(
+            key: const ValueKey('toggle-qr'),
+            onPressed: () => setState(() => _shown = !_shown),
+            icon: Icon(_shown ? AppIcons.chevronDown : AppIcons.chevronRight),
+            label: Text(
+              _shown ? context.l10n.payQrHide : context.l10n.payQrShow,
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            context.l10n.payQrHint,
-            textAlign: TextAlign.center,
-            style: context.text.bodySmall?.copyWith(
-              color: context.colors.muted,
+          if (_shown) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppTheme.radiusInner),
+              ),
+              child: QrImageView(
+                key: const ValueKey('pay-qr'),
+                data: widget.payload,
+                size: 188,
+                backgroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.black,
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.black,
+                ),
+                semanticsLabel: context.l10n.payQrHint,
+              ),
             ),
-          ),
+            const SizedBox(height: 10),
+            Text(
+              context.l10n.payQrHint,
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
         ],
       ),
     );

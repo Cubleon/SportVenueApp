@@ -58,7 +58,8 @@ void main() {
     // What to pay, where to, and what to write in the comment.
     expect(find.text('₽${share.amount}'), findsOneWidget);
     expect(find.text(share.code!), findsOneWidget);
-    expect(find.byKey(const ValueKey('pay-qr')), findsOneWidget);
+    // The bank button is the way to pay; the QR waits, folded.
+    expect(find.byKey(const ValueKey('pay-qr')), findsNothing);
     // There is no account yet, and the screen says not to send money.
     expect(find.byKey(const ValueKey('pay-test-banner')), findsOneWidget);
     expect(find.textContaining('до пн 25 мая, 18:00'), findsOneWidget);
@@ -74,6 +75,35 @@ void main() {
     expect(find.byKey(const ValueKey('pay-pending')), findsOneWidget);
     expect(find.byKey(const ValueKey('claim-paid')), findsNothing);
     expect(find.byKey(const ValueKey('pay-via-bank')), findsNothing);
+  });
+
+  testWidgets('the QR unfolds for paying from another device', (tester) async {
+    phone(tester);
+    final (controller, booking) = await booked();
+
+    await tester.pumpWidget(
+      app(SharePaymentScreen(controller: controller, bookingId: booking.id)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-qr')), findsNothing);
+
+    final toggle = find.byKey(const ValueKey('toggle-qr'));
+    await tester.scrollUntilVisible(
+      toggle,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    // Clear of the pinned buttons, which float over the end of the list.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-qr')), findsOneWidget);
+    expect(find.text('Скрыть QR'), findsOneWidget);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-qr')), findsNothing);
   });
 
   testWidgets('«Оплатить через банк» opens the SBP link', (tester) async {

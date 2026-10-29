@@ -1001,7 +1001,13 @@ class LRu extends L {
       'Не получилось открыть банк. Отсканируйте QR с другого телефона.';
 
   @override
-  String get payQrHint => 'Или отсканируйте QR с другого телефона';
+  String get payQrHint => 'Отсканируйте камерой телефона или в приложении банка';
+
+  @override
+  String get payQrShow => 'Показать QR для другого устройства';
+
+  @override
+  String get payQrHide => 'Скрыть QR';
 
   @override
   String get payIPaid => 'Я оплатил';
