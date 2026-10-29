@@ -1452,7 +1452,8 @@ class LRu extends L {
   String get adminEmptyTitle => 'Всё разобрано';
 
   @override
-  String get bookingStateYouDidNotPay => 'Вы не платили за это место, возвращать нечего.';
+  String get bookingStateYouDidNotPay =>
+      'Вы не платили за это место, возвращать нечего.';
 
   @override
   String get bookAgain => 'Забронировать заново';
@@ -1464,7 +1465,8 @@ class LRu extends L {
   String get deleteAccountQuestion => 'Удалить аккаунт?';
 
   @override
-  String get deleteAccountMessage => 'Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.';
+  String get deleteAccountMessage =>
+      'Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.';
 
   @override
   String get deleteAccountConfirm => 'Удалить навсегда';
