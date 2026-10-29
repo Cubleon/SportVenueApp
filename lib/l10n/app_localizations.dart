@@ -2204,6 +2204,162 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Присоединиться · {price}'**
   String joinGamePaid(String price);
+
+  /// No description provided for @adminPaymentsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплаты'**
+  String get adminPaymentsTitle;
+
+  /// No description provided for @adminPaymentsMenu.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить переводы и вернуть деньги'**
+  String get adminPaymentsMenu;
+
+  /// No description provided for @adminTabCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить'**
+  String get adminTabCheck;
+
+  /// No description provided for @adminTabRefund.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуть'**
+  String get adminTabRefund;
+
+  /// No description provided for @adminEmptyCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверять нечего: все «Я оплатил» разобраны.'**
+  String get adminEmptyCheck;
+
+  /// No description provided for @adminEmptyRefund.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возвращать никому не нужно.'**
+  String get adminEmptyRefund;
+
+  /// No description provided for @adminPayer.
+  ///
+  /// In ru, this message translates to:
+  /// **'В банке: {name}'**
+  String adminPayer(String name);
+
+  /// No description provided for @adminClaimed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажал «Я оплатил»: {when}'**
+  String adminClaimed(String when);
+
+  /// No description provided for @adminDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок сбора: {when}'**
+  String adminDeadline(String when);
+
+  /// No description provided for @adminGameAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'{venue} · {when}'**
+  String adminGameAt(String venue, String when);
+
+  /// No description provided for @adminFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нашёл перевод'**
+  String get adminFound;
+
+  /// No description provided for @adminNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не нашёл'**
+  String get adminNotFound;
+
+  /// No description provided for @adminRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернул'**
+  String get adminRefunded;
+
+  /// No description provided for @adminConfirmTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердить оплату?'**
+  String get adminConfirmTitle;
+
+  /// No description provided for @adminConfirmMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name}, {amount}, код {code}. Доля станет оплаченной.'**
+  String adminConfirmMessage(String name, String amount, String code);
+
+  /// No description provided for @adminRejectTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Почему не нашли перевод?'**
+  String get adminRejectTitle;
+
+  /// No description provided for @adminRejectHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Причину увидит игрок на экране оплаты.'**
+  String get adminRejectHint;
+
+  /// No description provided for @adminRejectAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма не совпадает'**
+  String get adminRejectAmount;
+
+  /// No description provided for @adminRejectCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет кода в комментарии'**
+  String get adminRejectCode;
+
+  /// No description provided for @adminRejectMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевода нет в выписке'**
+  String get adminRejectMissing;
+
+  /// No description provided for @adminRefundTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернули?'**
+  String get adminRefundTitle;
+
+  /// No description provided for @adminRefundMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name}, {amount}. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.'**
+  String adminRefundMessage(String name, String amount);
+
+  /// No description provided for @adminMarked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмечено'**
+  String get adminMarked;
+
+  /// No description provided for @adminPhoneCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер скопирован'**
+  String get adminPhoneCopied;
+
+  /// No description provided for @adminOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот раздел только для администратора оплат.'**
+  String get adminOnly;
+
+  /// No description provided for @adminEmptyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё разобрано'**
+  String get adminEmptyTitle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

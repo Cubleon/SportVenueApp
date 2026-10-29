@@ -1360,4 +1360,94 @@ class LRu extends L {
   String joinGamePaid(String price) {
     return 'Присоединиться · $price';
   }
+
+  @override
+  String get adminPaymentsTitle => 'Оплаты';
+
+  @override
+  String get adminPaymentsMenu => 'Проверить переводы и вернуть деньги';
+
+  @override
+  String get adminTabCheck => 'Проверить';
+
+  @override
+  String get adminTabRefund => 'Вернуть';
+
+  @override
+  String get adminEmptyCheck => 'Проверять нечего: все «Я оплатил» разобраны.';
+
+  @override
+  String get adminEmptyRefund => 'Возвращать никому не нужно.';
+
+  @override
+  String adminPayer(String name) {
+    return 'В банке: $name';
+  }
+
+  @override
+  String adminClaimed(String when) {
+    return 'Нажал «Я оплатил»: $when';
+  }
+
+  @override
+  String adminDeadline(String when) {
+    return 'Срок сбора: $when';
+  }
+
+  @override
+  String adminGameAt(String venue, String when) {
+    return '$venue · $when';
+  }
+
+  @override
+  String get adminFound => 'Нашёл перевод';
+
+  @override
+  String get adminNotFound => 'Не нашёл';
+
+  @override
+  String get adminRefunded => 'Деньги вернул';
+
+  @override
+  String get adminConfirmTitle => 'Подтвердить оплату?';
+
+  @override
+  String adminConfirmMessage(String name, String amount, String code) {
+    return '$name, $amount, код $code. Доля станет оплаченной.';
+  }
+
+  @override
+  String get adminRejectTitle => 'Почему не нашли перевод?';
+
+  @override
+  String get adminRejectHint => 'Причину увидит игрок на экране оплаты.';
+
+  @override
+  String get adminRejectAmount => 'Сумма не совпадает';
+
+  @override
+  String get adminRejectCode => 'Нет кода в комментарии';
+
+  @override
+  String get adminRejectMissing => 'Перевода нет в выписке';
+
+  @override
+  String get adminRefundTitle => 'Деньги вернули?';
+
+  @override
+  String adminRefundMessage(String name, String amount) {
+    return '$name, $amount. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.';
+  }
+
+  @override
+  String get adminMarked => 'Отмечено';
+
+  @override
+  String get adminPhoneCopied => 'Номер скопирован';
+
+  @override
+  String get adminOnly => 'Этот раздел только для администратора оплат.';
+
+  @override
+  String get adminEmptyTitle => 'Всё разобрано';
 }

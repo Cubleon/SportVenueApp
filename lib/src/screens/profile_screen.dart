@@ -153,6 +153,16 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       onTap: () => context.go(Routes.history),
                     ),
+                    // Only the owner of the service checks transfers; to
+                    // everyone else the row would lead to a locked door.
+                    if (controller.isPaymentAdmin)
+                      _MenuItem(
+                        key: const ValueKey('profile-admin-payments'),
+                        icon: AppIcons.checkCircle,
+                        title: context.l10n.adminPaymentsTitle,
+                        subtitle: context.l10n.adminPaymentsMenu,
+                        onTap: () => context.go(Routes.adminPayments),
+                      ),
                     // Платежи, Уведомления and Поддержка stood here looking
                     // exactly like История — same card, same chevron promising a
                     // screen — and answered with "позже". A row that cannot be
@@ -297,6 +307,7 @@ class _Stat extends StatelessWidget {
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

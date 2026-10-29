@@ -744,5 +744,49 @@
   "joinGamePaid": "Присоединиться · {price}",
   "@joinGamePaid": {
     "placeholders": { "price": { "type": "String" } }
-  }
+  },
+  "adminPaymentsTitle": "Оплаты",
+  "adminPaymentsMenu": "Проверить переводы и вернуть деньги",
+  "adminTabCheck": "Проверить",
+  "adminTabRefund": "Вернуть",
+  "adminEmptyCheck": "Проверять нечего: все «Я оплатил» разобраны.",
+  "adminEmptyRefund": "Возвращать никому не нужно.",
+  "adminPayer": "В банке: {name}",
+  "@adminPayer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "adminClaimed": "Нажал «Я оплатил»: {when}",
+  "@adminClaimed": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "adminDeadline": "Срок сбора: {when}",
+  "@adminDeadline": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "adminGameAt": "{venue} · {when}",
+  "@adminGameAt": {
+    "placeholders": { "venue": { "type": "String" }, "when": { "type": "String" } }
+  },
+  "adminFound": "Нашёл перевод",
+  "adminNotFound": "Не нашёл",
+  "adminRefunded": "Деньги вернул",
+  "adminConfirmTitle": "Подтвердить оплату?",
+  "adminConfirmMessage": "{name}, {amount}, код {code}. Доля станет оплаченной.",
+  "@adminConfirmMessage": {
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" }, "code": { "type": "String" } }
+  },
+  "adminRejectTitle": "Почему не нашли перевод?",
+  "adminRejectHint": "Причину увидит игрок на экране оплаты.",
+  "adminRejectAmount": "Сумма не совпадает",
+  "adminRejectCode": "Нет кода в комментарии",
+  "adminRejectMissing": "Перевода нет в выписке",
+  "adminRefundTitle": "Деньги вернули?",
+  "adminRefundMessage": "{name}, {amount}. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.",
+  "@adminRefundMessage": {
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" } }
+  },
+  "adminMarked": "Отмечено",
+  "adminPhoneCopied": "Номер скопирован",
+  "adminOnly": "Этот раздел только для администратора оплат.",
+  "adminEmptyTitle": "Всё разобрано"
 }

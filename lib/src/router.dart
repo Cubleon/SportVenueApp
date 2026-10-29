@@ -15,6 +15,7 @@ import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/payment_admin_screen.dart';
 import 'screens/share_payment_screen.dart';
 import 'screens/sport_selection_screen.dart';
 import 'screens/venue_screen.dart';
@@ -56,6 +57,9 @@ abstract final class Routes {
       : '$path?date=${date.toIso8601String().substring(0, 10)}';
 
   static String booking(String id) => '/booking/$id';
+
+  /// The payments admin's queue: transfers to check, money to return.
+  static const adminPayments = '/admin/payments';
 
   /// Paying the reader's share of a booking. [created] says the booking
   /// was made a moment ago, which the screen opens by saying so.
@@ -405,6 +409,12 @@ List<RouteBase> shellRoutes(AppController controller) => [
         },
       ),
     ],
+  ),
+  GoRoute(
+    path: 'admin/payments',
+    builder: (context, state) => controller.isPaymentAdmin
+        ? PaymentAdminScreen(controller: controller)
+        : _NotFound(what: context.l10n.adminOnly),
   ),
   GoRoute(
     path: 'bookings',
