@@ -619,7 +619,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         (share.status == ShareStatus.unpaid ||
             share.status == ShareStatus.notFound ||
             share.status == ShareStatus.pendingConfirmation);
-    final pay = owes && share != null && bookingId != null
+    final pay = owes
         ? PrimaryButton(
             key: const ValueKey('detail-pay-share'),
             label: share.status == ShareStatus.pendingConfirmation
