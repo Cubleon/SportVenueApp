@@ -766,7 +766,10 @@ void main() {
   testWidgets('a place in a game can be given back', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
-    final game = controller.games.first;
+    // An open game: one «по одобрению» takes a request, not a place.
+    final game = controller.games.firstWhere(
+      (item) => item.type == GameType.open,
+    );
 
     await tester.pumpWidget(
       _Harness(
