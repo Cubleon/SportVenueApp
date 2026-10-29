@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_icons.dart';
@@ -12,6 +14,7 @@ import '../theme/app_theme.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
+import '../widgets/venue_filters.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, required this.controller});
@@ -39,8 +42,67 @@ class _SearchScreenState extends State<SearchScreen> {
   static const _sheetOpen = 0.42;
   static const _sheetFull = 0.92;
 
+  VenueFilters _filters = VenueFilters.none;
+
+  /// The map draws from tiles on the network and says nothing when they do
+  /// not come. A style that has not loaded in this long is taken as a map
+  /// that will not, and the screen says so instead of showing a grey box.
+  static const _mapPatience = Duration(seconds: 15);
+  Timer? _mapWatch;
+  bool _mapFailed = false;
+
+  /// Bumped to build a fresh map when the reader asks to try again.
+  int _mapAttempt = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _watchMap();
+  }
+
+  void _watchMap() {
+    _mapWatch?.cancel();
+    _mapWatch = Timer(_mapPatience, () {
+      if (mounted) {
+        setState(() => _mapFailed = true);
+      }
+    });
+  }
+
+  void _mapLoaded() {
+    _mapWatch?.cancel();
+    if (mounted && _mapFailed) {
+      setState(() => _mapFailed = false);
+    }
+  }
+
+  void _retryMap() {
+    setState(() {
+      _mapAttempt++;
+      _mapFailed = false;
+      _mapController = null;
+    });
+    _watchMap();
+  }
+
+  Future<void> _openFilters() async {
+    final picked = await showVenueFilters(
+      context,
+      current: _filters,
+      venues: widget.controller.venues,
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _filters = picked;
+      _selectedVenue = null;
+    });
+  }
+
   @override
   void dispose() {
+    _mapWatch?.cancel();
     _searchController.dispose();
     _sheetController.dispose();
     super.dispose();
@@ -50,6 +112,9 @@ class _SearchScreenState extends State<SearchScreen> {
     final query = _searchController.text.trim().toLowerCase();
     return widget.controller.venues.where((venue) {
       if (_sportId != 'all' && !venue.sportIds.contains(_sportId)) {
+        return false;
+      }
+      if (!_filters.allows(venue)) {
         return false;
       }
       if (query.isEmpty) {
@@ -87,6 +152,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
                 children: [
+                  // Price, distance and what the club has: the same sheet
+                  // as on the home screen, which this screen never offered.
+                  SelectableChip(
+                    key: const ValueKey('search-filters'),
+                    label: _filters.isEmpty
+                        ? context.l10n.filtersOpen
+                        : '${context.l10n.filtersOpen} · ${_filters.count}',
+                    selected: !_filters.isEmpty,
+                    onTap: _openFilters,
+                  ),
+                  const SizedBox(width: 8),
                   SelectableChip(
                     label: context.l10n.allFilter,
                     selected: _sportId == 'all',
@@ -121,6 +197,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     fit: StackFit.expand,
                     children: [
                       maplibre.MapLibreMap(
+                        key: ValueKey('search-map-$_mapAttempt'),
+                        onStyleLoaded: (_) => _mapLoaded(),
                         options: const maplibre.MapOptions(
                           initStyle: _mapStyle,
                           initCenter: _moscowCenter,
@@ -172,6 +250,17 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                       ),
+                      if (_mapFailed)
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          top: 12,
+                          child: RetryNotice(
+                            key: const ValueKey('search-map-failed'),
+                            message: context.l10n.mapFailed,
+                            onRetry: _retryMap,
+                          ),
+                        ),
                       // The results, as a list, over the map they are
                       // plotted on. A map alone answers "where is it" and
                       // nothing else: a name typed into the field could
@@ -187,6 +276,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         onPick: _openVenue,
                         onReset: () => setState(() {
                           _sportId = 'all';
+                          _filters = VenueFilters.none;
                           _searchController.clear();
                         }),
                       ),
