@@ -176,7 +176,11 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 _timeChosen ? _barHeight : 24,
               ),
               children: [
-                _CreateHeader(onBack: () => Navigator.of(context).pop()),
+                ScreenTitleBar(
+                  padding: EdgeInsets.zero,
+                  title: context.l10n.createGame,
+                  onBack: () => Navigator.of(context).pop(),
+                ),
                 _Block(
                   step: 1,
                   title: context.l10n.sportKind,
@@ -573,39 +577,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       setState(() => _loading = false);
       showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
     }
-  }
-}
-
-class _CreateHeader extends StatelessWidget {
-  const _CreateHeader({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton.filled(
-          tooltip: context.l10n.back,
-          onPressed: onBack,
-          icon: const Icon(AppIcons.chevronLeft),
-          style: IconButton.styleFrom(
-            backgroundColor: context.colors.surface,
-            foregroundColor: context.colors.ink,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            context.l10n.createGame,
-            textAlign: TextAlign.center,
-            style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 48),
-      ],
-    );
   }
 }
 

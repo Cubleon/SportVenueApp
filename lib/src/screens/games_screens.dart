@@ -389,11 +389,24 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                 CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
-                      child: _DetailHeader(
+                      child: ScreenTitleBar(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
                         title: context.l10n.game,
                         onBack: () => Navigator.of(context).pop(),
-                        onShare: canShareLinks
-                            ? () => copyLink(context, gameLocation(current))
+                        // Getting people into a pickup game means sending
+                        // them to it.
+                        trailing: canShareLinks
+                            ? IconButton.filled(
+                                key: const ValueKey('share-game'),
+                                tooltip: context.l10n.shareGame,
+                                onPressed: () =>
+                                    copyLink(context, gameLocation(current)),
+                                icon: const Icon(AppIcons.share),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: context.colors.surface,
+                                  foregroundColor: context.colors.ink,
+                                ),
+                              )
                             : null,
                       ),
                     ),
@@ -835,64 +848,6 @@ class _Avatar extends StatelessWidget {
             fontSize: size * 0.42,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({
-    required this.title,
-    required this.onBack,
-    this.onShare,
-  });
-
-  final String title;
-  final VoidCallback onBack;
-
-  /// Offered where there is an address to offer. Getting people into a
-  /// pickup game means sending them to it, and until the app had routes
-  /// there was nothing to send.
-  final VoidCallback? onShare;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
-      child: Row(
-        children: [
-          IconButton.filled(
-            tooltip: context.l10n.back,
-            onPressed: onBack,
-            icon: const Icon(AppIcons.chevronLeft),
-            style: IconButton.styleFrom(
-              backgroundColor: context.colors.surface,
-              foregroundColor: context.colors.ink,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          if (onShare == null)
-            const SizedBox(width: 48)
-          else
-            IconButton.filled(
-              key: const ValueKey('share-game'),
-              tooltip: context.l10n.shareGame,
-              onPressed: onShare,
-              icon: const Icon(AppIcons.share),
-              style: IconButton.styleFrom(
-                backgroundColor: context.colors.surface,
-                foregroundColor: context.colors.ink,
-              ),
-            ),
-        ],
       ),
     );
   }

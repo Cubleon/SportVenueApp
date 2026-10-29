@@ -87,7 +87,10 @@ class _BookingScreenState extends State<BookingScreen> {
             CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
-                  child: _BookingHeader(
+                  // The club is named by the step below, which is also where
+                  // it can be changed.
+                  child: ScreenTitleBar(
+                    title: context.l10n.booking,
                     onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -368,7 +371,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             ListView(
               padding: EdgeInsets.fromLTRB(20, 12, 20, _barHeight),
               children: [
-                _BookingNav(
+                ScreenTitleBar(
+                  padding: EdgeInsets.zero,
                   title: context.l10n.confirmation,
                   onBack: () => Navigator.of(context).pop(),
                 ),
@@ -521,7 +525,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 hasBar ? _barHeight : 24,
               ),
               children: [
-                _BookingNav(
+                ScreenTitleBar(
+                  padding: EdgeInsets.zero,
                   title: context.l10n.bookingDetails,
                   onBack: () => Navigator.of(context).pop(),
                 ),
@@ -888,81 +893,6 @@ class _CancellationTermsCard extends StatelessWidget {
           _Bullet(text: context.l10n.cancellationTermRefund),
         ],
       ),
-    );
-  }
-}
-
-class _BookingHeader extends StatelessWidget {
-  const _BookingHeader({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-      child: Row(
-        children: [
-          IconButton.filled(
-            tooltip: context.l10n.back,
-            onPressed: onBack,
-            icon: const Icon(AppIcons.chevronLeft),
-            style: IconButton.styleFrom(
-              backgroundColor: context.colors.surface,
-              foregroundColor: context.colors.ink,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                // The club is named by the step below, which is also where
-                // it can be changed.
-                Text(
-                  context.l10n.booking,
-                  style: context.text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
-  }
-}
-
-class _BookingNav extends StatelessWidget {
-  const _BookingNav({required this.title, required this.onBack});
-
-  final String title;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton.filled(
-          tooltip: context.l10n.back,
-          onPressed: onBack,
-          icon: const Icon(AppIcons.chevronLeft),
-          style: IconButton.styleFrom(
-            backgroundColor: context.colors.surface,
-            foregroundColor: context.colors.ink,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 48),
-      ],
     );
   }
 }

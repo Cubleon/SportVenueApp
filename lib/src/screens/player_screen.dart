@@ -49,9 +49,7 @@ class PlayerScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: ScreenTitleBar(
                     title: context.l10n.player,
-                    leading: BackCircleButton(
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
+                    onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
                 SliverToBoxAdapter(

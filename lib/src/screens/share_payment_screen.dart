@@ -82,7 +82,11 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
                     needsPayment ? _barHeight : 24,
                   ),
                   children: [
-                    _Header(onBack: () => Navigator.of(context).maybePop()),
+                    ScreenTitleBar(
+                      padding: EdgeInsets.zero,
+                      title: context.l10n.paymentScreenTitle,
+                      onBack: () => Navigator.of(context).maybePop(),
+                    ),
                     const SizedBox(height: 12),
                     if (booking == null || share == null)
                       _Notice(icon: AppIcons.x, title: context.l10n.payNothing)
@@ -358,39 +362,6 @@ String _moment(DateTime value) {
   final hours = value.hour.toString().padLeft(2, '0');
   final minutes = value.minute.toString().padLeft(2, '0');
   return '${AppFormatters.dateShort(value)}, $hours:$minutes';
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton.filled(
-          tooltip: context.l10n.back,
-          onPressed: onBack,
-          icon: const Icon(AppIcons.chevronLeft),
-          style: IconButton.styleFrom(
-            backgroundColor: context.colors.surface,
-            foregroundColor: context.colors.ink,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            context.l10n.paymentScreenTitle,
-            textAlign: TextAlign.center,
-            style: context.text.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 48),
-      ],
-    );
-  }
 }
 
 /// The share's code, set large enough to copy by eye, with a button that

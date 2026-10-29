@@ -103,9 +103,7 @@ class HistoryScreen extends StatelessWidget {
                     child: ScreenTitleBar(
                       title: title,
                       subtitle: subtitle,
-                      leading: BackCircleButton(
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
+                      onBack: () => Navigator.of(context).pop(),
                     ),
                   ),
                   if ((!showBookings || bookings.isEmpty) &&

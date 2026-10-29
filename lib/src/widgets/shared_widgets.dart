@@ -842,51 +842,82 @@ void showAppSnack(
   );
 }
 
+/// The one header every inner screen uses: a way back on the left, a small
+/// title in the middle, and room on the right for what the screen offers.
+///
+/// Before it there were two kinds of header (a large title on the left and
+/// a small one in the middle) and five hand-made copies of the second, each
+/// with its own spacing. One widget keeps them the same.
 class ScreenTitleBar extends StatelessWidget {
   const ScreenTitleBar({
     super.key,
     required this.title,
     this.subtitle,
-    this.leading,
+    this.onBack,
     this.trailing,
+    this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 12),
   });
 
   final String title;
   final String? subtitle;
 
-  /// Before the title. Where a way back belongs: every other screen in the
-  /// app puts it there, and a thumb reaches the left corner.
-  final Widget? leading;
+  /// Shows the round back button. Every inner screen has one, on the left,
+  /// where a thumb reaches it.
+  final VoidCallback? onBack;
 
-  /// After the title. For what the screen does, not for leaving it.
+  /// After the title. For what the screen does, not for leaving it. Keep it
+  /// to one round button, so the title stays centred.
   final Widget? trailing;
+
+  /// Screens whose list already pads its children pass [EdgeInsets.zero].
+  final EdgeInsetsGeometry padding;
+
+  /// The width of a round button, kept empty on a side that has none so the
+  /// title sits in the middle of the screen, not of the space left over.
+  static const double _sideWidth = 48;
 
   @override
   Widget build(BuildContext context) {
+    final back = onBack;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      padding: padding,
       child: Row(
         children: [
-          ?leading,
-          if (leading != null) const SizedBox(width: 12),
+          SizedBox(
+            width: _sideWidth,
+            child: back == null ? null : BackCircleButton(onTap: back),
+          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: context.text.headlineSmall),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
+            child: Semantics(
+              header: true,
+              child: Column(
+                children: [
                   Text(
-                    subtitle!,
-                    style: context.text.bodySmall?.copyWith(
-                      color: context.colors.muted,
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.colors.muted,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-          ?trailing,
+          SizedBox(width: _sideWidth, child: trailing),
         ],
       ),
     );
