@@ -406,6 +406,21 @@ class AppTheme {
       // the page and 6.1:1 on a card.
       focusColor: colors.accent.withValues(alpha: 0.16),
       dividerColor: colors.border,
+      // One way of arriving on a new screen everywhere: a short fade with a
+      // small rise. The platform defaults differed by device — a zoom on
+      // Android, nothing at all on desktop browsers — so the same tap felt
+      // different depending on where the app was opened. iOS keeps its own
+      // slide, which carries the swipe back from the left edge.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _RiseFadeTransitions(),
+          TargetPlatform.fuchsia: _RiseFadeTransitions(),
+          TargetPlatform.linux: _RiseFadeTransitions(),
+          TargetPlatform.windows: _RiseFadeTransitions(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -468,6 +483,50 @@ extension TextThemeX on BuildContext {
   /// test harness, a preview — still paints.
   AppColors get colors =>
       Theme.of(this).extension<AppColors>() ?? AppColors.light;
+}
+
+/// The new screen fades in while rising a few pixels; the one it covers
+/// dims a little underneath, so the eye follows the one that arrived.
+///
+/// Leaving runs the same curve backwards. With «уменьшение движения» on,
+/// the screens simply swap.
+class _RiseFadeTransitions extends PageTransitionsBuilder {
+  const _RiseFadeTransitions();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
+    final incoming = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    final covered = CurvedAnimation(
+      parent: secondaryAnimation,
+      curve: Curves.easeOutCubic,
+    );
+    return FadeTransition(
+      opacity: Tween<double>(begin: 1, end: 0.85).animate(covered),
+      child: FadeTransition(
+        opacity: incoming,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.03),
+            end: Offset.zero,
+          ).animate(incoming),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
 
 extension MotionX on BuildContext {
