@@ -442,10 +442,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
       // channel never answers, awaiting it holds the screen on a payment
       // that has already gone through.
       unawaited(HapticFeedback.mediumImpact());
-      // Straight on to paying the reader's own share: the booking exists,
-      // but nothing is paid until that is done. The screen says the booking
-      // was made, and what the others still owe.
-      context.go(Routes.pay(booking.id, created: true));
+      // The moment gets a screen of its own, which says what is held until
+      // when, and leads on to paying the reader's share.
+      context.go(Routes.created(booking.id));
     } catch (error) {
       if (!mounted) {
         return;

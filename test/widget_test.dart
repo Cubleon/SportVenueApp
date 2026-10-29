@@ -305,20 +305,15 @@ void main() {
     expect(find.textContaining('им осталось оплатить 3 доли'), findsOneWidget);
     expect(find.textContaining('Ваша часть оплачена'), findsNothing);
 
-    // Paying the reader's own share comes next, on the same screen.
+    // Said with a screen of its own: what is held until when, and the way
+    // on to paying the reader's share.
+    expect(find.byKey(const ValueKey('success-mark')), findsOneWidget);
+    expect(find.byKey(const ValueKey('success-held')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('success-pay')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('pay-code')), findsOneWidget);
     expect(find.byKey(const ValueKey('claim-paid')), findsOneWidget);
-
-    final openBooking = find.byKey(const ValueKey('open-created-booking'));
-    await tester.scrollUntilVisible(
-      openBooking,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(openBooking);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
   });
 
   testWidgets('the keyboard can reach the tabs', (tester) async {

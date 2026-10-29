@@ -696,6 +696,14 @@ class LRu extends L {
   String get bookingSuccessDone => 'Готово';
 
   @override
+  String successHeld(String when) {
+    return 'Время за вами до $when';
+  }
+
+  @override
+  String get successFullBody => 'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.';
+
+  @override
   String get bookingDetails => 'Бронь';
 
   @override

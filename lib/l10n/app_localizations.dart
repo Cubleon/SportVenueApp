@@ -1191,6 +1191,18 @@ abstract class L {
   /// **'Готово'**
   String get bookingSuccessDone;
 
+  /// No description provided for @successHeld.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время за вами до {when}'**
+  String successHeld(String when);
+
+  /// No description provided for @successFullBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.'**
+  String get successFullBody;
+
   /// No description provided for @bookingDetails.
   ///
   /// In ru, this message translates to:

@@ -10,6 +10,7 @@ import 'models/sport_venue_models.dart';
 import 'screens/auth_screens.dart';
 import 'screens/email_auth_screens.dart';
 import 'screens/booking_screens.dart';
+import 'screens/booking_success_screen.dart';
 import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
@@ -58,6 +59,9 @@ abstract final class Routes {
 
   /// Paying the reader's share of a booking. [created] says the booking
   /// was made a moment ago, which the screen opens by saying so.
+  /// The screen that says a booking was just made.
+  static String created(String id) => '/booking/$id/created';
+
   static String pay(String id, {bool created = false}) =>
       '/booking/$id/pay${created ? '?new=1' : ''}';
 }
@@ -368,6 +372,16 @@ List<RouteBase> shellRoutes(AppController controller) => [
       return BookingDetailsScreen(controller: controller, booking: booking);
     },
     routes: [
+      GoRoute(
+        path: 'created',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          if (controller.bookingById(id) == null) {
+            return _NotFound(what: context.l10n.bookingNotFound);
+          }
+          return BookingSuccessScreen(controller: controller, bookingId: id);
+        },
+      ),
       GoRoute(
         path: 'pay',
         builder: (context, state) {

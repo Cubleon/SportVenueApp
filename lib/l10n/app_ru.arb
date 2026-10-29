@@ -322,6 +322,11 @@
   "bookingCreatedFull": "Площадка ваша целиком — искать игроков не нужно.",
   "openBooking": "Открыть бронь",
   "bookingSuccessDone": "Готово",
+  "successHeld": "Время за вами до {when}",
+  "@successHeld": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "successFullBody": "Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.",
   "bookingDetails": "Бронь",
   "statusLabel": "Статус",
   "onlyOrganizerCancels": "Отменить бронь может только организатор",
