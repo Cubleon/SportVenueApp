@@ -693,6 +693,35 @@ void main() {
     expect(find.byKey(const ValueKey('detail-open-booking')), findsOneWidget);
   });
 
+  testWidgets('an account can be deleted from the profile', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    controller.isSignedIn = true;
+    var loggedOut = false;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: ProfileScreen(
+          controller: controller,
+          onLogout: () => loggedOut = true,
+        ),
+      ),
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('delete-account')),
+      200,
+    );
+    await tester.tap(find.byKey(const ValueKey('delete-account')));
+    await tester.pumpAndSettle();
+    expect(find.text('Удалить аккаунт?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+    await tester.pumpAndSettle();
+
+    expect(controller.isSignedIn, isFalse);
+    expect(loggedOut, isTrue);
+  });
+
   testWidgets('signing out asks first, and the avatar never shows a digit', (
     tester,
   ) async {

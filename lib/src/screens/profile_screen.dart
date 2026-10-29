@@ -9,6 +9,7 @@ import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import 'sport_selection_screen.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../labels.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
@@ -176,6 +177,18 @@ class ProfileScreen extends StatelessWidget {
                       tone: ButtonTone.neutral,
                       onPressed: () => _confirmLogout(context, onLogout),
                     ),
+                    const SizedBox(height: 8),
+                    // The stores ask for it, and a person is owed it: leaving
+                    // for good is possible from inside the app.
+                    TextButton(
+                      key: const ValueKey('delete-account'),
+                      onPressed: () =>
+                          _confirmDelete(context, controller, onLogout),
+                      style: TextButton.styleFrom(
+                        foregroundColor: context.colors.danger,
+                      ),
+                      child: Text(context.l10n.deleteAccount),
+                    ),
                   ],
                 ),
               ),
@@ -197,6 +210,30 @@ Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
   );
   if (confirmed) {
     onLogout();
+  }
+}
+
+Future<void> _confirmDelete(
+  BuildContext context,
+  AppController controller,
+  VoidCallback onLogout,
+) async {
+  final confirmed = await confirmAction(
+    context,
+    title: context.l10n.deleteAccountQuestion,
+    message: context.l10n.deleteAccountMessage,
+    confirmLabel: context.l10n.deleteAccountConfirm,
+  );
+  if (!confirmed || !context.mounted) {
+    return;
+  }
+  try {
+    await controller.deleteAccount();
+    onLogout();
+  } catch (error) {
+    if (context.mounted) {
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    }
   }
 }
 

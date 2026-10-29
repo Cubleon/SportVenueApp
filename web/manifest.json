@@ -1,11 +1,11 @@
 {
-    "name": "sport_venue_app",
-    "short_name": "sport_venue_app",
+    "name": "SportVenue",
+    "short_name": "SportVenue",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Площадки, бронирование и игры с оплатой долями.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

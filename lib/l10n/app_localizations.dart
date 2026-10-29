@@ -2360,6 +2360,42 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Всё разобрано'**
   String get adminEmptyTitle;
+
+  /// No description provided for @bookingStateYouDidNotPay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы не платили за это место, возвращать нечего.'**
+  String get bookingStateYouDidNotPay;
+
+  /// No description provided for @bookAgain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забронировать заново'**
+  String get bookAgain;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт?'**
+  String get deleteAccountQuestion;
+
+  /// No description provided for @deleteAccountMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.'**
+  String get deleteAccountMessage;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить навсегда'**
+  String get deleteAccountConfirm;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
