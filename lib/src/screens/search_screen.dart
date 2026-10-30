@@ -39,7 +39,7 @@ class _SearchScreenState extends State<SearchScreen> {
   /// Three rests: out of the way, showing the first couple of results, and
   /// reading the list. Tapping a pin raises it to the middle one.
   static const _sheetPeek = 0.18;
-  static const _sheetOpen = 0.42;
+  static const _sheetOpen = 0.55;
   static const _sheetFull = 0.92;
 
   VenueFilters _filters = VenueFilters.none;
