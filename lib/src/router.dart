@@ -190,7 +190,7 @@ GoRouter buildRouter({
       return null;
     },
     routes: [
-      GoRoute(
+      appRoute(
         path: Routes.splash,
         builder: (context, state) => SplashScreen(
           onFinished: () async {
@@ -212,7 +212,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.signIn,
         builder: (context, state) => RegistrationScreen(
           onEmail: () => context.go(Routes.email),
@@ -236,7 +236,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.email,
         builder: (context, state) => EmailSignInScreen(
           onBack: () {
@@ -259,7 +259,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.emailCode,
         builder: (context, state) => EmailVerificationScreen(
           email: controller.email,
@@ -271,7 +271,7 @@ GoRouter buildRouter({
           codeAccepted: () => controller.emailCodeAccepted,
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.call,
         builder: (context, state) => CallVerificationScreen(
           phone: boot.pendingPhone,
@@ -282,7 +282,7 @@ GoRouter buildRouter({
           onRestart: () => controller.startPhoneVerification(boot.pendingPhone),
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.onboarding,
         builder: (context, state) => SportSelectionScreen(
           sports: controller.sports,
@@ -302,7 +302,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.home,
         builder: (context, state) => MainShell(
           controller: controller,
@@ -317,12 +317,39 @@ GoRouter buildRouter({
   );
 }
 
+/// A route whose screen opens with the app's own transition and can be
+/// swiped back from the left edge.
+///
+/// go_router picks the kind of page by looking for a `MaterialApp` above it,
+/// but it looks for the one in `material_ui`, and this app's `MaterialApp`
+/// is Flutter's own. Not finding it, go_router took the app for a bare
+/// `WidgetsApp` and built every screen as a page with no transition at all:
+/// screens snapped into place, and the swipe back had nothing to live on.
+/// Building the page here does not depend on that guess.
+GoRoute appRoute({
+  required String path,
+  required GoRouterWidgetBuilder builder,
+  List<RouteBase> routes = const [],
+}) {
+  return GoRoute(
+    path: path,
+    routes: routes,
+    pageBuilder: (context, state) => MaterialPage<void>(
+      key: state.pageKey,
+      name: state.name ?? state.matchedLocation,
+      arguments: state.pathParameters,
+      restorationId: state.pageKey.value,
+      child: builder(context, state),
+    ),
+  );
+}
+
 /// The screens that open over the shell, as routes.
 ///
 /// Shared with the widget tests, which push these same locations: one route
 /// table means a test cannot pass against a path the app does not have.
 List<RouteBase> shellRoutes(AppController controller) => [
-  GoRoute(
+  appRoute(
     path: 'game/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
@@ -337,7 +364,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
       );
     },
   ),
-  GoRoute(
+  appRoute(
     path: 'venue/:id',
     builder: (context, state) {
       final venue = _venueById(controller, state);
@@ -351,7 +378,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
       );
     },
     routes: [
-      GoRoute(
+      appRoute(
         path: 'book',
         builder: (context, state) {
           final venue = _venueById(controller, state);
@@ -367,7 +394,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
       ),
     ],
   ),
-  GoRoute(
+  appRoute(
     path: 'booking/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
@@ -384,7 +411,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
       );
     },
     routes: [
-      GoRoute(
+      appRoute(
         path: 'created',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
@@ -394,7 +421,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
           return BookingSuccessScreen(controller: controller, bookingId: id);
         },
       ),
-      GoRoute(
+      appRoute(
         path: 'pay',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
@@ -410,18 +437,18 @@ List<RouteBase> shellRoutes(AppController controller) => [
       ),
     ],
   ),
-  GoRoute(
+  appRoute(
     path: 'admin/payments',
     builder: (context, state) => controller.isPaymentAdmin
         ? PaymentAdminScreen(controller: controller)
         : _NotFound(what: context.l10n.adminOnly),
   ),
-  GoRoute(
+  appRoute(
     path: 'bookings',
     builder: (context, state) =>
         HistoryScreen(controller: controller, focus: HistoryFocus.bookings),
   ),
-  GoRoute(
+  appRoute(
     path: 'my-games',
     builder: (context, state) => HistoryScreen(
       controller: controller,
@@ -429,12 +456,12 @@ List<RouteBase> shellRoutes(AppController controller) => [
       onFindGames: () => openGamesTab(context),
     ),
   ),
-  GoRoute(
+  appRoute(
     path: 'history',
     builder: (context, state) =>
         HistoryScreen(controller: controller, focus: HistoryFocus.all),
   ),
-  GoRoute(
+  appRoute(
     path: 'create',
     builder: (context, state) => CreateGameScreen(
       controller: controller,
