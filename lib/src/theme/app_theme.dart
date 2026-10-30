@@ -1,4 +1,4 @@
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -581,17 +581,52 @@ class _BackSwipeState extends State<_BackSwipe> {
   /// A flick this fast, in screen widths per second, decides on its own.
   static const _flick = 1.0;
 
+  late final HorizontalDragGestureRecognizer _recognizer;
   bool _dragging = false;
   double _progress = 1;
 
-  void _start(DragStartDetails details) {
-    final route = widget.route;
-    if (!route.isCurrent || !route.popGestureEnabled) {
-      return;
+  @override
+  void initState() {
+    super.initState();
+    _recognizer =
+        HorizontalDragGestureRecognizer(
+            debugOwner: this,
+            supportedDevices: const {PointerDeviceKind.touch},
+          )
+          ..onStart = _start
+          ..onUpdate = _update
+          ..onEnd = _end
+          ..onCancel = _cancel;
+  }
+
+  @override
+  void dispose() {
+    _recognizer.dispose();
+    if (_dragging) {
+      final navigator = widget.route.navigator;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (navigator?.mounted ?? false) {
+          navigator!.didStopUserGesture();
+        }
+      });
     }
+    super.dispose();
+  }
+
+  /// The strip only competes for a touch when there is somewhere to go
+  /// back to. Otherwise it would win horizontal drags it then ignores —
+  /// a list that scrolls sideways from the edge of the first screen.
+  void _down(PointerDownEvent event) {
+    final route = widget.route;
+    if (route.isCurrent && route.popGestureEnabled) {
+      _recognizer.addPointer(event);
+    }
+  }
+
+  void _start(DragStartDetails details) {
     _dragging = true;
     _progress = 1;
-    route.handleStartBackGesture(progress: _progress);
+    widget.route.handleStartBackGesture(progress: _progress);
   }
 
   void _update(DragUpdateDetails details) {
@@ -638,13 +673,9 @@ class _BackSwipeState extends State<_BackSwipe> {
           top: 0,
           bottom: 0,
           width: _edge + inset,
-          child: GestureDetector(
+          child: Listener(
             behavior: HitTestBehavior.translucent,
-            supportedDevices: const {PointerDeviceKind.touch},
-            onHorizontalDragStart: _start,
-            onHorizontalDragUpdate: _update,
-            onHorizontalDragEnd: _end,
-            onHorizontalDragCancel: _cancel,
+            onPointerDown: _down,
           ),
         ),
       ],

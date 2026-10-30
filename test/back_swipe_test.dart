@@ -45,11 +45,43 @@ void main() {
     await openBooking(tester);
     expect(booking, findsOneWidget);
 
-    await tester.dragFrom(const Offset(4, 400), const Offset(320, 0));
-    await tester.pumpAndSettle();
+    // Each step says which one failed, if one does.
+    final route = ModalRoute.of(tester.element(booking))!;
+    expect(route.isCurrent, isTrue, reason: '1: the booking is on top');
+    expect(route.isFirst, isFalse, reason: '2: there is a screen beneath');
+    expect(
+      route.popGestureEnabled,
+      isTrue,
+      reason: '3: the route allows a swipe back',
+    );
+    final navigator = route.navigator!;
 
-    expect(booking, findsNothing);
-    expect(find.text('home'), findsOneWidget);
+    final gesture = await tester.startGesture(const Offset(4, 400));
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    expect(
+      navigator.userGestureInProgress,
+      isTrue,
+      reason: '4: the swipe from the edge started',
+    );
+
+    await gesture.moveBy(const Offset(260, 0));
+    await tester.pump();
+    expect(
+      route.animation!.value,
+      lessThan(0.5),
+      reason: '5: the screen followed the finger',
+    );
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(
+      navigator.userGestureInProgress,
+      isFalse,
+      reason: '6: the swipe finished',
+    );
+    expect(booking, findsNothing, reason: '7: the booking screen went away');
+    expect(find.text('home'), findsOneWidget, reason: '8: back at home');
   });
 
   testWidgets('a short swipe lets the screen settle back', (tester) async {
