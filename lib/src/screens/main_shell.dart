@@ -80,8 +80,8 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: context.motion(const Duration(milliseconds: 220)),
+      // A tab arrives the way a screen does, not with a bare cross-fade.
+      body: RiseFadeSwitcher(
         child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
       ),
       extendBody: true,

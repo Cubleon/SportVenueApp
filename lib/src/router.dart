@@ -507,19 +507,33 @@ class _OpenByLinkState<T extends Object> extends State<_OpenByLink<T>> {
 
   @override
   Widget build(BuildContext context) {
+    // The spinner, the error and the screen it was waiting for replace one
+    // another the way screens do, rather than snapping.
+    return RiseFadeSwitcher(child: _view(context));
+  }
+
+  Widget _view(BuildContext context) {
     final known = widget.known();
     if (known != null) {
-      return widget.found(known);
+      return KeyedSubtree(
+        key: const ValueKey('link-found'),
+        child: widget.found(known),
+      );
     }
     return FutureBuilder<T?>(
       future: _loading,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return _LinkWaiting(title: widget.title, onBack: _back);
+          return _LinkWaiting(
+            key: const ValueKey('link-waiting'),
+            title: widget.title,
+            onBack: _back,
+          );
         }
         final error = snapshot.error;
         if (error != null) {
           return _LinkWaiting(
+            key: const ValueKey('link-failed'),
             title: widget.title,
             onBack: _back,
             failure: RetryNotice(
@@ -531,9 +545,15 @@ class _OpenByLinkState<T extends Object> extends State<_OpenByLink<T>> {
         }
         final value = snapshot.data;
         if (value == null) {
-          return _NotFound(what: widget.missing);
+          return _NotFound(
+            key: const ValueKey('link-missing'),
+            what: widget.missing,
+          );
         }
-        return widget.found(value);
+        return KeyedSubtree(
+          key: const ValueKey('link-found'),
+          child: widget.found(value),
+        );
       },
     );
   }
@@ -541,7 +561,12 @@ class _OpenByLinkState<T extends Object> extends State<_OpenByLink<T>> {
 
 /// The screen a link stands on while it loads, or after it could not.
 class _LinkWaiting extends StatelessWidget {
-  const _LinkWaiting({required this.title, required this.onBack, this.failure});
+  const _LinkWaiting({
+    super.key,
+    required this.title,
+    required this.onBack,
+    this.failure,
+  });
 
   final String title;
   final VoidCallback onBack;
@@ -575,7 +600,7 @@ class _LinkWaiting extends StatelessWidget {
 
 /// What a link to something that is gone, or not loaded yet, arrives at.
 class _NotFound extends StatelessWidget {
-  const _NotFound({required this.what});
+  const _NotFound({super.key, required this.what});
 
   final String what;
 

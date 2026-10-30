@@ -1138,6 +1138,44 @@ class StatusChip extends StatelessWidget {
   }
 }
 
+/// Swaps one view for another the way a new screen arrives: the new one
+/// fades in rising a little, the old one fades out. For changes that are
+/// not a new screen but read as one — a tab, or a link that finishes
+/// loading — so they do not snap.
+///
+/// Give each view its own key; a child with the same key is only rebuilt,
+/// not swapped.
+class RiseFadeSwitcher extends StatelessWidget {
+  const RiseFadeSwitcher({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 240),
+  });
+
+  final Widget child;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: context.motion(duration),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// The round back button used at the top of a pushed screen.
 class BackCircleButton extends StatelessWidget {
   const BackCircleButton({super.key, required this.onTap});

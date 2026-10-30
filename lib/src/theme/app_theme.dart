@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -410,7 +411,10 @@ class AppTheme {
       // small rise. The platform defaults differed by device — a zoom on
       // Android, nothing at all on desktop browsers — so the same tap felt
       // different depending on where the app was opened. iOS keeps its own
-      // slide, which carries the swipe back from the left edge.
+      // slide, which carries the swipe back from the left edge — but only in
+      // the installed app. In a browser on an iPhone or iPad there is no
+      // swipe to keep (the browser has its own back), and the slide made the
+      // web build open screens differently from every other device.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: _RiseFadeTransitions(),
@@ -418,9 +422,9 @@ class AppTheme {
           TargetPlatform.linux: _RiseFadeTransitions(),
           TargetPlatform.windows: _RiseFadeTransitions(),
           TargetPlatform.macOS: _RiseFadeTransitions(),
-          // iOS is left out on purpose: with no builder named for it, Flutter
-          // uses Apple's own slide, which carries the swipe back from the
-          // edge, wherever this Flutter keeps that builder.
+          // Native iOS is left out on purpose: with no builder named for it,
+          // Flutter uses Apple's own slide and its swipe back.
+          if (kIsWeb) TargetPlatform.iOS: _RiseFadeTransitions(),
         },
       ),
       appBarTheme: AppBarTheme(
