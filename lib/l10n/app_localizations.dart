@@ -426,7 +426,7 @@ abstract class L {
   /// No description provided for @invitePlayers.
   ///
   /// In ru, this message translates to:
-  /// **'Позвать игроков — скопировать ссылку'**
+  /// **'Позвать игроков по ссылке'**
   String get invitePlayers;
 
   /// No description provided for @linkCopied.
@@ -744,7 +744,7 @@ abstract class L {
   /// No description provided for @searchSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Москва · openfreemap'**
+  /// **'Клубы на карте · Москва'**
   String get searchSubtitle;
 
   /// No description provided for @centreOnMoscow.

@@ -27,7 +27,7 @@ class MockData {
   static const venues = <Venue>[
     Venue(
       id: 'luzhniki',
-      name: 'футбольный центр лужники',
+      name: 'футбольный центр Лужники',
       address: 'ул. Лужники, 24',
       sportIds: ['football', 'basketball'],
       pricePerHour: 1600,
@@ -305,7 +305,7 @@ class MockData {
       draft: BookingDraft(
         venue: venues.first,
         date: date,
-        durationMinutes: 60,
+        durationMinutes: 90,
         startHour: 19,
         players: 4,
         mode: PaymentMode.split,

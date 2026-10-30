@@ -757,40 +757,40 @@ class SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Both boxes are tight, three parts to seven. Anything loose here
-          // keeps the width it does not use, and a row packs from the left,
-          // so the leftover lands after the value: the shorter the label, the
-          // further from the edge its value stops. That is what made a column
-          // of values look hand-placed — "Дата" left its value 38 pixels
-          // short of where "Стоимость" left its own.
-          Expanded(
-            flex: 3,
-            child: Text(
-              label,
-              style: context.text.bodySmall?.copyWith(
-                color: context.colors.muted,
-                fontWeight: FontWeight.w600,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The label takes the width it needs, up to a ceiling, and the
+            // value takes all the rest, right-aligned, so every value stops at
+            // the same edge. A fixed three-to-seven split did that too, but
+            // left the label a third of the row: «Стоимость с человека» broke
+            // over two lines beside a value four characters long.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4),
+              child: Text(
+                label,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 7,
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: context.text.bodyMedium?.copyWith(
-                color: accent ? context.colors.accent : context.colors.ink,
-                fontWeight: highlight || accent
-                    ? FontWeight.w700
-                    : FontWeight.w700,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: context.text.bodyMedium?.copyWith(
+                  color: accent ? context.colors.accent : context.colors.ink,
+                  fontWeight: highlight || accent
+                      ? FontWeight.w700
+                      : FontWeight.w700,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

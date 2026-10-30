@@ -222,7 +222,7 @@ class LRu extends L {
   }
 
   @override
-  String get invitePlayers => 'Позвать игроков — скопировать ссылку';
+  String get invitePlayers => 'Позвать игроков по ссылке';
 
   @override
   String get linkCopied => 'Ссылка скопирована';
@@ -415,7 +415,7 @@ class LRu extends L {
   String get search => 'Поиск';
 
   @override
-  String get searchSubtitle => 'Москва · openfreemap';
+  String get searchSubtitle => 'Клубы на карте · Москва';
 
   @override
   String get centreOnMoscow => 'Центр Москвы';

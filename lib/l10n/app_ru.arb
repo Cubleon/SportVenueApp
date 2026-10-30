@@ -95,7 +95,7 @@
   "@hoursCount": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "invitePlayers": "Позвать игроков — скопировать ссылку",
+  "invitePlayers": "Позвать игроков по ссылке",
   "linkCopied": "Ссылка скопирована",
   "perHourSuffix": "/час",
   "pricePerHour": "{price}/час",
@@ -196,7 +196,7 @@
   },
   "reset": "Сбросить",
   "search": "Поиск",
-  "searchSubtitle": "Москва · openfreemap",
+  "searchSubtitle": "Клубы на карте · Москва",
   "centreOnMoscow": "Центр Москвы",
   "allFilter": "Все",
   "mapLoading": "Карта загружается",
