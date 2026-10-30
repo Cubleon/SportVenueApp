@@ -496,8 +496,8 @@ class AppController extends ChangeNotifier {
             currentUserId: userId,
           );
 
+    // Notifies once, by itself.
     _replaceBooking(updated);
-    notifyListeners();
     return updated;
   }
 
@@ -823,8 +823,8 @@ class AppController extends ChangeNotifier {
         _replaceBooking(booking);
       } else {
         _linkedBookings[id] = booking;
+        notifyListeners();
       }
-      notifyListeners();
       return booking;
     } on ApiException catch (error) {
       if (error.statusCode == 404) {
