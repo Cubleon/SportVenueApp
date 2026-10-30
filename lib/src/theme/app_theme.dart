@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -408,13 +408,11 @@ class AppTheme {
       focusColor: colors.accent.withValues(alpha: 0.16),
       dividerColor: colors.border,
       // One way of arriving on a new screen everywhere: a short fade with a
-      // small rise. The platform defaults differed by device — a zoom on
-      // Android, nothing at all on desktop browsers — so the same tap felt
-      // different depending on where the app was opened. iOS keeps its own
-      // slide, which carries the swipe back from the left edge — but only in
-      // the installed app. In a browser on an iPhone or iPad there is no
-      // swipe to keep (the browser has its own back), and the slide made the
-      // web build open screens differently from every other device.
+      // small rise, and the same swipe from the left edge to go back. The
+      // platform defaults differed by device — a zoom on Android, a sideways
+      // slide on iPhone, nothing at all on desktop browsers — so the same tap
+      // felt different depending on where the app was opened. The swipe
+      // back, which came only with Apple's slide, is now part of this one.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: _RiseFadeTransitions(),
@@ -422,9 +420,7 @@ class AppTheme {
           TargetPlatform.linux: _RiseFadeTransitions(),
           TargetPlatform.windows: _RiseFadeTransitions(),
           TargetPlatform.macOS: _RiseFadeTransitions(),
-          // Native iOS is left out on purpose: with no builder named for it,
-          // Flutter uses Apple's own slide and its swipe back.
-          if (kIsWeb) TargetPlatform.iOS: _RiseFadeTransitions(),
+          TargetPlatform.iOS: _RiseFadeTransitions(),
         },
       ),
       appBarTheme: AppBarTheme(
@@ -492,11 +488,15 @@ extension TextThemeX on BuildContext {
 }
 
 /// The new screen fades in while rising a few pixels; the one it covers
-/// dims a little underneath, so the eye follows the one that arrived. Used
-/// everywhere but iOS, which keeps its own slide.
+/// dims a little underneath, so the eye follows the one that arrived.
+/// Leaving runs the same curve backwards.
 ///
-/// Leaving runs the same curve backwards. With «уменьшение движения» on,
-/// the screens simply swap.
+/// A swipe from the left edge takes the screen back the way it came: while
+/// the finger is down the screen follows it to the right with the one
+/// beneath showing through, and letting go past halfway, or with a flick,
+/// finishes the way back. With «уменьшение движения» on, screens simply
+/// swap; the swipe still moves the screen, since that is the reader's own
+/// hand and not an animation.
 class _RiseFadeTransitions extends PageTransitionsBuilder {
   const _RiseFadeTransitions();
 
@@ -508,9 +508,7 @@ class _RiseFadeTransitions extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    if (MediaQuery.disableAnimationsOf(context)) {
-      return child;
-    }
+    final still = MediaQuery.disableAnimationsOf(context);
     final incoming = CurvedAnimation(
       parent: animation,
       curve: Curves.easeOutCubic,
@@ -520,18 +518,136 @@ class _RiseFadeTransitions extends PageTransitionsBuilder {
       parent: secondaryAnimation,
       curve: Curves.easeOutCubic,
     );
+    final arriving = still
+        ? child
+        : FadeTransition(
+            opacity: incoming,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.03),
+                end: Offset.zero,
+              ).animate(incoming),
+              child: child,
+            ),
+          );
+    // Following the finger: straight along, no curve, so the screen stays
+    // under it. The same animation drives both, and at rest they are the
+    // same picture, so switching between them shows no seam.
+    final swiped = SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    );
     return FadeTransition(
-      opacity: Tween<double>(begin: 1, end: 0.85).animate(covered),
-      child: FadeTransition(
-        opacity: incoming,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.03),
-            end: Offset.zero,
-          ).animate(incoming),
-          child: child,
+      opacity: still
+          ? kAlwaysCompleteAnimation
+          : Tween<double>(begin: 1, end: 0.85).animate(covered),
+      child: _BackSwipe(
+        route: route,
+        child: AnimatedBuilder(
+          animation: animation,
+          // Held through the end of the swipe: the screen finishes leaving
+          // the way it was being pulled. A screen beneath has its animation
+          // complete, where the slide and the fade are the same picture.
+          builder: (context, _) =>
+              (route.navigator?.userGestureInProgress ?? false)
+              ? swiped
+              : arriving,
         ),
       ),
+    );
+  }
+}
+
+/// The strip along the left edge that takes a swipe back. Touch only: a
+/// mouse dragging from the edge of a browser window is selecting, not
+/// leaving.
+class _BackSwipe extends StatefulWidget {
+  const _BackSwipe({required this.route, required this.child});
+
+  final PageRoute<dynamic> route;
+  final Widget child;
+
+  @override
+  State<_BackSwipe> createState() => _BackSwipeState();
+}
+
+class _BackSwipeState extends State<_BackSwipe> {
+  /// As wide as Apple's, plus whatever the screen's own edge takes.
+  static const _edge = 20.0;
+
+  /// A flick this fast, in screen widths per second, decides on its own.
+  static const _flick = 1.0;
+
+  bool _dragging = false;
+  double _progress = 1;
+
+  void _start(DragStartDetails details) {
+    final route = widget.route;
+    if (!route.isCurrent || !route.popGestureEnabled) {
+      return;
+    }
+    _dragging = true;
+    _progress = 1;
+    route.handleStartBackGesture(progress: _progress);
+  }
+
+  void _update(DragUpdateDetails details) {
+    if (!_dragging) {
+      return;
+    }
+    final width = context.size?.width ?? 1;
+    _progress = (_progress - (details.primaryDelta ?? 0) / width).clamp(0, 1);
+    widget.route.handleUpdateBackGestureProgress(progress: _progress);
+  }
+
+  void _end(DragEndDetails details) {
+    if (!_dragging) {
+      return;
+    }
+    _dragging = false;
+    final width = context.size?.width ?? 1;
+    final velocity = details.velocity.pixelsPerSecond.dx / width;
+    final back = velocity.abs() >= _flick ? velocity > 0 : _progress < 0.5;
+    if (back) {
+      widget.route.handleCommitBackGesture();
+    } else {
+      widget.route.handleCancelBackGesture();
+    }
+  }
+
+  void _cancel() {
+    if (!_dragging) {
+      return;
+    }
+    _dragging = false;
+    widget.route.handleCancelBackGesture();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inset = MediaQuery.paddingOf(context).left;
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        widget.child,
+        PositionedDirectional(
+          start: 0,
+          top: 0,
+          bottom: 0,
+          width: _edge + inset,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            supportedDevices: const {PointerDeviceKind.touch},
+            onHorizontalDragStart: _start,
+            onHorizontalDragUpdate: _update,
+            onHorizontalDragEnd: _end,
+            onHorizontalDragCancel: _cancel,
+          ),
+        ),
+      ],
     );
   }
 }
