@@ -681,6 +681,12 @@ abstract class L {
   /// **'Найти игру'**
   String get findGame;
 
+  /// No description provided for @findVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти площадку'**
+  String get findVenue;
+
   /// No description provided for @bookingsSection.
   ///
   /// In ru, this message translates to:
@@ -794,6 +800,18 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'В Москве пока нет клубов для этого вида спорта.'**
   String get noVenuesForSportHint;
+
+  /// No description provided for @noClubsYet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клубов пока нет'**
+  String get noClubsYet;
+
+  /// No description provided for @noClubsYetHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мы подключаем клубы Москвы. Скоро здесь появится, где поиграть.'**
+  String get noClubsYetHint;
 
   /// No description provided for @noVenuesForQueryHint.
   ///
@@ -2355,6 +2373,12 @@ abstract class L {
   /// **'Этот раздел только для администратора оплат.'**
   String get adminOnly;
 
+  /// No description provided for @adminOnlyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь владелец сервиса проверяет переводы и возвращает деньги.'**
+  String get adminOnlyHint;
+
   /// No description provided for @adminEmptyTitle.
   ///
   /// In ru, this message translates to:
@@ -2414,6 +2438,36 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Отозвать заявку'**
   String get withdrawRequest;
+
+  /// No description provided for @withdrawRequestQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать заявку?'**
+  String get withdrawRequestQuestion;
+
+  /// No description provided for @withdrawRequestMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Организатор её больше не увидит. Подать заявку снова можно в любой момент, пока есть места.'**
+  String get withdrawRequestMessage;
+
+  /// No description provided for @withdrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать'**
+  String get withdrawConfirm;
+
+  /// No description provided for @keepRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить'**
+  String get keepRequest;
+
+  /// No description provided for @requestWithdrawn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отозвана'**
+  String get requestWithdrawn;
 
   /// No description provided for @gameRequests.
   ///

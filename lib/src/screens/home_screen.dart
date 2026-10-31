@@ -318,7 +318,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 if (venues.isEmpty)
                   SliverToBoxAdapter(
-                    child: _NothingFound(query: _query, onReset: _reset),
+                    child: _NothingFound(
+                      query: _query,
+                      onReset: _reset,
+                      noClubs: widget.controller.venues.isEmpty,
+                    ),
                   )
                 else ...[
                   SliverToBoxAdapter(
@@ -1390,7 +1394,11 @@ class _Tag extends StatelessWidget {
 }
 
 class _NothingFound extends StatelessWidget {
-  const _NothingFound({required this.query, required this.onReset});
+  const _NothingFound({
+    required this.query,
+    required this.onReset,
+    this.noClubs = false,
+  });
 
   /// What was typed, if anything. The message used to name a covering the
   /// reader had never filtered by — «В Москве пока нет клубов с этим
@@ -1398,8 +1406,24 @@ class _NothingFound extends StatelessWidget {
   final String query;
   final VoidCallback onReset;
 
+  /// No clubs at all, filter or not: the catalogue is still empty. Blaming
+  /// «этот вид спорта» under «Все» and offering a reset that changes nothing
+  /// is what a first reader would have seen on launch day.
+  final bool noClubs;
+
   @override
   Widget build(BuildContext context) {
+    if (noClubs) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+        child: EmptyState(
+          key: const ValueKey('home-no-clubs'),
+          icon: AppIcons.mapPinOff,
+          title: context.l10n.noClubsYet,
+          description: context.l10n.noClubsYetHint,
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: EmptyState(

@@ -441,12 +441,18 @@ List<RouteBase> shellRoutes(AppController controller) => [
     path: 'admin/payments',
     builder: (context, state) => controller.isPaymentAdmin
         ? PaymentAdminScreen(controller: controller)
-        : _NotFound(what: context.l10n.adminOnly),
+        : _NotFound(
+            what: context.l10n.adminOnly,
+            hint: context.l10n.adminOnlyHint,
+          ),
   ),
   appRoute(
     path: 'bookings',
-    builder: (context, state) =>
-        HistoryScreen(controller: controller, focus: HistoryFocus.bookings),
+    builder: (context, state) => HistoryScreen(
+      controller: controller,
+      focus: HistoryFocus.bookings,
+      onFindVenues: () => openSearchTab(context),
+    ),
   ),
   appRoute(
     path: 'my-games',
@@ -481,6 +487,12 @@ DateTime? _dateOf(GoRouterState state) =>
 /// Comes back to the shell with the games tab up.
 void openGamesTab(BuildContext context) {
   MainShell.requestedTab.value = 2;
+  context.go(Routes.home);
+}
+
+/// The same for the clubs: the search tab, with its map and list.
+void openSearchTab(BuildContext context) {
+  MainShell.requestedTab.value = 1;
   context.go(Routes.home);
 }
 
@@ -627,25 +639,44 @@ class _LinkWaiting extends StatelessWidget {
 
 /// What a link to something that is gone, or not loaded yet, arrives at.
 class _NotFound extends StatelessWidget {
-  const _NotFound({super.key, required this.what});
+  const _NotFound({super.key, required this.what, this.hint});
 
   final String what;
 
+  /// Why it is not here. A missing booking is a stale link; a screen the
+  /// reader may not open is not, and saying so sent them looking for one.
+  final String? hint;
+
   @override
   Widget build(BuildContext context) {
+    // Laid out like every other inner screen — a title bar with the way
+    // back, the card under it. Centred on its own, the card stretched to
+    // the full height of the page and there was no back button at all.
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: EmptyState(
-              icon: AppIcons.searchX,
-              title: what,
-              description: context.l10n.notFoundHint,
-              actionLabel: context.l10n.toHome,
-              onAction: () => context.go(Routes.home),
+        child: Column(
+          children: [
+            ScreenTitleBar(
+              title: '',
+              onBack: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(Routes.home);
+                }
+              },
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: EmptyState(
+                icon: AppIcons.searchX,
+                title: what,
+                description: hint ?? context.l10n.notFoundHint,
+                actionLabel: context.l10n.toHome,
+                onAction: () => context.go(Routes.home),
+              ),
+            ),
+          ],
         ),
       ),
     );

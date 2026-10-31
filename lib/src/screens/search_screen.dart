@@ -585,7 +585,7 @@ class _ResultsSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
-                  venues.isEmpty
+                  venues.isEmpty && controller.venues.isNotEmpty
                       ? context.l10n.nothingFound
                       : context.l10n.clubsNearby(venues.length),
                   style: context.text.titleSmall?.copyWith(
@@ -594,7 +594,14 @@ class _ResultsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              if (venues.isEmpty)
+              if (controller.venues.isEmpty)
+                EmptyState(
+                  key: const ValueKey('search-no-clubs'),
+                  icon: AppIcons.mapPinOff,
+                  title: context.l10n.noClubsYet,
+                  description: context.l10n.noClubsYetHint,
+                )
+              else if (venues.isEmpty)
                 // An empty map is indistinguishable from a broken one, so
                 // say which filter emptied it.
                 EmptyState(

@@ -120,6 +120,8 @@ class _GamesScreenState extends State<GamesScreen> {
                             icon: AppIcons.volleyball,
                             title: context.l10n.noOpenGames,
                             description: context.l10n.noOpenGamesHint,
+                            actionLabel: context.l10n.createGameAction,
+                            onAction: () => context.go(Routes.create()),
                           ),
                   ),
                 ),
@@ -802,16 +804,25 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   Future<void> _leave(Game game) async {
+    // A request holds no place, so taking it back is not leaving the game:
+    // «Место вернётся в игру» promised a seat the reader never had.
+    final request = game.readerRequested;
     final confirmed = await confirmAction(
       context,
-      title: context.l10n.leaveGameQuestion,
-      message: context.l10n.leaveGameMessage(
-        game.venue.name.capitalized,
-        AppFormatters.dateShort(game.date),
-        game.timeRange,
-      ),
-      confirmLabel: context.l10n.leaveConfirm,
-      cancelLabel: context.l10n.stay,
+      title: request
+          ? context.l10n.withdrawRequestQuestion
+          : context.l10n.leaveGameQuestion,
+      message: request
+          ? context.l10n.withdrawRequestMessage
+          : context.l10n.leaveGameMessage(
+              game.venue.name.capitalized,
+              AppFormatters.dateShort(game.date),
+              game.timeRange,
+            ),
+      confirmLabel: request
+          ? context.l10n.withdrawConfirm
+          : context.l10n.leaveConfirm,
+      cancelLabel: request ? context.l10n.keepRequest : context.l10n.stay,
     );
     if (!confirmed || !mounted) {
       return;
@@ -825,7 +836,11 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        left ? context.l10n.leftGame : context.l10n.wasNotInGame,
+        !left
+            ? context.l10n.wasNotInGame
+            : request
+            ? context.l10n.requestWithdrawn
+            : context.l10n.leftGame,
         tone: left ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {

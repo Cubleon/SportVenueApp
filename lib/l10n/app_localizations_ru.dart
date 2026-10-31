@@ -367,6 +367,9 @@ class LRu extends L {
   String get findGame => 'Найти игру';
 
   @override
+  String get findVenue => 'Найти площадку';
+
+  @override
   String get bookingsSection => 'Брони';
 
   @override
@@ -450,6 +453,13 @@ class LRu extends L {
   @override
   String get noVenuesForSportHint =>
       'В Москве пока нет клубов для этого вида спорта.';
+
+  @override
+  String get noClubsYet => 'Клубов пока нет';
+
+  @override
+  String get noClubsYetHint =>
+      'Мы подключаем клубы Москвы. Скоро здесь появится, где поиграть.';
 
   @override
   String noVenuesForQueryHint(String query) {
@@ -1449,6 +1459,10 @@ class LRu extends L {
   String get adminOnly => 'Этот раздел только для администратора оплат.';
 
   @override
+  String get adminOnlyHint =>
+      'Здесь владелец сервиса проверяет переводы и возвращает деньги.';
+
+  @override
   String get adminEmptyTitle => 'Всё разобрано';
 
   @override
@@ -1479,6 +1493,22 @@ class LRu extends L {
 
   @override
   String get withdrawRequest => 'Отозвать заявку';
+
+  @override
+  String get withdrawRequestQuestion => 'Отозвать заявку?';
+
+  @override
+  String get withdrawRequestMessage =>
+      'Организатор её больше не увидит. Подать заявку снова можно в любой момент, пока есть места.';
+
+  @override
+  String get withdrawConfirm => 'Отозвать';
+
+  @override
+  String get keepRequest => 'Оставить';
+
+  @override
+  String get requestWithdrawn => 'Заявка отозвана';
 
   @override
   String get gameRequests => 'Заявки';

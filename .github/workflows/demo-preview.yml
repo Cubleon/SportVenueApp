@@ -89,6 +89,14 @@ jobs:
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -q -m "Demo preview of ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          # The whole site goes up every time, some 40 MB, and GitHub now and
+          # then drops a push that size half-way (HTTP 408). A second try
+          # goes through, so it is made here instead of by hand.
+          for attempt in 1 2 3; do
+            git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages && exit 0
+            echo "Push failed (attempt $attempt), retrying in $((attempt * 15)) s"
+            sleep $((attempt * 15))
+          done
+          exit 1
       - name: Link
         run: echo "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${{ github.event.repository.name }}/" >> "$GITHUB_STEP_SUMMARY"

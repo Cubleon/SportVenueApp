@@ -37,6 +37,7 @@ class HistoryScreen extends StatelessWidget {
     required this.controller,
     this.focus = HistoryFocus.all,
     this.onFindGames,
+    this.onFindVenues,
   });
 
   final AppController controller;
@@ -46,8 +47,14 @@ class HistoryScreen extends StatelessWidget {
   /// dead end: a sentence saying there is nothing, and the back button.
   final VoidCallback? onFindGames;
 
+  /// The same for an empty list of bookings: off to the clubs.
+  final VoidCallback? onFindVenues;
+
   @override
   Widget build(BuildContext context) {
+    final emptyAction = focus == HistoryFocus.bookings
+        ? onFindVenues
+        : onFindGames;
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -130,14 +137,16 @@ class HistoryScreen extends StatelessWidget {
                               context.l10n.noUpcomingBookings,
                             HistoryFocus.games => context.l10n.noMyGames,
                           },
-                          actionLabel: onFindGames == null
+                          actionLabel: emptyAction == null
                               ? null
+                              : focus == HistoryFocus.bookings
+                              ? context.l10n.findVenue
                               : context.l10n.findGame,
-                          onAction: onFindGames == null
+                          onAction: emptyAction == null
                               ? null
                               : () {
                                   Navigator.of(context).pop();
-                                  onFindGames!();
+                                  emptyAction();
                                 },
                         ),
                       ),
