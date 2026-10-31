@@ -496,6 +496,17 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                   label: context.l10n.gameFormat,
                                   value: format,
                                 ),
+                              // Shown to everyone: the game is open to look
+                              // at, and the reader should know before asking
+                              // to join that the answer may be no.
+                              if (current.genderFilter != GenderFilter.any)
+                                SummaryRow(
+                                  label: context.l10n.participantFilter,
+                                  value:
+                                      current.genderFilter == GenderFilter.men
+                                      ? context.l10n.genderOnlyMen
+                                      : context.l10n.genderOnlyWomen,
+                                ),
                               SummaryRow(
                                 label: context.l10n.pricePerPerson,
                                 value: AppFormatters.money(

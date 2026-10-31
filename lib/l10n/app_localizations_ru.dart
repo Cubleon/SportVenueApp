@@ -690,7 +690,13 @@ class LRu extends L {
 
   @override
   String get participantFilterHint =>
-      'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».';
+      'Игру увидят все, а вступить смогут только выбранные. Это для женских или мужских составов — в остальных случаях оставьте «Любой».';
+
+  @override
+  String get genderOnlyMen => 'только мужчины';
+
+  @override
+  String get genderOnlyWomen => 'только женщины';
 
   @override
   String get genderAny => 'Любой';

@@ -1122,8 +1122,20 @@ abstract class L {
   /// No description provided for @participantFilterHint.
   ///
   /// In ru, this message translates to:
-  /// **'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».'**
+  /// **'Игру увидят все, а вступить смогут только выбранные. Это для женских или мужских составов — в остальных случаях оставьте «Любой».'**
   String get participantFilterHint;
+
+  /// No description provided for @genderOnlyMen.
+  ///
+  /// In ru, this message translates to:
+  /// **'только мужчины'**
+  String get genderOnlyMen;
+
+  /// No description provided for @genderOnlyWomen.
+  ///
+  /// In ru, this message translates to:
+  /// **'только женщины'**
+  String get genderOnlyWomen;
 
   /// No description provided for @genderAny.
   ///

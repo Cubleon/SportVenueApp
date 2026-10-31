@@ -172,6 +172,21 @@ void main() {
     expect(find.byKey(const ValueKey('detail-join-game')), findsNothing);
   });
 
+  testWidgets('a game for women says so to everyone who opens it', (
+    tester,
+  ) async {
+    final app = controller();
+    final first = app.games.first;
+    app.games = [
+      first.copyWith(genderFilter: GenderFilter.women),
+      ...app.games.skip(1),
+    ];
+    await open(tester, app, Routes.game(first.id));
+
+    expect(find.text('Кто может играть'), findsOneWidget);
+    expect(find.text('только женщины'), findsOneWidget);
+  });
+
   testWidgets('a game opens by its link', (tester) async {
     final app = controller();
     final game = app.games.first;
