@@ -813,9 +813,47 @@ class _SharesCard extends StatelessWidget {
               onPressed: () => copyLink(context, Routes.booking(booking.id)),
             ),
           ],
+          // Places taken and not paid for: someone said yes and has not
+          // followed through. There is no push to nudge them yet, so this
+          // hands over a reminder ready for the players' chat.
+          if (_owing(booking) > 0) ...[
+            const SizedBox(height: 10),
+            PrimaryButton(
+              key: const ValueKey('remind-to-pay'),
+              label: context.l10n.remindToPay,
+              tone: ButtonTone.neutral,
+              icon: AppIcons.clock,
+              onPressed: () => _copyReminder(context, booking),
+            ),
+          ],
         ],
       ),
     );
+  }
+}
+
+int _owing(Booking booking) => booking.shares
+    .where(
+      (share) =>
+          share.status == ShareStatus.unpaid ||
+          share.status == ShareStatus.notFound,
+    )
+    .length;
+
+Future<void> _copyReminder(BuildContext context, Booking booking) async {
+  final l10n = context.l10n;
+  final text = [
+    l10n.payReminderText(
+      AppFormatters.money(booking.draft.sharePrice),
+      booking.draft.venue.name.capitalized,
+      '${AppFormatters.dateShort(booking.draft.date)}, ${booking.draft.timeRange}',
+    ),
+    l10n.payReminderDeadline(AppFormatters.moment(booking.deadline)),
+    if (canShareLinks) shareLink(Routes.booking(booking.id)),
+  ].join(' ');
+  await Clipboard.setData(ClipboardData(text: text));
+  if (context.mounted) {
+    showAppSnack(context, l10n.payReminderCopied, tone: SnackTone.done);
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sport_venue_app/l10n/l10n.dart';
@@ -230,6 +231,65 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(went, Routes.create());
+    });
+
+    testWidgets('a booking with unpaid places hands over a reminder', (
+      tester,
+    ) async {
+      final app = controller();
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await open(tester, app, Routes.booking('booking-demo'));
+
+      await tap(tester, 'remind-to-pay');
+
+      expect(copied, contains('₽525'));
+      expect(copied, contains('Академия спорта'));
+      expect(copied, contains('бронь снимется'));
+      expect(find.textContaining('Напоминание скопировано'), findsOneWidget);
+    });
+
+    testWidgets('the search on the home clears in one tap', (tester) async {
+      phone(tester);
+      final app = controller();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          home: Scaffold(
+            body: HomeScreen(
+              controller: app,
+              onOpenSearch: () {},
+              onOpenGames: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('home-search-clear')), findsNothing);
+      await tester.enterText(find.byType(TextField).first, 'лужники');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('home-search-clear')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('лужники'), findsNothing);
+      expect(find.byKey(const ValueKey('home-search-clear')), findsNothing);
     });
 
     testWidgets('no clubs at all is not blamed on a filter', (tester) async {

@@ -429,6 +429,30 @@ abstract class L {
   /// **'Позвать игроков по ссылке'**
   String get invitePlayers;
 
+  /// No description provided for @remindToPay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напомнить об оплате'**
+  String get remindToPay;
+
+  /// No description provided for @payReminderText.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминание: оплатите свою долю {amount} — {venue}, {when}.'**
+  String payReminderText(String amount, String venue, String when);
+
+  /// No description provided for @payReminderDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок — {deadline}, иначе бронь снимется.'**
+  String payReminderDeadline(String deadline);
+
+  /// No description provided for @payReminderCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминание скопировано — отправьте его в чат игроков'**
+  String get payReminderCopied;
+
   /// No description provided for @linkCopied.
   ///
   /// In ru, this message translates to:
@@ -512,6 +536,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Уведомления'**
   String get notifications;
+
+  /// No description provided for @profileOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть профиль'**
+  String get profileOpen;
 
   /// No description provided for @noNotifications.
   ///
@@ -654,20 +684,20 @@ abstract class L {
   /// No description provided for @statBookings.
   ///
   /// In ru, this message translates to:
-  /// **'Броней'**
-  String get statBookings;
+  /// **'{count, plural, one{Бронь} few{Брони} many{Броней} other{Брони}}'**
+  String statBookings(int count);
 
   /// No description provided for @statMyGames.
   ///
   /// In ru, this message translates to:
-  /// **'Моих игр'**
-  String get statMyGames;
+  /// **'{count, plural, one{Моя игра} few{Мои игры} many{Моих игр} other{Моих игр}}'**
+  String statMyGames(int count);
 
   /// No description provided for @statSports.
   ///
   /// In ru, this message translates to:
-  /// **'Видов спорта'**
-  String get statSports;
+  /// **'{count, plural, one{Вид спорта} few{Вида спорта} many{Видов спорта} other{Видов спорта}}'**
+  String statSports(int count);
 
   /// No description provided for @historyEmpty.
   ///

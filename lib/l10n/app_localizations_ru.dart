@@ -225,6 +225,23 @@ class LRu extends L {
   String get invitePlayers => 'Позвать игроков по ссылке';
 
   @override
+  String get remindToPay => 'Напомнить об оплате';
+
+  @override
+  String payReminderText(String amount, String venue, String when) {
+    return 'Напоминание: оплатите свою долю $amount — $venue, $when.';
+  }
+
+  @override
+  String payReminderDeadline(String deadline) {
+    return 'Срок — $deadline, иначе бронь снимется.';
+  }
+
+  @override
+  String get payReminderCopied =>
+      'Напоминание скопировано — отправьте его в чат игроков';
+
+  @override
   String get linkCopied => 'Ссылка скопирована';
 
   @override
@@ -280,6 +297,9 @@ class LRu extends L {
 
   @override
   String get notifications => 'Уведомления';
+
+  @override
+  String get profileOpen => 'Открыть профиль';
 
   @override
   String get noNotifications => 'Уведомлений пока нет';
@@ -363,13 +383,43 @@ class LRu extends L {
   String get logoutCancel => 'Остаться';
 
   @override
-  String get statBookings => 'Броней';
+  String statBookings(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Брони',
+      many: 'Броней',
+      few: 'Брони',
+      one: 'Бронь',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get statMyGames => 'Моих игр';
+  String statMyGames(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Моих игр',
+      many: 'Моих игр',
+      few: 'Мои игры',
+      one: 'Моя игра',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get statSports => 'Видов спорта';
+  String statSports(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видов спорта',
+      many: 'Видов спорта',
+      few: 'Вида спорта',
+      one: 'Вид спорта',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get historyEmpty => 'Здесь появятся ваши брони и игры';

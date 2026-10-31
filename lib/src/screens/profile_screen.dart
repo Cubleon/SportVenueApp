@@ -261,16 +261,23 @@ class _Stats extends StatelessWidget {
           Expanded(
             child: _Stat(
               value: '${controller.activeBookings.length}',
-              label: context.l10n.statBookings,
+              // Agreed with the number above it: «1 Броней» read as written
+              // by a machine.
+              label: context.l10n.statBookings(
+                controller.activeBookings.length,
+              ),
             ),
           ),
           Expanded(
-            child: _Stat(value: '$games', label: context.l10n.statMyGames),
+            child: _Stat(
+              value: '$games',
+              label: context.l10n.statMyGames(games),
+            ),
           ),
           Expanded(
             child: _Stat(
               value: '${controller.selectedSports.length}',
-              label: context.l10n.statSports,
+              label: context.l10n.statSports(controller.selectedSports.length),
             ),
           ),
         ],

@@ -11,6 +11,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
+import 'main_shell.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_filters.dart';
 import '../widgets/skeleton.dart';
@@ -590,53 +591,74 @@ class _HeaderPill extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: context.scaled(42, max: 1.25),
-            height: context.scaled(42, max: 1.25),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.accent,
-            ),
-            child: Text(
-              controller.greetingName.characters.first.toUpperCase(),
-              style: context.text.titleMedium?.copyWith(
-                color: colors.onAccent,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
+          // The pill reads as a button, so it is one: it opens the profile,
+          // which is what the name and the face in it are about.
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+            child: Semantics(
+              button: true,
+              label: context.l10n.profileOpen,
+              child: InkWell(
+                key: const ValueKey('home-profile'),
+                borderRadius: BorderRadius.circular(99),
+                onTap: () => MainShell.requestedTab.value = 3,
+                child: Row(
                   children: [
-                    Icon(AppIcons.mapPin, size: 13, color: colors.dim),
-                    const SizedBox(width: 2),
-                    Flexible(
+                    Container(
+                      width: context.scaled(42, max: 1.25),
+                      height: context.scaled(42, max: 1.25),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.accent,
+                      ),
                       child: Text(
-                        context.l10n.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.text.labelSmall?.copyWith(
-                          color: colors.muted,
+                        controller.greetingName.characters.first.toUpperCase(),
+                        style: context.text.titleMedium?.copyWith(
+                          color: colors.onAccent,
+                          fontWeight: FontWeight.w800,
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                AppIcons.mapPin,
+                                size: 13,
+                                color: colors.dim,
+                              ),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  context.l10n.city,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.text.labelSmall?.copyWith(
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            controller.greetingName.capitalized,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  controller.greetingName.capitalized,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -658,8 +680,9 @@ class _HeaderPill extends StatelessWidget {
                     key: const ValueKey('home-bell'),
                     onTap: () => context.go(Routes.notifications),
                     child: SizedBox(
-                      width: context.scaled(42, max: 1.25),
-                      height: context.scaled(42, max: 1.25),
+                      // 44, the smallest target a thumb is promised.
+                      width: context.scaled(44, max: 1.25),
+                      height: context.scaled(44, max: 1.25),
                       child: Icon(AppIcons.bell, size: 20, color: colors.ink),
                     ),
                   ),
@@ -844,6 +867,25 @@ class _SearchField extends StatelessWidget {
               ),
             ),
           ),
+          // A typed name is cleared in one tap, not a character at a time.
+          if (controller.text.isNotEmpty)
+            Semantics(
+              button: true,
+              label: context.l10n.clearSearch,
+              child: InkWell(
+                key: const ValueKey('home-search-clear'),
+                onTap: () {
+                  controller.clear();
+                  onChanged('');
+                },
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(AppIcons.x, size: 20, color: colors.muted),
+                ),
+              ),
+            ),
           // Sliders again, now that there are filters behind them. The
           // icon meant filters and opened the map, which is the one thing
           // it could not be allowed to mean.
