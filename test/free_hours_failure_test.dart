@@ -54,7 +54,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final server = _FlakyServer();
     addTearDown(server.client.close);
-    final controller = AppController(now: fixedNow, api: server.client);
+    final controller = AppController(now: fixedNow, api: server.client)
+      ..venues = List.of(MockData.venues);
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -93,7 +94,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final server = _FlakyServer();
     addTearDown(server.client.close);
-    final controller = AppController(now: fixedNow, api: server.client);
+    final controller = AppController(now: fixedNow, api: server.client)
+      ..venues = List.of(MockData.venues);
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(

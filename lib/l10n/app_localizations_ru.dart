@@ -285,6 +285,26 @@ class LRu extends L {
   String get noNotifications => 'Уведомлений пока нет';
 
   @override
+  String get noNotificationsHint =>
+      'Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.';
+
+  @override
+  String get notificationNew => 'Новое';
+
+  @override
+  String notificationsUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уведомления: $count новых',
+      many: 'Уведомления: $count новых',
+      few: 'Уведомления: $count новых',
+      one: 'Уведомления: $count новое',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get searchPlaceholder => 'Найти площадку или игру';
 
   @override
@@ -927,26 +947,28 @@ class LRu extends L {
   String get noFreeSlots => 'На эту дату свободных слотов нет';
 
   @override
-  String get errorNetwork => 'сервер недоступен — проверьте, что он запущен';
+  String get errorNetwork =>
+      'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.';
 
   @override
-  String get errorInvalidResponse => 'сервер вернул неожиданный ответ';
+  String get errorInvalidResponse =>
+      'Что-то пошло не так на нашей стороне. Попробуйте ещё раз чуть позже.';
 
   @override
-  String get errorSessionExpired => 'сессия истекла — войдите снова';
+  String get errorSessionExpired => 'Вход устарел — войдите снова.';
 
   @override
-  String get errorSlotTaken => 'этот слот уже занят, выберите другое время';
+  String get errorSlotTaken => 'Это время уже заняли. Выберите другое.';
 
   @override
-  String get errorGameFull => 'в игре больше нет свободных мест';
+  String get errorGameFull => 'В игре больше нет свободных мест.';
 
   @override
   String get errorCancelNotOrganizer =>
-      'отменить бронь может только организатор';
+      'Отменить бронь может только организатор.';
 
   @override
-  String get errorBadPhone => 'проверьте номер телефона';
+  String get errorBadPhone => 'Проверьте номер телефона.';
 
   @override
   String get errorChallengeExpired =>
@@ -956,10 +978,10 @@ class LRu extends L {
   String get errorTooManyAttempts => 'Подождите минуту перед новой попыткой';
 
   @override
-  String get errorTimeout => 'сервер не ответил вовремя';
+  String get errorTimeout => 'Сервер долго не отвечает. Попробуйте ещё раз.';
 
   @override
-  String get errorUnknown => 'не удалось выполнить запрос';
+  String get errorUnknown => 'Не получилось. Попробуйте ещё раз.';
 
   @override
   String get bookingStatusCollecting => 'ожидает участников';
@@ -1487,6 +1509,9 @@ class LRu extends L {
 
   @override
   String get mapFailed => 'Карта не загрузилась. Список клубов ниже работает.';
+
+  @override
+  String get loadFailed => 'Не удалось загрузить данные. Проверьте интернет.';
 
   @override
   String get requestWaiting => 'заявка отправлена';

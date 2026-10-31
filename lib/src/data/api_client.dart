@@ -544,6 +544,22 @@ class SportVenueApiClient {
     await _send('DELETE', const ['me'], authenticated: true);
   }
 
+  /// The reader's notices, newest first. A server without them yet answers
+  /// 404, which the controller reads as «none».
+  Future<ApiJsonList> listNotifications() async {
+    final response = await _send('GET', const [
+      'notifications',
+    ], authenticated: true);
+    return _parseObjectList(response);
+  }
+
+  Future<void> markNotificationsRead() async {
+    await _send('POST', const [
+      'notifications',
+      'read-all',
+    ], authenticated: true);
+  }
+
   Future<ApiJsonList> listGames({
     String? sportId,
     DateTime? dateFrom,

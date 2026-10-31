@@ -1000,6 +1000,82 @@ bool _requiredBool(Map<String, dynamic> json, String key) {
   throw FormatException('Expected "$key" to be a boolean.');
 }
 
+/// What an in-app notice is about. Decides its mark; the words come from
+/// the server, which knows the club, the date and who did what.
+enum NotificationKind {
+  requestApproved,
+  requestRejected,
+  newRequest,
+  gameCancelled,
+  bookingCancelled,
+  payReminder,
+  shareConfirmed,
+  refunded,
+  other;
+
+  static NotificationKind fromCode(String? code) => switch (code) {
+    'request_approved' => requestApproved,
+    'request_rejected' => requestRejected,
+    'new_request' => newRequest,
+    'game_cancelled' => gameCancelled,
+    'booking_cancelled' => bookingCancelled,
+    'pay_reminder' => payReminder,
+    'share_confirmed' => shareConfirmed,
+    'refunded' => refunded,
+    _ => other,
+  };
+}
+
+/// One line under the bell: something that happened to the reader's game
+/// or booking while they were not looking.
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.body,
+    required this.createdAt,
+    this.read = false,
+    this.bookingId,
+    this.gameId,
+  });
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
+      id: _requiredString(json, 'id'),
+      kind: NotificationKind.fromCode(_optionalString(json, 'type')),
+      title: _requiredString(json, 'title'),
+      body: _optionalString(json, 'body') ?? '',
+      createdAt: _wallClock(_requiredDateTime(json, 'created_at')),
+      read: json['read_at'] != null,
+      bookingId: _optionalString(json, 'booking_id'),
+      gameId: _optionalString(json, 'game_id'),
+    );
+  }
+
+  final String id;
+  final NotificationKind kind;
+  final String title;
+  final String body;
+  final DateTime createdAt;
+  final bool read;
+
+  /// Where tapping it leads: the game if there is one, else the booking.
+  final String? bookingId;
+  final String? gameId;
+
+  AppNotification asRead() => AppNotification(
+    id: id,
+    kind: kind,
+    title: title,
+    body: body,
+    createdAt: createdAt,
+    read: true,
+    bookingId: bookingId,
+    gameId: gameId,
+  );
+}
+
 DateTime? _optionalDateTime(Map<String, dynamic> json, String key) {
   final value = json[key];
   return value is String ? DateTime.tryParse(value) : null;

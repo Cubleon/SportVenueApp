@@ -519,6 +519,24 @@ abstract class L {
   /// **'Уведомлений пока нет'**
   String get noNotifications;
 
+  /// No description provided for @noNotificationsHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.'**
+  String get noNotificationsHint;
+
+  /// No description provided for @notificationNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новое'**
+  String get notificationNew;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Уведомления: {count} новое} few{Уведомления: {count} новых} many{Уведомления: {count} новых} other{Уведомления: {count} новых}}'**
+  String notificationsUnread(int count);
+
   /// No description provided for @searchPlaceholder.
   ///
   /// In ru, this message translates to:
@@ -1560,43 +1578,43 @@ abstract class L {
   /// No description provided for @errorNetwork.
   ///
   /// In ru, this message translates to:
-  /// **'сервер недоступен — проверьте, что он запущен'**
+  /// **'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.'**
   String get errorNetwork;
 
   /// No description provided for @errorInvalidResponse.
   ///
   /// In ru, this message translates to:
-  /// **'сервер вернул неожиданный ответ'**
+  /// **'Что-то пошло не так на нашей стороне. Попробуйте ещё раз чуть позже.'**
   String get errorInvalidResponse;
 
   /// No description provided for @errorSessionExpired.
   ///
   /// In ru, this message translates to:
-  /// **'сессия истекла — войдите снова'**
+  /// **'Вход устарел — войдите снова.'**
   String get errorSessionExpired;
 
   /// No description provided for @errorSlotTaken.
   ///
   /// In ru, this message translates to:
-  /// **'этот слот уже занят, выберите другое время'**
+  /// **'Это время уже заняли. Выберите другое.'**
   String get errorSlotTaken;
 
   /// No description provided for @errorGameFull.
   ///
   /// In ru, this message translates to:
-  /// **'в игре больше нет свободных мест'**
+  /// **'В игре больше нет свободных мест.'**
   String get errorGameFull;
 
   /// No description provided for @errorCancelNotOrganizer.
   ///
   /// In ru, this message translates to:
-  /// **'отменить бронь может только организатор'**
+  /// **'Отменить бронь может только организатор.'**
   String get errorCancelNotOrganizer;
 
   /// No description provided for @errorBadPhone.
   ///
   /// In ru, this message translates to:
-  /// **'проверьте номер телефона'**
+  /// **'Проверьте номер телефона.'**
   String get errorBadPhone;
 
   /// No description provided for @errorChallengeExpired.
@@ -1614,13 +1632,13 @@ abstract class L {
   /// No description provided for @errorTimeout.
   ///
   /// In ru, this message translates to:
-  /// **'сервер не ответил вовремя'**
+  /// **'Сервер долго не отвечает. Попробуйте ещё раз.'**
   String get errorTimeout;
 
   /// No description provided for @errorUnknown.
   ///
   /// In ru, this message translates to:
-  /// **'не удалось выполнить запрос'**
+  /// **'Не получилось. Попробуйте ещё раз.'**
   String get errorUnknown;
 
   /// No description provided for @bookingStatusCollecting.
@@ -2426,6 +2444,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Карта не загрузилась. Список клубов ниже работает.'**
   String get mapFailed;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить данные. Проверьте интернет.'**
+  String get loadFailed;
 
   /// No description provided for @requestWaiting.
   ///

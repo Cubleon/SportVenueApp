@@ -316,7 +316,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ],
-                if (venues.isEmpty)
+                // Said once, above everything the server should have sent:
+                // the lists below are empty because nothing arrived, not
+                // because there is nothing.
+                if (widget.controller.loadFailed)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: RetryNotice(
+                        key: const ValueKey('home-load-failed'),
+                        message: context.l10n.loadFailed,
+                        onRetry: () =>
+                            refreshAndReport(context, widget.controller),
+                      ),
+                    ),
+                  ),
+                if (venues.isEmpty && !widget.controller.loadFailed)
                   SliverToBoxAdapter(
                     child: _NothingFound(
                       query: _query,
@@ -324,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       noClubs: widget.controller.venues.isEmpty,
                     ),
                   )
-                else ...[
+                else if (venues.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: SectionHeader(
                       title: context.l10n.freeOnDate(
@@ -627,20 +642,59 @@ class _HeaderPill extends StatelessWidget {
           const SizedBox(width: 8),
           Semantics(
             button: true,
-            label: context.l10n.notifications,
-            child: Material(
-              color: colors.surfaceRaised,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () =>
-                    showAppSnack(context, context.l10n.noNotifications),
-                child: SizedBox(
-                  width: context.scaled(42, max: 1.25),
-                  height: context.scaled(42, max: 1.25),
-                  child: Icon(AppIcons.bell, size: 20, color: colors.ink),
+            label: controller.unreadNotifications == 0
+                ? context.l10n.notifications
+                : context.l10n.notificationsUnread(
+                    controller.unreadNotifications,
+                  ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Material(
+                  color: colors.surfaceRaised,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: const ValueKey('home-bell'),
+                    onTap: () => context.go(Routes.notifications),
+                    child: SizedBox(
+                      width: context.scaled(42, max: 1.25),
+                      height: context.scaled(42, max: 1.25),
+                      child: Icon(AppIcons.bell, size: 20, color: colors.ink),
+                    ),
+                  ),
                 ),
-              ),
+                if (controller.unreadNotifications > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: ExcludeSemantics(
+                      child: Container(
+                        key: const ValueKey('home-bell-badge'),
+                        constraints: const BoxConstraints(minWidth: 18),
+                        height: 18,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: colors.accent,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: colors.surfaceRaised,
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          '${controller.unreadNotifications}',
+                          style: context.text.labelSmall?.copyWith(
+                            color: colors.onAccent,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

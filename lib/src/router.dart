@@ -15,6 +15,7 @@ import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/notifications_screen.dart';
 import 'screens/payment_admin_screen.dart';
 import 'screens/share_payment_screen.dart';
 import 'screens/sport_selection_screen.dart';
@@ -40,6 +41,7 @@ abstract final class Routes {
   static const bookings = '/bookings';
   static const myGames = '/my-games';
   static const history = '/history';
+  static const notifications = '/notifications';
   static String create({DateTime? date}) => date == null
       ? '/create'
       : '/create?date=${date.toIso8601String().substring(0, 10)}';
@@ -481,6 +483,10 @@ List<RouteBase> shellRoutes(AppController controller) => [
     path: 'history',
     builder: (context, state) =>
         HistoryScreen(controller: controller, focus: HistoryFocus.all),
+  ),
+  appRoute(
+    path: 'notifications',
+    builder: (context, state) => NotificationsScreen(controller: controller),
   ),
   appRoute(
     path: 'create',

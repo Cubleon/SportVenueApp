@@ -349,4 +349,35 @@ class MockData {
       ],
     );
   }
+
+  /// What the bell holds in the demo: one of each thing worth knowing.
+  static List<AppNotification> notifications(DateTime now) => [
+    AppNotification(
+      id: 'note-1',
+      kind: NotificationKind.payReminder,
+      title: 'Осталось оплатить 3 доли',
+      body:
+          'Академия спорта, завтра 20:00. Если не собрать до 18:00, бронь '
+          'снимется.',
+      createdAt: now.subtract(const Duration(minutes: 40)),
+      bookingId: 'booking-demo',
+    ),
+    AppNotification(
+      id: 'note-2',
+      kind: NotificationKind.shareConfirmed,
+      title: 'Ваша доля подтверждена',
+      body: 'Администратор нашёл перевод ₽525.',
+      createdAt: now.subtract(const Duration(hours: 3)),
+      bookingId: 'booking-demo',
+    ),
+    AppNotification(
+      id: 'note-3',
+      kind: NotificationKind.requestApproved,
+      title: 'Вас взяли в игру',
+      body: 'Максим Орлов одобрил заявку: футбол, Лужники, завтра 19:00.',
+      createdAt: now.subtract(const Duration(days: 1, hours: 2)),
+      read: true,
+      gameId: 'game-1',
+    ),
+  ];
 }

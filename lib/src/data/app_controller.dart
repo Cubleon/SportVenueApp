@@ -66,7 +66,10 @@ class AppController extends ChangeNotifier {
     this.isDemo = false,
   }) : _now = now ?? DateTime.now() {
     sports = List<Sport>.from(MockData.sports);
-    venues = List<Venue>.from(MockData.venues);
+    // Clubs come from the server when there is one. The fixtures used to
+    // stay in place until the first load succeeded, so a launch without a
+    // connection showed four made-up clubs as if they were real.
+    venues = _api == null ? List<Venue>.from(MockData.venues) : [];
     selectedSportIds = {'football', 'padel', 'tennis'};
 
     // Unit and widget tests use the controller without a transport. The
@@ -75,6 +78,7 @@ class AppController extends ChangeNotifier {
     if (_api == null) {
       games = MockData.games(_now);
       bookings = [MockData.initialBooking(_now)];
+      notifications = MockData.notifications(_now);
     }
     // The demo shows the admin's side too: whoever is shown the pilot is
     // shown both ends of a payment.
@@ -387,6 +391,44 @@ class AppController extends ChangeNotifier {
           ),
         )
         .toList();
+    // Notices ride along but are not allowed to fail the load: a server that
+    // does not have them yet would otherwise keep the whole app empty.
+    unawaited(loadNotifications());
+  }
+
+  /// What the bell holds, newest first.
+  List<AppNotification> notifications = [];
+
+  int get unreadNotifications =>
+      notifications.where((note) => !note.read).length;
+
+  Future<void> loadNotifications() async {
+    final api = _api;
+    if (api == null) {
+      return;
+    }
+    try {
+      final rows = await api.listNotifications();
+      notifications = rows.map(AppNotification.fromJson).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      notifyListeners();
+    } catch (_) {
+      // Not worth a word: the bell simply stays as it was.
+    }
+  }
+
+  /// Everything under the bell has been seen. Marked here first, so the dot
+  /// goes at once; the server is told after, and a failure there only means
+  /// the dot comes back on the next load.
+  Future<void> markNotificationsRead() async {
+    if (unreadNotifications == 0) {
+      return;
+    }
+    notifications = [for (final note in notifications) note.asRead()];
+    notifyListeners();
+    try {
+      await _api?.markNotificationsRead();
+    } catch (_) {}
   }
 
   /// Saves the sports the reader says they play.
@@ -1352,14 +1394,26 @@ class AppController extends ChangeNotifier {
     api.setTokens(tokens);
     try {
       await _loadRemoteState(api);
-    } catch (_) {
-      api.clearTokens();
-      return false;
+      loadFailed = false;
+    } catch (error) {
+      // Only the server saying the session is over ends it. No connection,
+      // a timeout or a server error used to wipe the stored session too,
+      // and a launch on the metro meant confirming the phone by call again.
+      if (kindOf(error) == AppErrorKind.sessionExpired) {
+        api.clearTokens();
+        return false;
+      }
+      loadFailed = true;
     }
     isSignedIn = true;
     notifyListeners();
     return true;
   }
+
+  /// Whether the last attempt to read the server's state failed, so what
+  /// the screens show is not the server's word. Cleared by a [refresh] that
+  /// goes through.
+  bool loadFailed = false;
 
   /// Re-reads everything the screens show. Pull-to-refresh calls this.
   ///
@@ -1376,6 +1430,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     await _loadRemoteState(api);
+    loadFailed = false;
     notifyListeners();
   }
 
@@ -1390,6 +1445,8 @@ class AppController extends ChangeNotifier {
     isSignedIn = false;
     isPaymentAdmin = isDemo;
     paymentInfo = null;
+    loadFailed = false;
+    notifications = _api == null ? MockData.notifications(_now) : [];
     _linkedBookings.clear();
     selectedSportIds = {'football', 'padel', 'tennis'};
     if (_api == null) {
