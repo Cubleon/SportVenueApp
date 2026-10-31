@@ -767,7 +767,7 @@ class SummaryRow extends StatelessWidget {
             // left the label a third of the row: «Стоимость с человека» broke
             // over two lines beside a value four characters long.
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.4),
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.5),
               child: Text(
                 label,
                 style: context.text.bodySmall?.copyWith(

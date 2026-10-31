@@ -1046,7 +1046,9 @@ class _MineCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    maxLines: 1,
+                    // Two lines under a large system font: «Мои бр…» told
+                    // nobody which card was which.
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -1195,6 +1197,74 @@ class _VenueRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final free = freeSlots;
+    // With a large system font the price column took a third of the row and
+    // left the name «Футбольны…» and the free-hours tag broken over two
+    // lines. Past a modest scale the price moves under the tags instead.
+    final roomy = MediaQuery.textScalerOf(context).scale(10) <= 11.5;
+    final price = Column(
+      crossAxisAlignment: roomy
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        // The unit rides with the number. Without it «₽1 600»
+        // reads as the price of a visit, and the search screen
+        // two taps away says «₽1 600/час» for the same club.
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: AppFormatters.money(venue.pricePerHour),
+                style: AppTheme.numeric(
+                  context.text.titleMedium,
+                ).copyWith(fontWeight: FontWeight.w900),
+              ),
+              TextSpan(
+                text: context.l10n.perHourSuffix,
+                style: context.text.bodySmall?.copyWith(
+                  color: colors.muted,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.end,
+        ),
+        const SizedBox(height: 3),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(AppIcons.star, size: 13, color: colors.ink),
+            const SizedBox(width: 3),
+            Flexible(
+              // Written short, read long: a reader hears
+              // "4.8 · 128 отзывов", the row shows what fits.
+              child: Semantics(
+                label: venue.reviewCount == null
+                    ? null
+                    : context.l10n.ratingWithReviews(
+                        venue.rating.toStringAsFixed(1),
+                        venue.reviewCount!,
+                      ),
+                child: Text(
+                  venue.reviewCount == null
+                      ? venue.rating.toStringAsFixed(1)
+                      : '${venue.rating.toStringAsFixed(1)} · '
+                            '${venue.reviewCount}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: AppTheme.numeric(
+                    context.text.labelSmall,
+                  ).copyWith(color: colors.muted),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
 
     return Semantics(
       button: true,
@@ -1228,7 +1298,7 @@ class _VenueRow extends StatelessWidget {
                   children: [
                     Text(
                       venue.name.capitalized,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.text.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -1280,80 +1350,22 @@ class _VenueRow extends StatelessWidget {
                             _Tag(label: amenity),
                       ],
                     ),
+                    if (!roomy) ...[const SizedBox(height: 8), price],
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              // Capped rather than flexible: a flexible column would split
-              // the row evenly with the name and clip it at the default text
-              // size, which is not where the pressure is.
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: context.scaled(98, max: 1.5),
+              if (roomy) ...[
+                const SizedBox(width: 10),
+                // Capped rather than flexible: a flexible column would split
+                // the row evenly with the name and clip it at the default
+                // text size, which is not where the pressure is.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: context.scaled(98, max: 1.5),
+                  ),
+                  child: price,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // The unit rides with the number. Without it «₽1 600»
-                    // reads as the price of a visit, and the search screen
-                    // two taps away says «₽1 600/час» for the same club.
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: AppFormatters.money(venue.pricePerHour),
-                            style: AppTheme.numeric(
-                              context.text.titleMedium,
-                            ).copyWith(fontWeight: FontWeight.w900),
-                          ),
-                          TextSpan(
-                            text: context.l10n.perHourSuffix,
-                            style: context.text.bodySmall?.copyWith(
-                              color: colors.muted,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(AppIcons.star, size: 13, color: colors.ink),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          // Written short, read long: a reader hears
-                          // "4.8 · 128 отзывов", the row shows what fits.
-                          child: Semantics(
-                            label: venue.reviewCount == null
-                                ? null
-                                : context.l10n.ratingWithReviews(
-                                    venue.rating.toStringAsFixed(1),
-                                    venue.reviewCount!,
-                                  ),
-                            child: Text(
-                              venue.reviewCount == null
-                                  ? venue.rating.toStringAsFixed(1)
-                                  : '${venue.rating.toStringAsFixed(1)} · '
-                                        '${venue.reviewCount}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                              style: AppTheme.numeric(
-                                context.text.labelSmall,
-                              ).copyWith(color: colors.muted),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ],
           ),
         ),
