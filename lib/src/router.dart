@@ -70,18 +70,33 @@ abstract final class Routes {
       '/booking/$id/pay${created ? '?new=1' : ''}';
 }
 
+/// The site links are shared on, set at build time with
+/// `--dart-define=SHARE_BASE_URL=https://example.ru`. Empty until the
+/// product has a domain.
+const String _shareBaseUrl = String.fromEnvironment('SHARE_BASE_URL');
+
 /// A link to somewhere in the app, ready to be pasted into a chat.
 ///
-/// The router keeps the hash strategy, which is what makes the app work on
-/// any static host without server rewrites — so the shareable form of a
-/// location is this page's own URL with the location in its fragment.
-/// Off the web there is no such address until a universal-link domain is
-/// configured, and [canShareLinks] is false rather than handing anyone a
-/// `file://` link that goes nowhere.
-bool get canShareLinks => kIsWeb;
+/// With a domain set, the link is that domain plus the location as a path
+/// (`https://example.ru/game/g7`): the form universal links and app links
+/// open the app with, and the one a phone can share at all. Without one,
+/// the web build shares its own URL with the location in the fragment — the
+/// router keeps the hash strategy so the app runs on any static host — and
+/// the phone apps have no address to give, so [canShareLinks] is false
+/// rather than handing anyone a `file://` link that goes nowhere.
+bool get canShareLinks => kIsWeb || _shareBaseUrl.isNotEmpty;
 
 String shareLink(String location) =>
-    Uri.base.replace(fragment: location).toString();
+    shareLinkFor(location, base: _shareBaseUrl, page: Uri.base);
+
+/// [shareLink] with its inputs spelled out, for tests.
+String shareLinkFor(String location, {required String base, Uri? page}) {
+  if (base.isNotEmpty) {
+    final root = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    return '$root$location';
+  }
+  return (page ?? Uri.base).replace(fragment: location).toString();
+}
 
 /// What the app was asked for before it was ready to answer.
 ///
