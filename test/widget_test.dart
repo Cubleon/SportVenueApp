@@ -181,7 +181,7 @@ void main() {
       expect(find.byKey(const ValueKey('players-plus')), findsNothing);
       await _answerBookingSteps(tester, day: fixedNow);
 
-      expect(find.textContaining('₽400'), findsWidgets);
+      expect(find.textContaining('400\u00A0₽'), findsWidgets);
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('players-plus')),
         250,
@@ -190,7 +190,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('players-plus')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('₽320'), findsWidgets);
+      expect(find.textContaining('320\u00A0₽'), findsWidgets);
 
       await tester.tap(find.byKey(const ValueKey('pay-share')));
       await tester.pumpAndSettle();
@@ -325,7 +325,7 @@ void main() {
     // No money has moved yet, so the screen does not say any has; it says
     // what the others still owe and what happens if they do not pay.
     expect(find.textContaining('им осталось оплатить 3 доли'), findsOneWidget);
-    expect(find.textContaining('Ваша часть оплачена'), findsNothing);
+    expect(find.textContaining('Ваша доля оплачена'), findsNothing);
 
     // Said with a screen of its own: what is held until when, and the way
     // on to paying the reader's share.
@@ -849,7 +849,7 @@ void main() {
       ),
     );
     await _answerBookingSteps(tester, day: fixedNow);
-    expect(find.textContaining('₽400'), findsWidgets);
+    expect(find.textContaining('400\u00A0₽'), findsWidgets);
 
     await tester.tap(find.byKey(const ValueKey('booking-venue-field')));
     await tester.pumpAndSettle();
@@ -862,8 +862,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // A different club costs differently, and the summary follows it.
-    expect(find.textContaining('₽400'), findsNothing);
-    expect(find.textContaining('₽550'), findsWidgets);
+    expect(find.textContaining('400\u00A0₽'), findsNothing);
+    expect(find.textContaining('550\u00A0₽'), findsWidgets);
   });
 
   testWidgets('the club picker searches, and picking one changes the step', (

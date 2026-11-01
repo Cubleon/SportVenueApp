@@ -194,7 +194,7 @@ class _NoteCard extends StatelessWidget {
                   ],
                   const SizedBox(height: 6),
                   Text(
-                    AppFormatters.moment(note.createdAt),
+                    AppFormatters.ago(note.createdAt),
                     style: context.text.labelSmall?.copyWith(color: colors.dim),
                   ),
                 ],

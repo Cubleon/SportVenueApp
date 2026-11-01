@@ -366,7 +366,7 @@ class MockData {
       id: 'note-2',
       kind: NotificationKind.shareConfirmed,
       title: 'Ваша доля подтверждена',
-      body: 'Администратор нашёл перевод ₽525.',
+      body: 'Администратор нашёл перевод 525\u00A0₽.',
       createdAt: now.subtract(const Duration(hours: 3)),
       bookingId: 'booking-demo',
     ),

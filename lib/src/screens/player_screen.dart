@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/l10n.dart';
 import '../data/app_controller.dart';
 import '../models/sport_venue_models.dart';
+import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'games_screens.dart';
@@ -158,7 +159,7 @@ class PlayerScreen extends StatelessWidget {
       if (isOrganizer) context.l10n.playerOrganizer,
       if (player.status == 'pending') context.l10n.playerPending,
       if (player.hasRating)
-        context.l10n.rating(player.rating.toStringAsFixed(1)),
+        context.l10n.rating(AppFormatters.decimal(player.rating)),
     ];
     return parts.isEmpty ? context.l10n.player : parts.join(' · ');
   }

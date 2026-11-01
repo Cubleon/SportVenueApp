@@ -133,7 +133,7 @@ class _VenueScreenState extends State<VenueScreen> {
                   Text(
                     context.l10n.venueAddressDistance(
                       venue.address,
-                      venue.distanceKm.toStringAsFixed(1),
+                      AppFormatters.decimal(venue.distanceKm),
                     ),
                     style: context.text.bodyMedium?.copyWith(
                       color: colors.muted,
@@ -176,7 +176,7 @@ class _VenueScreenState extends State<VenueScreen> {
                       runSpacing: 8,
                       children: [
                         for (final amenity in venue.amenities)
-                          _Amenity(label: amenity),
+                          _Amenity(label: amenity.capitalized),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -255,9 +255,9 @@ class _RatingRow extends StatelessWidget {
     final reviews = venue.reviewCount;
     return Semantics(
       label: reviews == null
-          ? context.l10n.ratingOnly(venue.rating.toStringAsFixed(1))
+          ? context.l10n.ratingOnly(AppFormatters.decimal(venue.rating))
           : context.l10n.ratingWithReviews(
-              venue.rating.toStringAsFixed(1),
+              AppFormatters.decimal(venue.rating),
               reviews,
             ),
       child: ExcludeSemantics(
@@ -266,7 +266,7 @@ class _RatingRow extends StatelessWidget {
             Icon(AppIcons.star, size: 17, color: context.colors.ink),
             const SizedBox(width: 6),
             Text(
-              venue.rating.toStringAsFixed(1),
+              AppFormatters.decimal(venue.rating),
               style: AppTheme.numeric(
                 context.text.titleMedium,
               ).copyWith(fontWeight: FontWeight.w800),

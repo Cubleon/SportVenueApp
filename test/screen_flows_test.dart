@@ -272,7 +272,7 @@ void main() {
 
       await tap(tester, 'remind-to-pay');
 
-      expect(copied, contains('₽525'));
+      expect(copied, contains('525\u00A0₽'));
       expect(copied, contains('Академия спорта'));
       expect(copied, contains('бронь снимется'));
       expect(find.textContaining('Напоминание скопировано'), findsOneWidget);

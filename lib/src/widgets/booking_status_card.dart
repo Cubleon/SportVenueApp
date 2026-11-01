@@ -102,8 +102,11 @@ class BookingStatusCard extends StatelessWidget {
                             booking.shares.length,
                           )
                           .capitalized,
+                      // Ink, not the tone: in blue it read as a link, and
+                      // nothing happens when it is tapped. The bar below
+                      // carries the colour.
                       style: context.text.bodyMedium?.copyWith(
-                        color: tone,
+                        color: colors.ink,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

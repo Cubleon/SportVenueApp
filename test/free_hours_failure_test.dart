@@ -115,7 +115,7 @@ void main() {
       find.byKey(const ValueKey('home-free-hours-failed')),
       findsOneWidget,
     );
-    expect(find.textContaining('свободно'), findsNothing);
+    expect(find.textContaining(RegExp(r'Свободно \d')), findsNothing);
 
     server.down = false;
     await tester.ensureVisible(find.text('Повторить'));
@@ -124,6 +124,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('home-free-hours-failed')), findsNothing);
-    expect(find.text('свободно 0 часов'), findsWidgets);
+    expect(find.text('Свободно 0 часов'), findsWidgets);
   });
 }

@@ -19,8 +19,11 @@
   "summaryTime": "Время",
   "summaryVenue": "Площадка",
   "summaryPlayers": "Игроки",
+  "summaryShares": "Доли",
+  "sharesTimesPrice": "{count} по {price}",
+  "@sharesTimesPrice": {"placeholders": {"count": {"type": "int"}, "price": {"type": "String"}}},
   "summaryTotal": "Итого",
-  "summaryYourShare": "Ваша часть",
+  "summaryYourShare": "Ваша доля",
   "back": "Назад",
   "cancel": "Отмена",
   "venueAddressDistance": "{address} · {km} км",
@@ -306,7 +309,7 @@
   "booking": "Бронирование",
   "timeStep": "Время",
   "playersStep": "Игроки",
-  "paySharePrice": "Оплатить свою часть · {price}",
+  "paySharePrice": "Оплатить свою долю · {price}",
   "@paySharePrice": {
     "placeholders": {
       "price": {
@@ -368,7 +371,7 @@
   "keepBooking": "Оставить",
   "bookingCancelled": "Бронь отменена",
   "howPaymentWorks": "Как это работает",
-  "payShareTitle": "Своя часть · {price}",
+  "payShareTitle": "Своя доля · {price}",
   "@payShareTitle": {
     "placeholders": { "price": { "type": "String" } }
   },
@@ -400,7 +403,7 @@
   "unknownSport": "Спорт",
   "games": "Игры",
   "gamesSubtitle": "открытые игры, куда можно вписаться",
-  "youAreIn": "вы в игре",
+  "youAreIn": "Вы в игре",
   "nothingMatchesFilters": "Под фильтры ничего не подошло",
   "nothingMatchesFiltersHint": "Игры есть, но не в этом виде спорта или не в это время.",
   "showAllGames": "Показать все игры",
@@ -498,7 +501,7 @@
     }
   },
   "sharesTitle": "Оплата долей",
-  "sharePaid": "оплачено",
+  "sharePaid": "Оплачено",
   "paymentScreenTitle": "Оплата доли",
   "payYourShare": "Ваша доля",
   "payRecipient": "Получатель: {name}, {bank}",
@@ -544,14 +547,14 @@
   "payToBooking": "Открыть бронь",
   "bookingStatusAwaiting": "проверяем оплату",
   "shareOpenSeat": "Свободное место",
-  "shareStatusOpen": "свободно",
-  "shareStatusPending": "проверяем оплату",
-  "shareStatusNotFound": "не нашли оплату",
-  "shareStatusRefundDue": "вернём деньги",
-  "shareStatusRefunded": "деньги вернули",
+  "shareStatusOpen": "Свободно",
+  "shareStatusPending": "Проверяем оплату",
+  "shareStatusNotFound": "Не нашли оплату",
+  "shareStatusRefundDue": "Вернём деньги",
+  "shareStatusRefunded": "Деньги вернули",
   "errorSharePaid": "Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.",
   "errorDeadlinePassed": "Срок оплаты уже прошёл.",
-  "shareUnpaid": "ждём оплату",
+  "shareUnpaid": "Ждём оплату",
   "sharesLeft": "{count, plural, one{осталась {count} доля} few{осталось {count} доли} other{осталось {count} долей}}",
   "@sharesLeft": {
     "placeholders": {
@@ -660,7 +663,7 @@
       }
     }
   },
-  "freeHoursToday": "свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
+  "freeHoursToday": "Свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
   "@freeHoursToday": {
     "description": "Сколько часов свободно у площадки в выбранный день",
     "placeholders": {

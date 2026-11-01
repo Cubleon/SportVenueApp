@@ -720,9 +720,18 @@ class BookingSummaryRows extends StatelessWidget {
           label: context.l10n.summaryVenue,
           value: draft.venue.name.capitalized,
         ),
+        // What the reader is weighing here is money: four shares at 525,
+        // not «Игроки 4».
         SummaryRow(
-          label: context.l10n.summaryPlayers,
-          value: '${draft.players}',
+          label: draft.mode == PaymentMode.split
+              ? context.l10n.summaryShares
+              : context.l10n.summaryPlayers,
+          value: draft.mode == PaymentMode.split
+              ? context.l10n.sharesTimesPrice(
+                  draft.players,
+                  AppFormatters.money(draft.sharePrice),
+                )
+              : '${draft.players}',
         ),
         SummaryRow(
           label: context.l10n.summaryTotal,
@@ -782,7 +791,9 @@ class SummaryRow extends StatelessWidget {
                 value,
                 textAlign: TextAlign.right,
                 style: context.text.bodyMedium?.copyWith(
-                  color: accent ? context.colors.accent : context.colors.ink,
+                  // Emphasis is weight, not colour: blue is kept for what
+                  // can be tapped, and a price is not a link.
+                  color: context.colors.ink,
                   fontWeight: highlight || accent
                       ? FontWeight.w700
                       : FontWeight.w700,
@@ -1405,7 +1416,10 @@ class DateStrip extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            AppFormatters.monthGenitive(selected ?? now),
+            AppFormatters.monthSpan(
+              DateTime(now.year, now.month, now.day),
+              DateTime(now.year, now.month, now.day + days - 1),
+            ),
             style: context.text.labelSmall?.copyWith(color: context.colors.dim),
           ),
         ),
@@ -1759,7 +1773,7 @@ class VenueRow extends StatelessWidget {
                   Text(
                     context.l10n.venueAddressDistance(
                       venue.address,
-                      venue.distanceKm.toStringAsFixed(1),
+                      AppFormatters.decimal(venue.distanceKm),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1773,7 +1787,7 @@ class VenueRow extends StatelessWidget {
                       Icon(AppIcons.star, size: 15, color: context.colors.ink),
                       const SizedBox(width: 3),
                       Text(
-                        venue.rating.toStringAsFixed(1),
+                        AppFormatters.decimal(venue.rating),
                         style: context.text.labelMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),

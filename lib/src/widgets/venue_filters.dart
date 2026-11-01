@@ -201,7 +201,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                     ? context.l10n.filterAnyDistance
                     : context.l10n.upTo(
                         context.l10n.distanceKm(
-                          _draft.maxDistanceKm!.toStringAsFixed(1),
+                          AppFormatters.decimal(_draft.maxDistanceKm!),
                         ),
                       ),
                 slider: Slider(

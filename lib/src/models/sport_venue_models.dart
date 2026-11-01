@@ -361,7 +361,7 @@ class BookingDraft {
     final endLabel = half
         ? '${end.toString().padLeft(2, '0')}:30'
         : '${end.toString().padLeft(2, '0')}:00';
-    return '${startHour.toString().padLeft(2, '0')}:00 - $endLabel';
+    return '${startHour.toString().padLeft(2, '0')}:00–$endLabel';
   }
 
   BookingDraft copyWith({
@@ -790,7 +790,7 @@ class Game {
     final endLabel = half
         ? '${endHour.toString().padLeft(2, '0')}:30'
         : '${endHour.toString().padLeft(2, '0')}:00';
-    return '${startHour.toString().padLeft(2, '0')}:00 - $endLabel';
+    return '${startHour.toString().padLeft(2, '0')}:00–$endLabel';
   }
 
   /// Everything but [myShare], which [withMyShare] sets: it has to be

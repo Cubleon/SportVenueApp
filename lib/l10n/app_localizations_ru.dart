@@ -57,10 +57,18 @@ class LRu extends L {
   String get summaryPlayers => 'Игроки';
 
   @override
+  String get summaryShares => 'Доли';
+
+  @override
+  String sharesTimesPrice(int count, String price) {
+    return '$count по $price';
+  }
+
+  @override
   String get summaryTotal => 'Итого';
 
   @override
-  String get summaryYourShare => 'Ваша часть';
+  String get summaryYourShare => 'Ваша доля';
 
   @override
   String get back => 'Назад';
@@ -733,7 +741,7 @@ class LRu extends L {
 
   @override
   String paySharePrice(String price) {
-    return 'Оплатить свою часть · $price';
+    return 'Оплатить свою долю · $price';
   }
 
   @override
@@ -821,7 +829,7 @@ class LRu extends L {
 
   @override
   String payShareTitle(String price) {
-    return 'Своя часть · $price';
+    return 'Своя доля · $price';
   }
 
   @override
@@ -884,7 +892,7 @@ class LRu extends L {
   String get gamesSubtitle => 'открытые игры, куда можно вписаться';
 
   @override
-  String get youAreIn => 'вы в игре';
+  String get youAreIn => 'Вы в игре';
 
   @override
   String get nothingMatchesFilters => 'Под фильтры ничего не подошло';
@@ -1060,7 +1068,7 @@ class LRu extends L {
   String get sharesTitle => 'Оплата долей';
 
   @override
-  String get sharePaid => 'оплачено';
+  String get sharePaid => 'Оплачено';
 
   @override
   String get paymentScreenTitle => 'Оплата доли';
@@ -1171,19 +1179,19 @@ class LRu extends L {
   String get shareOpenSeat => 'Свободное место';
 
   @override
-  String get shareStatusOpen => 'свободно';
+  String get shareStatusOpen => 'Свободно';
 
   @override
-  String get shareStatusPending => 'проверяем оплату';
+  String get shareStatusPending => 'Проверяем оплату';
 
   @override
-  String get shareStatusNotFound => 'не нашли оплату';
+  String get shareStatusNotFound => 'Не нашли оплату';
 
   @override
-  String get shareStatusRefundDue => 'вернём деньги';
+  String get shareStatusRefundDue => 'Вернём деньги';
 
   @override
-  String get shareStatusRefunded => 'деньги вернули';
+  String get shareStatusRefunded => 'Деньги вернули';
 
   @override
   String get errorSharePaid =>
@@ -1193,7 +1201,7 @@ class LRu extends L {
   String get errorDeadlinePassed => 'Срок оплаты уже прошёл.';
 
   @override
-  String get shareUnpaid => 'ждём оплату';
+  String get shareUnpaid => 'Ждём оплату';
 
   @override
   String sharesLeft(int count) {
@@ -1314,7 +1322,7 @@ class LRu extends L {
       few: '$count часа',
       one: '$count час',
     );
-    return 'свободно $_temp0';
+    return 'Свободно $_temp0';
   }
 
   @override

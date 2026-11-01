@@ -1212,7 +1212,7 @@ class _ParticipantTile extends StatelessWidget {
                 Text(
                   participant.hasRating
                       ? context.l10n.rating(
-                          participant.rating.toStringAsFixed(1),
+                          AppFormatters.decimal(participant.rating),
                         )
                       : context.l10n.playerOrganizer,
                   style: context.text.bodySmall?.copyWith(
@@ -1275,7 +1275,7 @@ class _PlayerSlot extends StatelessWidget {
                 ),
                 if (!empty && participant!.hasRating)
                   Text(
-                    participant!.rating.toStringAsFixed(1),
+                    AppFormatters.decimal(participant!.rating),
                     style: AppTheme.numeric(context.text.labelLarge).copyWith(
                       color: context.colors.muted,
                       fontWeight: FontWeight.w700,

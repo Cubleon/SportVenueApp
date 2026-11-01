@@ -512,7 +512,10 @@ class _SkyHeaderState extends State<_SkyHeader> {
                     const SizedBox(width: 12),
                     Flexible(
                       child: Text(
-                        AppFormatters.monthGenitive(date),
+                        AppFormatters.monthSpan(
+                          start,
+                          start.add(const Duration(days: _days - 1)),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.right,
@@ -625,25 +628,15 @@ class _HeaderPill extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                AppIcons.mapPin,
-                                size: 13,
-                                color: colors.dim,
-                              ),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  context.l10n.city,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: context.text.labelSmall?.copyWith(
-                                    color: colors.muted,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          // The city as a plain word: with a pin beside it
+                          // it read as a city picker, and there is one city.
+                          Text(
+                            context.l10n.city,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.labelSmall?.copyWith(
+                              color: colors.muted,
+                            ),
                           ),
                           Text(
                             controller.greetingName.capitalized,
@@ -1302,9 +1295,9 @@ class _VenueRow extends StatelessWidget {
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
-        // The unit rides with the number. Without it «₽1 600»
+        // The unit rides with the number. Without it «1 600 ₽»
         // reads as the price of a visit, and the search screen
-        // two taps away says «₽1 600/час» for the same club.
+        // two taps away says «1 600 ₽/час» for the same club.
         Text.rich(
           TextSpan(
             children: [
@@ -1340,13 +1333,13 @@ class _VenueRow extends StatelessWidget {
                 label: venue.reviewCount == null
                     ? null
                     : context.l10n.ratingWithReviews(
-                        venue.rating.toStringAsFixed(1),
+                        AppFormatters.decimal(venue.rating),
                         venue.reviewCount!,
                       ),
                 child: Text(
                   venue.reviewCount == null
-                      ? venue.rating.toStringAsFixed(1)
-                      : '${venue.rating.toStringAsFixed(1)} · '
+                      ? AppFormatters.decimal(venue.rating)
+                      : '${AppFormatters.decimal(venue.rating)} · '
                             '${venue.reviewCount}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1408,7 +1401,7 @@ class _VenueRow extends StatelessWidget {
                       // Walking time, where it is plausible, is a tag below.
                       context.l10n.venueAddressDistance(
                         venue.address,
-                        venue.distanceKm.toStringAsFixed(1),
+                        AppFormatters.decimal(venue.distanceKm),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1443,7 +1436,7 @@ class _VenueRow extends StatelessWidget {
                           )
                         else
                           for (final amenity in venue.amenities.take(1))
-                            _Tag(label: amenity),
+                            _Tag(label: amenity.capitalized),
                       ],
                     ),
                     if (!roomy) ...[const SizedBox(height: 8), price],

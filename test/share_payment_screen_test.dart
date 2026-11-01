@@ -56,7 +56,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // What to pay, where to, and what to write in the comment.
-    expect(find.text('₽${share.amount}'), findsOneWidget);
+    expect(find.text('${share.amount}\u00A0₽'), findsOneWidget);
     expect(find.text(share.code!), findsOneWidget);
     // The bank button is the way to pay; the QR waits, folded.
     expect(find.byKey(const ValueKey('pay-qr')), findsNothing);

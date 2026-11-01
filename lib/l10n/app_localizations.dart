@@ -189,6 +189,18 @@ abstract class L {
   /// **'Игроки'**
   String get summaryPlayers;
 
+  /// No description provided for @summaryShares.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доли'**
+  String get summaryShares;
+
+  /// No description provided for @sharesTimesPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} по {price}'**
+  String sharesTimesPrice(int count, String price);
+
   /// No description provided for @summaryTotal.
   ///
   /// In ru, this message translates to:
@@ -198,7 +210,7 @@ abstract class L {
   /// No description provided for @summaryYourShare.
   ///
   /// In ru, this message translates to:
-  /// **'Ваша часть'**
+  /// **'Ваша доля'**
   String get summaryYourShare;
 
   /// No description provided for @back.
@@ -1206,7 +1218,7 @@ abstract class L {
   /// No description provided for @paySharePrice.
   ///
   /// In ru, this message translates to:
-  /// **'Оплатить свою часть · {price}'**
+  /// **'Оплатить свою долю · {price}'**
   String paySharePrice(String price);
 
   /// No description provided for @payFullPrice.
@@ -1338,7 +1350,7 @@ abstract class L {
   /// No description provided for @payShareTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Своя часть · {price}'**
+  /// **'Своя доля · {price}'**
   String payShareTitle(String price);
 
   /// No description provided for @payShareExplainer.
@@ -1416,7 +1428,7 @@ abstract class L {
   /// No description provided for @youAreIn.
   ///
   /// In ru, this message translates to:
-  /// **'вы в игре'**
+  /// **'Вы в игре'**
   String get youAreIn;
 
   /// No description provided for @nothingMatchesFilters.
@@ -1722,7 +1734,7 @@ abstract class L {
   /// No description provided for @sharePaid.
   ///
   /// In ru, this message translates to:
-  /// **'оплачено'**
+  /// **'Оплачено'**
   String get sharePaid;
 
   /// No description provided for @paymentScreenTitle.
@@ -1908,31 +1920,31 @@ abstract class L {
   /// No description provided for @shareStatusOpen.
   ///
   /// In ru, this message translates to:
-  /// **'свободно'**
+  /// **'Свободно'**
   String get shareStatusOpen;
 
   /// No description provided for @shareStatusPending.
   ///
   /// In ru, this message translates to:
-  /// **'проверяем оплату'**
+  /// **'Проверяем оплату'**
   String get shareStatusPending;
 
   /// No description provided for @shareStatusNotFound.
   ///
   /// In ru, this message translates to:
-  /// **'не нашли оплату'**
+  /// **'Не нашли оплату'**
   String get shareStatusNotFound;
 
   /// No description provided for @shareStatusRefundDue.
   ///
   /// In ru, this message translates to:
-  /// **'вернём деньги'**
+  /// **'Вернём деньги'**
   String get shareStatusRefundDue;
 
   /// No description provided for @shareStatusRefunded.
   ///
   /// In ru, this message translates to:
-  /// **'деньги вернули'**
+  /// **'Деньги вернули'**
   String get shareStatusRefunded;
 
   /// No description provided for @errorSharePaid.
@@ -1950,7 +1962,7 @@ abstract class L {
   /// No description provided for @shareUnpaid.
   ///
   /// In ru, this message translates to:
-  /// **'ждём оплату'**
+  /// **'Ждём оплату'**
   String get shareUnpaid;
 
   /// No description provided for @sharesLeft.
@@ -2070,7 +2082,7 @@ abstract class L {
   /// Сколько часов свободно у площадки в выбранный день
   ///
   /// In ru, this message translates to:
-  /// **'свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
+  /// **'Свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
   String freeHoursToday(int count);
 
   /// Кнопка на главной и заголовок экрана с бронями
