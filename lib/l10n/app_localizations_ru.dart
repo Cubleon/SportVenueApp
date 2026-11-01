@@ -313,6 +313,9 @@ class LRu extends L {
   String get noNotifications => 'Уведомлений пока нет';
 
   @override
+  String get todayShort => 'сегодня';
+
+  @override
   String get noNotificationsHint =>
       'Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.';
 

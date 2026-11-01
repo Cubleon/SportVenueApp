@@ -85,6 +85,11 @@ void main() {
 
     expect(find.text('Бронь не найдена'), findsNothing);
     expect(find.byKey(const ValueKey('take-share')), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('cancel-booking')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
   });
 }

@@ -43,7 +43,9 @@ class SkyHeader extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [colors.skyTop, colors.skyLow, colors.bg],
-          stops: const [0, 0.62, 1],
+          // The colour holds to near the foot and then gives way quickly: a
+          // long fade left a band of washed-out blue under every tab title.
+          stops: const [0, 0.86, 1],
         ),
       ),
       child: Stack(
@@ -53,7 +55,7 @@ class SkyHeader extends StatelessWidget {
           // end. The floor gives the fade room to be a fade.
           ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: topInset + context.scaled(146, max: 1.3),
+              minHeight: topInset + context.scaled(118, max: 1.3),
             ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, topInset + 14, 20, 20),

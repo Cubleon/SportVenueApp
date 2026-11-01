@@ -132,36 +132,51 @@ class ProfileScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: controller.selectedSports
                           .map(
-                            (sport) => SelectableChip(
+                            (sport) => InfoTag(
                               label: sport.name.capitalized,
-                              selected: true,
-                              color: AppTheme.sportGround(sport.id).last,
+                              dot: AppTheme.sportGround(sport.id).last,
                             ),
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _Stats(controller: controller),
-                    const SizedBox(height: 18),
-                    _MenuItem(
-                      icon: AppIcons.history,
-                      title: context.l10n.history,
-                      subtitle: context.l10n.historySummary(
-                        controller.activeBookings.length,
-                        _myGamesCount(controller),
+                    const SizedBox(height: 16),
+                    // One card for the rows that lead somewhere, with a
+                    // hairline between them, as a settings list is drawn.
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          _MenuItem(
+                            icon: AppIcons.history,
+                            title: context.l10n.history,
+                            subtitle: context.l10n.historySummary(
+                              controller.activeBookings.length,
+                              _myGamesCount(controller),
+                            ),
+                            onTap: () => context.go(Routes.history),
+                          ),
+                          // Only the owner of the service checks transfers; to
+                          // everyone else the row would lead to a locked door.
+                          if (controller.isPaymentAdmin) ...[
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              indent: 16,
+                              color: context.colors.border,
+                            ),
+                            _MenuItem(
+                              key: const ValueKey('profile-admin-payments'),
+                              icon: AppIcons.checkCircle,
+                              title: context.l10n.adminPaymentsTitle,
+                              subtitle: context.l10n.adminPaymentsMenu,
+                              onTap: () => context.go(Routes.adminPayments),
+                            ),
+                          ],
+                        ],
                       ),
-                      onTap: () => context.go(Routes.history),
                     ),
-                    // Only the owner of the service checks transfers; to
-                    // everyone else the row would lead to a locked door.
-                    if (controller.isPaymentAdmin)
-                      _MenuItem(
-                        key: const ValueKey('profile-admin-payments'),
-                        icon: AppIcons.checkCircle,
-                        title: context.l10n.adminPaymentsTitle,
-                        subtitle: context.l10n.adminPaymentsMenu,
-                        onTap: () => context.go(Routes.adminPayments),
-                      ),
                     // Платежи, Уведомления and Поддержка stood here looking
                     // exactly like История — same card, same chevron promising a
                     // screen — and answered with "позже". A row that cannot be
@@ -252,8 +267,10 @@ class _Stats extends StatelessWidget {
   Widget build(BuildContext context) {
     final games = _myGamesCount(controller);
 
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+    // On the page, not in a card of its own: five white cards of one weight
+    // in a row left the eye nothing to hold on to.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(
@@ -360,10 +377,10 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppCard(
-        onTap: onTap,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(

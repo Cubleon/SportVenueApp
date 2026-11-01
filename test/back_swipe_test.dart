@@ -39,7 +39,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  final booking = find.byKey(const ValueKey('cancel-booking'));
+  // The title bar is on screen whatever the booking holds; the cancel link
+  // lives at the foot of the page now and is not built until scrolled to.
+  final booking = find.text('Бронь');
 
   testWidgets('a swipe from the left edge goes back', (tester) async {
     await openBooking(tester);

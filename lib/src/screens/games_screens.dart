@@ -203,7 +203,7 @@ class MiniGameCard extends StatelessWidget {
                       ),
                     ),
                     Opacity(
-                      opacity: 0.35,
+                      opacity: 0.55,
                       child: SportSurface(sportId: game.sportId),
                     ),
                     Padding(
@@ -217,9 +217,10 @@ class MiniGameCard extends StatelessWidget {
                               text:
                                   countdown ??
                                   AppFormatters.dateShort(game.date),
-                              background: countdown == null
-                                  ? Colors.black.withValues(alpha: 0.5)
-                                  : colors.skyLow,
+                              // One stamp style on the picture: a blue one
+                              // beside two black ones read as three kinds of
+                              // thing.
+                              background: Colors.black.withValues(alpha: 0.5),
                               foreground: Colors.white,
                             ),
                           ),
@@ -247,17 +248,12 @@ class MiniGameCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      left: 12,
-                      right: 12,
+                      left: 10,
                       bottom: 10,
-                      child: Text(
-                        sport.name.capitalized,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.eyebrow(
-                          context,
-                          Colors.white.withValues(alpha: 0.85),
-                        ),
+                      child: _Marker(
+                        text: sport.name.capitalized,
+                        background: Colors.black.withValues(alpha: 0.5),
+                        foreground: Colors.white,
                       ),
                     ),
                   ],
@@ -276,13 +272,13 @@ class MiniGameCard extends StatelessWidget {
                     style: context.text.titleLarge,
                   ),
                   const SizedBox(height: 5),
+                  // When it is, in ink: the time is what a player decides on,
+                  // and it sat in small grey under the club's name.
                   Text(
                     details,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.bodySmall?.copyWith(
-                      color: colors.muted,
-                    ),
+                    style: context.text.bodyMedium?.copyWith(color: colors.ink),
                   ),
                   const SizedBox(height: 14),
                   Row(
@@ -300,8 +296,10 @@ class MiniGameCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.end,
+                          // 20, not 24: at the larger size the price was the
+                          // first thing the eye landed on, before the time.
                           style: AppTheme.numeric(
-                            context.text.headlineSmall,
+                            context.text.titleLarge,
                           ).copyWith(color: colors.ink),
                         ),
                       ),
@@ -442,13 +440,10 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                   if (current.type != GameType.open) ...[
                                     const SizedBox(width: 8),
                                     Flexible(
-                                      child: Text(
-                                        _gameTypeTitle(context, current.type),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTheme.eyebrow(
+                                      child: InfoTag(
+                                        label: _gameTypeTitle(
                                           context,
-                                          context.colors.muted,
+                                          current.type,
                                         ),
                                       ),
                                     ),
@@ -470,49 +465,51 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                 ),
                               ),
                               Divider(height: 28, color: context.colors.border),
-                              SummaryRow(
-                                label: context.l10n.summaryDate,
-                                value: AppFormatters.dateFull(current.date),
-                              ),
-                              SummaryRow(
-                                label: context.l10n.summaryTime,
-                                value: current.timeRange,
-                              ),
-                              SummaryRow(
-                                label: context.l10n.playersStep,
-                                value: context.l10n.playersOfCapacity(
-                                  current.players.length,
-                                  current.capacity,
-                                ),
-                              ),
-                              if (current.level case final String level)
+                              ...summaryRowsDivided(context, [
                                 SummaryRow(
-                                  label: context.l10n.gameLevel,
-                                  value: level,
+                                  label: context.l10n.summaryDate,
+                                  value: AppFormatters.dateFull(current.date),
                                 ),
-                              if (current.format case final String format)
                                 SummaryRow(
-                                  label: context.l10n.gameFormat,
-                                  value: format,
+                                  label: context.l10n.summaryTime,
+                                  value: current.timeRange,
                                 ),
-                              // Shown to everyone: the game is open to look
-                              // at, and the reader should know before asking
-                              // to join that the answer may be no.
-                              if (current.genderFilter != GenderFilter.any)
                                 SummaryRow(
-                                  label: context.l10n.participantFilter,
-                                  value:
-                                      current.genderFilter == GenderFilter.men
-                                      ? context.l10n.genderOnlyMen
-                                      : context.l10n.genderOnlyWomen,
+                                  label: context.l10n.playersStep,
+                                  value: context.l10n.playersOfCapacity(
+                                    current.players.length,
+                                    current.capacity,
+                                  ),
                                 ),
-                              SummaryRow(
-                                label: context.l10n.pricePerPerson,
-                                value: AppFormatters.money(
-                                  current.pricePerPerson,
+                                if (current.level case final String level)
+                                  SummaryRow(
+                                    label: context.l10n.gameLevel,
+                                    value: level,
+                                  ),
+                                if (current.format case final String format)
+                                  SummaryRow(
+                                    label: context.l10n.gameFormat,
+                                    value: format,
+                                  ),
+                                // Shown to everyone: the game is open to look
+                                // at, and the reader should know before asking
+                                // to join that the answer may be no.
+                                if (current.genderFilter != GenderFilter.any)
+                                  SummaryRow(
+                                    label: context.l10n.participantFilter,
+                                    value:
+                                        current.genderFilter == GenderFilter.men
+                                        ? context.l10n.genderOnlyMen
+                                        : context.l10n.genderOnlyWomen,
+                                  ),
+                                SummaryRow(
+                                  label: context.l10n.pricePerPerson,
+                                  value: AppFormatters.money(
+                                    current.pricePerPerson,
+                                  ),
+                                  accent: true,
                                 ),
-                                accent: true,
-                              ),
+                              ]),
                             ],
                           ),
                         ),
@@ -1013,7 +1010,7 @@ class _AvatarStack extends StatelessWidget {
     final taken = participants.length;
     final circles = capacity.clamp(taken, _maxCircles);
     final hidden = capacity - circles;
-    final size = context.scaled(26, max: 1.2);
+    final size = context.scaled(32, max: 1.2);
 
     // Eight seats and a price do not always fit a narrow card, and a row that
     // overflows is worse than one drawn a little smaller.
@@ -1052,16 +1049,20 @@ class _EmptySeat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A plus in a ring: a place waiting for someone. A bare grey circle
+    // looked like a picture that had not loaded.
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: context.colors.bgAlt,
-        // At full strength the ring carries 3.5:1 against the card in light
-        // and 4.5:1 in dark — an outline is a shape, and a shape has to
-        // clear 3:1 to be seen at all.
-        border: Border.all(color: context.colors.dim, width: 2),
+        color: context.colors.surface,
+        border: Border.all(color: context.colors.borderStrong, width: 1.5),
+      ),
+      child: Icon(
+        AppIcons.plus,
+        size: size * 0.45,
+        color: context.colors.muted,
       ),
     );
   }
@@ -1202,12 +1203,10 @@ class _ParticipantTile extends StatelessWidget {
               children: [
                 Text(participant.name, style: context.text.titleSmall),
                 const SizedBox(height: 4),
+                // No rating: nothing yet says how one is earned, and an
+                // unexplained number beside a person's name reads as a grade.
                 Text(
-                  participant.hasRating
-                      ? context.l10n.rating(
-                          AppFormatters.decimal(participant.rating),
-                        )
-                      : context.l10n.playerOrganizer,
+                  context.l10n.playerOrganizer,
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                   ),
@@ -1264,13 +1263,6 @@ class _PlayerSlot extends StatelessWidget {
                         : context.text.titleSmall,
                   ),
                 ),
-                if (!empty && participant!.hasRating)
-                  Text(
-                    AppFormatters.decimal(participant!.rating),
-                    style: AppTheme.numeric(
-                      context.text.labelLarge,
-                    ).copyWith(color: context.colors.muted),
-                  ),
               ],
             ),
           ),

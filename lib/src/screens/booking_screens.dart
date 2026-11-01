@@ -518,7 +518,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final outsider = mine == null && !canCancel;
     final canTake =
         outsider && booking.isCollectingShares && booking.openShares > 0;
-    final hasBar = canCancel || canPay || canTake;
+    // Cancelling is not pinned: as the big button at the foot it was the
+    // loudest thing on the screen, and the screen is about collecting the
+    // money. It sits at the end of the page as a quiet red link.
+    final hasBar = canPay || canTake;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -547,6 +550,34 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
                 const SizedBox(height: 12),
                 const _CancellationTermsCard(),
+                if (canCancel) ...[
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      key: const ValueKey('cancel-booking'),
+                      onPressed: _loading ? null : _cancel,
+                      style: TextButton.styleFrom(
+                        foregroundColor: context.colors.danger,
+                        minimumSize: const Size(44, 48),
+                      ),
+                      child: _loading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: context.colors.danger,
+                              ),
+                            )
+                          : Text(
+                              context.l10n.cancelBooking,
+                              style: context.text.labelLarge?.copyWith(
+                                color: context.colors.danger,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
                 if (!canCancel && !canTake) ...[
                   const SizedBox(height: 12),
                   AppCard(
@@ -595,15 +626,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                 ),
                           tone: ButtonTone.commit,
                           onPressed: () => context.go(Routes.pay(booking.id)),
-                        ),
-                      if (canPay && canCancel) const SizedBox(height: 10),
-                      if (canCancel)
-                        PrimaryButton(
-                          key: const ValueKey('cancel-booking'),
-                          label: context.l10n.cancelBooking,
-                          tone: ButtonTone.neutral,
-                          isLoading: _loading,
-                          onPressed: _loading ? null : _cancel,
                         ),
                     ],
                   ),
@@ -751,14 +773,21 @@ class _SharesCard extends StatelessWidget {
                           ? context.colors.accentSoft
                           : context.colors.surfaceRaised,
                     ),
-                    child: Text(
-                      share.initial,
-                      style: context.text.labelLarge?.copyWith(
-                        color: share.isPaid
-                            ? context.colors.accent
-                            : context.colors.muted,
-                      ),
-                    ),
+                    child: share.isOpen
+                        // A free place: a plus, not an empty grey disc.
+                        ? Icon(
+                            AppIcons.plus,
+                            size: context.scaled(16),
+                            color: context.colors.muted,
+                          )
+                        : Text(
+                            share.initial,
+                            style: context.text.labelLarge?.copyWith(
+                              color: share.isPaid
+                                  ? context.colors.accent
+                                  : context.colors.muted,
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

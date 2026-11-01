@@ -483,7 +483,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [colors.skyTop, colors.skyLow, colors.bg],
-          stops: const [0, 0.62, 1],
+          stops: const [0, 0.86, 1],
         ),
       ),
       child: Stack(
@@ -498,7 +498,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 SizedBox(height: context.scaled(22, max: 1.4)),
                 Row(
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Text(
                         context.l10n.whenToPlay,
                         maxLines: 1,
@@ -508,19 +508,17 @@ class _SkyHeaderState extends State<_SkyHeader> {
                         ),
                       ),
                     ),
+                    // The month sits at the far end, on its own: next to the
+                    // title it read as one phrase, «Когда играете ноябрь».
                     const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        AppFormatters.monthSpan(
-                          start,
-                          start.add(const Duration(days: _days - 1)),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                        style: context.text.labelLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.82),
-                        ),
+                    Text(
+                      AppFormatters.monthSpan(
+                        start,
+                        start.add(const Duration(days: _days - 1)),
+                      ),
+                      maxLines: 1,
+                      style: context.text.labelLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
                       ),
                     ),
                   ],
@@ -553,7 +551,8 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 Text(
                   '${context.l10n.gamesCount(widget.gamesToday)} · '
                   '${context.l10n.clubsNearby(widget.venuesToday)}',
-                  textAlign: TextAlign.center,
+                  // Left, like every other line on the screen; centred, it
+                  // was the one line that did not line up with anything.
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodyMedium?.copyWith(
@@ -744,7 +743,9 @@ class _SkyDateCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: context.motion(const Duration(milliseconds: 180)),
           curve: Curves.easeOut,
-          width: context.scaled(selected ? 78 : 62, max: 1.3),
+          // One width for every day: the chosen one used to be wider, and
+          // the strip stepped.
+          width: context.scaled(64, max: 1.3),
           decoration: BoxDecoration(
             color: selected
                 ? colors.surface
@@ -759,8 +760,12 @@ class _SkyDateCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // «сегодня» in words instead of a dot nobody could read.
               Text(
-                AppFormatters.weekdayShort(date),
+                isToday
+                    ? context.l10n.todayShort
+                    : AppFormatters.weekdayShort(date),
+                maxLines: 1,
                 style: context.text.labelSmall?.copyWith(
                   color: selected ? colors.muted : Colors.white,
                 ),
@@ -768,27 +773,12 @@ class _SkyDateCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '${date.day}',
-                style:
-                    (selected
-                            ? context.text.headlineSmall
-                            : context.text.titleLarge)
-                        ?.copyWith(
-                          color: selected ? colors.accent : Colors.white,
-                          letterSpacing: -0.8,
-                          height: 1.1,
-                        ),
-              ),
-              if (isToday) ...[
-                const SizedBox(height: 4),
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: selected ? colors.accent : Colors.white,
-                  ),
+                style: context.text.titleLarge?.copyWith(
+                  color: selected ? colors.accent : Colors.white,
+                  letterSpacing: -0.8,
+                  height: 1.1,
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -1023,8 +1013,20 @@ class _CategoryTile extends StatelessWidget {
                     width: 2.5,
                   ),
                 ),
+                // «Все» is a filled tile like its neighbours — the app's own
+                // blue with a white mark — not a white frame with a blue
+                // icon in a row of pictures.
                 child: id == null
-                    ? Icon(AppIcons.layoutGrid, color: colors.accent)
+                    ? DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [colors.skyTop, colors.skyLow],
+                          ),
+                        ),
+                        child: Icon(AppIcons.layoutGrid, color: Colors.white),
+                      )
                     : SportSurface(sportId: id),
               ),
               const SizedBox(height: 7),
@@ -1113,39 +1115,33 @@ class _MineCard extends StatelessWidget {
     return Pressable(
       child: AppCard(
         onTap: onTap,
-        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-        // The name of the thing leads, beside its mark; the number follows
-        // it. A card that opens «мои брони» is answering "what is this" long
-        // before "how many", and the count set large made the label read as
-        // its caption.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+        // One row: the mark, the name, the count, the way in. Two rows with
+        // a large grey number under the name made the card tall for one
+        // digit, and a grey «0» read as switched off.
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(icon, size: 20, color: colors.accent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    label,
-                    // Two lines under a large system font: «Мои бр…» told
-                    // nobody which card was which.
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
-              ],
+            Icon(icon, size: 20, color: colors.accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                // Two lines under a large system font: «Мои бр…» told
+                // nobody which card was which.
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.titleSmall,
+              ),
             ),
-            SizedBox(height: context.scaled(10, max: 1.3)),
+            const SizedBox(width: 6),
             Text(
               '$count',
               style: AppTheme.numeric(
-                context.text.titleLarge,
-              ).copyWith(color: colors.muted),
+                context.text.titleSmall,
+              ).copyWith(color: colors.ink),
             ),
+            const SizedBox(width: 2),
+            Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
           ],
         ),
       ),
@@ -1292,7 +1288,11 @@ class _VenueRow extends StatelessWidget {
             children: [
               TextSpan(
                 text: AppFormatters.money(venue.pricePerHour),
-                style: AppTheme.numeric(context.text.titleMedium).copyWith(),
+                // Lighter than the club's name beside it, so the two do not
+                // compete for the first look.
+                style: AppTheme.numeric(
+                  context.text.bodyMedium,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
               TextSpan(
                 text: context.l10n.perHourSuffix,
@@ -1410,18 +1410,9 @@ class _VenueRow extends StatelessWidget {
                           )
                         else if (!freeSlotsFailed)
                           const Skeleton.line(width: 96, height: 18, radius: 6),
-                        // One more tag after the free-hours chip, and one
-                        // only: a second wraps the row onto a new line and
-                        // the list loses a club's worth of height per club.
-                        if (venue.distanceKm <= 2.5)
-                          _Tag(
-                            label: context.l10n.walkMinutes(
-                              AppFormatters.walkMinutes(venue.distanceKm),
-                            ),
-                          )
-                        else
-                          for (final amenity in venue.amenities.take(1))
-                            _Tag(label: amenity.capitalized),
+                        // The free hours only. A second tag wrapped under the
+                        // first on most rows, so cards came out of different
+                        // heights; what the club has is on its own screen.
                       ],
                     ),
                     if (!roomy) ...[const SizedBox(height: 8), price],
@@ -1459,23 +1450,8 @@ class _Tag extends StatelessWidget {
   final _TagTone tone;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final live = tone == _TagTone.live;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: live ? colors.accentSoft : colors.bgAlt,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: context.text.labelSmall?.copyWith(
-          color: live ? colors.accent : colors.muted,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      InfoTag(label: label, live: tone == _TagTone.live);
 }
 
 class _NothingFound extends StatelessWidget {

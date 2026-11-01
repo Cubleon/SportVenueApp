@@ -561,6 +561,12 @@ abstract class L {
   /// **'Уведомлений пока нет'**
   String get noNotifications;
 
+  /// No description provided for @todayShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'сегодня'**
+  String get todayShort;
+
   /// No description provided for @noNotificationsHint.
   ///
   /// In ru, this message translates to:

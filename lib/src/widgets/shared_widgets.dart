@@ -498,33 +498,60 @@ class SportBadge extends StatelessWidget {
   final Sport sport;
   final bool compact;
 
+  /// The sport as an [InfoTag]: its colour as a dot before its name.
+  @override
+  Widget build(BuildContext context) => InfoTag(
+    label: sport.name.capitalized,
+    dot: AppTheme.sportGround(sport.id).last,
+  );
+}
+
+/// A small word on a card: what a club has, how much is free, which sport.
+///
+/// One look for all of them. The club screen alone had three — full-colour
+/// sport chips, outlined amenity chips with a tick, pale tags — so nothing
+/// said which of them mattered.
+class InfoTag extends StatelessWidget {
+  const InfoTag({super.key, required this.label, this.dot, this.live = false});
+
+  final String label;
+
+  /// A sport's colour, as a dot before the word: the colour stays the sport's
+  /// mark without turning the chip into a block of paint.
+  final Color? dot;
+
+  /// The one fact on the card that answers the reader's question — free
+  /// hours on the chosen day — set in the accent.
+  final bool live;
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
-      height: compact ? 26 : 30,
-      padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: context.colors.surfaceRaised,
-        borderRadius: BorderRadius.circular(99),
+        color: live ? colors.accentSoft : colors.surfaceRaised,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // A dot in the sport's own colour. The emoji that used to sit here
-          // was clip art, and the colour says the same thing without it.
-          Container(
-            width: compact ? 6 : 7,
-            height: compact ? 6 : 7,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.sportGround(sport.id).last,
+          if (dot != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            sport.name.capitalized,
-            style: context.text.labelSmall?.copyWith(
-              color: context.colors.muted,
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.labelSmall?.copyWith(
+                color: live ? colors.accent : colors.ink,
+              ),
             ),
           ),
         ],
@@ -576,9 +603,12 @@ class SelectableChip extends StatelessWidget {
                   ? (color ?? context.colors.accent)
                   : context.colors.surface,
               borderRadius: BorderRadius.circular(99),
+              // A hairline, not the strong outline of a secondary button:
+              // «Вечер» and «Отменить бронь» were drawn the same way, so a
+              // filter could not be told from an action.
               border: selected
                   ? null
-                  : Border.all(color: context.colors.borderStrong, width: 1),
+                  : Border.all(color: context.colors.border, width: 1),
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -593,7 +623,7 @@ class SelectableChip extends StatelessWidget {
                           ? (color == null
                                 ? context.colors.onAccent
                                 : Colors.white)
-                          : context.colors.muted,
+                          : context.colors.ink,
                     ),
                   ),
                 ],
@@ -701,7 +731,7 @@ class BookingSummaryRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: summaryRowsDivided(context, [
         SummaryRow(
           label: context.l10n.summaryDate,
           value: AppFormatters.dateFull(draft.date),
@@ -734,10 +764,20 @@ class BookingSummaryRows extends StatelessWidget {
           value: AppFormatters.money(draft.sharePrice),
           accent: true,
         ),
-      ],
+      ]),
     );
   }
 }
+
+/// Summary rows with a hairline between them. The label sits at one edge
+/// and the value at the other, and without a line the eye had a long way to
+/// travel across white to pair them.
+List<Widget> summaryRowsDivided(BuildContext context, List<Widget> rows) => [
+  for (final (i, row) in rows.indexed) ...[
+    if (i > 0) Divider(height: 1, thickness: 1, color: context.colors.border),
+    row,
+  ],
+];
 
 class SummaryRow extends StatelessWidget {
   const SummaryRow({
@@ -941,29 +981,17 @@ class PinnedActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bar = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 28,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                context.colors.bg.withValues(alpha: 0),
-                context.colors.bg,
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          color: context.colors.bg,
-          padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
-          child: child,
-        ),
-      ],
+    // A solid ground with a hairline, not a fade: through a 28-point fade
+    // the outline of the button scrolling underneath showed as a stray arc
+    // above the bar, which read as a layout fault.
+    final bar = Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: context.colors.bg,
+        border: Border(top: BorderSide(color: context.colors.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: child,
     );
     return onHeight == null
         ? bar
@@ -1770,7 +1798,7 @@ class VenueRow extends StatelessWidget {
                           AppFormatters.money(venue.pricePerHour),
                         ),
                         style: context.text.labelMedium?.copyWith(
-                          color: context.colors.accent,
+                          color: context.colors.ink,
                         ),
                       ),
                     ],

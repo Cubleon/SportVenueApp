@@ -634,6 +634,11 @@ void main() {
     expect(find.text('Бронь'), findsOneWidget);
     expect(find.byKey(const ValueKey('confirm-payment')), findsNothing);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('cancel-booking')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
     await tester.pumpAndSettle();
 
@@ -644,6 +649,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.upcomingBookings, isNotEmpty);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('cancel-booking')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('confirm-yes')));

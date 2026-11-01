@@ -120,7 +120,9 @@ class _VenueScreenState extends State<VenueScreen> {
                   const SizedBox(height: 12),
                   VenueHero(
                     venue: venue,
-                    height: context.scaled(168, max: 1.2),
+                    // A picture of the ground, the same for every club of a
+                    // sport: worth a strip, not a fifth of the screen.
+                    height: context.scaled(120, max: 1.2),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -157,10 +159,9 @@ class _VenueScreenState extends State<VenueScreen> {
                       runSpacing: 8,
                       children: [
                         for (final id in venue.sportIds)
-                          SelectableChip(
+                          InfoTag(
                             label: _sportOf(id)?.name.capitalized ?? id,
-                            selected: true,
-                            color: AppTheme.sportGround(id).last,
+                            dot: AppTheme.sportGround(id).last,
                           ),
                       ],
                     ),
@@ -181,14 +182,13 @@ class _VenueScreenState extends State<VenueScreen> {
                   ],
                   AppCard(
                     child: Column(
-                      children: [
+                      children: summaryRowsDivided(context, [
                         SummaryRow(
                           label: context.l10n.price,
                           value: context.l10n.pricePerHour(
                             AppFormatters.money(venue.pricePerHour),
                           ),
                         ),
-                        const SizedBox(height: 10),
                         // The day goes in the value, not the label: as a
                         // label it wraps to two lines against rows that are
                         // one, and the column stops looking like a column.
@@ -205,7 +205,6 @@ class _VenueScreenState extends State<VenueScreen> {
                               _freeHours != null &&
                               _freeHours! > 0,
                         ),
-                        const SizedBox(height: 10),
                         SummaryRow(
                           label: context.l10n.venueCapacity,
                           value: context.l10n.capacityRange(
@@ -213,7 +212,7 @@ class _VenueScreenState extends State<VenueScreen> {
                             venue.capacityMax,
                           ),
                         ),
-                      ],
+                      ]),
                     ),
                   ),
                   if (_freeHoursFailed) ...[
@@ -300,27 +299,5 @@ class _Amenity extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: context.colors.borderStrong),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(AppIcons.check, size: 15, color: context.colors.success),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: context.text.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => InfoTag(label: label);
 }

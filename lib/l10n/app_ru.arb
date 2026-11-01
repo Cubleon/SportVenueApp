@@ -152,6 +152,7 @@
   "notifications": "Уведомления",
   "profileOpen": "Открыть профиль",
   "noNotifications": "Уведомлений пока нет",
+  "todayShort": "сегодня",
   "noNotificationsHint": "Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.",
   "notificationNew": "Новое",
   "notificationsUnread": "{count, plural, one{Уведомления: {count} новое} few{Уведомления: {count} новых} many{Уведомления: {count} новых} other{Уведомления: {count} новых}}",
