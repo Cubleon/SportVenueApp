@@ -171,6 +171,9 @@ class _BookingScreenState extends State<BookingScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                       child: VenueHero(
                         venue: venue,
+                        // The game's sport, so a padel game at a club that
+                        // also has tennis does not show a tennis court.
+                        sportId: _findPlayers ? _gameSportId(venue) : null,
                         height: context.scaled(120, max: 1.2),
                       ),
                     ),
@@ -191,7 +194,11 @@ class _BookingScreenState extends State<BookingScreen> {
                         : VenueRow(
                             key: const ValueKey('booking-venue-field'),
                             venue: venue,
-                            sport: _sportById(primarySportId(venue)),
+                            sport: _sportById(
+                              _findPlayers
+                                  ? _gameSportId(venue)
+                                  : primarySportId(venue),
+                            ),
                             selected: false,
                             onTap: _pickVenue,
                             trailing: Icon(

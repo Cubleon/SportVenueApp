@@ -697,10 +697,15 @@ class VenueHero extends StatelessWidget {
     required this.venue,
     this.height = 116,
     this.flies = true,
+    this.sportId,
   });
 
   final Venue venue;
   final double height;
+
+  /// The sport to draw, when the club has several and one has been chosen.
+  /// Otherwise the club's first.
+  final String? sportId;
 
   /// Whether this one takes part in the flight between screens. Two pictures
   /// of the same club on one screen would both claim the tag and Flutter
@@ -716,7 +721,7 @@ class VenueHero extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
-      child: SportSurface(sportId: primarySportId(venue)),
+      child: SportSurface(sportId: primarySportId(venue, filterId: sportId)),
     );
     return flies ? Hero(tag: venueHeroTag(venue), child: picture) : picture;
   }
