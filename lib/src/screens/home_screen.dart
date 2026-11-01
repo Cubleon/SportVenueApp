@@ -505,7 +505,6 @@ class _SkyHeaderState extends State<_SkyHeader> {
                         overflow: TextOverflow.ellipsis,
                         style: context.text.labelLarge?.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -618,7 +617,6 @@ class _HeaderPill extends StatelessWidget {
                         controller.greetingName.characters.first.toUpperCase(),
                         style: context.text.titleMedium?.copyWith(
                           color: colors.onAccent,
-                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
@@ -642,9 +640,7 @@ class _HeaderPill extends StatelessWidget {
                             controller.greetingName.capitalized,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: context.text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: context.text.titleSmall,
                           ),
                         ],
                       ),
@@ -767,7 +763,6 @@ class _SkyDateCard extends StatelessWidget {
                 AppFormatters.weekdayShort(date),
                 style: context.text.labelSmall?.copyWith(
                   color: selected ? colors.muted : Colors.white,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 2),
@@ -779,7 +774,6 @@ class _SkyDateCard extends StatelessWidget {
                             : context.text.titleLarge)
                         ?.copyWith(
                           color: selected ? colors.accent : Colors.white,
-                          fontWeight: FontWeight.w900,
                           letterSpacing: -0.8,
                           height: 1.1,
                         ),
@@ -1044,7 +1038,6 @@ class _CategoryTile extends StatelessWidget {
                             ? colors.accent
                             : AppTheme.sportGround(id).last)
                       : colors.muted,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -1139,9 +1132,7 @@ class _MineCard extends StatelessWidget {
                     // nobody which card was which.
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.text.titleSmall,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -1153,7 +1144,7 @@ class _MineCard extends StatelessWidget {
               '$count',
               style: AppTheme.numeric(
                 context.text.titleLarge,
-              ).copyWith(color: colors.muted, fontWeight: FontWeight.w700),
+              ).copyWith(color: colors.muted),
             ),
           ],
         ),
@@ -1222,9 +1213,7 @@ class _GameRow extends StatelessWidget {
                       '${game.timeRange} · ${sport.name.capitalized}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: context.text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: context.text.titleSmall,
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1303,15 +1292,13 @@ class _VenueRow extends StatelessWidget {
             children: [
               TextSpan(
                 text: AppFormatters.money(venue.pricePerHour),
-                style: AppTheme.numeric(
-                  context.text.titleMedium,
-                ).copyWith(fontWeight: FontWeight.w900),
+                style: AppTheme.numeric(context.text.titleMedium).copyWith(),
               ),
               TextSpan(
                 text: context.l10n.perHourSuffix,
                 style: context.text.bodySmall?.copyWith(
                   color: colors.muted,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -1389,9 +1376,7 @@ class _VenueRow extends StatelessWidget {
                       venue.name.capitalized,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: context.text.titleSmall,
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1487,7 +1472,6 @@ class _Tag extends StatelessWidget {
         label,
         style: context.text.labelSmall?.copyWith(
           color: live ? colors.accent : colors.muted,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

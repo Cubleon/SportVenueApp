@@ -56,9 +56,7 @@ class BookingSuccessScreen extends StatelessWidget {
                       Text(
                         context.l10n.bookingCreated,
                         textAlign: TextAlign.center,
-                        style: context.text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: context.text.headlineSmall,
                       ),
                       const SizedBox(height: 8),
                       Text(

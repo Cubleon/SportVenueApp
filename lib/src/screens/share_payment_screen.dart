@@ -147,12 +147,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
     final draft = booking.draft;
     return [
       if (widget.justCreated) ...[
-        Text(
-          context.l10n.bookingCreated,
-          style: context.text.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        Text(context.l10n.bookingCreated, style: context.text.headlineSmall),
         if (booking.othersUnpaid > 0) ...[
           const SizedBox(height: 6),
           Text(
@@ -177,9 +172,7 @@ class _SharePaymentScreenState extends State<SharePaymentScreen> {
             Text(
               AppFormatters.money(amount),
               key: const ValueKey('pay-amount'),
-              style: AppTheme.numeric(
-                context.text.headlineMedium,
-              ).copyWith(fontWeight: FontWeight.w800),
+              style: AppTheme.numeric(context.text.headlineMedium).copyWith(),
             ),
             const SizedBox(height: 8),
             Text(
@@ -408,7 +401,7 @@ class _CodeCard extends StatelessWidget {
                   key: const ValueKey('pay-code'),
                   style: AppTheme.numeric(
                     context.text.headlineSmall,
-                  ).copyWith(fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                  ).copyWith(letterSpacing: 1.2),
                 ),
               ),
               if (value != null)
@@ -572,12 +565,7 @@ class _Notice extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(title, style: context.text.titleSmall),
                 if (body != null) ...[
                   const SizedBox(height: 4),
                   Text(

@@ -993,7 +993,7 @@ class LRu extends L {
   }
 
   @override
-  String get freeSlot => 'свободно';
+  String get freeSlot => 'Свободно';
 
   @override
   String get openGame => 'Открытая игра';

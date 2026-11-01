@@ -588,9 +588,7 @@ class _ResultsSheet extends StatelessWidget {
                   venues.isEmpty && controller.venues.isNotEmpty
                       ? context.l10n.nothingFound
                       : context.l10n.clubsNearby(venues.length),
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: context.text.titleSmall,
                 ),
               ),
               const SizedBox(height: 10),

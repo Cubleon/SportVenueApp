@@ -281,12 +281,10 @@ class AppTheme {
   /// The heading over a block of content: «Организатор», «Условия отмены».
   /// Three screens had written the same thing out by hand, each with the
   /// tracking of capitals on words that were not capitals.
-  static TextStyle sectionLabel(BuildContext context) =>
-      context.text.labelLarge!.copyWith(
-        color: context.colors.muted,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.1,
-      );
+  static TextStyle sectionLabel(BuildContext context) => context
+      .text
+      .labelLarge!
+      .copyWith(color: context.colors.muted, letterSpacing: 0.1);
 
   static TextStyle _face(TextStyle? style) =>
       (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
@@ -324,21 +322,40 @@ class AppTheme {
           letterSpacing: -0.5,
         ),
       ),
+      // Seven sizes, each with its own weight, so a screen picks a role and
+      // not a size and a weight: 22 hand-made pairs had grown up across the
+      // screens. Body text is 15, not 14 or 12 — the money and the deadlines
+      // are read on the move — and 12 is the floor, for labels only.
       titleLarge: _face(
         base.titleLarge?.copyWith(
+          fontSize: 20,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
         ),
       ),
-      titleMedium: _face(base.titleMedium),
-      titleSmall: _face(base.titleSmall),
-      bodyLarge: _face(base.bodyLarge),
-      bodyMedium: _face(base.bodyMedium),
-      bodySmall: _face(base.bodySmall),
-      labelLarge: _face(base.labelLarge),
-      labelMedium: _face(base.labelMedium),
+      titleMedium: _face(
+        base.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+      ),
+      titleSmall: _face(
+        base.titleSmall?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
+      bodyLarge: _face(
+        base.bodyLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+      ),
+      bodyMedium: _face(
+        base.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+      ),
+      bodySmall: _face(
+        base.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w400),
+      ),
+      labelLarge: _face(
+        base.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+      labelMedium: _face(
+        base.labelMedium?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
       labelSmall: _face(
-        base.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
+        base.labelSmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }

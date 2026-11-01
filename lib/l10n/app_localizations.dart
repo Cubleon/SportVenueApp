@@ -1596,7 +1596,7 @@ abstract class L {
   /// No description provided for @freeSlot.
   ///
   /// In ru, this message translates to:
-  /// **'свободно'**
+  /// **'Свободно'**
   String get freeSlot;
 
   /// No description provided for @openGame.

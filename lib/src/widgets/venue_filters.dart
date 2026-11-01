@@ -155,9 +155,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 Expanded(
                   child: Text(
                     context.l10n.filtersTitle,
-                    style: context.text.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: context.text.headlineSmall,
                   ),
                 ),
                 if (!_draft.isEmpty)
@@ -284,7 +282,7 @@ class _SliderBlock extends StatelessWidget {
             Text(
               value,
               style: context.text.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

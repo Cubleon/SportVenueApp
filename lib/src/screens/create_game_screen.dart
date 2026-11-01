@@ -241,7 +241,6 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                     ),
                                     style: context.text.labelSmall?.copyWith(
                                       color: context.colors.muted,
-                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 Icon(
@@ -332,9 +331,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                             Expanded(
                               child: Text(
                                 context.l10n.playersCount(_capacity),
-                                style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: context.text.titleLarge,
                               ),
                             ),
                             StepperButton(
@@ -383,9 +380,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                   .withValues(alpha: 0.28),
                               title: Text(
                                 context.l10n.approveManually,
-                                style: context.text.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: context.text.titleSmall,
                               ),
                               subtitle: Text(
                                 context.l10n.approveManuallyHint,
@@ -472,9 +467,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                 pricePerPerson == null
                                     ? context.l10n.emptyValue
                                     : AppFormatters.money(pricePerPerson),
-                                style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: context.text.titleLarge,
                               ),
                             ],
                           ),
@@ -614,9 +607,7 @@ class _ChooseVenueRow extends StatelessWidget {
                 children: [
                   Text(
                     context.l10n.chooseVenue,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.text.titleSmall,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -667,18 +658,12 @@ class _Block extends StatelessWidget {
                       // On the accent, not beside it: near-black on blue is
                       // 2.6:1, which is a number you have to hunt for.
                       color: context.colors.onAccent,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                title,
-                style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text(title, style: context.text.titleSmall),
             ],
           ),
           const SizedBox(height: 12),

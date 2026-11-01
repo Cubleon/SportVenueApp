@@ -42,10 +42,7 @@ class AppLogo extends StatelessWidget {
         const SizedBox(height: 16),
         RichText(
           text: TextSpan(
-            style: context.text.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-            ),
+            style: context.text.headlineSmall?.copyWith(letterSpacing: -0.3),
             children: [
               const TextSpan(text: 'sport'),
               TextSpan(
@@ -260,7 +257,6 @@ class PrimaryButton extends StatelessWidget {
                         // words around it.
                         style: context.text.titleSmall?.copyWith(
                           color: foreground,
-                          fontWeight: FontWeight.w700,
                           letterSpacing: -0.05,
                           height: 1.15,
                         ),
@@ -485,10 +481,7 @@ class SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.15,
-              ),
+              style: context.text.titleMedium?.copyWith(letterSpacing: -0.15),
             ),
           ),
           if (action != null)
@@ -532,7 +525,6 @@ class SportBadge extends StatelessWidget {
             sport.name.capitalized,
             style: context.text.labelSmall?.copyWith(
               color: context.colors.muted,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -602,7 +594,6 @@ class SelectableChip extends StatelessWidget {
                                 ? context.colors.onAccent
                                 : Colors.white)
                           : context.colors.muted,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -841,7 +832,6 @@ void showAppSnack(
         message,
         style: context.text.bodyMedium?.copyWith(
           color: context.colors.onCommit,
-          fontWeight: FontWeight.w500,
         ),
       ),
       behavior: SnackBarBehavior.floating,
@@ -908,9 +898,7 @@ class ScreenTitleBar extends StatelessWidget {
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.text.titleMedium,
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
@@ -1061,13 +1049,11 @@ class BookingRow extends StatelessWidget {
                   AppFormatters.weekdayShort(booking.draft.date),
                   style: context.text.labelSmall?.copyWith(
                     color: over ? context.colors.dim : context.colors.accent,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   '${booking.draft.date.day}',
                   style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
                     color: over ? context.colors.muted : null,
                   ),
                 ),
@@ -1087,7 +1073,6 @@ class BookingRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
                           color: over ? context.colors.muted : null,
                         ),
                       ),
@@ -1140,10 +1125,7 @@ class StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: context.text.labelSmall?.copyWith(
-          color: context.colors.danger,
-          fontWeight: FontWeight.w700,
-        ),
+        style: context.text.labelSmall?.copyWith(color: context.colors.danger),
       ),
     );
   }
@@ -1278,9 +1260,7 @@ class EmptyState extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: context.text.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: context.text.titleSmall,
           ),
           const SizedBox(height: 6),
           Text(
@@ -1493,7 +1473,6 @@ class _DayCard extends StatelessWidget {
                   color: isSelected
                       ? colors.onAccent.withValues(alpha: 0.85)
                       : colors.dim,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1558,9 +1537,7 @@ class DurationPicker extends StatelessWidget {
         Expanded(
           child: Text(
             durationText(context, value),
-            style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: context.text.titleLarge,
           ),
         ),
         StepperButton(
@@ -1674,7 +1651,6 @@ class TimeTile extends StatelessWidget {
                     ? context.colors.ink
                     : context.colors.dim,
                 decoration: available ? null : TextDecoration.lineThrough,
-                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -1765,9 +1741,7 @@ class VenueRow extends StatelessWidget {
                     venue.name.capitalized,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.text.titleSmall,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -1788,9 +1762,7 @@ class VenueRow extends StatelessWidget {
                       const SizedBox(width: 3),
                       Text(
                         AppFormatters.decimal(venue.rating),
-                        style: context.text.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: context.text.labelMedium,
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -1799,7 +1771,6 @@ class VenueRow extends StatelessWidget {
                         ),
                         style: context.text.labelMedium?.copyWith(
                           color: context.colors.accent,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],

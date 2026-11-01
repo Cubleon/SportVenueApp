@@ -97,9 +97,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Text(
                   context.l10n.venuePickerTitle,
-                  style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: context.text.titleLarge,
                 ),
               ),
               Padding(

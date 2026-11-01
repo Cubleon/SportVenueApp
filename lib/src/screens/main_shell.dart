@@ -156,9 +156,7 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 18),
                 Text(
                   context.l10n.createSheetTitle,
-                  style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: context.text.titleLarge,
                 ),
                 const SizedBox(height: 14),
                 _SheetAction(
@@ -402,9 +400,12 @@ class _NavItem extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      // 11, under the 12 of every other label: the tab bar
+                      // is a fixed strip, and at 12 «Профиль» lost its end
+                      // under a large system font. Apple sets these at 10.
                       style: context.text.labelSmall?.copyWith(
                         color: color,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -452,12 +453,7 @@ class _SheetAction extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(title, style: context.text.titleSmall),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,

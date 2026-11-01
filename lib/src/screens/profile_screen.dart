@@ -89,9 +89,7 @@ class ProfileScreen extends StatelessWidget {
                                   // SportVenue» here is two names for one
                                   // reader in one session.
                                   controller.greetingName.capitalized,
-                                  style: context.text.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: context.text.titleMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -332,10 +330,7 @@ class _Stat extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.text.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.4,
-          ),
+          style: context.text.headlineSmall?.copyWith(letterSpacing: -0.4),
         ),
         const SizedBox(height: 2),
         Text(
@@ -385,12 +380,7 @@ class _MenuItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text(title, style: context.text.titleSmall),
                   const SizedBox(height: 3),
                   Text(
                     subtitle,

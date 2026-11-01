@@ -238,7 +238,6 @@ class _SportCard extends StatelessWidget {
                       // Sits on the pitch drawing, not on the page.
                       style: context.text.titleSmall?.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

@@ -70,7 +70,6 @@ class PlayerScreen extends StatelessWidget {
                             child: Text(
                               player.initial,
                               style: context.text.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
                                 color: context.colors.onAccent,
                               ),
                             ),
@@ -82,9 +81,7 @@ class PlayerScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   player.name,
-                                  style: context.text.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: context.text.titleMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

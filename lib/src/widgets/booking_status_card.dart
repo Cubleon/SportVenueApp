@@ -87,12 +87,7 @@ class BookingStatusCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text(title, style: context.text.titleSmall),
                   if (counted) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -107,7 +102,7 @@ class BookingStatusCard extends StatelessWidget {
                       // carries the colour.
                       style: context.text.bodyMedium?.copyWith(
                         color: colors.ink,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),

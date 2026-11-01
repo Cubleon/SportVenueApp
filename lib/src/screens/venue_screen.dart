@@ -125,9 +125,7 @@ class _VenueScreenState extends State<VenueScreen> {
                   const SizedBox(height: 18),
                   Text(
                     venue.name.capitalized,
-                    style: context.text.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: context.text.headlineSmall,
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -267,9 +265,7 @@ class _RatingRow extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               AppFormatters.decimal(venue.rating),
-              style: AppTheme.numeric(
-                context.text.titleMedium,
-              ).copyWith(fontWeight: FontWeight.w800),
+              style: AppTheme.numeric(context.text.titleMedium).copyWith(),
             ),
             if (reviews != null) ...[
               const SizedBox(width: 8),

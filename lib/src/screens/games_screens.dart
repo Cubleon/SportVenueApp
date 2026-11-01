@@ -459,7 +459,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               Text(
                                 current.venue.name.capitalized,
                                 style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
                                   letterSpacing: -0.2,
                                 ),
                               ),
@@ -1034,10 +1033,9 @@ class _AvatarStack extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               '+$hidden',
-              style: AppTheme.numeric(context.text.labelSmall).copyWith(
-                color: context.colors.dim,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTheme.numeric(
+                context.text.labelSmall,
+              ).copyWith(color: context.colors.dim),
             ),
           ],
         ],
@@ -1136,7 +1134,7 @@ class _RequestCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1202,12 +1200,7 @@ class _ParticipantTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  participant.name,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(participant.name, style: context.text.titleSmall),
                 const SizedBox(height: 4),
                 Text(
                   participant.hasRating
@@ -1268,18 +1261,15 @@ class _PlayerSlot extends StatelessWidget {
                             color: context.colors.dim,
                             fontStyle: FontStyle.italic,
                           )
-                        : context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        : context.text.titleSmall,
                   ),
                 ),
                 if (!empty && participant!.hasRating)
                   Text(
                     AppFormatters.decimal(participant!.rating),
-                    style: AppTheme.numeric(context.text.labelLarge).copyWith(
-                      color: context.colors.muted,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTheme.numeric(
+                      context.text.labelLarge,
+                    ).copyWith(color: context.colors.muted),
                   ),
               ],
             ),

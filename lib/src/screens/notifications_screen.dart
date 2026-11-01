@@ -159,12 +159,7 @@ class _NoteCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          note.title,
-                          style: context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        child: Text(note.title, style: context.text.titleSmall),
                       ),
                       if (fresh) ...[
                         const SizedBox(width: 8),

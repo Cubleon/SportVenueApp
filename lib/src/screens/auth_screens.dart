@@ -222,10 +222,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 autofillHints: const [AutofillHints.telephoneNumber],
                 autofocus: true,
                 inputFormatters: [_RuPhoneFormatter()],
-                style: context.text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+                style: context.text.titleMedium?.copyWith(letterSpacing: 0.2),
                 decoration: InputDecoration(
                   hintText: '+7 (000) 000-00-00',
                   prefixIcon: Padding(
@@ -582,9 +579,7 @@ class _CallVerificationScreenState extends State<CallVerificationScreen>
                 _challenge.callPhonePretty,
                 key: const ValueKey('call-number'),
                 textAlign: TextAlign.center,
-                style: context.text.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: context.text.headlineSmall,
               ),
               TextButton(
                 onPressed: () async {

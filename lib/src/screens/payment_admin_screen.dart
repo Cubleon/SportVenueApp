@@ -340,18 +340,12 @@ class _QueueCard extends StatelessWidget {
               Expanded(
                 child: SelectableText(
                   item.code,
-                  style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
+                  style: context.text.titleLarge?.copyWith(letterSpacing: 0.5),
                 ),
               ),
               Text(
                 AppFormatters.money(item.amount),
-                style: context.text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: colors.accent,
-                ),
+                style: context.text.titleMedium?.copyWith(color: colors.accent),
               ),
             ],
           ),
@@ -359,7 +353,7 @@ class _QueueCard extends StatelessWidget {
           Text(
             item.userName,
             style: context.text.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           if (payer != null) Text(l10n.adminPayer(payer), style: muted),

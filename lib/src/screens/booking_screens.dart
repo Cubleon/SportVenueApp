@@ -719,9 +719,7 @@ class _SharesCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   context.l10n.sharesTitle,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: context.text.titleSmall,
                 ),
               ),
               Text(
@@ -756,7 +754,6 @@ class _SharesCard extends StatelessWidget {
                     child: Text(
                       share.initial,
                       style: context.text.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
                         color: share.isPaid
                             ? context.colors.accent
                             : context.colors.muted,
@@ -771,8 +768,8 @@ class _SharesCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: context.text.bodyMedium?.copyWith(
                         fontWeight: share.isCurrentUser
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                   ),
@@ -912,10 +909,7 @@ class _ExplainerRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-        ),
+        Text(title, style: context.text.titleSmall),
         const SizedBox(height: 2),
         Text(
           body,
@@ -985,18 +979,12 @@ class _StepBlock extends StatelessWidget {
                       // On the accent, not beside it: near-black on blue is
                       // 2.6:1, which is a number you have to hunt for.
                       color: context.colors.onAccent,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                title,
-                style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text(title, style: context.text.titleSmall),
             ],
           ),
           const SizedBox(height: 12),
@@ -1030,9 +1018,7 @@ class _CounterRow extends StatelessWidget {
         Expanded(
           child: Text(
             context.l10n.playersCount(value),
-            style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: context.text.titleLarge,
           ),
         ),
         StepperButton(
