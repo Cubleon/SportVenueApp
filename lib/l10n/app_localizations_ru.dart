@@ -560,6 +560,32 @@ class LRu extends L {
   String get signInWithEmail => 'Войти по почте';
 
   @override
+  String get addToCalendar => 'В календарь';
+
+  @override
+  String get openRoute => 'Маршрут';
+
+  @override
+  String calendarBookingTitle(String venue) {
+    return 'Игра · $venue';
+  }
+
+  @override
+  String calendarGameTitle(String sport, String venue) {
+    return '$sport · $venue';
+  }
+
+  @override
+  String get linkOpenFailed => 'Не получилось открыть. Попробуйте ещё раз.';
+
+  @override
+  String get callHint => 'Подтвердим номер звонком — вводить код не нужно.';
+
+  @override
+  String get requestPendingHint =>
+      'Организатор ответит здесь и в уведомлениях. Платить не нужно, пока заявку не одобрят.';
+
+  @override
   String get emailSignInTitle => 'Вход по коду из письма';
 
   @override
@@ -1131,7 +1157,7 @@ class LRu extends L {
 
   @override
   String get payPendingBody =>
-      'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.';
+      'Сверяем перевод с выпиской банка — обычно в течение нескольких часов, днём быстрее. Когда проверим, придёт уведомление; если не найдём перевод, скажем здесь же.';
 
   @override
   String get payPaidTitle => 'Оплата получена';
@@ -1581,7 +1607,7 @@ class LRu extends L {
   String get loadFailed => 'Не удалось загрузить данные. Проверьте интернет.';
 
   @override
-  String get requestWaiting => 'заявка отправлена';
+  String get requestWaiting => 'Заявка отправлена';
 
   @override
   String get withdrawRequest => 'Отозвать заявку';

@@ -116,7 +116,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       onTap: _pickVenue,
                       trailing: Icon(
                         AppIcons.chevronDown,
-                        color: context.colors.dim,
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
@@ -544,6 +544,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 const SizedBox(height: 12),
                 // The state is said once, by the card above.
                 _BookingDetailsCard(draft: booking.draft),
+                if (booking.isActive) ...[
+                  const SizedBox(height: 12),
+                  PlanActions(
+                    title: context.l10n.calendarBookingTitle(
+                      booking.draft.venue.name.capitalized,
+                    ),
+                    start: booking.startsAt,
+                    durationMinutes: booking.draft.durationMinutes,
+                    venue: booking.draft.venue,
+                  ),
+                ],
                 if (booking.shares.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _SharesCard(booking: booking),
@@ -810,7 +821,7 @@ class _SharesCard extends StatelessWidget {
                     size: 18,
                     color: share.isPaid
                         ? context.colors.success
-                        : context.colors.dim,
+                        : context.colors.muted,
                   ),
                   const SizedBox(width: 6),
                   Text(

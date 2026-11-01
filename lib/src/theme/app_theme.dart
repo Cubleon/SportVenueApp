@@ -31,7 +31,6 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onCommit,
     required this.ink,
     required this.muted,
-    required this.dim,
     required this.faint,
     required this.borderStrong,
     required this.border,
@@ -77,7 +76,6 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color ink;
   final Color muted;
-  final Color dim;
 
   /// Hairlines and disabled marks only — it fails as text.
   final Color faint;
@@ -113,8 +111,8 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Contrast, measured against both grounds this palette uses — cards and
   /// the tinted page: ink 17.9:1 / 15.9:1, muted 5.3:1 / 4.7:1, both clear
-  /// AA for body text. dim clears 3:1 only, so it is for icons, hints and
-  /// disabled marks, never for a sentence.
+  /// AA for body text. One grey for everything secondary: a second, «dim»,
+  /// differed from muted by a shade nobody could see.
   static const light = AppColors(
     brightness: Brightness.light,
     bg: Color(0xFFEBF2F7),
@@ -129,7 +127,6 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFFFFFFFF),
     ink: Color(0xFF15171C),
     muted: Color(0xFF616C7A),
-    dim: Color(0xFF5F6B7A),
     faint: Color(0xFFD5DDE5),
     borderStrong: Color(0xFF7E8A99),
     border: Color(0xFFE3EAF0),
@@ -143,7 +140,7 @@ class AppColors extends ThemeExtension<AppColors> {
   );
 
   /// The same palette read in the dark: ink 16.4:1 on the page and 14.4:1 on
-  /// a card, muted 7.6 / 6.7, dim 5.2 / 4.5. The accent had to move — the
+  /// a card, muted 7.6 / 6.7. The accent had to move — the
   /// light theme's indigo cannot both carry white text and be legible as
   /// text on a dark page, so the dark theme lightens the fill and writes on
   /// it in near-black: 5.7:1 on the button, 5.9:1 as a link on the page.
@@ -161,7 +158,6 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFF12141F),
     ink: Color(0xFFEDF1F7),
     muted: Color(0xFF9BA7B8),
-    dim: Color(0xFF8E9BAC),
     faint: Color(0xFF333C4A),
     borderStrong: Color(0xFF6C7A8A),
     border: Color(0xFF262E3B),
@@ -468,7 +464,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surface,
-        hintStyle: textTheme.bodyLarge?.copyWith(color: colors.dim),
+        hintStyle: textTheme.bodyLarge?.copyWith(color: colors.muted),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,

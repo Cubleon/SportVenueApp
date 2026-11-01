@@ -1,5 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:flutter/material.dart';
 import '../theme/app_icons.dart';
 
@@ -190,7 +194,7 @@ class PrimaryButton extends StatelessWidget {
             ButtonTone.danger => context.colors.danger,
           };
     final foreground = !enabled
-        ? context.colors.dim
+        ? context.colors.muted
         : switch (tone) {
             ButtonTone.accent => context.colors.onAccent,
             ButtonTone.neutral => context.colors.ink,
@@ -1076,7 +1080,7 @@ class BookingRow extends StatelessWidget {
                 Text(
                   AppFormatters.weekdayShort(booking.draft.date),
                   style: context.text.labelSmall?.copyWith(
-                    color: over ? context.colors.dim : context.colors.accent,
+                    color: over ? context.colors.muted : context.colors.accent,
                   ),
                 ),
                 Text(
@@ -1129,7 +1133,7 @@ class BookingRow extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            Icon(AppIcons.chevronRight, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.muted),
         ],
       ),
     );
@@ -1428,7 +1432,9 @@ class DateStrip extends StatelessWidget {
               DateTime(now.year, now.month, now.day),
               DateTime(now.year, now.month, now.day + days - 1),
             ),
-            style: context.text.labelSmall?.copyWith(color: context.colors.dim),
+            style: context.text.labelSmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
         ),
         SizedBox(
@@ -1500,7 +1506,7 @@ class _DayCard extends StatelessWidget {
                 style: context.text.labelSmall?.copyWith(
                   color: isSelected
                       ? colors.onAccent.withValues(alpha: 0.85)
-                      : colors.dim,
+                      : colors.muted,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1618,7 +1624,7 @@ class StepperButton extends StatelessWidget {
             : context.colors.surfaceRaised,
         disabledBackgroundColor: context.colors.surfaceRaised,
         foregroundColor: context.colors.onAccent,
-        disabledForegroundColor: context.colors.dim,
+        disabledForegroundColor: context.colors.muted,
       ),
     );
   }
@@ -1677,7 +1683,7 @@ class TimeTile extends StatelessWidget {
                     ? context.colors.onAccent
                     : available
                     ? context.colors.ink
-                    : context.colors.dim,
+                    : context.colors.muted,
                 decoration: available ? null : TextDecoration.lineThrough,
               ),
             ),
@@ -1773,10 +1779,7 @@ class VenueRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    context.l10n.venueAddressDistance(
-                      venue.address,
-                      AppFormatters.decimal(venue.distanceKm),
-                    ),
+                    venue.address,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.bodySmall?.copyWith(
@@ -1786,13 +1789,19 @@ class VenueRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(AppIcons.star, size: 15, color: context.colors.ink),
-                      const SizedBox(width: 3),
-                      Text(
-                        AppFormatters.decimal(venue.rating),
-                        style: context.text.labelMedium,
-                      ),
-                      const SizedBox(width: 10),
+                      if (kShowClubRatings) ...[
+                        Icon(
+                          AppIcons.star,
+                          size: 15,
+                          color: context.colors.ink,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          AppFormatters.decimal(venue.rating),
+                          style: context.text.labelMedium,
+                        ),
+                        const SizedBox(width: 10),
+                      ],
                       Text(
                         context.l10n.pricePerHour(
                           AppFormatters.money(venue.pricePerHour),
@@ -1806,10 +1815,131 @@ class VenueRow extends StatelessWidget {
                 ],
               ),
             ),
-            trailing ?? Icon(AppIcons.chevronRight, color: context.colors.dim),
+            trailing ??
+                Icon(AppIcons.chevronRight, color: context.colors.muted),
           ],
         ),
       ),
     );
   }
+}
+
+/// «В календарь» and «Маршрут» side by side, under a booking or a game.
+///
+/// Booking services put both right after the booking is made: a game in the
+/// calendar is not forgotten, and the way to the club is one tap.
+class PlanActions extends StatelessWidget {
+  const PlanActions({
+    super.key,
+    required this.title,
+    required this.start,
+    required this.durationMinutes,
+    required this.venue,
+  });
+
+  final String title;
+  final DateTime start;
+  final int durationMinutes;
+  final Venue venue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: PrimaryButton(
+            key: const ValueKey('add-to-calendar'),
+            label: context.l10n.addToCalendar,
+            icon: AppIcons.calendarDays,
+            tone: ButtonTone.neutral,
+            onPressed: () => _addToCalendar(context),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: PrimaryButton(
+            key: const ValueKey('open-route'),
+            label: context.l10n.openRoute,
+            icon: AppIcons.mapPin,
+            tone: ButtonTone.neutral,
+            onPressed: () => _openRoute(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  DateTime get _end => start.add(Duration(minutes: durationMinutes));
+
+  Future<void> _addToCalendar(BuildContext context) async {
+    final failed = context.l10n.linkOpenFailed;
+    final location = '${venue.name.capitalized}, ${venue.address}';
+    try {
+      if (kIsWeb) {
+        // No system calendar to hand an event to in a browser: Google
+        // Calendar's new-event page, filled in, is the nearest thing.
+        await launchUrl(
+          googleCalendarLink(title, start, _end, location),
+          mode: LaunchMode.externalApplication,
+        );
+        return;
+      }
+      final added = await Add2Calendar.addEvent2Cal(
+        Event(
+          title: title,
+          location: location,
+          startDate: start,
+          endDate: _end,
+        ),
+      );
+      if (!added && context.mounted) {
+        showAppSnack(context, failed, tone: SnackTone.failed);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        showAppSnack(context, failed, tone: SnackTone.failed);
+      }
+    }
+  }
+
+  Future<void> _openRoute(BuildContext context) async {
+    final failed = context.l10n.linkOpenFailed;
+    final opened = await launchUrl(
+      routeLink(venue),
+      mode: LaunchMode.externalApplication,
+    ).catchError((_) => false);
+    if (!opened && context.mounted) {
+      showAppSnack(context, failed, tone: SnackTone.failed);
+    }
+  }
+}
+
+/// A route to the club in Yandex Maps: the app if it is installed, the site
+/// if not.
+Uri routeLink(Venue venue) => Uri.https('yandex.ru', '/maps/', {
+  'rtext': '~${venue.latitude},${venue.longitude}',
+  'rtt': 'auto',
+});
+
+/// Google Calendar's new-event page with the event filled in. Times are
+/// Moscow wall-clock, the way the app keeps them.
+Uri googleCalendarLink(
+  String title,
+  DateTime start,
+  DateTime end,
+  String location,
+) {
+  String stamp(DateTime t) =>
+      '${t.year.toString().padLeft(4, '0')}'
+      '${t.month.toString().padLeft(2, '0')}'
+      '${t.day.toString().padLeft(2, '0')}T'
+      '${t.hour.toString().padLeft(2, '0')}'
+      '${t.minute.toString().padLeft(2, '0')}00';
+  return Uri.https('calendar.google.com', '/calendar/render', {
+    'action': 'TEMPLATE',
+    'text': title,
+    'dates': '${stamp(start)}/${stamp(end)}',
+    'ctz': 'Europe/Moscow',
+    'location': location,
+  });
 }

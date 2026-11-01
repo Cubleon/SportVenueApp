@@ -747,13 +747,14 @@ class _SkyDateCard extends StatelessWidget {
           // the strip stepped.
           width: context.scaled(64, max: 1.3),
           decoration: BoxDecoration(
+            // White in both themes: a dark card on the blue read as a hole.
             color: selected
-                ? colors.surface
+                ? Colors.white
                 : Colors.white.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: selected
-                  ? colors.surface
+                  ? Colors.white
                   : Colors.white.withValues(alpha: 0.4),
             ),
           ),
@@ -767,14 +768,16 @@ class _SkyDateCard extends StatelessWidget {
                     : AppFormatters.weekdayShort(date),
                 maxLines: 1,
                 style: context.text.labelSmall?.copyWith(
-                  color: selected ? colors.muted : Colors.white,
+                  color: selected
+                      ? colors.skyTop.withValues(alpha: 0.7)
+                      : Colors.white,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 '${date.day}',
                 style: context.text.titleLarge?.copyWith(
-                  color: selected ? colors.accent : Colors.white,
+                  color: selected ? colors.skyTop : Colors.white,
                   letterSpacing: -0.8,
                   height: 1.1,
                 ),
@@ -816,7 +819,7 @@ class _SearchField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(AppIcons.search, size: 21, color: colors.dim),
+          Icon(AppIcons.search, size: 21, color: colors.muted),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -1141,7 +1144,7 @@ class _MineCard extends StatelessWidget {
               ).copyWith(color: colors.ink),
             ),
             const SizedBox(width: 2),
-            Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
+            Icon(AppIcons.chevronRight, size: 16, color: colors.muted),
           ],
         ),
       ),
@@ -1307,38 +1310,40 @@ class _VenueRow extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.end,
         ),
-        const SizedBox(height: 3),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(AppIcons.star, size: 13, color: colors.ink),
-            const SizedBox(width: 3),
-            Flexible(
-              // Written short, read long: a reader hears
-              // "4.8 · 128 отзывов", the row shows what fits.
-              child: Semantics(
-                label: venue.reviewCount == null
-                    ? null
-                    : context.l10n.ratingWithReviews(
-                        AppFormatters.decimal(venue.rating),
-                        venue.reviewCount!,
-                      ),
-                child: Text(
-                  venue.reviewCount == null
-                      ? AppFormatters.decimal(venue.rating)
-                      : '${AppFormatters.decimal(venue.rating)} · '
-                            '${venue.reviewCount}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: AppTheme.numeric(
-                    context.text.labelSmall,
-                  ).copyWith(color: colors.muted),
+        if (kShowClubRatings) ...[
+          const SizedBox(height: 3),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(AppIcons.star, size: 13, color: colors.ink),
+              const SizedBox(width: 3),
+              Flexible(
+                // Written short, read long: a reader hears
+                // "4.8 · 128 отзывов", the row shows what fits.
+                child: Semantics(
+                  label: venue.reviewCount == null
+                      ? null
+                      : context.l10n.ratingWithReviews(
+                          AppFormatters.decimal(venue.rating),
+                          venue.reviewCount!,
+                        ),
+                  child: Text(
+                    venue.reviewCount == null
+                        ? AppFormatters.decimal(venue.rating)
+                        : '${AppFormatters.decimal(venue.rating)} · '
+                              '${venue.reviewCount}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: AppTheme.numeric(
+                      context.text.labelSmall,
+                    ).copyWith(color: colors.muted),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
 
@@ -1384,10 +1389,7 @@ class _VenueRow extends StatelessWidget {
                       // be compared down: «8.4 км» against «29 мин пешком»
                       // is not a comparison anyone can make in their head.
                       // Walking time, where it is plausible, is a tag below.
-                      context.l10n.venueAddressDistance(
-                        venue.address,
-                        AppFormatters.decimal(venue.distanceKm),
-                      ),
+                      venue.address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.text.labelSmall?.copyWith(

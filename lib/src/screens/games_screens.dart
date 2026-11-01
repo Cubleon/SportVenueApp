@@ -515,6 +515,25 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         ),
                       ),
                     ),
+                    // Only for those who are going: someone looking the game
+                    // over has nothing yet to put in a calendar.
+                    if ((current.readerPlays ||
+                            current.organizer.isCurrentUser) &&
+                        !widget.controller.gameIsOff(current))
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                          child: PlanActions(
+                            title: context.l10n.calendarGameTitle(
+                              sport.name.capitalized,
+                              current.venue.name.capitalized,
+                            ),
+                            start: current.startsAt,
+                            durationMinutes: current.durationMinutes,
+                            venue: current.venue,
+                          ),
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: _SectionLabel(text: context.l10n.organizer),
                     ),
@@ -636,13 +655,29 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     final inGame = game.readerPlays;
     if (game.readerRequested) {
       // Waiting for the organiser: nothing to pay yet, only a way to
-      // take the request back.
-      return PrimaryButton(
-        key: const ValueKey('detail-withdraw-request'),
-        label: l10n.withdrawRequest,
-        tone: ButtonTone.neutral,
-        isLoading: _joining,
-        onPressed: _joining ? null : () => _leave(game),
+      // take the request back — and, above it, what happens now, above the way out: the request is with the
+      // organiser, and nothing is owed until it is accepted.
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              l10n.requestPendingHint,
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
+            ),
+          ),
+          PrimaryButton(
+            key: const ValueKey('detail-withdraw-request'),
+            label: l10n.withdrawRequest,
+            tone: ButtonTone.neutral,
+            isLoading: _joining,
+            onPressed: _joining ? null : () => _leave(game),
+          ),
+        ],
       );
     }
     final bookingId = game.bookingId;
@@ -1032,7 +1067,7 @@ class _AvatarStack extends StatelessWidget {
               '+$hidden',
               style: AppTheme.numeric(
                 context.text.labelSmall,
-              ).copyWith(color: context.colors.dim),
+              ).copyWith(color: context.colors.muted),
             ),
           ],
         ],
@@ -1217,7 +1252,7 @@ class _ParticipantTile extends StatelessWidget {
           // A card that opens someone's profile says so, now that the
           // button which used to sit here has gone.
           if (onTap != null)
-            Icon(AppIcons.chevronRight, size: 18, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, size: 18, color: context.colors.muted),
         ],
       ),
     );
@@ -1257,7 +1292,7 @@ class _PlayerSlot extends StatelessWidget {
                     empty ? context.l10n.freeSlot : participant!.name,
                     style: empty
                         ? context.text.bodyMedium?.copyWith(
-                            color: context.colors.dim,
+                            color: context.colors.muted,
                             fontStyle: FontStyle.italic,
                           )
                         : context.text.titleSmall,

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sport_venue_app/src/data/formatters.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
+import 'package:sport_venue_app/src/widgets/shared_widgets.dart';
 
 /// Numbers, money and dates written the Russian way.
 void main() {
@@ -66,5 +67,27 @@ void main() {
       AppFormatters.monthSpan(DateTime(2026, 11, 1), DateTime(2026, 11, 14)),
       'ноябрь',
     );
+  });
+
+  test('a route goes to the club in Yandex Maps', () {
+    final venue = MockData.venues.first;
+    final link = routeLink(venue);
+    expect(link.host, 'yandex.ru');
+    expect(
+      link.queryParameters['rtext'],
+      '~${venue.latitude},${venue.longitude}',
+    );
+  });
+
+  test('a calendar link carries Moscow wall-clock times', () {
+    final link = googleCalendarLink(
+      'Игра · Лужники',
+      DateTime(2026, 11, 2, 20),
+      DateTime(2026, 11, 2, 21, 30),
+      'Лужники, ул. Лужники, 24',
+    );
+    expect(link.queryParameters['dates'], '20261102T200000/20261102T213000');
+    expect(link.queryParameters['ctz'], 'Europe/Moscow');
+    expect(link.queryParameters['text'], 'Игра · Лужники');
   });
 }

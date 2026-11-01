@@ -192,7 +192,10 @@ class _FilterSheetState extends State<_FilterSheet> {
               ),
               const SizedBox(height: 4),
             ],
-            if (_maxDistance > 0) ...[
+            // No distance filter while distance is measured from the centre
+            // of Moscow, not from the reader: «до 3 км» from the Kremlin is not
+            // a question anyone has.
+            if (kDistanceFromReader && _maxDistance > 0) ...[
               _SliderBlock(
                 title: context.l10n.filterDistance,
                 value: _draft.maxDistanceKm == null

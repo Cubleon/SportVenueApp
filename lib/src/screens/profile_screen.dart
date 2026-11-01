@@ -408,7 +408,7 @@ class _MenuItem extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(AppIcons.chevronRight, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.muted),
           ],
         ),
       ),

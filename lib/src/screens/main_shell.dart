@@ -464,7 +464,7 @@ class _SheetAction extends StatelessWidget {
               ],
             ),
           ),
-          Icon(AppIcons.chevronRight, color: context.colors.dim),
+          Icon(AppIcons.chevronRight, color: context.colors.muted),
         ],
       ),
     );

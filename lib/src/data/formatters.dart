@@ -1,3 +1,13 @@
+/// Whether clubs show stars and review counts. Off until the reviews are our
+/// own: the ones there now come from catalogues whose terms forbid reuse, and
+/// a club with no reviews of ours has no rating to show.
+const bool kShowClubRatings = false;
+
+/// Whether distances are measured from the reader. Until the app asks for a
+/// location they are measured from the centre of Moscow, so they are not
+/// shown and not filtered by.
+const bool kDistanceFromReader = false;
+
 class AppFormatters {
   const AppFormatters._();
 

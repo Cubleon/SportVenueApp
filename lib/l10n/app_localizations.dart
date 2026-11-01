@@ -909,6 +909,48 @@ abstract class L {
   /// **'Войти по почте'**
   String get signInWithEmail;
 
+  /// No description provided for @addToCalendar.
+  ///
+  /// In ru, this message translates to:
+  /// **'В календарь'**
+  String get addToCalendar;
+
+  /// No description provided for @openRoute.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут'**
+  String get openRoute;
+
+  /// No description provided for @calendarBookingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра · {venue}'**
+  String calendarBookingTitle(String venue);
+
+  /// No description provided for @calendarGameTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'{sport} · {venue}'**
+  String calendarGameTitle(String sport, String venue);
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось открыть. Попробуйте ещё раз.'**
+  String get linkOpenFailed;
+
+  /// No description provided for @callHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердим номер звонком — вводить код не нужно.'**
+  String get callHint;
+
+  /// No description provided for @requestPendingHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Организатор ответит здесь и в уведомлениях. Платить не нужно, пока заявку не одобрят.'**
+  String get requestPendingHint;
+
   /// No description provided for @emailSignInTitle.
   ///
   /// In ru, this message translates to:
@@ -1842,7 +1884,7 @@ abstract class L {
   /// No description provided for @payPendingBody.
   ///
   /// In ru, this message translates to:
-  /// **'Сверяем перевод с выпиской банка. Если не найдём, скажем здесь же.'**
+  /// **'Сверяем перевод с выпиской банка — обычно в течение нескольких часов, днём быстрее. Когда проверим, придёт уведомление; если не найдём перевод, скажем здесь же.'**
   String get payPendingBody;
 
   /// No description provided for @payPaidTitle.
@@ -2514,7 +2556,7 @@ abstract class L {
   /// No description provided for @requestWaiting.
   ///
   /// In ru, this message translates to:
-  /// **'заявка отправлена'**
+  /// **'Заявка отправлена'**
   String get requestWaiting;
 
   /// No description provided for @withdrawRequest.

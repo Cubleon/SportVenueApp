@@ -26,7 +26,12 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  static const _mapStyle = 'https://tiles.openfreemap.org/styles/dark';
+  /// The map follows the theme: the dark style on a light screen was a black
+  /// slab in the middle of a pale page.
+  static String _mapStyleFor(Brightness brightness) =>
+      brightness == Brightness.dark
+      ? 'https://tiles.openfreemap.org/styles/dark'
+      : 'https://tiles.openfreemap.org/styles/positron';
   static const _moscowCenter = maplibre.Geographic(lon: 37.6173, lat: 55.7558);
   static const _moscowZoom = 10.6;
 
@@ -197,10 +202,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     fit: StackFit.expand,
                     children: [
                       maplibre.MapLibreMap(
-                        key: ValueKey('search-map-$_mapAttempt'),
+                        key: ValueKey(
+                          'search-map-$_mapAttempt-'
+                          '${Theme.of(context).brightness.name}',
+                        ),
                         onStyleLoaded: (_) => _mapLoaded(),
-                        options: const maplibre.MapOptions(
-                          initStyle: _mapStyle,
+                        options: maplibre.MapOptions(
+                          initStyle: _mapStyleFor(Theme.of(context).brightness),
                           initCenter: _moscowCenter,
                           initZoom: _moscowZoom,
                           minZoom: 8,
@@ -366,7 +374,7 @@ class _SearchField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          Icon(AppIcons.search, color: context.colors.dim),
+          Icon(AppIcons.search, color: context.colors.muted),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(

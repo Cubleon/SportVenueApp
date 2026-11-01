@@ -245,7 +245,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                                   ),
                                 Icon(
                                   AppIcons.chevronDown,
-                                  color: context.colors.dim,
+                                  color: context.colors.muted,
                                 ),
                               ],
                             ),
@@ -619,7 +619,7 @@ class _ChooseVenueRow extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(AppIcons.chevronRight, color: colors.dim),
+            Icon(AppIcons.chevronRight, color: colors.muted),
           ],
         ),
       ),

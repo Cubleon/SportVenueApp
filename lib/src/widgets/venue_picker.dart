@@ -110,7 +110,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(AppIcons.search, color: context.colors.dim),
+                      Icon(AppIcons.search, color: context.colors.muted),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(

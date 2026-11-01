@@ -250,7 +250,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
+              // Said before the button, not after it: people waiting for a
+              // text message with a code did not know to pick up the phone.
+              Text(
+                context.l10n.callHint,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                ),
+              ),
+              const SizedBox(height: 10),
               InkWell(
                 key: const ValueKey('consent-toggle'),
                 onTap: () => setState(() {
@@ -330,10 +339,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               if (widget.onEmail != null) ...[
                 const SizedBox(height: 16),
-                OutlinedButton(
+                // A secondary button like every other one, not a thin 32-point
+                // outline under a 56-point primary.
+                PrimaryButton(
                   key: const ValueKey('email-sign-in'),
+                  label: context.l10n.signInWithEmail,
+                  tone: ButtonTone.neutral,
                   onPressed: _submitting ? null : widget.onEmail,
-                  child: Text(context.l10n.signInWithEmail),
                 ),
               ],
               if (_submitting)

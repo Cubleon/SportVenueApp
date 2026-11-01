@@ -131,16 +131,15 @@ class _VenueScreenState extends State<VenueScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    context.l10n.venueAddressDistance(
-                      venue.address,
-                      AppFormatters.decimal(venue.distanceKm),
-                    ),
+                    venue.address,
                     style: context.text.bodyMedium?.copyWith(
                       color: colors.muted,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  _RatingRow(venue: venue),
+                  if (kShowClubRatings) ...[
+                    const SizedBox(height: 14),
+                    _RatingRow(venue: venue),
+                  ],
                   if (venue.description.isNotEmpty) ...[
                     const SizedBox(height: 18),
                     Text(
