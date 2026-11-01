@@ -19,6 +19,9 @@ void main() {
     'venue': Routes.venue('luzhniki'),
     'pay': Routes.pay('booking-demo'),
     'history': Routes.history,
+    'new booking': Routes.create(),
+    'new game': Routes.create(game: true),
+    'book a club': Routes.book('luzhniki'),
   };
 
   for (final dark in [false, true]) {

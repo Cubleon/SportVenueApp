@@ -15,6 +15,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../router.dart';
 import '../widgets/booking_status_card.dart';
+import '../widgets/pull_to_refresh.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
@@ -186,10 +187,38 @@ class _BookingScreenState extends State<BookingScreen> {
                     // choice: comparing two clubs' free hours used to mean
                     // going back out and starting over.
                     child: venue == null
-                        ? _ChooseVenueRow(
-                            key: const ValueKey('create-venue-empty'),
-                            count: widget.controller.venues.length,
-                            onTap: _pickVenue,
+                        // Opened from the «+» with no clubs to offer: the
+                        // server did not answer, or has none yet. A picker
+                        // over an empty list said neither.
+                        ? ListenableBuilder(
+                            listenable: widget.controller,
+                            builder: (context, _) {
+                              final venues = widget.controller.venues;
+                              if (venues.isNotEmpty) {
+                                return _ChooseVenueRow(
+                                  key: const ValueKey('create-venue-empty'),
+                                  count: venues.length,
+                                  onTap: _pickVenue,
+                                );
+                              }
+                              if (widget.controller.loadFailed) {
+                                return RetryNotice(
+                                  key: const ValueKey('create-load-failed'),
+                                  message: l10n.loadFailed,
+                                  onRetry: () => refreshAndReport(
+                                    context,
+                                    widget.controller,
+                                  ),
+                                );
+                              }
+                              return Text(
+                                l10n.noVenuesAvailable,
+                                key: const ValueKey('create-no-venues'),
+                                style: context.text.bodyMedium?.copyWith(
+                                  color: context.colors.muted,
+                                ),
+                              );
+                            },
                           )
                         : VenueRow(
                             key: const ValueKey('booking-venue-field'),
@@ -369,41 +398,48 @@ class _BookingScreenState extends State<BookingScreen> {
                       child: _StepBlock(
                         step: ++step,
                         title: l10n.whoCanJoin,
+                        // One node for a screen reader: the switch, named by
+                        // the words beside it.
                         child: AppCard(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.approveManually,
-                                      style: context.text.titleSmall,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      l10n.approveManuallyHint,
-                                      style: context.text.bodySmall?.copyWith(
-                                        color: context.colors.muted,
+                          child: MergeSemantics(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.approveManually,
+                                        style: context.text.titleSmall,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        l10n.approveManuallyHint,
+                                        style: context.text.bodySmall?.copyWith(
+                                          color: context.colors.muted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Switch.adaptive(
-                                key: const ValueKey('create-approve-manually'),
-                                activeThumbColor: context.colors.accent,
-                                activeTrackColor: context.colors.accent
-                                    .withValues(alpha: 0.28),
-                                value: _type == GameType.approval,
-                                onChanged: (value) => setState(
-                                  () => _type = value
-                                      ? GameType.approval
-                                      : GameType.open,
+                                const SizedBox(width: 12),
+                                Switch.adaptive(
+                                  key: const ValueKey(
+                                    'create-approve-manually',
+                                  ),
+                                  activeThumbColor: context.colors.accent,
+                                  activeTrackColor: context.colors.accent
+                                      .withValues(alpha: 0.28),
+                                  value: _type == GameType.approval,
+                                  onChanged: (value) => setState(
+                                    () => _type = value
+                                        ? GameType.approval
+                                        : GameType.open,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -1407,7 +1443,9 @@ class _StepBlock extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(title, style: context.text.titleSmall),
+              // Wraps on large text: «Продолжительность» at 160% is wider
+              // than the phone.
+              Flexible(child: Text(title, style: context.text.titleSmall)),
             ],
           ),
           const SizedBox(height: 12),

@@ -881,6 +881,117 @@ void main() {
     expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
   });
 
+  testWidgets('a filled-in game reads aloud and survives large text', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final semantics = tester.ensureSemantics();
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        textScale: 1.6,
+        child: BookingScreen(controller: controller, findPlayers: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('venue-option-luzhniki')));
+    await tester.pumpAndSettle();
+    // Large text pushes the days below the fold too.
+    await tester.ensureVisible(find.byKey(ValueKey(_dayKey(fixedNow))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey(_dayKey(fixedNow))));
+    await tester.pumpAndSettle();
+    // Large text pushes the hours below the fold, where they are not built.
+    final freeHour = find.byWidgetPredicate(
+      (widget) => widget is TimeTile && widget.available,
+    );
+    for (var i = 0; i < 10 && freeHour.evaluate().isEmpty; i++) {
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+    }
+    await tester.ensureVisible(freeHour.first);
+    await tester.pumpAndSettle();
+    await tester.tap(freeHour.first);
+    await tester.pumpAndSettle();
+    // The game's own steps, which only appear once the hour is picked.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('create-approve-manually')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
+    expect(
+      tester.getSemantics(
+        find.byKey(const ValueKey('create-approve-manually')),
+      ),
+      matchesSemantics(
+        label: 'Одобрять вручную\nВы будете подтверждать каждого игрока',
+        hasToggledState: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
+    );
+
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, 4000),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('mode-game'))),
+      matchesSemantics(
+        label: 'Нужны игроки\nоткрытая игра',
+        isButton: true,
+        isSelected: true,
+        hasSelectedState: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('a new booking with no clubs says why, not an empty list', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow)..venues = [];
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: BookingScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('create-venue-empty')), findsNothing);
+    expect(find.byKey(const ValueKey('create-no-venues')), findsOneWidget);
+
+    // The server did not answer: the step offers to ask again.
+    controller.loadFailed = true;
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('create-load-failed')), findsOneWidget);
+    expect(find.text('Повторить'), findsOneWidget);
+  });
+
   testWidgets('booking can change club without starting over', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
