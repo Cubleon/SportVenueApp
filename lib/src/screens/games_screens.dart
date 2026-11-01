@@ -121,7 +121,8 @@ class _GamesScreenState extends State<GamesScreen> {
                             title: context.l10n.noOpenGames,
                             description: context.l10n.noOpenGamesHint,
                             actionLabel: context.l10n.createGameAction,
-                            onAction: () => context.go(Routes.create()),
+                            onAction: () =>
+                                context.go(Routes.create(game: true)),
                           ),
                   ),
                 ),

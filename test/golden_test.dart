@@ -12,7 +12,6 @@ import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/screens/auth_screens.dart';
 import 'package:sport_venue_app/src/screens/email_auth_screens.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
-import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/main_shell.dart';
@@ -135,7 +134,8 @@ void main() {
         'create-game',
         theme,
         now: fixedNow,
-        build: (controller) => CreateGameScreen(controller: controller),
+        build: (controller) =>
+            BookingScreen(controller: controller, findPlayers: true),
       );
 
       _golden(

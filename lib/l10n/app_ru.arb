@@ -317,6 +317,19 @@
   "pickSportAndVenue": "Выберите вид спорта и площадку",
   "gameCreated": "Игра создана",
   "booking": "Бронирование",
+  "newGame": "Новая игра",
+  "modeOwn": "Для своих",
+  "modeOwnHint": "бронь и доли",
+  "modeGame": "Нужны игроки",
+  "modeGameHint": "открытая игра",
+  "createGameShare": "Создать игру · доля {price}",
+  "@createGameShare": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "timeStep": "Время",
   "playersStep": "Игроки",
   "paySharePrice": "Оплатить свою долю · {price}",

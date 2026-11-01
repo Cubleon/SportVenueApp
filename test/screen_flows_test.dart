@@ -245,7 +245,7 @@ void main() {
       await tester.tap(find.text('Создать игру'));
       await tester.pumpAndSettle();
 
-      expect(went, Routes.create());
+      expect(went, Routes.create(game: true));
     });
 
     testWidgets('a booking with unpaid places hands over a reminder', (

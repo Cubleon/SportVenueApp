@@ -19,21 +19,36 @@ import '../widgets/shared_widgets.dart';
 import '../widgets/venue_picker.dart';
 import '../widgets/venue_slot_picker.dart';
 
+/// One screen for an hour at a club, whoever is going to play in it.
+///
+/// Booking and creating a game used to be two screens behind a sheet that
+/// asked which one before anything else: the same club, day, length and hour
+/// asked twice, in two orders, with two sets of buttons. Now the question is
+/// a switch at the top — «Для своих» or «Нужны игроки» — and the steps below
+/// are shared; a game adds who may play and whether the organiser lets each
+/// player in by hand.
 class BookingScreen extends StatefulWidget {
   const BookingScreen({
     super.key,
     required this.controller,
-    required this.venue,
+    this.venue,
     this.date,
+    this.findPlayers = false,
   });
 
   final AppController controller;
-  final Venue venue;
+
+  /// The club, when the reader arrived from one. From the «+» there is none
+  /// yet, and the first step asks.
+  final Venue? venue;
 
   /// The day the screen opens on. The home screen sends the day its calendar
   /// is showing, so picking Friday there and tapping a club does not land you
   /// back on today.
   final DateTime? date;
+
+  /// Opens on «Нужны игроки» rather than «Для своих».
+  final bool findPlayers;
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -49,29 +64,44 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
+  late bool _findPlayers = widget.findPlayers;
+
   /// The day, if one has been chosen. A reader arriving from the home
   /// brings the day its calendar was showing; one arriving from the tab bar
   /// has not said yet, and the steps below wait for them.
   late DateTime? _date = widget.date;
-  late Venue _venue = widget.venue;
-  int _duration = 60;
+  late Venue? _venue = widget.venue;
+
+  /// An hour for a booking, two for a game — until the reader says
+  /// otherwise, after which switching modes leaves their answer alone.
+  late int _duration = _findPlayers ? 120 : 60;
+  bool _durationTouched = false;
 
   /// The hour, once it is picked. It used to start at eight in the evening
   /// with the pay button already live above it, so the screen could be paid
   /// for an hour nobody had chosen.
   int? _hour;
-  int _players = 4;
+  late int _players = _venue == null
+      ? 4
+      : 4.clamp(_venue!.capacityMin, _venue!.capacityMax);
 
   /// Set by the slot picker, which is the only thing that knows whether the
   /// hour on screen is one the club will take.
   bool _slotReady = false;
 
-  bool get _dateChosen => _date != null;
-  bool get _timeChosen => _hour != null && _slotReady;
+  /// The game's sport, when the club has more than one.
+  String? _sportId;
+  GameType _type = GameType.open;
+  GenderFilter _gender = GenderFilter.any;
+  bool _creating = false;
 
-  /// Only makes sense once a day and an hour exist.
+  bool get _venueChosen => _venue != null;
+  bool get _dateChosen => _venueChosen && _date != null;
+  bool get _timeChosen => _dateChosen && _hour != null && _slotReady;
+
+  /// Only makes sense once a club, a day and an hour exist.
   BookingDraft get _draft => BookingDraft(
-    venue: _venue,
+    venue: _venue!,
     date: _date!,
     durationMinutes: _duration,
     startHour: _hour!,
@@ -79,8 +109,39 @@ class _BookingScreenState extends State<BookingScreen> {
     mode: PaymentMode.split,
   );
 
+  /// The sport a game at [venue] is for: the one picked on the screen, else
+  /// the reader's own if the club has it, else the club's first.
+  String _gameSportId(Venue venue) {
+    final picked = _sportId;
+    if (picked != null && venue.sportIds.contains(picked)) {
+      return picked;
+    }
+    for (final id in widget.controller.selectedSportIds) {
+      if (venue.sportIds.contains(id)) {
+        return id;
+      }
+    }
+    return primarySportId(venue);
+  }
+
+  void _setMode(bool findPlayers) {
+    if (findPlayers == _findPlayers) {
+      return;
+    }
+    setState(() {
+      _findPlayers = findPlayers;
+      if (!_durationTouched && _hour == null) {
+        _duration = findPlayers ? 120 : 60;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final venue = _venue;
+    final l10n = context.l10n;
+    var step = 0;
+    final multiSport = venue != null && venue.sportIds.length > 1;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -91,51 +152,93 @@ class _BookingScreenState extends State<BookingScreen> {
                   // The club is named by the step below, which is also where
                   // it can be changed.
                   child: ScreenTitleBar(
-                    title: context.l10n.booking,
+                    title: _findPlayers ? l10n.newGame : l10n.booking,
                     onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: VenueHero(venue: _venue, height: 138),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                    child: _ModeSwitch(
+                      findPlayers: _findPlayers,
+                      onChanged: _setMode,
+                    ),
                   ),
                 ),
+                if (venue != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: VenueHero(
+                        venue: venue,
+                        height: context.scaled(120, max: 1.2),
+                      ),
+                    ),
+                  ),
                 SliverToBoxAdapter(
                   child: _StepBlock(
-                    step: 1,
-                    title: context.l10n.venueStep,
+                    step: ++step,
+                    title: l10n.venueStep,
                     // The club arrives with the screen, but it is still a
                     // choice: comparing two clubs' free hours used to mean
                     // going back out and starting over.
-                    child: VenueRow(
-                      key: const ValueKey('booking-venue-field'),
-                      venue: _venue,
-                      sport: _sportOf(_venue),
-                      selected: false,
-                      onTap: _pickVenue,
-                      trailing: Icon(
-                        AppIcons.chevronDown,
-                        color: context.colors.muted,
+                    child: venue == null
+                        ? _ChooseVenueRow(
+                            key: const ValueKey('create-venue-empty'),
+                            count: widget.controller.venues.length,
+                            onTap: _pickVenue,
+                          )
+                        : VenueRow(
+                            key: const ValueKey('booking-venue-field'),
+                            venue: venue,
+                            sport: _sportById(primarySportId(venue)),
+                            selected: false,
+                            onTap: _pickVenue,
+                            trailing: Icon(
+                              AppIcons.chevronDown,
+                              color: context.colors.muted,
+                            ),
+                          ),
+                  ),
+                ),
+                // A game is for one sport; a club with several asks which.
+                if (_findPlayers && multiSport)
+                  SliverToBoxAdapter(
+                    child: _StepBlock(
+                      step: ++step,
+                      title: l10n.sportKind,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final id in venue.sportIds)
+                            SelectableChip(
+                              label: _sportById(id)?.name.capitalized ?? id,
+                              selected: _gameSportId(venue) == id,
+                              onTap: () => setState(() => _sportId = id),
+                            ),
+                        ],
                       ),
                     ),
                   ),
-                ),
                 SliverToBoxAdapter(
-                  child: _StepBlock(
-                    step: 2,
-                    title: context.l10n.dateStep,
-                    child: DateStrip(
-                      now: widget.controller.now,
-                      selected: _date,
-                      onSelect: (date) => setState(() {
-                        _date = date;
-                        // A different day has different free hours; the one
-                        // that was picked on the old day is not a choice on
-                        // this one.
-                        _hour = null;
-                        _slotReady = false;
-                      }),
+                  child: RevealStep(
+                    visible: _venueChosen,
+                    child: _StepBlock(
+                      step: ++step,
+                      title: l10n.dateStep,
+                      child: DateStrip(
+                        now: widget.controller.now,
+                        selected: _date,
+                        onSelect: (date) => setState(() {
+                          _date = date;
+                          // A different day has different free hours; the
+                          // one that was picked on the old day is not a
+                          // choice on this one.
+                          _hour = null;
+                          _slotReady = false;
+                        }),
+                      ),
                     ),
                   ),
                 ),
@@ -143,11 +246,14 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: RevealStep(
                     visible: _dateChosen,
                     child: _StepBlock(
-                      step: 3,
-                      title: context.l10n.durationStep,
+                      step: ++step,
+                      title: l10n.durationStep,
                       child: DurationPicker(
                         value: _duration,
-                        onChanged: (value) => setState(() => _duration = value),
+                        onChanged: (value) => setState(() {
+                          _duration = value;
+                          _durationTouched = true;
+                        }),
                       ),
                     ),
                   ),
@@ -156,24 +262,27 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: RevealStep(
                     visible: _dateChosen,
                     child: _StepBlock(
-                      step: 4,
-                      title: context.l10n.timeStep,
-                      child: VenueSlotPicker(
-                        key: ValueKey(
-                          'slots-${_venue.id}-${_date?.toIso8601String()}',
-                        ),
-                        controller: widget.controller,
-                        venue: _venue,
-                        date: _date ?? widget.controller.now,
-                        durationMinutes: _duration,
-                        selectedHour: _hour,
-                        onHourChanged: (hour) => setState(() => _hour = hour),
-                        onReadyChanged: (ready) {
-                          if (ready != _slotReady) {
-                            setState(() => _slotReady = ready);
-                          }
-                        },
-                      ),
+                      step: ++step,
+                      title: l10n.timeStep,
+                      child: venue == null
+                          ? const SizedBox.shrink()
+                          : VenueSlotPicker(
+                              key: ValueKey(
+                                'slots-${venue.id}-${_date?.toIso8601String()}',
+                              ),
+                              controller: widget.controller,
+                              venue: venue,
+                              date: _date ?? widget.controller.now,
+                              durationMinutes: _duration,
+                              selectedHour: _hour,
+                              onHourChanged: (hour) =>
+                                  setState(() => _hour = hour),
+                              onReadyChanged: (ready) {
+                                if (ready != _slotReady) {
+                                  setState(() => _slotReady = ready);
+                                }
+                              },
+                            ),
                     ),
                   ),
                 ),
@@ -181,14 +290,14 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: RevealStep(
                     visible: _timeChosen,
                     child: _StepBlock(
-                      step: 5,
-                      title: context.l10n.playersStep,
+                      step: ++step,
+                      title: _findPlayers ? l10n.placesStep : l10n.playersStep,
                       child: Column(
                         children: [
                           _CounterRow(
                             value: _players,
-                            min: _venue.capacityMin,
-                            max: _venue.capacityMax,
+                            min: venue?.capacityMin ?? 2,
+                            max: venue?.capacityMax ?? 2,
                             onChanged: (value) =>
                                 setState(() => _players = value),
                           ),
@@ -200,11 +309,105 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                   ),
                 ),
+                if (_findPlayers) ...[
+                  SliverToBoxAdapter(
+                    child: RevealStep(
+                      visible: _timeChosen,
+                      child: _StepBlock(
+                        step: ++step,
+                        title: l10n.participantFilter,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                for (final (index, option) in [
+                                  (GenderFilter.any, l10n.genderAny),
+                                  (GenderFilter.men, l10n.genderMen),
+                                  (GenderFilter.women, l10n.genderWomen),
+                                ].indexed) ...[
+                                  if (index > 0) const SizedBox(width: 8),
+                                  Expanded(
+                                    child: SelectableChip(
+                                      label: option.$2,
+                                      selected: _gender == option.$1,
+                                      onTap: () =>
+                                          setState(() => _gender = option.$1),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            // Three bare chips let anyone shut half the city
+                            // out of a game with one tap and no thought. The
+                            // line does not forbid it — women's and men's
+                            // sessions are a real thing — it says what the
+                            // option is for.
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.participantFilterHint,
+                              style: context.text.bodySmall?.copyWith(
+                                color: context.colors.muted,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: RevealStep(
+                      visible: _timeChosen,
+                      child: _StepBlock(
+                        step: ++step,
+                        title: l10n.whoCanJoin,
+                        child: AppCard(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.approveManually,
+                                      style: context.text.titleSmall,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      l10n.approveManuallyHint,
+                                      style: context.text.bodySmall?.copyWith(
+                                        color: context.colors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Switch.adaptive(
+                                key: const ValueKey('create-approve-manually'),
+                                activeThumbColor: context.colors.accent,
+                                activeTrackColor: context.colors.accent
+                                    .withValues(alpha: 0.28),
+                                value: _type == GameType.approval,
+                                onChanged: (value) => setState(
+                                  () => _type = value
+                                      ? GameType.approval
+                                      : GameType.open,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 SliverToBoxAdapter(
                   child: RevealStep(
-                    visible: _timeChosen,
+                    visible: _timeChosen && !_findPlayers,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                       child: _timeChosen
                           ? _PaymentExplainerCard(draft: _draft)
                           : const SizedBox.shrink(),
@@ -215,7 +418,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   child: RevealStep(
                     visible: _timeChosen,
                     child: const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
                       child: _CancellationTermsCard(),
                     ),
                   ),
@@ -237,15 +440,14 @@ class _BookingScreenState extends State<BookingScreen> {
                   onHeight: _onBarHeight,
                   child: Column(
                     children: [
-                      // What the money is for. The hour is chosen four steps
-                      // up the page and the button used to carry only a price,
-                      // so the one part of the deal that changes was the one
-                      // part the reader could not see while paying.
+                      // What the money is for. The hour is chosen steps up
+                      // the page, and the one part of the deal that changes
+                      // should be in sight while paying.
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Text(
                           '${AppFormatters.dateShort(_date!)} · '
-                          '${_draft.timeRange} · ${_venue.name.capitalized}',
+                          '${_draft.timeRange} · ${venue!.name.capitalized}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -255,27 +457,35 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                         ),
                       ),
-                      PrimaryButton(
-                        key: const ValueKey('pay-share'),
-                        label: context.l10n.paySharePrice(
-                          AppFormatters.money(_draft.sharePrice),
+                      if (_findPlayers)
+                        PrimaryButton(
+                          key: const ValueKey('create-game-submit'),
+                          label: l10n.createGameShare(
+                            AppFormatters.money(_draft.sharePrice),
+                          ),
+                          tone: ButtonTone.commit,
+                          isLoading: _creating,
+                          onPressed: _creating ? null : _createGame,
+                        )
+                      else ...[
+                        PrimaryButton(
+                          key: const ValueKey('pay-share'),
+                          label: l10n.paySharePrice(
+                            AppFormatters.money(_draft.sharePrice),
+                          ),
+                          tone: ButtonTone.commit,
+                          onPressed: () => _goToConfirm(PaymentMode.split),
                         ),
-                        tone: ButtonTone.commit,
-                        onPressed: _canContinue
-                            ? () => _goToConfirm(PaymentMode.split)
-                            : null,
-                      ),
-                      const SizedBox(height: 10),
-                      PrimaryButton(
-                        key: const ValueKey('pay-full'),
-                        label: context.l10n.payFullPrice(
-                          AppFormatters.money(_draft.totalPrice),
+                        const SizedBox(height: 10),
+                        PrimaryButton(
+                          key: const ValueKey('pay-full'),
+                          label: l10n.payFullPrice(
+                            AppFormatters.money(_draft.totalPrice),
+                          ),
+                          tone: ButtonTone.neutral,
+                          onPressed: () => _goToConfirm(PaymentMode.full),
                         ),
-                        tone: ButtonTone.neutral,
-                        onPressed: _canContinue
-                            ? () => _goToConfirm(PaymentMode.full)
-                            : null,
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -286,12 +496,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  bool get _canContinue => _slotReady;
-
-  /// The club's own first sport, which is what [VenueHero] above draws. Two
-  /// pictures of the same club disagreeing reads as a mistake.
-  Sport? _sportOf(Venue venue) {
-    final id = primarySportId(venue);
+  Sport? _sportById(String id) {
     for (final sport in widget.controller.sports) {
       if (sport.id == id) {
         return sport;
@@ -305,9 +510,9 @@ class _BookingScreenState extends State<BookingScreen> {
       context,
       venues: widget.controller.venues,
       selected: _venue,
-      sportOf: _sportOf,
+      sportOf: (venue) => _sportById(primarySportId(venue)),
     );
-    if (picked == null || !mounted || picked.id == _venue.id) {
+    if (picked == null || !mounted || picked.id == _venue?.id) {
       return;
     }
     setState(() {
@@ -324,6 +529,177 @@ class _BookingScreenState extends State<BookingScreen> {
         builder: (_) => BookingConfirmationScreen(
           controller: widget.controller,
           draft: _draft.copyWith(mode: mode),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createGame() async {
+    final venue = _venue!;
+    setState(() => _creating = true);
+    try {
+      final game = await widget.controller.createGame(
+        sportId: _gameSportId(venue),
+        venue: venue,
+        date: _date!,
+        startHour: _hour!,
+        durationMinutes: _duration,
+        capacity: _players,
+        type: _type,
+        genderFilter: _gender,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() => _creating = false);
+      showAppSnack(context, context.l10n.gameCreated, tone: SnackTone.done);
+      // Replaced rather than stacked, and by address rather than by
+      // object: the game now has a link its organiser can send to people.
+      context.go(gameLocation(game));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _creating = false);
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    }
+  }
+}
+
+/// «Для своих» or «Нужны игроки»: the one question that tells a booking from
+/// a game, asked before the steps they share.
+class _ModeSwitch extends StatelessWidget {
+  const _ModeSwitch({required this.findPlayers, required this.onChanged});
+
+  final bool findPlayers;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    Widget option({
+      required Key key,
+      required bool value,
+      required String title,
+      required String hint,
+    }) {
+      final selected = findPlayers == value;
+      return Expanded(
+        child: Semantics(
+          button: true,
+          selected: selected,
+          child: TapTarget(
+            key: key,
+            radius: 12,
+            onTap: withSelectionFeedback(() => onChanged(value)),
+            child: AnimatedContainer(
+              duration: context.motion(const Duration(milliseconds: 160)),
+              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+              decoration: BoxDecoration(
+                color: selected ? colors.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: context.text.titleSmall?.copyWith(
+                      color: selected ? colors.onAccent : colors.ink,
+                    ),
+                  ),
+                  Text(
+                    hint,
+                    textAlign: TextAlign.center,
+                    style: context.text.labelSmall?.copyWith(
+                      color: selected
+                          ? colors.onAccent.withValues(alpha: 0.85)
+                          : colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          option(
+            key: const ValueKey('mode-own'),
+            value: false,
+            title: context.l10n.modeOwn,
+            hint: context.l10n.modeOwnHint,
+          ),
+          option(
+            key: const ValueKey('mode-game'),
+            value: true,
+            title: context.l10n.modeGame,
+            hint: context.l10n.modeGameHint,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The club step before it is answered: a row that looks like the row that
+/// replaces it, so the step does not change shape when it is filled in.
+class _ChooseVenueRow extends StatelessWidget {
+  const _ChooseVenueRow({super.key, required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: context.scaled(44),
+              height: context.scaled(44),
+              decoration: BoxDecoration(
+                color: colors.accentSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(AppIcons.search, color: colors.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.chooseVenue,
+                    style: context.text.titleSmall,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    context.l10n.venuesToChoose(count),
+                    style: context.text.bodySmall?.copyWith(
+                      color: colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(AppIcons.chevronRight, color: colors.muted),
+          ],
         ),
       ),
     );

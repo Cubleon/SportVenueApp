@@ -10,7 +10,6 @@ import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/venue_picker.dart';
 import 'games_screens.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -91,98 +90,9 @@ class _MainShellState extends State<MainShell> {
           MainShell.requestedTab.value = index;
           setState(() => _tab = index);
         },
-        onCreate: _showCreateSheet,
+        // One screen for a booking and a game; it asks which at the top.
+        onCreate: () => context.go(Routes.create(date: _homeDate)),
       ),
-    );
-  }
-
-  /// Booking from the tab bar names no club, so it asks for one instead of
-  /// picking whichever happened to be first in the catalogue.
-  Future<void> _startBooking() async {
-    final venues = widget.controller.venues;
-    if (venues.isEmpty) {
-      showAppSnack(context, context.l10n.noVenuesAvailable);
-      return;
-    }
-    final venue = await pickVenue(
-      context,
-      venues: venues,
-      selected: null,
-      sportOf: (venue) {
-        for (final sport in widget.controller.sports) {
-          if (sport.id == venue.sportIds.first) {
-            return sport;
-          }
-        }
-        return null;
-      },
-    );
-    if (venue == null || !mounted) {
-      return;
-    }
-    if (!context.mounted) {
-      return;
-    }
-    // Picked from «Забронировать площадку», so the club has already been
-    // chosen and looked at: straight to the hours.
-    context.go(Routes.book(venue.id, date: _homeDate));
-  }
-
-  void _showCreateSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.colors.ink.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  context.l10n.createSheetTitle,
-                  style: context.text.titleLarge,
-                ),
-                const SizedBox(height: 14),
-                _SheetAction(
-                  icon: AppIcons.volleyball,
-                  title: context.l10n.createGameAction,
-                  subtitle: context.l10n.createGameActionSubtitle,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    context.go(Routes.create(date: _homeDate));
-                  },
-                ),
-                const SizedBox(height: 10),
-                _SheetAction(
-                  icon: AppIcons.calendarDays,
-                  title: context.l10n.bookVenueAction,
-                  subtitle: context.l10n.bookVenueActionSubtitle,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _startBooking();
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -414,58 +324,6 @@ class _NavItem extends StatelessWidget {
             },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SheetAction extends StatelessWidget {
-  const _SheetAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: context.scaled(44),
-            height: context.scaled(44),
-            decoration: BoxDecoration(
-              color: context.colors.accentSoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: context.colors.accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: context.text.titleSmall),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(AppIcons.chevronRight, color: context.colors.muted),
-        ],
       ),
     );
   }

@@ -10,7 +10,6 @@ import 'package:sport_venue_app/src/data/formatters.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
-import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
@@ -401,13 +400,11 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
     // The length of the game is asked after the day, because it decides
     // which hours are still whole.
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Футбол'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
     await tester.pumpAndSettle();
@@ -422,7 +419,10 @@ void main() {
 
     // Scrolled into the middle of the screen: the pinned «Создать игру» bar
     // floats over the foot of the list and swallows taps aimed under it.
-    await tester.drag(find.byType(ListView).first, const Offset(0, -260));
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, -260),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('duration-plus')));
@@ -704,7 +704,7 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
     // The steps arrive one at a time, and the button with the last of them.
@@ -846,6 +846,41 @@ void main() {
     expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
   });
 
+  testWidgets('one screen books for friends or opens a game', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: BookingScreen(
+          controller: controller,
+          venue: MockData.venues.first,
+        ),
+      ),
+    );
+    await _answerBookingSteps(tester, day: fixedNow);
+    expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsNothing);
+
+    // The answers so far stay: the switch only changes what is made of them.
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, 2000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mode-game')));
+    await tester.pumpAndSettle();
+    expect(find.text('Новая игра'), findsOneWidget);
+    expect(find.byKey(const ValueKey('pay-share')), findsNothing);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('mode-own')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
+  });
+
   testWidgets('booking can change club without starting over', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
@@ -885,15 +920,13 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
     await tester.pumpAndSettle();
 
     // Nothing is chosen for the reader: the step asks, and the catalogue
     // lives in the sheet it opens.
-    await tester.tap(find.text('Футбол'));
-    await tester.pumpAndSettle();
     final field = find.byKey(const ValueKey('create-venue-empty'));
     expect(field, findsOneWidget);
     expect(find.text('Арена север'), findsNothing);
@@ -1013,15 +1046,12 @@ Future<void> _answerBookingSteps(
   await _pickFreeHour(tester);
 }
 
-/// The same for creating a game, which asks for a sport and a club first.
+/// The same for creating a game, which asks for a club first.
 Future<void> _answerCreateSteps(
   WidgetTester tester, {
   required DateTime day,
-  String sport = 'Футбол',
   String venueKey = 'venue-option-luzhniki',
 }) async {
-  await tester.pumpAndSettle();
-  await tester.tap(find.text(sport));
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
   await tester.pumpAndSettle();

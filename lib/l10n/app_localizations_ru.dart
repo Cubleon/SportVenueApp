@@ -763,6 +763,26 @@ class LRu extends L {
   String get booking => 'Бронирование';
 
   @override
+  String get newGame => 'Новая игра';
+
+  @override
+  String get modeOwn => 'Для своих';
+
+  @override
+  String get modeOwnHint => 'бронь и доли';
+
+  @override
+  String get modeGame => 'Нужны игроки';
+
+  @override
+  String get modeGameHint => 'открытая игра';
+
+  @override
+  String createGameShare(String price) {
+    return 'Создать игру · доля $price';
+  }
+
+  @override
   String get timeStep => 'Время';
 
   @override

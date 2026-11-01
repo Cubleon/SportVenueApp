@@ -11,7 +11,6 @@ import 'screens/auth_screens.dart';
 import 'screens/email_auth_screens.dart';
 import 'screens/booking_screens.dart';
 import 'screens/booking_success_screen.dart';
-import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
@@ -42,9 +41,16 @@ abstract final class Routes {
   static const myGames = '/my-games';
   static const history = '/history';
   static const notifications = '/notifications';
-  static String create({DateTime? date}) => date == null
-      ? '/create'
-      : '/create?date=${date.toIso8601String().substring(0, 10)}';
+
+  /// A new booking, or with [game] a new game: the same screen, opened on
+  /// «Для своих» or «Нужны игроки».
+  static String create({DateTime? date, bool game = false}) {
+    final query = [
+      if (date != null) 'date=${date.toIso8601String().substring(0, 10)}',
+      if (game) 'game=1',
+    ];
+    return query.isEmpty ? '/create' : '/create?${query.join('&')}';
+  }
 
   static String game(String id) => '/game/$id';
   static String venue(String id, {DateTime? date}) =>
@@ -490,9 +496,10 @@ List<RouteBase> shellRoutes(AppController controller) => [
   ),
   appRoute(
     path: 'create',
-    builder: (context, state) => CreateGameScreen(
+    builder: (context, state) => BookingScreen(
       controller: controller,
-      date: DateTime.tryParse(state.uri.queryParameters['date'] ?? ''),
+      date: _dateOf(state),
+      findPlayers: state.uri.queryParameters['game'] == '1',
     ),
   ),
 ];

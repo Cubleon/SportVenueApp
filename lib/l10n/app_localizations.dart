@@ -1251,6 +1251,42 @@ abstract class L {
   /// **'Бронирование'**
   String get booking;
 
+  /// No description provided for @newGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая игра'**
+  String get newGame;
+
+  /// No description provided for @modeOwn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Для своих'**
+  String get modeOwn;
+
+  /// No description provided for @modeOwnHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'бронь и доли'**
+  String get modeOwnHint;
+
+  /// No description provided for @modeGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нужны игроки'**
+  String get modeGame;
+
+  /// No description provided for @modeGameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'открытая игра'**
+  String get modeGameHint;
+
+  /// No description provided for @createGameShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать игру · доля {price}'**
+  String createGameShare(String price);
+
   /// No description provided for @timeStep.
   ///
   /// In ru, this message translates to:
