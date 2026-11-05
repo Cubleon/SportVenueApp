@@ -58,7 +58,13 @@ class _BookingScreenState extends State<BookingScreen> {
   late Venue _venue = widget.venue;
   int _duration = 60;
   int _hour = 20;
-  int _players = 4;
+  int _minute = 0;
+  DateTime? _apiStartsAt;
+  int? _quotedTotalPrice;
+  late int _players = 4.clamp(
+    widget.venue.capacityMin,
+    widget.venue.capacityMax,
+  );
 
   /// Set by the slot picker, which is the only thing that knows whether the
   /// hour on screen is one the club will take.
@@ -69,6 +75,9 @@ class _BookingScreenState extends State<BookingScreen> {
     date: _date,
     durationMinutes: _duration,
     startHour: _hour,
+    startMinute: _minute,
+    apiStartsAt: _apiStartsAt,
+    quotedTotalPrice: _quotedTotalPrice,
     players: _players,
     mode: PaymentMode.split,
   );
@@ -119,7 +128,14 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: DateStrip(
                       now: widget.controller.now,
                       selected: _date,
-                      onSelect: (date) => setState(() => _date = date),
+                      onSelect: (date) => setState(() {
+                        if (!DateUtils.isSameDay(_date, date)) {
+                          _slotReady = false;
+                          _apiStartsAt = null;
+                          _quotedTotalPrice = null;
+                        }
+                        _date = date;
+                      }),
                     ),
                   ),
                 ),
@@ -129,7 +145,13 @@ class _BookingScreenState extends State<BookingScreen> {
                     title: context.l10n.durationStep,
                     child: DurationPicker(
                       value: _duration,
-                      onChanged: (value) => setState(() => _duration = value),
+                      onChanged: (value) => setState(() {
+                        if (_duration != value) {
+                          _slotReady = false;
+                          _quotedTotalPrice = null;
+                        }
+                        _duration = value;
+                      }),
                     ),
                   ),
                 ),
@@ -143,7 +165,14 @@ class _BookingScreenState extends State<BookingScreen> {
                       date: _date,
                       durationMinutes: _duration,
                       selectedHour: _hour,
+                      selectedMinute: _minute,
                       onHourChanged: (hour) => setState(() => _hour = hour),
+                      onSlotChanged: (slot) => setState(() {
+                        _hour = slot.hour;
+                        _minute = slot.minute;
+                        _apiStartsAt = slot.startsAt;
+                        _quotedTotalPrice = slot.price;
+                      }),
                       onReadyChanged: (ready) {
                         if (ready != _slotReady) {
                           setState(() => _slotReady = ready);
@@ -261,7 +290,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _pickVenue() async {
     final picked = await pickVenue(
       context,
-      venues: widget.controller.venues,
+      venues: widget.controller.bookableVenues,
       selected: _venue,
       sportOf: _sportOf,
     );
@@ -270,6 +299,9 @@ class _BookingScreenState extends State<BookingScreen> {
     }
     setState(() {
       _venue = picked;
+      _slotReady = false;
+      _apiStartsAt = null;
+      _quotedTotalPrice = null;
       // Clubs take different numbers of players; carrying a count the new
       // one will not accept would be rejected at payment.
       _players = _players.clamp(picked.capacityMin, picked.capacityMax);

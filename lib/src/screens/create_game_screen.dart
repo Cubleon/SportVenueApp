@@ -50,6 +50,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       ).add(const Duration(days: 1));
 
   int _hour = 19;
+  int _minute = 0;
+  DateTime? _apiStartsAt;
+  int? _quotedTotalPrice;
 
   /// Set by the slot picker: whether the hour on screen is one the chosen
   /// club will actually take.
@@ -94,7 +97,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     if (sportId == null) {
       return const [];
     }
-    return widget.controller.venues
+    return widget.controller.bookableVenues
         .where((venue) => venue.sportIds.contains(sportId))
         .toList();
   }
@@ -144,6 +147,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
       date: _date,
       durationMinutes: _duration,
       startHour: _hour,
+      startMinute: _minute,
+      quotedTotalPrice: _quotedTotalPrice,
       players: _capacity,
       mode: PaymentMode.split,
     ).sharePrice);
@@ -236,7 +241,14 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   child: DateStrip(
                     now: widget.controller.now,
                     selected: _date,
-                    onSelect: (date) => setState(() => _date = date),
+                    onSelect: (date) => setState(() {
+                      if (!DateUtils.isSameDay(_date, date)) {
+                        _slotReady = false;
+                        _apiStartsAt = null;
+                        _quotedTotalPrice = null;
+                      }
+                      _date = date;
+                    }),
                   ),
                 ),
                 _Block(
@@ -255,7 +267,14 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                           date: _date,
                           durationMinutes: _duration,
                           selectedHour: _hour,
+                          selectedMinute: _minute,
                           onHourChanged: (hour) => setState(() => _hour = hour),
+                          onSlotChanged: (slot) => setState(() {
+                            _hour = slot.hour;
+                            _minute = slot.minute;
+                            _apiStartsAt = slot.startsAt;
+                            _quotedTotalPrice = slot.price;
+                          }),
                           onReadyChanged: (ready) {
                             if (ready != _slotReady) {
                               setState(() => _slotReady = ready);
@@ -268,7 +287,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                   title: context.l10n.durationStep,
                   child: DurationPicker(
                     value: _duration,
-                    onChanged: (value) => setState(() => _duration = value),
+                    onChanged: (value) => setState(() {
+                      if (_duration != value) {
+                        _slotReady = false;
+                        _quotedTotalPrice = null;
+                      }
+                      _duration = value;
+                    }),
                   ),
                 ),
                 _Block(
@@ -454,10 +479,16 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   }
 
   void _selectSport(Sport sport) {
+    final previousVenueId = _selectedVenue?.id;
     setState(() {
       _sportId = sport.id;
       _venue = null;
       final venue = _selectedVenue;
+      if (venue?.id != previousVenueId) {
+        _slotReady = false;
+        _apiStartsAt = null;
+        _quotedTotalPrice = null;
+      }
       if (venue != null) {
         if (_capacity > venue.capacityMax) {
           _capacity = venue.capacityMax;
@@ -471,6 +502,11 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
   void _selectVenue(Venue venue) {
     setState(() {
+      if (_selectedVenue?.id != venue.id) {
+        _slotReady = false;
+        _apiStartsAt = null;
+        _quotedTotalPrice = null;
+      }
       _venue = venue;
       if (_capacity > venue.capacityMax) {
         _capacity = venue.capacityMax;
@@ -496,6 +532,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
         venue: venue,
         date: _date,
         startHour: _hour,
+        startMinute: _minute,
+        apiStartsAt: _apiStartsAt,
         durationMinutes: _duration,
         capacity: _capacity,
         type: _type,

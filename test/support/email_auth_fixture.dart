@@ -23,6 +23,15 @@ class EmailAuthFixture {
   String verifyError = 'email code is invalid';
   Future<void> Function()? beforeVerify;
   Future<void> Function()? beforeCatalog;
+  final profile = <String, dynamic>{
+    'id': 'email-user',
+    'phone': null,
+    'email': 'sportvenue@gmail.com',
+    'name': null,
+    'last_name': null,
+    'middle_name': null,
+    'preferred_sports': [],
+  };
 
   Future<http.Response> _respond(http.Request request) async {
     requests.add(request);
@@ -67,12 +76,10 @@ class EmailAuthFixture {
       ]);
     }
     if (path.endsWith('/me')) {
-      return _json({
-        'id': 'email-user',
-        'phone': null,
-        'email': 'sportvenue@gmail.com',
-        'preferred_sports': [],
-      });
+      if (request.method == 'PATCH') {
+        profile.addAll(jsonDecode(request.body) as Map<String, dynamic>);
+      }
+      return _json(profile);
     }
     if (path.endsWith('/venues') ||
         path.endsWith('/bookings') ||

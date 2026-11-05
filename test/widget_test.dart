@@ -59,6 +59,21 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('check-call')));
       await tester.pumpAndSettle();
 
+      expect(find.text('Давайте познакомимся'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('profile-last-name')),
+        'Иванов',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('profile-first-name')),
+        'Иван',
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('save-profile-name')),
+      );
+      await tester.tap(find.byKey(const ValueKey('save-profile-name')));
+      await tester.pumpAndSettle();
+      expect(controller.fullName, 'Иванов Иван');
       expect(find.text('Какой спорт?'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('sports-continue')));
       await tester.pumpAndSettle();
@@ -188,7 +203,7 @@ void main() {
     // rather than showing games from another day. The games sit below the
     // fold, so they have to be scrolled to before they exist at all.
     expect(find.text('Свободно вс 24 мая'), findsOneWidget);
-    expect(find.text('0 игр · 4 клуба рядом'), findsOneWidget);
+    expect(find.text('0 игр'), findsOneWidget);
 
     await tester.tap(
       find.byKey(
@@ -201,7 +216,7 @@ void main() {
       find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
       findsOneWidget,
     );
-    expect(find.text('1 игра · 4 клуба рядом'), findsOneWidget);
+    expect(find.text('1 игра'), findsOneWidget);
   });
 
   testWidgets('the home survives the reader doubling the text', (tester) async {

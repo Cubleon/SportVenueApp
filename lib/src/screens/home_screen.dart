@@ -222,7 +222,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     onOpenFilters: _openFilters,
                     filterCount: _filters.count,
                     gamesToday: games.length,
-                    venuesToday: venues.length,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -308,7 +307,6 @@ class _SkyHeader extends StatefulWidget {
     required this.onOpenFilters,
     required this.filterCount,
     required this.gamesToday,
-    required this.venuesToday,
   });
 
   final AppController controller;
@@ -319,7 +317,6 @@ class _SkyHeader extends StatefulWidget {
   final VoidCallback onOpenFilters;
   final int filterCount;
   final int gamesToday;
-  final int venuesToday;
 
   @override
   State<_SkyHeader> createState() => _SkyHeaderState();
@@ -441,8 +438,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 ),
                 SizedBox(height: context.scaled(14, max: 1.3)),
                 Text(
-                  '${context.l10n.gamesCount(widget.gamesToday)} · '
-                  '${context.l10n.clubsNearby(widget.venuesToday)}',
+                  context.l10n.gamesCount(widget.gamesToday),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1068,7 +1064,9 @@ class _VenueRow extends StatelessWidget {
                         // that changes with the calendar above. Until it
                         // lands it holds its own space, so the row does not
                         // jump when it does.
-                        if (free != null)
+                        if (venue.isPublic)
+                          const _Tag(label: 'Общественная')
+                        else if (free != null)
                           _Tag(
                             label: context.l10n.freeHoursToday(free),
                             tone: _TagTone.live,
@@ -1110,13 +1108,17 @@ class _VenueRow extends StatelessWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: AppFormatters.money(venue.pricePerHour),
+                            text: venue.isPublic
+                                ? 'Бесплатно'
+                                : AppFormatters.money(venue.pricePerHour),
                             style: AppTheme.numeric(
                               context.text.titleMedium,
                             ).copyWith(fontWeight: FontWeight.w900),
                           ),
                           TextSpan(
-                            text: context.l10n.perHourSuffix,
+                            text: venue.isPublic
+                                ? ''
+                                : context.l10n.perHourSuffix,
                             style: context.text.bodySmall?.copyWith(
                               color: colors.muted,
                               fontWeight: FontWeight.w700,
@@ -1129,37 +1131,38 @@ class _VenueRow extends StatelessWidget {
                       textAlign: TextAlign.end,
                     ),
                     const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(AppIcons.star, size: 13, color: colors.ink),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          // Written short, read long: a reader hears
-                          // "4.8 · 128 отзывов", the row shows what fits.
-                          child: Semantics(
-                            label: venue.reviewCount == null
-                                ? null
-                                : context.l10n.ratingWithReviews(
-                                    venue.rating.toStringAsFixed(1),
-                                    venue.reviewCount!,
-                                  ),
-                            child: Text(
-                              venue.reviewCount == null
-                                  ? venue.rating.toStringAsFixed(1)
-                                  : '${venue.rating.toStringAsFixed(1)} · '
-                                        '${venue.reviewCount}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                              style: AppTheme.numeric(
-                                context.text.labelSmall,
-                              ).copyWith(color: colors.muted),
+                    if (!venue.isPublic)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(AppIcons.star, size: 13, color: colors.ink),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            // Written short, read long: a reader hears
+                            // "4.8 · 128 отзывов", the row shows what fits.
+                            child: Semantics(
+                              label: venue.reviewCount == null
+                                  ? null
+                                  : context.l10n.ratingWithReviews(
+                                      venue.rating.toStringAsFixed(1),
+                                      venue.reviewCount!,
+                                    ),
+                              child: Text(
+                                venue.reviewCount == null
+                                    ? venue.rating.toStringAsFixed(1)
+                                    : '${venue.rating.toStringAsFixed(1)} · '
+                                          '${venue.reviewCount}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
+                                style: AppTheme.numeric(
+                                  context.text.labelSmall,
+                                ).copyWith(color: colors.muted),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ],
                 ),
               ),

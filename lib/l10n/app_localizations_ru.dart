@@ -12,6 +12,29 @@ class LRu extends L {
   String get appTitle => 'SportVenue';
 
   @override
+  String get playerAccount => 'Я игрок';
+
+  @override
+  String get clubAccount => 'Я клуб';
+
+  @override
+  String get invalidClubCredentials => 'Неверный логин или пароль';
+
+  @override
+  String get clubLoginTooManyAttempts =>
+      'Слишком много попыток входа. Попробуйте позже.';
+
+  @override
+  String get signInAsDeveloper => 'Войти как разработчик';
+
+  @override
+  String get introduceYourself => 'Давайте познакомимся';
+
+  @override
+  String get firstLoginNameHint =>
+      'Заполните ФИО перед первым входом. Эти данные сохранятся в вашем профиле.';
+
+  @override
   String get navHome => 'Главная';
 
   @override
@@ -96,6 +119,12 @@ class LRu extends L {
 
   @override
   String get shareVenue => 'Поделиться клубом';
+
+  @override
+  String get closeVenuePreview => 'Закрыть описание клуба';
+
+  @override
+  String get venueDetails => 'Подробнее о клубе';
 
   @override
   String get venueSports => 'Виды спорта';
@@ -300,6 +329,48 @@ class LRu extends L {
   String get profile => 'Профиль';
 
   @override
+  String get personalData => 'Личные данные';
+
+  @override
+  String get fillFullName => 'Заполнить ФИО';
+
+  @override
+  String get editFullName => 'Изменить ФИО';
+
+  @override
+  String get profileNameHint => 'Укажите фамилию, имя и отчество';
+
+  @override
+  String get lastNameLabel => 'Фамилия';
+
+  @override
+  String get firstNameLabel => 'Имя';
+
+  @override
+  String get middleNameLabel => 'Отчество';
+
+  @override
+  String get middleNameOptional => 'Необязательно';
+
+  @override
+  String get lastNameRequired => 'Введите фамилию';
+
+  @override
+  String get firstNameRequired => 'Введите имя';
+
+  @override
+  String get nameTooLong => 'Не больше 80 символов';
+
+  @override
+  String get saveProfile => 'Сохранить';
+
+  @override
+  String get savingProfile => 'Сохраняем…';
+
+  @override
+  String get profileNameSaved => 'ФИО сохранено';
+
+  @override
   String get accountSportVenue => 'Аккаунт SportVenue';
 
   @override
@@ -425,18 +496,6 @@ class LRu extends L {
 
   @override
   String get clearSearch => 'Очистить поиск';
-
-  @override
-  String clubsNearby(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count клубов',
-      few: '$count клуба',
-      one: '$count клуб',
-    );
-    return '$_temp0 рядом';
-  }
 
   @override
   String get noVenuesForSport => 'Площадок этого вида нет';

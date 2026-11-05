@@ -34,6 +34,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.6.0
   maplibre: ^0.3.5
+  pointer_interceptor: ^0.10.1+2
   flutter_secure_storage: ^11.2.0
   flutter_localizations:
     sdk: flutter
@@ -64,6 +65,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   generate: true
+
+  assets:
+    - assets/images/google_g.png
 
   fonts:
     - family: AppIcons

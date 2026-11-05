@@ -8,6 +8,7 @@ import '../data/app_controller.dart';
 import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import 'sport_selection_screen.dart';
+import 'profile_edit_screen.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
@@ -83,11 +84,9 @@ class ProfileScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  // The same fallback the home greets with.
-                                  // «Спортсмен» there and «Пользователь
-                                  // SportVenue» here is two names for one
-                                  // reader in one session.
-                                  controller.greetingName.capitalized,
+                                  controller.fullName ??
+                                      controller.greetingName.capitalized,
+                                  key: const ValueKey('profile-full-name'),
                                   style: context.text.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -103,6 +102,20 @@ class ProfileScreen extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: context.text.bodySmall?.copyWith(
                                     color: context.colors.muted,
+                                  ),
+                                ),
+                                TextButton(
+                                  key: const ValueKey('edit-profile-name'),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    alignment: Alignment.centerLeft,
+                                  ),
+                                  onPressed: () =>
+                                      _editProfile(context, controller),
+                                  child: Text(
+                                    controller.fullName == null
+                                        ? context.l10n.fillFullName
+                                        : context.l10n.editFullName,
                                   ),
                                 ),
                               ],
@@ -153,6 +166,13 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       onTap: () => context.go(Routes.history),
                     ),
+                    const SizedBox(height: 12),
+                    _MenuItem(
+                      icon: AppIcons.plus,
+                      title: 'Общественные площадки',
+                      subtitle: 'Добавить площадку и проверить свои заявки',
+                      onTap: () => context.go(Routes.venueSubmissions),
+                    ),
                     // Платежи, Уведомления and Поддержка stood here looking
                     // exactly like История — same card, same chevron promising a
                     // screen — and answered with "позже". A row that cannot be
@@ -174,6 +194,20 @@ class ProfileScreen extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+Future<void> _editProfile(
+  BuildContext context,
+  AppController controller,
+) async {
+  final saved = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      builder: (_) => ProfileEditScreen(controller: controller),
+    ),
+  );
+  if (saved == true && context.mounted) {
+    showAppSnack(context, context.l10n.profileNameSaved, tone: SnackTone.done);
   }
 }
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/l10n.dart';
 import 'data/app_controller.dart';
+import 'data/api_client.dart';
 import 'labels.dart';
 import 'models/sport_venue_models.dart';
 import 'screens/auth_screens.dart';
@@ -14,6 +15,12 @@ import 'screens/create_game_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/club_dashboard_screen.dart';
+import 'screens/club_login_screen.dart';
+import 'screens/moderator_dashboard_screen.dart';
+import 'screens/venue_submissions_screen.dart';
+import 'screens/club_name_setup_screen.dart';
+import 'screens/profile_edit_screen.dart';
 import 'screens/sport_selection_screen.dart';
 import 'screens/venue_screen.dart';
 import 'theme/app_icons.dart';
@@ -33,6 +40,11 @@ abstract final class Routes {
   static const email = '/signin/email';
   static const emailCode = '/signin/email/code';
   static const onboarding = '/onboarding';
+  static const profileSetup = '/onboarding/name';
+  static const clubDashboard = '/club';
+  static const moderatorDashboard = '/moderator';
+  static const venueSubmissions = '/venue-submissions';
+  static const clubNameSetup = '/club/name';
   static const home = '/';
   static const bookings = '/bookings';
   static const myGames = '/my-games';
@@ -84,6 +96,10 @@ class AppBoot {
   bool onboarded = false;
   String? _parked;
   String pendingPhone = '';
+  AccountType loginAccountType = AccountType.player;
+  String get signInLocation => loginAccountType == AccountType.player
+      ? Routes.signIn
+      : '${Routes.signIn}?account=${loginAccountType.name}';
 
   void park(String location) {
     if (location == Routes.splash) {
@@ -137,9 +153,9 @@ GoRouter buildRouter({
     // an open sheet out from under the reader mid-decision.
     refreshListenable: _AuthChanges(controller),
     redirect: (context, state) {
-      final here = state.uri.toString();
+      final here = state.uri.path;
       if (!boot.ready) {
-        boot.park(here);
+        boot.park(state.uri.toString());
         return here == Routes.splash ? null : Routes.splash;
       }
       final authArea =
@@ -148,8 +164,25 @@ GoRouter buildRouter({
           here == Routes.email ||
           here == Routes.emailCode ||
           here == Routes.onboarding ||
+          here == Routes.profileSetup ||
+          here == Routes.clubNameSetup ||
           here == Routes.splash;
       if (!controller.isSignedIn) {
+        if (here == Routes.moderatorDashboard) {
+          boot.loginAccountType = AccountType.moderator;
+          return boot.signInLocation;
+        }
+        if (here == Routes.clubDashboard || here == Routes.clubNameSetup) {
+          boot.loginAccountType = AccountType.club;
+          return boot.signInLocation;
+        }
+        if (here == Routes.profileSetup) return Routes.signIn;
+        if (boot.loginAccountType != AccountType.player &&
+            (here == Routes.email ||
+                here == Routes.emailCode ||
+                here == Routes.call)) {
+          return boot.signInLocation;
+        }
         if (here == Routes.call && controller.phoneChallenge == null) {
           return Routes.signIn;
         }
@@ -159,8 +192,27 @@ GoRouter buildRouter({
         if (authArea) {
           return null;
         }
-        boot.park(here);
+        boot.park(state.uri.toString());
         return Routes.signIn;
+      }
+      if (controller.isModeratorAccount) {
+        return here == Routes.moderatorDashboard
+            ? null
+            : Routes.moderatorDashboard;
+      }
+      if (here == Routes.moderatorDashboard) return Routes.home;
+      if (controller.isClubAccount) {
+        final destination = controller.needsClubName
+            ? Routes.clubNameSetup
+            : Routes.clubDashboard;
+        return here == destination ? null : destination;
+      }
+      if (controller.needsProfileName) {
+        if (!authArea) boot.park(state.uri.toString());
+        return here == Routes.profileSetup ? null : Routes.profileSetup;
+      }
+      if (here == Routes.clubDashboard || here == Routes.clubNameSetup) {
+        return Routes.home;
       }
       // Signed in and still standing on a door. Onboarding is the one screen
       // that comes after signing in, so it stays open — until it has been
@@ -191,42 +243,159 @@ GoRouter buildRouter({
             // A session that came back is an account that answered the
             // sports question long ago.
             boot.onboarded = restored;
+            if (restored) boot.loginAccountType = controller.accountType;
             if (!context.mounted) {
               return;
             }
-            context.go(restored ? boot.take() : Routes.signIn);
+            context.go(
+              restored
+                  ? controller.isModeratorAccount
+                        ? Routes.moderatorDashboard
+                        : controller.isClubAccount
+                        ? controller.needsClubName
+                              ? Routes.clubNameSetup
+                              : Routes.clubDashboard
+                        : controller.needsProfileName
+                        ? Routes.profileSetup
+                        : boot.take()
+                  : Routes.signIn,
+            );
           },
         ),
       ),
       GoRoute(
         path: Routes.signIn,
-        builder: (context, state) => RegistrationScreen(
-          onEmail: () => context.go(Routes.email),
-          onContinue: (phone) async {
-            final l10n = context.l10n;
-            try {
-              await controller.startPhoneVerification(phone);
-              if (!context.mounted) return null;
-              boot.pendingPhone = phone;
-              context.go(Routes.call);
-              return null;
-            } catch (error) {
-              return errorTextFor(l10n, error);
-            }
-          },
-        ),
+        builder: (context, state) {
+          boot.loginAccountType =
+              switch (state.uri.queryParameters['account']) {
+                'club' => AccountType.club,
+                'moderator' => AccountType.moderator,
+                _ => AccountType.player,
+              };
+          if (boot.loginAccountType == AccountType.moderator) {
+            return ClubLoginScreen(
+              key: const ValueKey('moderator-login'),
+              moderator: true,
+              onBack: () {
+                controller.cancelClubLogin();
+                context.go(Routes.signIn);
+              },
+              onLogin: (login, password) async {
+                final l10n = context.l10n;
+                try {
+                  await controller.loginModerator(login, password);
+                  if (!context.mounted || !controller.isSignedIn) return null;
+                  boot.onboarded = true;
+                  context.go(Routes.moderatorDashboard);
+                  return null;
+                } catch (error) {
+                  if (error is ApiException &&
+                      (error.statusCode == 401 || error.statusCode == 422)) {
+                    return 'Неверный логин или пароль.';
+                  }
+                  if (error is ApiException && error.statusCode == 429) {
+                    return 'Слишком много попыток. Попробуйте позже.';
+                  }
+                  return errorTextFor(l10n, error);
+                }
+              },
+            );
+          }
+          if (boot.loginAccountType == AccountType.club) {
+            return ClubLoginScreen(
+              onBack: () {
+                controller.cancelClubLogin();
+                context.go(Routes.signIn);
+              },
+              onLogin: (login, password) async {
+                final l10n = context.l10n;
+                try {
+                  await controller.loginClub(login, password);
+                  if (!context.mounted || !controller.isSignedIn) return null;
+                  boot.onboarded = true;
+                  context.go(
+                    controller.needsClubName
+                        ? Routes.clubNameSetup
+                        : Routes.clubDashboard,
+                  );
+                  return null;
+                } catch (error) {
+                  if (error is ApiException &&
+                      (error.statusCode == 401 || error.statusCode == 422)) {
+                    return l10n.invalidClubCredentials;
+                  }
+                  if (error is ApiException && error.statusCode == 429) {
+                    return l10n.clubLoginTooManyAttempts;
+                  }
+                  return errorTextFor(l10n, error);
+                }
+              },
+            );
+          }
+          return RegistrationScreen(
+            key: ValueKey(boot.loginAccountType),
+            onAccountTypeChanged: (club) => context.go(
+              club ? '${Routes.signIn}?account=club' : Routes.signIn,
+            ),
+            onModeratorLogin: () =>
+                context.go('${Routes.signIn}?account=moderator'),
+            onEmail: () => context.go(Routes.email),
+            onDeveloperLogin: controller.canDeveloperLogin
+                ? () async {
+                    final l10n = context.l10n;
+                    try {
+                      await controller.developerLogin(
+                        accountType: boot.loginAccountType,
+                      );
+                      if (!context.mounted || !controller.isSignedIn) {
+                        return null;
+                      }
+                      boot.onboarded = true;
+                      context.go(
+                        controller.needsProfileName
+                            ? Routes.profileSetup
+                            : controller.isClubAccount
+                            ? Routes.clubDashboard
+                            : boot.take(),
+                      );
+                      return null;
+                    } catch (error) {
+                      return errorTextFor(l10n, error);
+                    }
+                  }
+                : null,
+            onContinue: (phone) async {
+              final l10n = context.l10n;
+              try {
+                await controller.startPhoneVerification(
+                  phone,
+                  accountType: boot.loginAccountType,
+                );
+                if (!context.mounted) return null;
+                boot.pendingPhone = phone;
+                context.go(Routes.call);
+                return null;
+              } catch (error) {
+                return errorTextFor(l10n, error);
+              }
+            },
+          );
+        },
       ),
       GoRoute(
         path: Routes.email,
         builder: (context, state) => EmailSignInScreen(
           onBack: () {
             controller.cancelEmailVerification();
-            context.go(Routes.signIn);
+            context.go(boot.signInLocation);
           },
           onContinue: (email) async {
             final l10n = context.l10n;
             try {
-              await controller.startEmailVerification(email);
+              await controller.startEmailVerification(
+                email,
+                accountType: boot.loginAccountType,
+              );
               if (context.mounted) context.go(Routes.emailCode);
               return null;
             } catch (error) {
@@ -241,7 +410,10 @@ GoRouter buildRouter({
           email: controller.email,
           challenge: controller.emailChallenge!,
           onVerify: controller.verifyEmailCode,
-          onResend: () => controller.startEmailVerification(controller.email),
+          onResend: () => controller.startEmailVerification(
+            controller.email,
+            accountType: boot.loginAccountType,
+          ),
           onBack: () => context.go(Routes.email),
           onCancel: controller.cancelEmailVerification,
           codeAccepted: () => controller.emailCodeAccepted,
@@ -252,10 +424,32 @@ GoRouter buildRouter({
         builder: (context, state) => CallVerificationScreen(
           phone: boot.pendingPhone,
           challenge: controller.phoneChallenge!,
-          onBack: () => context.go(Routes.signIn),
+          onBack: () => context.go(boot.signInLocation),
           onCheck: controller.checkPhoneVerification,
           onCancel: controller.cancelPhoneVerification,
-          onRestart: () => controller.startPhoneVerification(boot.pendingPhone),
+          onRestart: () => controller.startPhoneVerification(
+            boot.pendingPhone,
+            accountType: boot.loginAccountType,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.profileSetup,
+        builder: (context, state) => ProfileEditScreen(
+          controller: controller,
+          initialSetup: true,
+          onSaved: () => context.go(
+            controller.isClubAccount
+                ? Routes.clubDashboard
+                : boot.onboarded
+                ? boot.take()
+                : Routes.onboarding,
+          ),
+          onLogout: () {
+            controller.logout();
+            boot.onboarded = false;
+            context.go(boot.signInLocation);
+          },
         ),
       ),
       GoRoute(
@@ -277,6 +471,57 @@ GoRouter buildRouter({
             context.go(boot.take());
           },
         ),
+      ),
+      GoRoute(
+        path: Routes.clubNameSetup,
+        builder: (context, state) => ClubNameSetupScreen(
+          initialName: controller.clubName ?? '',
+          onContinue: (name) async {
+            final l10n = context.l10n;
+            try {
+              await controller.updateClubName(name);
+              if (!context.mounted || !controller.isSignedIn) return null;
+              context.go(Routes.clubDashboard);
+              return null;
+            } catch (error) {
+              return errorTextFor(l10n, error);
+            }
+          },
+          onLogout: () {
+            controller.logout();
+            boot.onboarded = false;
+            context.go(boot.signInLocation);
+          },
+        ),
+      ),
+      GoRoute(
+        path: Routes.clubDashboard,
+        builder: (context, state) => ClubDashboardScreen(
+          api: controller.apiClient!,
+          accountClubName: controller.clubName,
+          onLogout: () {
+            controller.logout();
+            boot.onboarded = false;
+            context.go(boot.signInLocation);
+          },
+        ),
+      ),
+      GoRoute(
+        path: Routes.moderatorDashboard,
+        builder: (context, state) => ModeratorDashboardScreen(
+          api: controller.apiClient!,
+          sports: controller.sports,
+          onLogout: () {
+            controller.logout();
+            boot.onboarded = false;
+            context.go('${Routes.signIn}?account=moderator');
+          },
+        ),
+      ),
+      GoRoute(
+        path: Routes.venueSubmissions,
+        builder: (context, state) =>
+            VenueSubmissionsScreen(controller: controller),
       ),
       GoRoute(
         path: Routes.home,
@@ -329,6 +574,9 @@ List<RouteBase> shellRoutes(AppController controller) => [
           final venue = _venueById(controller, state);
           if (venue == null) {
             return _NotFound(what: context.l10n.venueNotFound);
+          }
+          if (venue.isPublic) {
+            return VenueScreen(controller: controller, venue: venue);
           }
           return BookingScreen(
             controller: controller,

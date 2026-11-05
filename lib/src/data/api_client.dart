@@ -219,6 +219,9 @@ class SportVenueApiClient {
 
   ApiTokenPair? _tokens;
   Future<ApiTokenPair>? _refreshInFlight;
+  int _tokenGeneration = 0;
+  int _sessionGeneration = 0;
+  int? _refreshGeneration;
   bool _isClosed = false;
 
   Uri get baseUri => _baseUri;
@@ -238,11 +241,16 @@ class SportVenueApiClient {
   Future<ApiPhoneChallenge> startPhoneCall({
     required String phone,
     required bool consentAccepted,
+    String accountType = 'player',
   }) async {
     final response = await _send(
       'POST',
       const ['auth', 'call', 'start'],
-      body: {'phone': phone, 'consent_accepted': consentAccepted},
+      body: {
+        'phone': phone,
+        'consent_accepted': consentAccepted,
+        if (accountType != 'player') 'account_type': accountType,
+      },
     );
     return ApiPhoneChallenge.fromJson(_parseObject(response));
   }
@@ -259,14 +267,27 @@ class SportVenueApiClient {
     return ApiPhoneCallStatus.fromJson(_parseObject(response));
   }
 
+  Future<ApiTokenPair> developerLogin({String accountType = 'player'}) async {
+    final response = await _send('POST', const [
+      'auth',
+      'dev',
+    ], body: accountType == 'player' ? null : {'account_type': accountType});
+    return ApiTokenPair.fromJson(_parseObject(response));
+  }
+
   Future<ApiEmailChallenge> startEmailLogin({
     required String email,
     required bool consentAccepted,
+    String accountType = 'player',
   }) async {
     final response = await _send(
       'POST',
       const ['auth', 'email', 'start'],
-      body: {'email': email, 'consent_accepted': consentAccepted},
+      body: {
+        'email': email,
+        'consent_accepted': consentAccepted,
+        if (accountType != 'player') 'account_type': accountType,
+      },
     );
     return ApiEmailChallenge.fromJson(_parseObject(response));
   }
@@ -288,17 +309,190 @@ class SportVenueApiClient {
   Future<ApiTokenPair> refreshTokens() {
     _ensureOpen();
     final existing = _refreshInFlight;
-    if (existing != null) {
+    if (existing != null && _refreshGeneration == _tokenGeneration) {
       return existing;
     }
 
-    final refresh = _performRefresh();
+    final generation = _tokenGeneration;
+    final refresh = _performRefresh(generation);
     _refreshInFlight = refresh;
+    _refreshGeneration = generation;
     return refresh.whenComplete(() {
       if (identical(_refreshInFlight, refresh)) {
         _refreshInFlight = null;
+        _refreshGeneration = null;
       }
     });
+  }
+
+  Future<ApiTokenPair> loginClub({
+    required String login,
+    required String password,
+  }) async {
+    final response = await _send(
+      'POST',
+      const ['auth', 'club', 'login'],
+      body: {'login': login, 'password': password},
+    );
+    return ApiTokenPair.fromJson(_parseObject(response));
+  }
+
+  Future<ApiTokenPair> loginModerator({
+    required String login,
+    required String password,
+  }) async => ApiTokenPair.fromJson(
+    _parseObject(
+      await _send(
+        'POST',
+        const ['auth', 'moderator', 'login'],
+        body: {'login': login, 'password': password},
+      ),
+    ),
+  );
+
+  Future<ApiJsonList> listVenueSubmissions({bool moderation = false}) async =>
+      _parseObjectList(
+        await _send(
+          'GET',
+          moderation
+              ? const ['moderator', 'venue-submissions']
+              : const ['venue-submissions'],
+          authenticated: true,
+        ),
+      );
+
+  Future<ApiJsonObject> submitPublicVenue(ApiJsonObject data) async =>
+      _parseObject(
+        await _send(
+          'POST',
+          const ['venue-submissions'],
+          body: data,
+          authenticated: true,
+        ),
+      );
+
+  Future<ApiJsonObject> reviewVenueSubmission(
+    String id, {
+    required bool approve,
+  }) async => _parseObject(
+    await _send('POST', [
+      'moderator',
+      'venue-submissions',
+      id,
+      approve ? 'approve' : 'reject',
+    ], authenticated: true),
+  );
+
+  Future<ApiJsonObject> updateClubAccountName(String name) async =>
+      _parseObject(
+        await _send(
+          'PATCH',
+          const ['club', 'account'],
+          body: {'club_name': name},
+          authenticated: true,
+        ),
+      );
+
+  Future<ApiJsonList> listManagedClubs() async => _parseObjectList(
+    await _send('GET', const ['club', 'clubs'], authenticated: true),
+  );
+
+  Future<ApiJsonObject> createManagedClub({
+    required Map<String, Object?> data,
+  }) async => _parseObject(
+    await _send(
+      'POST',
+      const ['club', 'clubs'],
+      body: data,
+      authenticated: true,
+    ),
+  );
+
+  Future<ApiJsonObject> updateManagedClub(
+    String clubId, {
+    required Map<String, Object?> data,
+  }) async => _parseObject(
+    await _send(
+      'PATCH',
+      ['club', 'clubs', clubId],
+      body: data,
+      authenticated: true,
+    ),
+  );
+
+  Future<void> deleteManagedClub(String clubId) async {
+    await _send('DELETE', ['club', 'clubs', clubId], authenticated: true);
+  }
+
+  Future<ApiJsonList> listManagedVenues() async => _parseObjectList(
+    await _send('GET', const ['club', 'venues'], authenticated: true),
+  );
+
+  Future<ApiJsonObject> createManagedVenue(
+    String clubId, {
+    required Map<String, Object?> data,
+  }) async => _parseObject(
+    await _send(
+      'POST',
+      ['club', 'clubs', clubId, 'venues'],
+      body: data,
+      authenticated: true,
+    ),
+  );
+
+  Future<ApiJsonObject> updateManagedVenue(
+    String venueId, {
+    required Map<String, Object?> data,
+  }) async => _parseObject(
+    await _send(
+      'PATCH',
+      ['club', 'venues', venueId],
+      body: data,
+      authenticated: true,
+    ),
+  );
+
+  Future<void> deleteManagedVenue(String venueId) async {
+    await _send('DELETE', ['club', 'venues', venueId], authenticated: true);
+  }
+
+  Future<ApiJsonList> listManagedAvailability(String venueId) async =>
+      _parseObjectList(
+        await _send('GET', [
+          'club',
+          'venues',
+          venueId,
+          'availability',
+        ], authenticated: true),
+      );
+
+  Future<ApiJsonObject> publishManagedAvailability(
+    String venueId, {
+    required DateTime startsAt,
+    required DateTime endsAt,
+  }) async => _parseObject(
+    await _send(
+      'POST',
+      ['club', 'venues', venueId, 'availability'],
+      body: {
+        'starts_at': startsAt.toUtc().toIso8601String(),
+        'ends_at': endsAt.toUtc().toIso8601String(),
+      },
+      authenticated: true,
+    ),
+  );
+
+  Future<void> deleteManagedAvailability(
+    String venueId,
+    String windowId,
+  ) async {
+    await _send('DELETE', [
+      'club',
+      'venues',
+      venueId,
+      'availability',
+      windowId,
+    ], authenticated: true);
   }
 
   Future<ApiJsonList> listSports() async {
@@ -365,6 +559,7 @@ class SportVenueApiClient {
   Future<ApiJsonObject> updateMe({
     String? name,
     String? lastName,
+    String? middleName,
     String? avatarUrl,
     DateTime? birthDate,
     String? gender,
@@ -376,6 +571,7 @@ class SportVenueApiClient {
     final body = <String, Object?>{
       'name': ?name,
       'last_name': ?lastName,
+      'middle_name': ?middleName,
       'avatar_url': ?avatarUrl,
       if (birthDate != null) 'birth_date': _dateOnly(birthDate),
       'gender': ?gender,
@@ -464,6 +660,7 @@ class SportVenueApiClient {
     String? gameType,
     String? genderFilter,
     bool availableOnly = true,
+    bool includeMyHistory = false,
   }) async {
     final response = await _send(
       'GET',
@@ -475,7 +672,9 @@ class SportVenueApiClient {
         'type': gameType,
         'gender_filter': genderFilter,
         'available_only': '$availableOnly',
+        if (includeMyHistory) 'include_my_history': 'true',
       },
+      authenticated: includeMyHistory,
     );
     return _parseObjectList(response);
   }
@@ -566,10 +765,14 @@ class SportVenueApiClient {
       return;
     }
     _isClosed = true;
+    _tokenGeneration++;
+    _sessionGeneration++;
+    _refreshInFlight = null;
+    _refreshGeneration = null;
     _httpClient.close();
   }
 
-  Future<ApiTokenPair> _performRefresh() async {
+  Future<ApiTokenPair> _performRefresh(int generation) async {
     final refreshToken = _tokens?.refreshToken;
     if (refreshToken == null || refreshToken.isEmpty) {
       throw const ApiException(
@@ -587,9 +790,15 @@ class SportVenueApiClient {
         retryAfterUnauthorized: false,
       );
       final pair = _parseTokenPair(response);
-      _replaceTokens(pair);
+      if (generation != _tokenGeneration) {
+        throw _supersededAuthentication();
+      }
+      _replaceTokens(pair, refreshed: true);
       return pair;
     } on ApiException catch (error) {
+      if (generation != _tokenGeneration) {
+        throw _supersededAuthentication();
+      }
       if (error.isUnauthorized) {
         _replaceTokens(null);
       }
@@ -608,6 +817,8 @@ class SportVenueApiClient {
     _ensureOpen();
     final uri = _buildUri(pathSegments, query);
     final request = http.Request(method, uri);
+    final requestSessionGeneration = _sessionGeneration;
+    final requestTokenGeneration = _tokenGeneration;
     request.headers.addAll(_defaultHeaders);
     request.headers['Accept'] = 'application/json';
 
@@ -653,9 +864,20 @@ class SportVenueApiClient {
 
     if (response.statusCode == 401 &&
         authenticated &&
+        requestSessionGeneration != _sessionGeneration) {
+      throw _supersededAuthentication(uri: uri);
+    }
+    if (response.statusCode == 401 &&
+        authenticated &&
         retryAfterUnauthorized &&
         _tokens?.refreshToken.isNotEmpty == true) {
-      await refreshTokens();
+      // Another request may already have rotated this session's credentials.
+      if (requestTokenGeneration == _tokenGeneration) {
+        await refreshTokens();
+      }
+      if (requestSessionGeneration != _sessionGeneration) {
+        throw _supersededAuthentication(uri: uri);
+      }
       return _send(
         method,
         pathSegments,
@@ -815,10 +1037,23 @@ class SportVenueApiClient {
     );
   }
 
-  void _replaceTokens(ApiTokenPair? tokens) {
+  void _replaceTokens(ApiTokenPair? tokens, {bool refreshed = false}) {
+    _tokenGeneration++;
+    if (!refreshed) {
+      _sessionGeneration++;
+    }
+    _refreshInFlight = null;
+    _refreshGeneration = null;
     _tokens = tokens;
     onTokensChanged?.call(tokens);
   }
+
+  ApiException _supersededAuthentication({Uri? uri}) => ApiException(
+    kind: ApiExceptionKind.authentication,
+    message: 'Authentication request was superseded',
+    statusCode: 401,
+    uri: uri,
+  );
 
   void _ensureOpen() {
     if (_isClosed) {

@@ -99,6 +99,48 @@ abstract class L {
   /// **'SportVenue'**
   String get appTitle;
 
+  /// No description provided for @playerAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я игрок'**
+  String get playerAccount;
+
+  /// No description provided for @clubAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я клуб'**
+  String get clubAccount;
+
+  /// No description provided for @invalidClubCredentials.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный логин или пароль'**
+  String get invalidClubCredentials;
+
+  /// No description provided for @clubLoginTooManyAttempts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много попыток входа. Попробуйте позже.'**
+  String get clubLoginTooManyAttempts;
+
+  /// No description provided for @signInAsDeveloper.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти как разработчик'**
+  String get signInAsDeveloper;
+
+  /// No description provided for @introduceYourself.
+  ///
+  /// In ru, this message translates to:
+  /// **'Давайте познакомимся'**
+  String get introduceYourself;
+
+  /// No description provided for @firstLoginNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заполните ФИО перед первым входом. Эти данные сохранятся в вашем профиле.'**
+  String get firstLoginNameHint;
+
   /// No description provided for @navHome.
   ///
   /// In ru, this message translates to:
@@ -266,6 +308,18 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Поделиться клубом'**
   String get shareVenue;
+
+  /// No description provided for @closeVenuePreview.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть описание клуба'**
+  String get closeVenuePreview;
+
+  /// No description provided for @venueDetails.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подробнее о клубе'**
+  String get venueDetails;
 
   /// No description provided for @venueSports.
   ///
@@ -549,6 +603,90 @@ abstract class L {
   /// **'Профиль'**
   String get profile;
 
+  /// No description provided for @personalData.
+  ///
+  /// In ru, this message translates to:
+  /// **'Личные данные'**
+  String get personalData;
+
+  /// No description provided for @fillFullName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заполнить ФИО'**
+  String get fillFullName;
+
+  /// No description provided for @editFullName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить ФИО'**
+  String get editFullName;
+
+  /// No description provided for @profileNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите фамилию, имя и отчество'**
+  String get profileNameHint;
+
+  /// No description provided for @lastNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фамилия'**
+  String get lastNameLabel;
+
+  /// No description provided for @firstNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get firstNameLabel;
+
+  /// No description provided for @middleNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отчество'**
+  String get middleNameLabel;
+
+  /// No description provided for @middleNameOptional.
+  ///
+  /// In ru, this message translates to:
+  /// **'Необязательно'**
+  String get middleNameOptional;
+
+  /// No description provided for @lastNameRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите фамилию'**
+  String get lastNameRequired;
+
+  /// No description provided for @firstNameRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите имя'**
+  String get firstNameRequired;
+
+  /// No description provided for @nameTooLong.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не больше 80 символов'**
+  String get nameTooLong;
+
+  /// No description provided for @saveProfile.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить'**
+  String get saveProfile;
+
+  /// No description provided for @savingProfile.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохраняем…'**
+  String get savingProfile;
+
+  /// No description provided for @profileNameSaved.
+  ///
+  /// In ru, this message translates to:
+  /// **'ФИО сохранено'**
+  String get profileNameSaved;
+
   /// No description provided for @accountSportVenue.
   ///
   /// In ru, this message translates to:
@@ -764,12 +902,6 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Очистить поиск'**
   String get clearSearch;
-
-  /// No description provided for @clubsNearby.
-  ///
-  /// In ru, this message translates to:
-  /// **'{count, plural, one{{count} клуб} few{{count} клуба} other{{count} клубов}} рядом'**
-  String clubsNearby(int count);
 
   /// No description provided for @noVenuesForSport.
   ///

@@ -1624,19 +1624,28 @@ class VenueRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(AppIcons.star, size: 15, color: context.colors.ink),
+                      if (!venue.isPublic)
+                        Icon(
+                          AppIcons.star,
+                          size: 15,
+                          color: context.colors.ink,
+                        ),
                       const SizedBox(width: 3),
                       Text(
-                        venue.rating.toStringAsFixed(1),
+                        venue.isPublic
+                            ? 'Общественная'
+                            : venue.rating.toStringAsFixed(1),
                         style: context.text.labelMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        context.l10n.pricePerHour(
-                          AppFormatters.money(venue.pricePerHour),
-                        ),
+                        venue.isPublic
+                            ? 'Бесплатно'
+                            : context.l10n.pricePerHour(
+                                AppFormatters.money(venue.pricePerHour),
+                              ),
                         style: context.text.labelMedium?.copyWith(
                           color: context.colors.accent,
                           fontWeight: FontWeight.w700,

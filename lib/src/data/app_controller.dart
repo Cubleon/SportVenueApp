@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 import '../models/sport_venue_models.dart';
@@ -28,6 +29,8 @@ enum AppErrorKind {
   serverSaidSo,
   unknown,
 }
+
+enum AccountType { player, club, moderator }
 
 class AppController extends ChangeNotifier {
   factory AppController({
@@ -94,7 +97,12 @@ class AppController extends ChangeNotifier {
   String email = '';
   String? userId;
   String? userName;
+  String? firstName;
+  String? lastName;
+  String? middleName;
+  String? clubName;
   bool isSignedIn = false;
+  AccountType accountType = AccountType.player;
   Set<String> selectedSportIds = {};
   List<Sport> sports = [];
   List<Venue> venues = [];
@@ -115,11 +123,38 @@ class AppController extends ChangeNotifier {
   ApiEmailChallenge? emailChallenge;
   String? _confirmedEmailChallengeId;
   int _emailVerificationVersion = 0;
+  int _clubAuthenticationVersion = 0;
+  ApiTokenPair? _pendingClubTokens;
 
   DateTime get now => _now;
   bool get isConnected => _api != null;
+  SportVenueApiClient? get apiClient => _api;
+  bool get isModeratorAccount => accountType == AccountType.moderator;
+  List<Venue> get bookableVenues =>
+      venues.where((venue) => !venue.isPublic).toList();
+  bool get isClubAccount => accountType == AccountType.club;
+  bool get needsClubName =>
+      isConnected && isClubAccount && clubName?.trim().isNotEmpty != true;
+  bool get needsProfileName =>
+      isConnected &&
+      accountType == AccountType.player &&
+      (firstName?.trim().isNotEmpty != true ||
+          lastName?.trim().isNotEmpty != true);
+  bool get canDeveloperLogin =>
+      kDebugMode &&
+      const bool.fromEnvironment('DEV_AUTH_ENABLED', defaultValue: true) &&
+      isConnected;
   String get greetingName =>
       userName?.trim().isNotEmpty == true ? userName!.trim() : 'спортсмен';
+
+  String? get fullName {
+    final parts = [lastName, firstName, middleName]
+        .whereType<String>()
+        .where((part) => part.trim().isNotEmpty)
+        .map((part) => part.trim());
+    final joined = parts.join(' ');
+    return joined.isEmpty ? userName : joined;
+  }
 
   List<Sport> get selectedSports {
     return sports
@@ -165,17 +200,133 @@ class AppController extends ChangeNotifier {
         .toList();
   }
 
-  Future<ApiPhoneChallenge> startPhoneVerification(String newPhone) async {
+  void cancelClubLogin() {
+    _clubAuthenticationVersion++;
+    if (_pendingClubTokens != null &&
+        !isSignedIn &&
+        identical(_api?.tokens, _pendingClubTokens)) {
+      _api?.clearTokens();
+    }
+    _pendingClubTokens = null;
+  }
+
+  Future<void> loginClub(String login, String password) =>
+      _loginPassword(login, password, moderator: false);
+
+  Future<void> loginModerator(String login, String password) =>
+      _loginPassword(login, password, moderator: true);
+
+  Future<void> _loginPassword(
+    String login,
+    String password, {
+    required bool moderator,
+  }) async {
+    final api = _api;
+    if (api == null) {
+      throw StateError('Club login requires a server connection');
+    }
+    cancelClubLogin();
+    cancelPhoneVerification();
+    cancelEmailVerification();
+    final version = _clubAuthenticationVersion;
+    bool stillCurrent() => version == _clubAuthenticationVersion;
+    try {
+      final tokens = moderator
+          ? await api.loginModerator(login: login.trim(), password: password)
+          : await api.loginClub(login: login.trim(), password: password);
+      if (!stillCurrent()) return;
+      _pendingClubTokens = tokens;
+      api.setTokens(tokens);
+      await _loadRemoteState(api, stillCurrent: stillCurrent);
+      if (!stillCurrent()) return;
+      if (accountType !=
+          (moderator ? AccountType.moderator : AccountType.club)) {
+        throw StateError('Password login returned an unexpected account role');
+      }
+      isSignedIn = true;
+      _pendingClubTokens = null;
+      notifyListeners();
+    } catch (_) {
+      if (stillCurrent()) {
+        api.clearTokens();
+        _pendingClubTokens = null;
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> updateClubName(String name) async {
+    final api = _api;
+    if (api == null || !isSignedIn || !isClubAccount) {
+      throw StateError('A signed-in club account is required');
+    }
+    final normalized = name.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (normalized.runes.length < 2 || normalized.runes.length > 160) {
+      throw ArgumentError('Club name must contain 2 to 160 characters');
+    }
+    final accountId = userId;
+    final version = _clubAuthenticationVersion;
+    final profile = await api.updateClubAccountName(normalized);
+    if (!isSignedIn ||
+        userId != accountId ||
+        version != _clubAuthenticationVersion) {
+      return;
+    }
+    final savedName = profile['club_name'] as String?;
+    if (savedName?.trim().isNotEmpty != true) {
+      throw StateError('The server did not save the club name');
+    }
+    clubName = savedName;
+    notifyListeners();
+  }
+
+  Future<void> developerLogin({
+    AccountType accountType = AccountType.player,
+  }) async {
+    final api = _api;
+    if (!canDeveloperLogin || api == null) {
+      throw StateError(
+        'Developer login is only available in connected debug builds',
+      );
+    }
+    cancelClubLogin();
+    cancelPhoneVerification();
+    cancelEmailVerification();
+    final phoneVersion = _phoneVerificationVersion;
+    final emailVersion = _emailVerificationVersion;
+    bool stillCurrent() =>
+        phoneVersion == _phoneVerificationVersion &&
+        emailVersion == _emailVerificationVersion;
+    try {
+      final tokens = await api.developerLogin(accountType: accountType.name);
+      if (!stillCurrent()) return;
+      api.setTokens(tokens);
+      await _loadRemoteState(api, stillCurrent: stillCurrent);
+      if (!stillCurrent()) return;
+      isSignedIn = true;
+      notifyListeners();
+    } catch (_) {
+      if (stillCurrent()) api.clearTokens();
+      rethrow;
+    }
+  }
+
+  Future<ApiPhoneChallenge> startPhoneVerification(
+    String newPhone, {
+    AccountType accountType = AccountType.player,
+  }) async {
     final api = _api;
     if (api == null) {
       throw StateError('Phone verification requires a server connection');
     }
+    cancelClubLogin();
     cancelPhoneVerification();
     cancelEmailVerification();
     final version = _phoneVerificationVersion;
     final challenge = await api.startPhoneCall(
       phone: newPhone,
       consentAccepted: true,
+      accountType: accountType.name,
     );
     if (version == _phoneVerificationVersion) {
       phone = newPhone;
@@ -221,16 +372,21 @@ class AppController extends ChangeNotifier {
 
   bool get emailCodeAccepted => _confirmedEmailChallengeId != null;
 
-  Future<ApiEmailChallenge> startEmailVerification(String newEmail) async {
+  Future<ApiEmailChallenge> startEmailVerification(
+    String newEmail, {
+    AccountType accountType = AccountType.player,
+  }) async {
     final api = _api;
     if (api == null) {
       throw StateError('Email verification requires a server connection');
     }
+    cancelClubLogin();
     cancelPhoneVerification();
     final version = ++_emailVerificationVersion;
     final challenge = await api.startEmailLogin(
       email: newEmail.trim(),
       consentAccepted: true,
+      accountType: accountType.name,
     );
     if (version == _emailVerificationVersion) {
       if (_confirmedEmailChallengeId != null && !isSignedIn) api.clearTokens();
@@ -276,17 +432,25 @@ class AppController extends ChangeNotifier {
     SportVenueApiClient api, {
     bool Function()? stillCurrent,
   }) async {
+    final user = await api.getMe();
+    if (stillCurrent != null && !stillCurrent()) return;
+    final nextAccountType = AccountType.values.byName(
+      user['account_type'] as String? ?? 'player',
+    );
+    final isClub = nextAccountType == AccountType.club;
+    final isStaff = nextAccountType != AccountType.player;
     final responses = await Future.wait<Object>([
       api.listSports(),
-      api.listVenues(),
-      api.getMe(),
-      api.listBookings(),
-      api.listGames(),
+      isStaff ? Future<ApiJsonList>.value([]) : api.listVenues(),
+      Future<ApiJsonObject>.value(user),
+      isStaff ? Future<ApiJsonList>.value([]) : api.listBookings(),
+      isStaff
+          ? Future<ApiJsonList>.value([])
+          : api.listGames(includeMyHistory: true),
     ]);
 
     final sportRows = responses[0] as ApiJsonList;
     final venueRows = responses[1] as ApiJsonList;
-    final user = responses[2] as ApiJsonObject;
     final bookingRows = responses[3] as ApiJsonList;
     final gameRows = responses[4] as ApiJsonList;
 
@@ -314,7 +478,9 @@ class AppController extends ChangeNotifier {
     sports = nextSports;
     venues = nextVenues;
     userId = nextUserId;
-    userName = _userDisplayName(user);
+    accountType = nextAccountType;
+    clubName = isClub ? user['club_name'] as String? : null;
+    _applyProfileName(user);
     phone = user['phone'] as String? ?? '';
     email = user['email'] as String? ?? '';
     selectedSportIds = nextSelectedIds;
@@ -357,6 +523,53 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateProfileName({
+    required String firstName,
+    required String lastName,
+    String middleName = '',
+  }) async {
+    String normalize(String value) =>
+        value.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final nextFirstName = normalize(firstName);
+    final nextLastName = normalize(lastName);
+    final nextMiddleName = normalize(middleName);
+    if (nextFirstName.isEmpty || nextLastName.isEmpty) {
+      throw ArgumentError('First name and surname are required.');
+    }
+    if ([
+      nextFirstName,
+      nextLastName,
+      nextMiddleName,
+    ].any((part) => part.runes.length > 80)) {
+      throw ArgumentError('Each name part must be at most 80 characters.');
+    }
+
+    final api = _api;
+    final accountId = userId;
+    final profile = api == null
+        ? <String, dynamic>{
+            'name': nextFirstName,
+            'last_name': nextLastName,
+            'middle_name': nextMiddleName.isEmpty ? null : nextMiddleName,
+          }
+        : await api.updateMe(
+            name: nextFirstName,
+            lastName: nextLastName,
+            // An empty string explicitly clears the optional field.
+            middleName: nextMiddleName,
+          );
+    if (userId != accountId) return;
+    _applyProfileName(profile);
+    notifyListeners();
+  }
+
+  void _applyProfileName(ApiJsonObject profile) {
+    firstName = profile['name'] as String?;
+    lastName = profile['last_name'] as String?;
+    middleName = profile['middle_name'] as String?;
+    userName = _userDisplayName(profile);
+  }
+
   void togglePreferredSport(String id) {
     final next = Set<String>.from(selectedSportIds);
     if (next.contains(id)) {
@@ -391,6 +604,7 @@ class AppController extends ChangeNotifier {
     required DateTime day,
     required int durationMinutes,
   }) async {
+    if (venue.isPublic) return [];
     final api = _api;
     if (api == null) {
       return MockData.timeSlots();
@@ -400,7 +614,11 @@ class AppController extends ChangeNotifier {
       day: day,
       durationMinutes: durationMinutes,
     );
-    return rows.map(TimeSlot.fromJson).toList();
+    return rows
+        .map(
+          (row) => TimeSlot.fromJson(row, useMoscowTime: venue.scheduleManaged),
+        )
+        .toList();
   }
 
   Future<Booking> addBooking(BookingDraft draft) async {
@@ -421,7 +639,14 @@ class AppController extends ChangeNotifier {
       return booking;
     }
 
-    final startsAt = _apiStartTime(draft.date, draft.startHour);
+    final startsAt =
+        draft.apiStartsAt ??
+        _apiStartTime(
+          draft.date,
+          draft.startHour,
+          minute: draft.startMinute,
+          useMoscowTime: draft.venue.scheduleManaged,
+        );
     await api.createSlotLock(
       draft.venue.id,
       startsAt: startsAt,
@@ -546,6 +771,8 @@ class AppController extends ChangeNotifier {
     required Venue venue,
     required DateTime date,
     required int startHour,
+    int startMinute = 0,
+    DateTime? apiStartsAt,
     required int durationMinutes,
     required int capacity,
     required GameType type,
@@ -558,6 +785,8 @@ class AppController extends ChangeNotifier {
         date: date,
         durationMinutes: durationMinutes,
         startHour: startHour,
+        startMinute: startMinute,
+        apiStartsAt: apiStartsAt,
         players: capacity,
         mode: PaymentMode.split,
       );
@@ -567,6 +796,8 @@ class AppController extends ChangeNotifier {
         venue: venue,
         date: date,
         startHour: startHour,
+        startMinute: startMinute,
+        apiStartsAt: apiStartsAt,
         durationMinutes: durationMinutes,
         capacity: capacity,
         pricePerPerson: draft.sharePrice,
@@ -592,7 +823,14 @@ class AppController extends ChangeNotifier {
       return game;
     }
 
-    final startsAt = _apiStartTime(date, startHour);
+    final startsAt =
+        apiStartsAt ??
+        _apiStartTime(
+          date,
+          startHour,
+          minute: startMinute,
+          useMoscowTime: venue.scheduleManaged,
+        );
     await api.createSlotLock(
       venue.id,
       startsAt: startsAt,
@@ -662,6 +900,7 @@ class AppController extends ChangeNotifier {
   }
 
   void logout() {
+    cancelClubLogin();
     cancelPhoneVerification();
     cancelEmailVerification();
     _api?.clearTokens();
@@ -669,7 +908,12 @@ class AppController extends ChangeNotifier {
     email = '';
     userId = null;
     userName = null;
+    firstName = null;
+    lastName = null;
+    middleName = null;
+    clubName = null;
     isSignedIn = false;
+    accountType = AccountType.player;
     selectedSportIds = {'football', 'padel', 'tennis'};
     if (_api == null) {
       bookings = [MockData.initialBooking(_now)];
@@ -750,6 +994,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    cancelClubLogin();
     cancelPhoneVerification();
     cancelEmailVerification();
     if (_closeApiOnDispose) {
@@ -819,9 +1064,16 @@ ApiJsonObject _objectField(ApiJsonObject row, String key) {
   throw FormatException('Expected "$key" to be an object.');
 }
 
-DateTime _apiStartTime(DateTime day, int hour) {
-  // The backend currently models Moscow booking hours as UTC wall-clock.
-  return DateTime.utc(day.year, day.month, day.day, hour);
+DateTime _apiStartTime(
+  DateTime day,
+  int hour, {
+  int minute = 0,
+  bool useMoscowTime = false,
+}) {
+  final wallClock = DateTime.utc(day.year, day.month, day.day, hour, minute);
+  return useMoscowTime
+      ? wallClock.subtract(const Duration(hours: 3))
+      : wallClock;
 }
 
 String? _userDisplayName(ApiJsonObject user) {

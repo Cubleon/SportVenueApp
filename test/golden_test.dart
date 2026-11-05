@@ -17,6 +17,7 @@ import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/main_shell.dart';
 import 'package:sport_venue_app/src/screens/profile_screen.dart';
+import 'package:sport_venue_app/src/screens/profile_edit_screen.dart';
 import 'package:sport_venue_app/src/screens/sport_selection_screen.dart';
 import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
@@ -116,6 +117,18 @@ void main() {
       );
 
       _golden(
+        'profile-setup',
+        theme,
+        now: fixedNow,
+        build: (controller) => ProfileEditScreen(
+          controller: controller,
+          initialSetup: true,
+          onSaved: () {},
+          onLogout: () {},
+        ),
+      );
+
+      _golden(
         'home',
         theme,
         now: fixedNow,
@@ -149,8 +162,16 @@ void main() {
         'profile',
         theme,
         now: fixedNow,
-        build: (controller) =>
-            ProfileScreen(controller: controller, onLogout: () {}),
+        build: (controller) => Scaffold(
+          body: ProfileScreen(controller: controller, onLogout: () {}),
+        ),
+      );
+
+      _golden(
+        'profile-edit',
+        theme,
+        now: fixedNow,
+        build: (controller) => ProfileEditScreen(controller: controller),
       );
 
       _golden(
@@ -195,6 +216,14 @@ void _golden(
         home: build(controller),
       ),
     );
+    if (name == 'sign-in') {
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/images/google_g.png'),
+          tester.element(find.byType(RegistrationScreen)),
+        ),
+      );
+    }
     await tester.pumpAndSettle();
 
     await expectLater(

@@ -164,10 +164,20 @@ class _SplashScreenState extends State<SplashScreen>
 }
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key, required this.onContinue, this.onEmail});
+  const RegistrationScreen({
+    super.key,
+    required this.onContinue,
+    this.onEmail,
+    this.onDeveloperLogin,
+    this.onAccountTypeChanged,
+    this.onModeratorLogin,
+  });
 
   final Future<String?> Function(String phone) onContinue;
   final VoidCallback? onEmail;
+  final Future<String?> Function()? onDeveloperLogin;
+  final ValueChanged<bool>? onAccountTypeChanged;
+  final VoidCallback? onModeratorLogin;
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -205,6 +215,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: [
               const Center(child: AppLogo(size: 52)),
               const SizedBox(height: 32),
+              if (widget.onAccountTypeChanged != null) ...[
+                SegmentedButton<bool>(
+                  key: const ValueKey('account-type-selector'),
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      label: Text(context.l10n.playerAccount),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      label: Text(context.l10n.clubAccount),
+                    ),
+                  ],
+                  selected: const {false},
+                  onSelectionChanged: _submitting
+                      ? null
+                      : (selection) =>
+                            widget.onAccountTypeChanged!(selection.single),
+                ),
+                const SizedBox(height: 24),
+              ],
               Text(
                 context.l10n.signInTitle,
                 // Weight and tracking come from the scale. Only the line
@@ -333,10 +364,42 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               if (widget.onEmail != null) ...[
                 const SizedBox(height: 16),
+                Center(
+                  child: IconButton(
+                    key: const ValueKey('email-sign-in'),
+                    tooltip: context.l10n.signInWithEmail,
+                    onPressed: _submitting ? null : widget.onEmail,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      fixedSize: const Size.square(52),
+                      side: const BorderSide(color: Color(0xFF747775)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: Image.asset(
+                      'assets/images/google_g.png',
+                      width: 24,
+                      height: 24,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+              ],
+              if (widget.onModeratorLogin != null) ...[
+                const SizedBox(height: 16),
+                TextButton(
+                  key: const ValueKey('moderator-sign-in'),
+                  onPressed: _submitting ? null : widget.onModeratorLogin,
+                  child: const Text('Вход для модераторов'),
+                ),
+              ],
+              if (widget.onDeveloperLogin != null) ...[
+                const SizedBox(height: 16),
                 OutlinedButton(
-                  key: const ValueKey('email-sign-in'),
-                  onPressed: _submitting ? null : widget.onEmail,
-                  child: Text(context.l10n.signInWithEmail),
+                  key: const ValueKey('developer-sign-in'),
+                  onPressed: _submitting ? null : _developerLogin,
+                  child: Text(context.l10n.signInAsDeveloper),
                 ),
               ],
               if (_submitting)
@@ -360,6 +423,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _developerLogin() async {
+    setState(() {
+      _submitting = true;
+      _errorText = null;
+    });
+    final error = await widget.onDeveloperLogin!();
+    if (!mounted) return;
+    setState(() {
+      _submitting = false;
+      _errorText = error;
+    });
   }
 
   Future<void> _continue() async {

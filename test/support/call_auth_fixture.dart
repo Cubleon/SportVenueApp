@@ -18,6 +18,14 @@ class CallAuthFixture {
   int starts = 0;
   int checks = 0;
   Future<void> Function()? beforeStatus;
+  final profile = <String, dynamic>{
+    'id': 'user-1',
+    'phone': '+79000000000',
+    'name': null,
+    'last_name': null,
+    'middle_name': null,
+    'preferred_sports': [],
+  };
 
   Future<http.Response> _respond(http.Request request) async {
     final path = request.url.path;
@@ -60,11 +68,10 @@ class CallAuthFixture {
       ]);
     }
     if (path.endsWith('/me') || path.endsWith('/me/preferences')) {
-      return _json({
-        'id': 'user-1',
-        'phone': '+79000000000',
-        'preferred_sports': [],
-      });
+      if (request.method == 'PATCH') {
+        profile.addAll(jsonDecode(request.body) as Map<String, dynamic>);
+      }
+      return _json(profile);
     }
     if (path.endsWith('/venues') ||
         path.endsWith('/bookings') ||

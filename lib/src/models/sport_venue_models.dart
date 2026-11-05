@@ -64,6 +64,10 @@ class Venue {
     required this.gradient,
     this.reviewCount,
     this.amenities = const [],
+    this.scheduleManaged = false,
+    this.isPublic = false,
+    this.surface,
+    this.hasLighting,
   });
 
   final String id;
@@ -88,6 +92,13 @@ class Venue {
   /// What the club has: indoors, showers, hire, parking. Short words, in the
   /// server's own wording, and empty when it says nothing.
   final List<String> amenities;
+
+  /// Club accounts publish actual Moscow instants. Older catalogue venues
+  /// retain their original UTC wall-clock schedule.
+  final bool scheduleManaged;
+  final bool isPublic;
+  final String? surface;
+  final bool? hasLighting;
 
   factory Venue.fromJson(
     Map<String, dynamic> json, {
@@ -114,6 +125,10 @@ class Venue {
       ],
       reviewCount: _optionalInt(json, 'review_count'),
       amenities: _optionalStringList(json, 'amenities'),
+      scheduleManaged: json['managed_schedule'] == true,
+      isPublic: json['venue_kind'] == 'public',
+      surface: json['surface'] as String?,
+      hasLighting: json['has_lighting'] as bool?,
     );
   }
 }
@@ -122,6 +137,7 @@ class TimeSlot {
   const TimeSlot({
     required this.hour,
     required this.isAvailable,
+    this.minute = 0,
     this.startsAt,
     this.endsAt,
     this.price,
@@ -129,21 +145,24 @@ class TimeSlot {
   });
 
   final int hour;
+  final int minute;
   final bool isAvailable;
   final DateTime? startsAt;
   final DateTime? endsAt;
   final int? price;
   final String? status;
 
-  String get label => '${hour.toString().padLeft(2, '0')}:00';
+  String get label => _clockLabel(hour * 60 + minute);
 
-  factory TimeSlot.fromJson(Map<String, dynamic> json) {
+  factory TimeSlot.fromJson(
+    Map<String, dynamic> json, {
+    bool useMoscowTime = false,
+  }) {
     final startsAt = _requiredDateTime(json, 'starts_at');
+    final displayTime = _scheduleTime(startsAt, useMoscowTime: useMoscowTime);
     return TimeSlot(
-      // The backend currently publishes Moscow booking hours as UTC wall-clock
-      // values. Keep the API hour stable instead of shifting it to the device
-      // timezone.
-      hour: startsAt.toUtc().hour,
+      hour: displayTime.hour,
+      minute: displayTime.minute,
       isAvailable: _requiredBool(json, 'is_available'),
       startsAt: startsAt,
       endsAt: _requiredDateTime(json, 'ends_at'),
@@ -161,6 +180,8 @@ class BookingDraft {
     required this.startHour,
     required this.players,
     required this.mode,
+    this.startMinute = 0,
+    this.apiStartsAt,
     this.quotedTotalPrice,
     this.quotedSharePrice,
   });
@@ -169,6 +190,10 @@ class BookingDraft {
   final DateTime date;
   final int durationMinutes;
   final int startHour;
+  final int startMinute;
+
+  /// The exact published instant, retained through the confirmation screen.
+  final DateTime? apiStartsAt;
   final int players;
   final PaymentMode mode;
   final int? quotedTotalPrice;
@@ -179,19 +204,14 @@ class BookingDraft {
 
   int get sharePrice => quotedSharePrice ?? (totalPrice / players).ceil();
 
-  String get timeRange {
-    final end = startHour + durationMinutes ~/ 60;
-    final half = durationMinutes % 60 == 30;
-    final endLabel = half
-        ? '${end.toString().padLeft(2, '0')}:30'
-        : '${end.toString().padLeft(2, '0')}:00';
-    return '${startHour.toString().padLeft(2, '0')}:00 - $endLabel';
-  }
+  String get timeRange => _timeRange(startHour, startMinute, durationMinutes);
 
   BookingDraft copyWith({
     DateTime? date,
     int? durationMinutes,
     int? startHour,
+    int? startMinute,
+    DateTime? apiStartsAt,
     int? players,
     PaymentMode? mode,
     int? quotedTotalPrice,
@@ -202,6 +222,12 @@ class BookingDraft {
       date: date ?? this.date,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       startHour: startHour ?? this.startHour,
+      startMinute: startMinute ?? this.startMinute,
+      apiStartsAt:
+          apiStartsAt ??
+          (date == null && startHour == null && startMinute == null
+              ? this.apiStartsAt
+              : null),
       players: players ?? this.players,
       mode: mode ?? this.mode,
       quotedTotalPrice: quotedTotalPrice ?? this.quotedTotalPrice,
@@ -239,12 +265,16 @@ class Booking {
 
   bool get isCollectingShares => statusCode == 'collecting_shares';
 
-  DateTime get startsAt => DateTime(
-    draft.date.year,
-    draft.date.month,
-    draft.date.day,
-    draft.startHour,
-  );
+  DateTime get startsAt =>
+      draft.venue.scheduleManaged && draft.apiStartsAt != null
+      ? draft.apiStartsAt!.toLocal()
+      : DateTime(
+          draft.date.year,
+          draft.date.month,
+          draft.date.day,
+          draft.startHour,
+          draft.startMinute,
+        );
 
   bool get isActive => switch (statusCode) {
     'collecting_shares' || 'confirmed' => true,
@@ -268,7 +298,11 @@ class Booking {
     String? currentUserId,
   }) {
     final slot = _requiredMap(json, 'time_slot');
-    final startsAt = _requiredDateTime(slot, 'starts_at').toUtc();
+    final apiStartsAt = _requiredDateTime(slot, 'starts_at');
+    final startsAt = _scheduleTime(
+      apiStartsAt,
+      useMoscowTime: venue.scheduleManaged,
+    );
     final players = _requiredInt(json, 'players_count');
     final status = _requiredString(json, 'status');
     final paymentMode = json['payment_mode'];
@@ -279,6 +313,8 @@ class Booking {
         date: DateTime(startsAt.year, startsAt.month, startsAt.day),
         durationMinutes: _requiredInt(slot, 'duration_minutes'),
         startHour: startsAt.hour,
+        startMinute: startsAt.minute,
+        apiStartsAt: apiStartsAt,
         players: players,
         mode: paymentMode is String
             ? PaymentMode.values.byName(paymentMode)
@@ -410,6 +446,8 @@ class Game {
     required this.genderFilter,
     required this.organizer,
     required this.participants,
+    this.startMinute = 0,
+    this.apiStartsAt,
     this.level,
     this.format,
   });
@@ -419,6 +457,8 @@ class Game {
   final Venue venue;
   final DateTime date;
   final int startHour;
+  final int startMinute;
+  final DateTime? apiStartsAt;
   final int durationMinutes;
   final int capacity;
   final int pricePerPerson;
@@ -437,20 +477,15 @@ class Game {
 
   /// The moment play begins, which is what a countdown needs — the date and
   /// the hour are stored apart.
-  DateTime get startsAt => DateTime(date.year, date.month, date.day, startHour);
+  DateTime get startsAt => venue.scheduleManaged && apiStartsAt != null
+      ? apiStartsAt!.toLocal()
+      : DateTime(date.year, date.month, date.day, startHour, startMinute);
 
   int get freePlaces => capacity - participants.length;
 
   bool get isFull => freePlaces <= 0;
 
-  String get timeRange {
-    final endHour = startHour + durationMinutes ~/ 60;
-    final half = durationMinutes % 60 == 30;
-    final endLabel = half
-        ? '${endHour.toString().padLeft(2, '0')}:30'
-        : '${endHour.toString().padLeft(2, '0')}:00';
-    return '${startHour.toString().padLeft(2, '0')}:00 - $endLabel';
-  }
+  String get timeRange => _timeRange(startHour, startMinute, durationMinutes);
 
   Game copyWith({
     List<Participant>? participants,
@@ -463,6 +498,8 @@ class Game {
       venue: venue,
       date: date,
       startHour: startHour,
+      startMinute: startMinute,
+      apiStartsAt: apiStartsAt,
       durationMinutes: durationMinutes,
       capacity: capacity,
       pricePerPerson: pricePerPerson,
@@ -479,7 +516,11 @@ class Game {
     required String? currentUserId,
   }) {
     final slot = _requiredMap(json, 'time_slot');
-    final startsAt = _requiredDateTime(slot, 'starts_at').toUtc();
+    final apiStartsAt = _requiredDateTime(slot, 'starts_at');
+    final startsAt = _scheduleTime(
+      apiStartsAt,
+      useMoscowTime: venue.scheduleManaged,
+    );
     final participantMaps = _mapList(json, 'participants');
     final participants = participantMaps
         .map((item) => Participant.fromJson(item, currentUserId: currentUserId))
@@ -497,6 +538,8 @@ class Game {
       venue: venue,
       date: DateTime(startsAt.year, startsAt.month, startsAt.day),
       startHour: startsAt.hour,
+      startMinute: startsAt.minute,
+      apiStartsAt: apiStartsAt,
       durationMinutes: _requiredInt(slot, 'duration_minutes'),
       capacity: _requiredInt(json, 'capacity'),
       pricePerPerson: _requiredInt(json, 'price_per_person'),
@@ -510,6 +553,20 @@ class Game {
       format: _optionalString(json, 'format'),
     );
   }
+}
+
+DateTime _scheduleTime(DateTime instant, {required bool useMoscowTime}) =>
+    instant.toUtc().add(Duration(hours: useMoscowTime ? 3 : 0));
+
+String _clockLabel(int minutes) {
+  final dayMinutes = minutes % (24 * 60);
+  return '${(dayMinutes ~/ 60).toString().padLeft(2, '0')}:'
+      '${(dayMinutes % 60).toString().padLeft(2, '0')}';
+}
+
+String _timeRange(int hour, int minute, int durationMinutes) {
+  final start = hour * 60 + minute;
+  return '${_clockLabel(start)} - ${_clockLabel(start + durationMinutes)}';
 }
 
 Map<String, dynamic> _requiredMap(Map<String, dynamic> json, String key) {

@@ -9,6 +9,7 @@ import '../router.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/venue_submission_details.dart';
 
 /// What a club is, before deciding to pay for an hour of it.
 ///
@@ -44,7 +45,7 @@ class _VenueScreenState extends State<VenueScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFreeHours();
+    if (!widget.venue.isPublic) _loadFreeHours();
   }
 
   Future<void> _loadFreeHours() async {
@@ -125,7 +126,9 @@ class _VenueScreenState extends State<VenueScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  _RatingRow(venue: venue),
+                  if (!venue.isPublic) _RatingRow(venue: venue),
+                  if (venue.isPublic)
+                    const Text('Общественная площадка · Бесплатно'),
                   if (venue.description.isNotEmpty) ...[
                     const SizedBox(height: 18),
                     Text(
@@ -166,50 +169,68 @@ class _VenueScreenState extends State<VenueScreen> {
                     ),
                     const SizedBox(height: 20),
                   ],
-                  AppCard(
-                    child: Column(
-                      children: [
-                        SummaryRow(
-                          label: context.l10n.price,
-                          value: context.l10n.pricePerHour(
-                            AppFormatters.money(venue.pricePerHour),
+                  if (venue.isPublic)
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Свободный доступ без бронирования'),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Покрытие: ${surfaceLabels[venue.surface] ?? "Не указано"}',
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        // The day goes in the value, not the label: as a
-                        // label it wraps to two lines against rows that are
-                        // one, and the column stops looking like a column.
-                        SummaryRow(
-                          label: context.l10n.freeLabel,
-                          value: _freeHours == null
-                              ? context.l10n.loading
-                              : '${context.l10n.hoursCount(_freeHours!)} · '
-                                    '${AppFormatters.dateShort(_day)}',
-                          accent: _freeHours != null && _freeHours! > 0,
-                        ),
-                        const SizedBox(height: 10),
-                        SummaryRow(
-                          label: context.l10n.venueCapacity,
-                          value: context.l10n.capacityRange(
-                            venue.capacityMin,
-                            venue.capacityMax,
+                          Text(
+                            'Освещение: ${venue.hasLighting == true ? "Есть" : "Нет"}',
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  if (!venue.isPublic)
+                    AppCard(
+                      child: Column(
+                        children: [
+                          SummaryRow(
+                            label: context.l10n.price,
+                            value: context.l10n.pricePerHour(
+                              AppFormatters.money(venue.pricePerHour),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // The day goes in the value, not the label: as a
+                          // label it wraps to two lines against rows that are
+                          // one, and the column stops looking like a column.
+                          SummaryRow(
+                            label: context.l10n.freeLabel,
+                            value: _freeHours == null
+                                ? context.l10n.loading
+                                : '${context.l10n.hoursCount(_freeHours!)} · '
+                                      '${AppFormatters.dateShort(_day)}',
+                            accent: _freeHours != null && _freeHours! > 0,
+                          ),
+                          const SizedBox(height: 10),
+                          SummaryRow(
+                            label: context.l10n.venueCapacity,
+                            value: context.l10n.capacityRange(
+                              venue.capacityMin,
+                              venue.capacityMax,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: PrimaryButton(
-                key: const ValueKey('venue-book'),
-                label: context.l10n.bookVenueAction,
-                onPressed: () =>
-                    context.go(Routes.book(venue.id, date: widget.date)),
+            if (!venue.isPublic)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: PrimaryButton(
+                  key: const ValueKey('venue-book'),
+                  label: context.l10n.bookVenueAction,
+                  onPressed: () =>
+                      context.go(Routes.book(venue.id, date: widget.date)),
+                ),
               ),
-            ),
           ],
         ),
       ),

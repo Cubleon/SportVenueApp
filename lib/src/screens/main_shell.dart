@@ -99,7 +99,7 @@ class _MainShellState extends State<MainShell> {
   /// Booking from the tab bar names no club, so it asks for one instead of
   /// picking whichever happened to be first in the catalogue.
   Future<void> _startBooking() async {
-    final venues = widget.controller.venues;
+    final venues = widget.controller.bookableVenues;
     if (venues.isEmpty) {
       showAppSnack(context, context.l10n.noVenuesAvailable);
       return;
@@ -137,50 +137,62 @@ class _MainShellState extends State<MainShell> {
       ),
       builder: (sheetContext) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.colors.ink.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(99),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: context.colors.ink.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  context.l10n.createSheetTitle,
-                  style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 18),
+                  Text(
+                    context.l10n.createSheetTitle,
+                    style: context.text.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                _SheetAction(
-                  icon: AppIcons.volleyball,
-                  title: context.l10n.createGameAction,
-                  subtitle: context.l10n.createGameActionSubtitle,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    context.go(Routes.create(date: _homeDate));
-                  },
-                ),
-                const SizedBox(height: 10),
-                _SheetAction(
-                  icon: AppIcons.calendarDays,
-                  title: context.l10n.bookVenueAction,
-                  subtitle: context.l10n.bookVenueActionSubtitle,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _startBooking();
-                  },
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  _SheetAction(
+                    icon: AppIcons.volleyball,
+                    title: context.l10n.createGameAction,
+                    subtitle: context.l10n.createGameActionSubtitle,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      context.go(Routes.create(date: _homeDate));
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _SheetAction(
+                    icon: AppIcons.plus,
+                    title: 'Добавить площадку',
+                    subtitle: 'Общественная площадка · проверка модератором',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      context.go(Routes.venueSubmissions);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _SheetAction(
+                    icon: AppIcons.calendarDays,
+                    title: context.l10n.bookVenueAction,
+                    subtitle: context.l10n.bookVenueActionSubtitle,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _startBooking();
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );

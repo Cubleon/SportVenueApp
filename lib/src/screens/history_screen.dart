@@ -61,21 +61,7 @@ class HistoryScreen extends StatelessWidget {
                       game.participants.any((player) => player.isCurrentUser),
                 )
                 .toList()
-              ..sort((a, b) {
-                final aStart = DateTime(
-                  a.date.year,
-                  a.date.month,
-                  a.date.day,
-                  a.startHour,
-                );
-                final bStart = DateTime(
-                  b.date.year,
-                  b.date.month,
-                  b.date.day,
-                  b.startHour,
-                );
-                return bStart.compareTo(aStart);
-              });
+              ..sort((a, b) => b.startsAt.compareTo(a.startsAt));
 
         final showBookings = focus != HistoryFocus.games;
         final showGames = focus != HistoryFocus.bookings;
