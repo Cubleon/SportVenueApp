@@ -209,7 +209,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -253,10 +253,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 autofillHints: const [AutofillHints.telephoneNumber],
                 autofocus: true,
                 inputFormatters: [_RuPhoneFormatter()],
-                style: context.text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+                style: context.text.titleMedium?.copyWith(letterSpacing: 0.2),
                 decoration: InputDecoration(
                   hintText: '+7 (000) 000-00-00',
                   prefixIcon: Padding(
@@ -284,7 +281,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
+              // Said before the button, not after it: people waiting for a
+              // text message with a code did not know to pick up the phone.
+              Text(
+                context.l10n.callHint,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                ),
+              ),
+              const SizedBox(height: 10),
               InkWell(
                 key: const ValueKey('consent-toggle'),
                 onTap: () => setState(() {
@@ -364,26 +370,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               if (widget.onEmail != null) ...[
                 const SizedBox(height: 16),
-                Center(
-                  child: IconButton(
-                    key: const ValueKey('email-sign-in'),
-                    tooltip: context.l10n.signInWithEmail,
-                    onPressed: _submitting ? null : widget.onEmail,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      fixedSize: const Size.square(52),
-                      side: const BorderSide(color: Color(0xFF747775)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: Image.asset(
-                      'assets/images/google_g.png',
-                      width: 24,
-                      height: 24,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
+                PrimaryButton(
+                  key: const ValueKey('email-sign-in'),
+                  label: context.l10n.signInWithEmail,
+                  tone: ButtonTone.neutral,
+                  onPressed: _submitting ? null : widget.onEmail,
                 ),
               ],
               if (widget.onModeratorLogin != null) ...[
@@ -628,7 +619,7 @@ class _CallVerificationScreenState extends State<CallVerificationScreen>
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -658,9 +649,7 @@ class _CallVerificationScreenState extends State<CallVerificationScreen>
                 _challenge.callPhonePretty,
                 key: const ValueKey('call-number'),
                 textAlign: TextAlign.center,
-                style: context.text.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: context.text.headlineSmall,
               ),
               TextButton(
                 onPressed: () async {

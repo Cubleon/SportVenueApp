@@ -12,6 +12,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
+import '../widgets/booking_status_card.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
 import '../widgets/sport_surface.dart';
@@ -65,6 +66,7 @@ class _GamesScreenState extends State<GamesScreen> {
       animation: widget.controller,
       builder: (context, _) {
         final games = widget.controller.games
+            .where(widget.controller.gameIsListed)
             .where((game) => _sportId == 'all' || game.sportId == _sportId)
             .where((game) => _timeFilter == 'all' || game.startHour >= 18)
             .toList();
@@ -118,6 +120,9 @@ class _GamesScreenState extends State<GamesScreen> {
                             icon: AppIcons.volleyball,
                             title: context.l10n.noOpenGames,
                             description: context.l10n.noOpenGamesHint,
+                            actionLabel: context.l10n.createGameAction,
+                            onAction: () =>
+                                context.go(Routes.create(game: true)),
                           ),
                   ),
                 ),
@@ -199,7 +204,7 @@ class MiniGameCard extends StatelessWidget {
                       ),
                     ),
                     Opacity(
-                      opacity: 0.35,
+                      opacity: 0.55,
                       child: SportSurface(sportId: game.sportId),
                     ),
                     Padding(
@@ -213,9 +218,10 @@ class MiniGameCard extends StatelessWidget {
                               text:
                                   countdown ??
                                   AppFormatters.dateShort(game.date),
-                              background: countdown == null
-                                  ? Colors.black.withValues(alpha: 0.5)
-                                  : colors.skyLow,
+                              // One stamp style on the picture: a blue one
+                              // beside two black ones read as three kinds of
+                              // thing.
+                              background: Colors.black.withValues(alpha: 0.5),
                               foreground: Colors.white,
                             ),
                           ),
@@ -226,14 +232,14 @@ class MiniGameCard extends StatelessWidget {
                               // for: the list used to look identical whether
                               // the reader had joined or not, so checking
                               // meant opening every one of them.
-                              text:
-                                  game.participants.any((p) => p.isCurrentUser)
+                              text: game.readerPlays
                                   ? context.l10n.youAreIn
+                                  : game.readerRequested
+                                  ? context.l10n.requestWaiting
                                   : game.isFull
                                   ? context.l10n.gameFull
                                   : context.l10n.freePlaces(game.freePlaces),
-                              background:
-                                  game.participants.any((p) => p.isCurrentUser)
+                              background: game.readerPlays
                                   ? context.colors.success
                                   : Colors.black.withValues(alpha: 0.5),
                               foreground: Colors.white,
@@ -243,17 +249,12 @@ class MiniGameCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      left: 12,
-                      right: 12,
+                      left: 10,
                       bottom: 10,
-                      child: Text(
-                        sport.name.capitalized,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.eyebrow(
-                          context,
-                          Colors.white.withValues(alpha: 0.85),
-                        ),
+                      child: _Marker(
+                        text: sport.name.capitalized,
+                        background: Colors.black.withValues(alpha: 0.5),
+                        foreground: Colors.white,
                       ),
                     ),
                   ],
@@ -272,20 +273,20 @@ class MiniGameCard extends StatelessWidget {
                     style: context.text.titleLarge,
                   ),
                   const SizedBox(height: 5),
+                  // When it is, in ink: the time is what a player decides on,
+                  // and it sat in small grey under the club's name.
                   Text(
                     details,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.bodySmall?.copyWith(
-                      color: colors.muted,
-                    ),
+                    style: context.text.bodyMedium?.copyWith(color: colors.ink),
                   ),
                   const SizedBox(height: 14),
                   Row(
                     children: [
                       Flexible(
                         child: _AvatarStack(
-                          participants: game.participants,
+                          participants: game.players,
                           capacity: game.capacity,
                         ),
                       ),
@@ -296,8 +297,10 @@ class MiniGameCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.end,
+                          // 20, not 24: at the larger size the price was the
+                          // first thing the eye landed on, before the time.
                           style: AppTheme.numeric(
-                            context.text.headlineSmall,
+                            context.text.titleLarge,
                           ).copyWith(color: colors.ink),
                         ),
                       ),
@@ -382,6 +385,14 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
           orElse: () => widget.game,
         );
         final sport = _sportById(widget.controller.sports, current.sportId);
+        // The game stands on a booking, and the booking is what can fall
+        // through. Shown when the reader has it; a friend who came by a
+        // link gets it once bookings open by link.
+        final booking = switch (current.bookingId) {
+          final String id => widget.controller.bookingById(id),
+          null => null,
+        };
+        final actions = _actions(context, current);
         return Scaffold(
           body: SafeArea(
             child: Stack(
@@ -389,14 +400,34 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                 CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
-                      child: _DetailHeader(
+                      child: ScreenTitleBar(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
                         title: context.l10n.game,
                         onBack: () => Navigator.of(context).pop(),
-                        onShare: canShareLinks
-                            ? () => copyLink(context, gameLocation(current))
+                        // Getting people into a pickup game means sending
+                        // them to it.
+                        trailing: canShareLinks
+                            ? IconButton.filled(
+                                key: const ValueKey('share-game'),
+                                tooltip: context.l10n.shareGame,
+                                onPressed: () =>
+                                    copyLink(context, gameLocation(current)),
+                                icon: const Icon(AppIcons.share),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: context.colors.surface,
+                                  foregroundColor: context.colors.ink,
+                                ),
+                              )
                             : null,
                       ),
                     ),
+                    if (booking != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: BookingStatusCard(booking: booking),
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
@@ -410,13 +441,10 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                   if (current.type != GameType.open) ...[
                                     const SizedBox(width: 8),
                                     Flexible(
-                                      child: Text(
-                                        _gameTypeTitle(context, current.type),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTheme.eyebrow(
+                                      child: InfoTag(
+                                        label: _gameTypeTitle(
                                           context,
-                                          context.colors.muted,
+                                          current.type,
                                         ),
                                       ),
                                     ),
@@ -427,7 +455,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                               Text(
                                 current.venue.name.capitalized,
                                 style: context.text.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
                                   letterSpacing: -0.2,
                                 ),
                               ),
@@ -439,43 +466,75 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                                 ),
                               ),
                               Divider(height: 28, color: context.colors.border),
-                              SummaryRow(
-                                label: context.l10n.summaryDate,
-                                value: AppFormatters.dateFull(current.date),
-                              ),
-                              SummaryRow(
-                                label: context.l10n.summaryTime,
-                                value: current.timeRange,
-                              ),
-                              SummaryRow(
-                                label: context.l10n.playersStep,
-                                value: context.l10n.playersOfCapacity(
-                                  current.participants.length,
-                                  current.capacity,
-                                ),
-                              ),
-                              if (current.level case final String level)
+                              ...summaryRowsDivided(context, [
                                 SummaryRow(
-                                  label: context.l10n.gameLevel,
-                                  value: level,
+                                  label: context.l10n.summaryDate,
+                                  value: AppFormatters.dateFull(current.date),
                                 ),
-                              if (current.format case final String format)
                                 SummaryRow(
-                                  label: context.l10n.gameFormat,
-                                  value: format,
+                                  label: context.l10n.summaryTime,
+                                  value: current.timeRange,
                                 ),
-                              SummaryRow(
-                                label: context.l10n.pricePerPerson,
-                                value: AppFormatters.money(
-                                  current.pricePerPerson,
+                                SummaryRow(
+                                  label: context.l10n.playersStep,
+                                  value: context.l10n.playersOfCapacity(
+                                    current.players.length,
+                                    current.capacity,
+                                  ),
                                 ),
-                                accent: true,
-                              ),
+                                if (current.level case final String level)
+                                  SummaryRow(
+                                    label: context.l10n.gameLevel,
+                                    value: level,
+                                  ),
+                                if (current.format case final String format)
+                                  SummaryRow(
+                                    label: context.l10n.gameFormat,
+                                    value: format,
+                                  ),
+                                // Shown to everyone: the game is open to look
+                                // at, and the reader should know before asking
+                                // to join that the answer may be no.
+                                if (current.genderFilter != GenderFilter.any)
+                                  SummaryRow(
+                                    label: context.l10n.participantFilter,
+                                    value:
+                                        current.genderFilter == GenderFilter.men
+                                        ? context.l10n.genderOnlyMen
+                                        : context.l10n.genderOnlyWomen,
+                                  ),
+                                SummaryRow(
+                                  label: context.l10n.pricePerPerson,
+                                  value: AppFormatters.money(
+                                    current.pricePerPerson,
+                                  ),
+                                  accent: true,
+                                ),
+                              ]),
                             ],
                           ),
                         ),
                       ),
                     ),
+                    // Only for those who are going: someone looking the game
+                    // over has nothing yet to put in a calendar.
+                    if ((current.readerPlays ||
+                            current.organizer.isCurrentUser) &&
+                        !widget.controller.gameIsOff(current))
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                          child: PlanActions(
+                            title: context.l10n.calendarGameTitle(
+                              sport.name.capitalized,
+                              current.venue.name.capitalized,
+                            ),
+                            start: current.startsAt,
+                            durationMinutes: current.durationMinutes,
+                            venue: current.venue,
+                          ),
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: _SectionLabel(text: context.l10n.organizer),
                     ),
@@ -508,15 +567,15 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             children: [
                               for (var i = 0; i < current.capacity; i++)
                                 _PlayerSlot(
-                                  participant: i < current.participants.length
-                                      ? current.participants[i]
+                                  participant: i < current.players.length
+                                      ? current.players[i]
                                       : null,
                                   isLast: i == current.capacity - 1,
-                                  onTap: i < current.participants.length
+                                  onTap: i < current.players.length
                                       ? () => _openPlayer(
                                           context,
                                           widget.controller,
-                                          current.participants[i],
+                                          current.players[i],
                                         )
                                       : null,
                                 ),
@@ -525,45 +584,54 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                         ),
                       ),
                     ),
+                    // Requests to a game «по одобрению» wait here for the
+                    // organiser. They used to arrive as players, with a seat
+                    // and nobody having said yes.
+                    if (current.organizer.isCurrentUser &&
+                        current.requests.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: _SectionLabel(text: context.l10n.gameRequests),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+                        sliver: SliverList.separated(
+                          itemCount: current.requests.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final player = current.requests[index];
+                            return _RequestCard(
+                              player: player,
+                              busy: _answering?.sameAs(player) ?? false,
+                              onApprove: () => _answer(current, player, true),
+                              onReject: () => _answer(current, player, false),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     // The same price was printed twice on one screen, seven
                     // hundred pixels apart. The card above says it; this
                     // leaves only the room the pinned bar needs.
-                    SliverToBoxAdapter(child: SizedBox(height: _barHeight)),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: actions == null ? 24 : _barHeight,
+                      ),
+                    ),
                   ],
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  // The button used to float with nothing under it, so the
-                  // cards slid through it on the way past.
-                  // Someone already in the game is not offered a way in; a
-                  // place nobody can give back is a place nobody can take.
-                  child: PinnedActionBar(
-                    onHeight: _onBarHeight,
-                    child:
-                        current.participants.any(
-                          (player) => player.isCurrentUser,
-                        )
-                        ? PrimaryButton(
-                            key: const ValueKey('detail-leave-game'),
-                            label: context.l10n.leaveGame,
-                            tone: ButtonTone.neutral,
-                            isLoading: _joining,
-                            onPressed: _joining ? null : () => _leave(current),
-                          )
-                        : PrimaryButton(
-                            key: const ValueKey('detail-join-game'),
-                            label: current.type == GameType.approval
-                                ? context.l10n.sendRequest
-                                : context.l10n.joinGame,
-                            isLoading: _joining,
-                            onPressed: current.isFull || _joining
-                                ? null
-                                : () => _join(current),
-                          ),
+                if (actions != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // The buttons used to float with nothing under them, so
+                    // the cards slid through them on the way past.
+                    child: PinnedActionBar(
+                      onHeight: _onBarHeight,
+                      child: actions,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -572,17 +640,232 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
-  Future<void> _leave(Game game) async {
+  /// What the reader can do here, which depends on who they are in the
+  /// game and where their share stands. Null when there is nothing to do.
+  ///
+  /// A paid place is a share of the booking: joining takes one and goes on
+  /// to paying for it, and a place already paid for is not given back with
+  /// a button (the server refuses that; the organiser cancels the booking).
+  Widget? _actions(BuildContext context, Game game) {
+    final l10n = context.l10n;
+    // A game whose booking is off has nothing left to do here: the status
+    // card above says what happened and what happens to the money.
+    if (widget.controller.gameIsOff(game)) {
+      return null;
+    }
+    final inGame = game.readerPlays;
+    if (game.readerRequested) {
+      // Waiting for the organiser: nothing to pay yet, only a way to
+      // take the request back — and, above it, what happens now, above the way out: the request is with the
+      // organiser, and nothing is owed until it is accepted.
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              l10n.requestPendingHint,
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
+            ),
+          ),
+          PrimaryButton(
+            key: const ValueKey('detail-withdraw-request'),
+            label: l10n.withdrawRequest,
+            tone: ButtonTone.neutral,
+            isLoading: _joining,
+            onPressed: _joining ? null : () => _leave(game),
+          ),
+        ],
+      );
+    }
+    final bookingId = game.bookingId;
+    final share = game.myShare;
+    final paidGame = game.payment == GamePayment.shares && bookingId != null;
+
+    if (!inGame) {
+      return PrimaryButton(
+        key: const ValueKey('detail-join-game'),
+        label: game.type == GameType.approval
+            ? l10n.sendRequest
+            : paidGame
+            ? l10n.joinGamePaid(AppFormatters.money(game.pricePerPerson))
+            : l10n.joinGame,
+        tone: paidGame && game.type != GameType.approval
+            ? ButtonTone.commit
+            : ButtonTone.accent,
+        isLoading: _joining,
+        onPressed: game.isFull || _joining ? null : () => _join(game),
+      );
+    }
+
+    final owes =
+        paidGame &&
+        share != null &&
+        (share.status == ShareStatus.unpaid ||
+            share.status == ShareStatus.notFound ||
+            share.status == ShareStatus.pendingConfirmation);
+    final pay = owes
+        ? PrimaryButton(
+            key: const ValueKey('detail-pay-share'),
+            label: share.status == ShareStatus.pendingConfirmation
+                ? l10n.payPendingTitle
+                : l10n.payMyShare(
+                    AppFormatters.money(share.amount ?? game.pricePerPerson),
+                  ),
+            tone: ButtonTone.commit,
+            onPressed: () => context.go(Routes.pay(bookingId)),
+          )
+        : null;
+
+    // The organiser holds the booking: leaving would leave it without an
+    // owner, so the way out is cancelling it, on the booking's screen.
+    if (game.organizer.isCurrentUser) {
+      final open = bookingId == null
+          ? null
+          : PrimaryButton(
+              key: const ValueKey('detail-open-booking'),
+              label: l10n.openBooking,
+              tone: ButtonTone.neutral,
+              onPressed: () => context.go(Routes.booking(bookingId)),
+            );
+      // Cancelling the game is cancelling the booking it stands on; the
+      // server refunds everyone who paid.
+      final booking = bookingId == null
+          ? null
+          : widget.controller.bookingById(bookingId);
+      final cancel = booking == null
+          ? null
+          : PrimaryButton(
+              key: const ValueKey('detail-cancel-game'),
+              label: l10n.cancelGame,
+              tone: ButtonTone.neutral,
+              isLoading: _joining,
+              onPressed: _joining ? null : () => _cancelGame(game, booking),
+            );
+      return _stack([?pay, ?open, ?cancel]);
+    }
+
+    // Money that has gone, or may have, keeps the place: no leave button.
+    final canLeave =
+        !paidGame ||
+        share == null ||
+        share.status == ShareStatus.unpaid ||
+        share.status == ShareStatus.notFound;
+    final leave = canLeave
+        ? PrimaryButton(
+            key: const ValueKey('detail-leave-game'),
+            label: l10n.leaveGame,
+            tone: ButtonTone.neutral,
+            isLoading: _joining,
+            onPressed: _joining ? null : () => _leave(game),
+          )
+        : null;
+    return _stack([?pay, ?leave]);
+  }
+
+  Widget? _stack(List<Widget> buttons) {
+    if (buttons.isEmpty) {
+      return null;
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < buttons.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          buttons[i],
+        ],
+      ],
+    );
+  }
+
+  /// The request being answered, so only its card waits.
+  Participant? _answering;
+
+  Future<void> _answer(Game game, Participant player, bool approve) async {
+    setState(() => _answering = player);
+    try {
+      if (approve) {
+        await widget.controller.approveParticipant(game, player);
+      } else {
+        await widget.controller.rejectParticipant(game, player);
+      }
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(
+        context,
+        approve ? context.l10n.requestApproved : context.l10n.requestRejected,
+        tone: SnackTone.done,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _answering = null);
+      }
+    }
+  }
+
+  Future<void> _cancelGame(Game game, Booking booking) async {
     final confirmed = await confirmAction(
       context,
-      title: context.l10n.leaveGameQuestion,
-      message: context.l10n.leaveGameMessage(
+      title: context.l10n.cancelGameQuestion,
+      message: context.l10n.cancelGameMessage(
         game.venue.name.capitalized,
         AppFormatters.dateShort(game.date),
         game.timeRange,
       ),
-      confirmLabel: context.l10n.leaveConfirm,
-      cancelLabel: context.l10n.stay,
+      confirmLabel: context.l10n.cancelGame,
+      cancelLabel: context.l10n.keepGame,
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+    setState(() => _joining = true);
+    try {
+      await widget.controller.cancelBooking(booking);
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, context.l10n.gameCancelled, tone: SnackTone.done);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    } finally {
+      if (mounted) {
+        setState(() => _joining = false);
+      }
+    }
+  }
+
+  Future<void> _leave(Game game) async {
+    // A request holds no place, so taking it back is not leaving the game:
+    // «Место вернётся в игру» promised a seat the reader never had.
+    final request = game.readerRequested;
+    final confirmed = await confirmAction(
+      context,
+      title: request
+          ? context.l10n.withdrawRequestQuestion
+          : context.l10n.leaveGameQuestion,
+      message: request
+          ? context.l10n.withdrawRequestMessage
+          : context.l10n.leaveGameMessage(
+              game.venue.name.capitalized,
+              AppFormatters.dateShort(game.date),
+              game.timeRange,
+            ),
+      confirmLabel: request
+          ? context.l10n.withdrawConfirm
+          : context.l10n.leaveConfirm,
+      cancelLabel: request ? context.l10n.keepRequest : context.l10n.stay,
     );
     if (!confirmed || !mounted) {
       return;
@@ -596,7 +879,11 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       }
       showAppSnack(
         context,
-        left ? context.l10n.leftGame : context.l10n.wasNotInGame,
+        !left
+            ? context.l10n.wasNotInGame
+            : request
+            ? context.l10n.requestWithdrawn
+            : context.l10n.leftGame,
         tone: left ? SnackTone.done : SnackTone.plain,
       );
     } catch (error) {
@@ -626,7 +913,17 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         (item) => item.id == game.id,
         orElse: () => game,
       );
-      final inside = after.participants.any((p) => p.isCurrentUser);
+      final inside = after.readerPlays;
+      final bookingId = after.bookingId;
+      if (joined &&
+          inside &&
+          bookingId != null &&
+          after.myShare != null &&
+          widget.controller.bookingById(bookingId) != null) {
+        // The place is held, not paid: paying is the rest of joining.
+        context.go(Routes.pay(bookingId));
+        return;
+      }
       showAppSnack(
         context,
         !joined
@@ -749,7 +1046,7 @@ class _AvatarStack extends StatelessWidget {
     final taken = participants.length;
     final circles = capacity.clamp(taken, _maxCircles);
     final hidden = capacity - circles;
-    final size = context.scaled(26, max: 1.2);
+    final size = context.scaled(32, max: 1.2);
 
     // Eight seats and a price do not always fit a narrow card, and a row that
     // overflows is worse than one drawn a little smaller.
@@ -769,10 +1066,9 @@ class _AvatarStack extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               '+$hidden',
-              style: AppTheme.numeric(context.text.labelSmall).copyWith(
-                color: context.colors.dim,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTheme.numeric(
+                context.text.labelSmall,
+              ).copyWith(color: context.colors.muted),
             ),
           ],
         ],
@@ -789,16 +1085,20 @@ class _EmptySeat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A plus in a ring: a place waiting for someone. A bare grey circle
+    // looked like a picture that had not loaded.
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: context.colors.bgAlt,
-        // At full strength the ring carries 3.5:1 against the card in light
-        // and 4.5:1 in dark — an outline is a shape, and a shape has to
-        // clear 3:1 to be seen at all.
-        border: Border.all(color: context.colors.dim, width: 2),
+        color: context.colors.surface,
+        border: Border.all(color: context.colors.borderStrong, width: 1.5),
+      ),
+      child: Icon(
+        AppIcons.plus,
+        size: size * 0.45,
+        color: context.colors.muted,
       ),
     );
   }
@@ -840,58 +1140,65 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({
-    required this.title,
-    required this.onBack,
-    this.onShare,
+/// One request to join, with the organiser's two answers.
+class _RequestCard extends StatelessWidget {
+  const _RequestCard({
+    required this.player,
+    required this.busy,
+    required this.onApprove,
+    required this.onReject,
   });
 
-  final String title;
-  final VoidCallback onBack;
-
-  /// Offered where there is an address to offer. Getting people into a
-  /// pickup game means sending them to it, and until the app had routes
-  /// there was nothing to send.
-  final VoidCallback? onShare;
+  final Participant player;
+  final bool busy;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
-      child: Row(
+    return AppCard(
+      key: ValueKey('request-${player.id ?? player.name}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton.filled(
-            tooltip: context.l10n.back,
-            onPressed: onBack,
-            icon: const Icon(AppIcons.chevronLeft),
-            style: IconButton.styleFrom(
-              backgroundColor: context.colors.surface,
-              foregroundColor: context.colors.ink,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              _Avatar(participant: player, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  player.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          if (onShare == null)
-            const SizedBox(width: 48)
-          else
-            IconButton.filled(
-              key: const ValueKey('share-game'),
-              tooltip: context.l10n.shareGame,
-              onPressed: onShare,
-              icon: const Icon(AppIcons.share),
-              style: IconButton.styleFrom(
-                backgroundColor: context.colors.surface,
-                foregroundColor: context.colors.ink,
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  key: const ValueKey('request-approve'),
+                  label: context.l10n.requestApprove,
+                  isLoading: busy,
+                  onPressed: busy ? null : onApprove,
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: PrimaryButton(
+                  key: const ValueKey('request-reject'),
+                  label: context.l10n.requestReject,
+                  tone: ButtonTone.neutral,
+                  onPressed: busy ? null : onReject,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -930,19 +1237,12 @@ class _ParticipantTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  participant.name,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(participant.name, style: context.text.titleSmall),
                 const SizedBox(height: 4),
+                // No rating: nothing yet says how one is earned, and an
+                // unexplained number beside a person's name reads as a grade.
                 Text(
-                  participant.hasRating
-                      ? context.l10n.rating(
-                          participant.rating.toStringAsFixed(1),
-                        )
-                      : context.l10n.playerOrganizer,
+                  context.l10n.playerOrganizer,
                   style: context.text.bodySmall?.copyWith(
                     color: context.colors.muted,
                   ),
@@ -953,7 +1253,7 @@ class _ParticipantTile extends StatelessWidget {
           // A card that opens someone's profile says so, now that the
           // button which used to sit here has gone.
           if (onTap != null)
-            Icon(AppIcons.chevronRight, size: 18, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, size: 18, color: context.colors.muted),
         ],
       ),
     );
@@ -993,22 +1293,12 @@ class _PlayerSlot extends StatelessWidget {
                     empty ? context.l10n.freeSlot : participant!.name,
                     style: empty
                         ? context.text.bodyMedium?.copyWith(
-                            color: context.colors.dim,
+                            color: context.colors.muted,
                             fontStyle: FontStyle.italic,
                           )
-                        : context.text.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        : context.text.titleSmall,
                   ),
                 ),
-                if (!empty && participant!.hasRating)
-                  Text(
-                    participant!.rating.toStringAsFixed(1),
-                    style: AppTheme.numeric(context.text.labelLarge).copyWith(
-                      color: context.colors.muted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
               ],
             ),
           ),

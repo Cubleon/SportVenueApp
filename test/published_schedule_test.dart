@@ -10,7 +10,6 @@ import 'package:sport_venue_app/src/data/api_client.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
-import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
 import 'package:sport_venue_app/src/widgets/shared_widgets.dart';
 import 'package:sport_venue_app/src/widgets/venue_slot_picker.dart';
@@ -45,10 +44,10 @@ void main() {
       players: 4,
       mode: PaymentMode.split,
     );
-    expect(draft.timeRange, '18:30 - 20:00');
+    expect(draft.timeRange, '18:30–20:00');
     expect(draft.copyWith(mode: PaymentMode.full).apiStartsAt, instant);
     expect(draft.copyWith(startMinute: 0).apiStartsAt, isNull);
-    expect(draft.copyWith(startHour: 23).timeRange, '23:30 - 01:00');
+    expect(draft.copyWith(startHour: 23).timeRange, '23:30–01:00');
 
     final booking = Booking.fromJson({
       'id': 'booking-1',
@@ -62,7 +61,7 @@ void main() {
       'created_at': '2026-10-18T10:00:00Z',
     }, venue: _venue);
     expect(booking.draft.date, DateTime(2026, 10, 19));
-    expect(booking.draft.timeRange, '00:30 - 02:00');
+    expect(booking.draft.timeRange, '00:30–02:00');
     expect(
       booking.startsAt.isAtSameMomentAs(DateTime.utc(2026, 10, 18, 21, 30)),
       isTrue,
@@ -85,7 +84,7 @@ void main() {
       venue: _venue,
       currentUserId: null,
     );
-    expect(game.timeRange, '18:30 - 20:00');
+    expect(game.timeRange, '18:30–20:00');
     expect(game.copyWith(participants: []).startMinute, 30);
     expect(game.copyWith(participants: []).apiStartsAt, game.apiStartsAt);
     expect(
@@ -109,7 +108,7 @@ void main() {
       addTearDown(controller.dispose);
       addTearDown(api.close);
       var duration = 60;
-      var hour = 18;
+      int? hour = 18;
       var minute = 30;
       var ready = false;
       TimeSlot? selected;
@@ -126,7 +125,7 @@ void main() {
                 durationMinutes: duration,
                 selectedHour: hour,
                 selectedMinute: minute,
-                onHourChanged: (_) {},
+                onHourChanged: (value) => setState(() => hour = value),
                 onSlotChanged: (slot) => setState(() {
                   selected = slot;
                   hour = slot.hour;
@@ -150,6 +149,10 @@ void main() {
       expect(selected?.startsAt, DateTime.utc(2026, 10, 18, 15));
 
       rebuild(() => duration = 120);
+      await tester.pumpAndSettle();
+      expect(ready, isFalse);
+      expect(hour, isNull);
+      await tester.tap(find.text('19:30'));
       await tester.pumpAndSettle();
       expect(ready, isTrue);
       expect(selected?.label, '19:30');
@@ -204,6 +207,9 @@ void main() {
     await tester.pump();
     responses[120]!.complete([_slot(16, 30)]);
     await tester.pumpAndSettle();
+    expect(selected, isNull);
+    await tester.tap(find.text('19:30'));
+    await tester.pumpAndSettle();
     expect(selected?.label, '19:30');
     responses[60]!.complete([_slot(15, 0)]);
     await tester.pumpAndSettle();
@@ -236,12 +242,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-full')), findsNothing);
+    await _pickSlot(tester, '18:30');
     await tester.tap(find.byKey(const ValueKey('pay-full')));
     await tester.pumpAndSettle();
     final screen = tester.widget<BookingConfirmationScreen>(
       find.byType(BookingConfirmationScreen),
     );
-    expect(screen.draft.timeRange, '18:30 - 19:30');
+    expect(screen.draft.timeRange, '18:30–19:30');
     expect(screen.draft.totalPrice, 1700);
     expect(screen.draft.players, 6);
     expect(screen.draft.apiStartsAt, DateTime.utc(2026, 10, 18, 15, 30));
@@ -260,17 +268,33 @@ void main() {
     addTearDown(api.close);
     await tester.pumpWidget(
       _app(
-        CreateGameScreen(controller: controller, date: DateTime(2026, 10, 18)),
+        BookingScreen(
+          controller: controller,
+          venue: _venue,
+          date: DateTime(2026, 10, 18),
+          findPlayers: true,
+        ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('₽425'),
-      300,
-      scrollable: find.byType(Scrollable).first,
+    await _pickSlot(tester, '18:30');
+    final summary = tester.widget<BookingSummaryRows>(
+      find.byType(BookingSummaryRows),
     );
-    expect(find.text('₽425'), findsOneWidget);
+    expect(summary.draft.sharePrice, 425);
+    expect(summary.draft.apiStartsAt, DateTime.utc(2026, 10, 18, 15, 30));
+    expect(find.byKey(const ValueKey('create-game-submit')), findsOneWidget);
   });
+}
+
+Future<void> _pickSlot(WidgetTester tester, String label) async {
+  await tester.scrollUntilVisible(
+    find.text(label),
+    250,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(find.text(label));
+  await tester.pumpAndSettle();
 }
 
 Widget _app(Widget child) => MaterialApp(

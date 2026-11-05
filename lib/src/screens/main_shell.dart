@@ -10,7 +10,6 @@ import '../data/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/venue_picker.dart';
 import 'games_screens.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -80,8 +79,8 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: context.motion(const Duration(milliseconds: 220)),
+      // A tab arrives the way a screen does, not with a bare cross-fade.
+      body: RiseFadeSwitcher(
         child: KeyedSubtree(key: ValueKey(_tab), child: screens[_tab]),
       ),
       extendBody: true,
@@ -91,112 +90,9 @@ class _MainShellState extends State<MainShell> {
           MainShell.requestedTab.value = index;
           setState(() => _tab = index);
         },
-        onCreate: _showCreateSheet,
+        // One screen for a booking and a game; it asks which at the top.
+        onCreate: () => context.go(Routes.create(date: _homeDate)),
       ),
-    );
-  }
-
-  /// Booking from the tab bar names no club, so it asks for one instead of
-  /// picking whichever happened to be first in the catalogue.
-  Future<void> _startBooking() async {
-    final venues = widget.controller.bookableVenues;
-    if (venues.isEmpty) {
-      showAppSnack(context, context.l10n.noVenuesAvailable);
-      return;
-    }
-    final venue = await pickVenue(
-      context,
-      venues: venues,
-      selected: null,
-      sportOf: (venue) {
-        for (final sport in widget.controller.sports) {
-          if (sport.id == venue.sportIds.first) {
-            return sport;
-          }
-        }
-        return null;
-      },
-    );
-    if (venue == null || !mounted) {
-      return;
-    }
-    if (!context.mounted) {
-      return;
-    }
-    // Picked from «Забронировать площадку», so the club has already been
-    // chosen and looked at: straight to the hours.
-    context.go(Routes.book(venue.id, date: _homeDate));
-  }
-
-  void _showCreateSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: context.colors.ink.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    context.l10n.createSheetTitle,
-                    style: context.text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _SheetAction(
-                    icon: AppIcons.volleyball,
-                    title: context.l10n.createGameAction,
-                    subtitle: context.l10n.createGameActionSubtitle,
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      context.go(Routes.create(date: _homeDate));
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _SheetAction(
-                    icon: AppIcons.plus,
-                    title: 'Добавить площадку',
-                    subtitle: 'Общественная площадка · проверка модератором',
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      context.go(Routes.venueSubmissions);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _SheetAction(
-                    icon: AppIcons.calendarDays,
-                    title: context.l10n.bookVenueAction,
-                    subtitle: context.l10n.bookVenueActionSubtitle,
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      _startBooking();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -414,9 +310,12 @@ class _NavItem extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      // 11, under the 12 of every other label: the tab bar
+                      // is a fixed strip, and at 12 «Профиль» lost its end
+                      // under a large system font. Apple sets these at 10.
                       style: context.text.labelSmall?.copyWith(
                         color: color,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -425,63 +324,6 @@ class _NavItem extends StatelessWidget {
             },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SheetAction extends StatelessWidget {
-  const _SheetAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: context.colors.accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: context.colors.accent),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: context.text.bodySmall?.copyWith(
-                    color: context.colors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(AppIcons.chevronRight, color: context.colors.dim),
-        ],
       ),
     );
   }

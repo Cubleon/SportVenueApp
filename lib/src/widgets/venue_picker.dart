@@ -97,9 +97,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Text(
                   context.l10n.venuePickerTitle,
-                  style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: context.text.titleLarge,
                 ),
               ),
               Padding(
@@ -112,7 +110,7 @@ class _VenuePickerSheetState extends State<_VenuePickerSheet> {
                   ),
                   child: Row(
                     children: [
-                      Icon(AppIcons.search, color: context.colors.dim),
+                      Icon(AppIcons.search, color: context.colors.muted),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(

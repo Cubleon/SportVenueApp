@@ -323,6 +323,7 @@ void main() {
         'capacity': 4,
         'type': 'closed',
         'gender_filter': 'any',
+        'payment': 'shares',
       });
       expect(requests[1].url.path, '/api/v1/games/game-1/join');
       expect(jsonDecode(requests[1].body), {'invite_token': 'invite-1'});

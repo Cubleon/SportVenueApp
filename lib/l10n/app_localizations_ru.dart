@@ -12,6 +12,9 @@ class LRu extends L {
   String get appTitle => 'SportVenue';
 
   @override
+  String get addPublicVenue => 'Добавить площадку';
+
+  @override
   String get playerAccount => 'Я игрок';
 
   @override
@@ -80,10 +83,18 @@ class LRu extends L {
   String get summaryPlayers => 'Игроки';
 
   @override
+  String get summaryShares => 'Доли';
+
+  @override
+  String sharesTimesPrice(int count, String price) {
+    return '$count по $price';
+  }
+
+  @override
   String get summaryTotal => 'Итого';
 
   @override
-  String get summaryYourShare => 'Ваша часть';
+  String get summaryYourShare => 'Ваша доля';
 
   @override
   String get back => 'Назад';
@@ -162,6 +173,12 @@ class LRu extends L {
 
   @override
   String get freeLabel => 'Свободно';
+
+  @override
+  String get freeHoursUnknown => 'нет данных';
+
+  @override
+  String get freeHoursFailed => 'Не удалось узнать свободные часы';
 
   @override
   String get durationShorter => 'Короче';
@@ -245,7 +262,24 @@ class LRu extends L {
   }
 
   @override
-  String get invitePlayers => 'Позвать игроков — скопировать ссылку';
+  String get invitePlayers => 'Позвать игроков по ссылке';
+
+  @override
+  String get remindToPay => 'Напомнить об оплате';
+
+  @override
+  String payReminderText(String amount, String venue, String when) {
+    return 'Напоминание: оплатите свою долю $amount — $venue, $when.';
+  }
+
+  @override
+  String payReminderDeadline(String deadline) {
+    return 'Срок — $deadline, иначе бронь снимется.';
+  }
+
+  @override
+  String get payReminderCopied =>
+      'Напоминание скопировано — отправьте его в чат игроков';
 
   @override
   String get linkCopied => 'Ссылка скопирована';
@@ -305,7 +339,33 @@ class LRu extends L {
   String get notifications => 'Уведомления';
 
   @override
+  String get profileOpen => 'Открыть профиль';
+
+  @override
   String get noNotifications => 'Уведомлений пока нет';
+
+  @override
+  String get todayShort => 'сегодня';
+
+  @override
+  String get noNotificationsHint =>
+      'Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.';
+
+  @override
+  String get notificationNew => 'Новое';
+
+  @override
+  String notificationsUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уведомления: $count новых',
+      many: 'Уведомления: $count новых',
+      few: 'Уведомления: $count новых',
+      one: 'Уведомления: $count новое',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get searchPlaceholder => 'Найти площадку или игру';
@@ -408,13 +468,43 @@ class LRu extends L {
   String get logoutCancel => 'Остаться';
 
   @override
-  String get statBookings => 'Броней';
+  String statBookings(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Брони',
+      many: 'Броней',
+      few: 'Брони',
+      one: 'Бронь',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get statMyGames => 'Моих игр';
+  String statMyGames(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Моих игр',
+      many: 'Моих игр',
+      few: 'Мои игры',
+      one: 'Моя игра',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get statSports => 'Видов спорта';
+  String statSports(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видов спорта',
+      many: 'Видов спорта',
+      few: 'Вида спорта',
+      one: 'Вид спорта',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get historyEmpty => 'Здесь появятся ваши брони и игры';
@@ -430,6 +520,9 @@ class LRu extends L {
 
   @override
   String get findGame => 'Найти игру';
+
+  @override
+  String get findVenue => 'Найти площадку';
 
   @override
   String get bookingsSection => 'Брони';
@@ -480,7 +573,7 @@ class LRu extends L {
   String get search => 'Поиск';
 
   @override
-  String get searchSubtitle => 'Москва · openfreemap';
+  String get searchSubtitle => 'Клубы на карте · Москва';
 
   @override
   String get centreOnMoscow => 'Центр Москвы';
@@ -505,6 +598,13 @@ class LRu extends L {
       'В Москве пока нет клубов для этого вида спорта.';
 
   @override
+  String get noClubsYet => 'Клубов пока нет';
+
+  @override
+  String get noClubsYetHint =>
+      'Мы подключаем клубы Москвы. Скоро здесь появится, где поиграть.';
+
+  @override
   String noVenuesForQueryHint(String query) {
     return 'По запросу «$query» ничего не нашлось. Проверьте написание или сбросьте фильтры.';
   }
@@ -520,6 +620,32 @@ class LRu extends L {
 
   @override
   String get signInWithEmail => 'Войти по почте';
+
+  @override
+  String get addToCalendar => 'В календарь';
+
+  @override
+  String get openRoute => 'Маршрут';
+
+  @override
+  String calendarBookingTitle(String venue) {
+    return 'Игра · $venue';
+  }
+
+  @override
+  String calendarGameTitle(String sport, String venue) {
+    return '$sport · $venue';
+  }
+
+  @override
+  String get linkOpenFailed => 'Не получилось открыть. Попробуйте ещё раз.';
+
+  @override
+  String get callHint => 'Подтвердим номер звонком — вводить код не нужно.';
+
+  @override
+  String get requestPendingHint =>
+      'Организатор ответит здесь и в уведомлениях. Платить не нужно, пока заявку не одобрят.';
 
   @override
   String get emailSignInTitle => 'Вход по коду из письма';
@@ -608,6 +734,22 @@ class LRu extends L {
       'Для выбранного спорта площадок пока нет';
 
   @override
+  String get chooseVenue => 'Выберите площадку';
+
+  @override
+  String venuesToChoose(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count площадки рядом',
+      many: '$count площадок рядом',
+      few: '$count площадки рядом',
+      one: '$count площадка рядом',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String moreVenues(int count) {
     return 'ещё $count';
   }
@@ -647,7 +789,13 @@ class LRu extends L {
 
   @override
   String get participantFilterHint =>
-      'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».';
+      'Игру увидят все, а вступить смогут только выбранные. Это для женских или мужских составов — в остальных случаях оставьте «Любой».';
+
+  @override
+  String get genderOnlyMen => 'только мужчины';
+
+  @override
+  String get genderOnlyWomen => 'только женщины';
 
   @override
   String get genderAny => 'Любой';
@@ -677,6 +825,26 @@ class LRu extends L {
   String get booking => 'Бронирование';
 
   @override
+  String get newGame => 'Новая игра';
+
+  @override
+  String get modeOwn => 'Для своих';
+
+  @override
+  String get modeOwnHint => 'бронь и доли';
+
+  @override
+  String get modeGame => 'Нужны игроки';
+
+  @override
+  String get modeGameHint => 'открытая игра';
+
+  @override
+  String createGameShare(String price) {
+    return 'Создать игру · доля $price';
+  }
+
+  @override
   String get timeStep => 'Время';
 
   @override
@@ -684,7 +852,7 @@ class LRu extends L {
 
   @override
   String paySharePrice(String price) {
-    return 'Оплатить свою часть · $price';
+    return 'Оплатить свою долю · $price';
   }
 
   @override
@@ -719,7 +887,7 @@ class LRu extends L {
       few: '$count доли',
       one: '$count долю',
     );
-    return 'Ваша часть оплачена. Осталось собрать $_temp0 — позовите игроков до начала.';
+    return 'Позовите игроков: им осталось оплатить $_temp0. Если за 2 часа до начала оплачены не все доли, бронь отменится, а деньги вернутся.';
   }
 
   @override
@@ -731,6 +899,15 @@ class LRu extends L {
 
   @override
   String get bookingSuccessDone => 'Готово';
+
+  @override
+  String successHeld(String when) {
+    return 'Время за вами до $when';
+  }
+
+  @override
+  String get successFullBody =>
+      'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.';
 
   @override
   String get bookingDetails => 'Бронь';
@@ -749,7 +926,7 @@ class LRu extends L {
 
   @override
   String cancelBookingMessage(String venue, String date, String time) {
-    return '$venue, $date, $time. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.';
+    return '$venue, $date, $time. Место освободится для других, вернуть его не получится. Деньги вернутся в течение 1 рабочего дня.';
   }
 
   @override
@@ -763,7 +940,7 @@ class LRu extends L {
 
   @override
   String payShareTitle(String price) {
-    return 'Своя часть · $price';
+    return 'Своя доля · $price';
   }
 
   @override
@@ -775,7 +952,7 @@ class LRu extends L {
       few: '$others доли',
       one: '$others долю',
     );
-    return 'Вы платите свою долю, остальные $_temp0 оплачивают другие игроки — всего $total. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.';
+    return 'Вы платите свою долю, остальные $_temp0 оплачивают другие игроки — всего $total. Если за 2 часа до начала доли не собраны, бронь отменяется, а деньги возвращаются в течение 1 рабочего дня.';
   }
 
   @override
@@ -792,11 +969,11 @@ class LRu extends L {
 
   @override
   String get cancellationTermAuto =>
-      'Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически';
+      'Если за 2 часа до начала оплачены не все доли, бронь отменяется автоматически';
 
   @override
   String get cancellationTermRefund =>
-      'Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней';
+      'Если бронь отменена, деньги возвращаются в течение 1 рабочего дня';
 
   @override
   String get removePlayer => 'Убрать игрока';
@@ -826,7 +1003,7 @@ class LRu extends L {
   String get gamesSubtitle => 'открытые игры, куда можно вписаться';
 
   @override
-  String get youAreIn => 'вы в игре';
+  String get youAreIn => 'Вы в игре';
 
   @override
   String get nothingMatchesFilters => 'Под фильтры ничего не подошло';
@@ -927,7 +1104,7 @@ class LRu extends L {
   }
 
   @override
-  String get freeSlot => 'свободно';
+  String get freeSlot => 'Свободно';
 
   @override
   String get openGame => 'Открытая игра';
@@ -945,26 +1122,28 @@ class LRu extends L {
   String get noFreeSlots => 'На эту дату свободных слотов нет';
 
   @override
-  String get errorNetwork => 'сервер недоступен — проверьте, что он запущен';
+  String get errorNetwork =>
+      'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.';
 
   @override
-  String get errorInvalidResponse => 'сервер вернул неожиданный ответ';
+  String get errorInvalidResponse =>
+      'Что-то пошло не так на нашей стороне. Попробуйте ещё раз чуть позже.';
 
   @override
-  String get errorSessionExpired => 'сессия истекла — войдите снова';
+  String get errorSessionExpired => 'Вход устарел — войдите снова.';
 
   @override
-  String get errorSlotTaken => 'этот слот уже занят, выберите другое время';
+  String get errorSlotTaken => 'Это время уже заняли. Выберите другое.';
 
   @override
-  String get errorGameFull => 'в игре больше нет свободных мест';
+  String get errorGameFull => 'В игре больше нет свободных мест.';
 
   @override
   String get errorCancelNotOrganizer =>
-      'отменить бронь может только организатор';
+      'Отменить бронь может только организатор.';
 
   @override
-  String get errorBadPhone => 'проверьте номер телефона';
+  String get errorBadPhone => 'Проверьте номер телефона.';
 
   @override
   String get errorChallengeExpired =>
@@ -974,10 +1153,10 @@ class LRu extends L {
   String get errorTooManyAttempts => 'Подождите минуту перед новой попыткой';
 
   @override
-  String get errorTimeout => 'сервер не ответил вовремя';
+  String get errorTimeout => 'Сервер долго не отвечает. Попробуйте ещё раз.';
 
   @override
-  String get errorUnknown => 'не удалось выполнить запрос';
+  String get errorUnknown => 'Не получилось. Попробуйте ещё раз.';
 
   @override
   String get bookingStatusCollecting => 'ожидает участников';
@@ -1000,10 +1179,140 @@ class LRu extends L {
   String get sharesTitle => 'Оплата долей';
 
   @override
-  String get sharePaid => 'оплачено';
+  String get sharePaid => 'Оплачено';
 
   @override
-  String get shareUnpaid => 'ждём оплату';
+  String get paymentScreenTitle => 'Оплата доли';
+
+  @override
+  String get payYourShare => 'Ваша доля';
+
+  @override
+  String payRecipient(String name, String bank) {
+    return 'Получатель: $name, $bank';
+  }
+
+  @override
+  String get payTestBanner =>
+      'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.';
+
+  @override
+  String get payCodeLabel => 'Код доли';
+
+  @override
+  String get payCodeHint =>
+      'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.';
+
+  @override
+  String get payCopyCode => 'Скопировать';
+
+  @override
+  String get payCodeCopied => 'Код скопирован';
+
+  @override
+  String get payViaBank => 'Оплатить через банк';
+
+  @override
+  String get payBankFailed =>
+      'Не получилось открыть банк. Отсканируйте QR с другого телефона.';
+
+  @override
+  String get payQrHint =>
+      'Отсканируйте камерой телефона или в приложении банка';
+
+  @override
+  String get payQrShow => 'Показать QR для другого устройства';
+
+  @override
+  String get payQrHide => 'Скрыть QR';
+
+  @override
+  String get payIPaid => 'Я оплатил';
+
+  @override
+  String payDeadline(String when) {
+    return 'Все доли нужно оплатить до $when';
+  }
+
+  @override
+  String get payPendingTitle => 'Проверяем оплату';
+
+  @override
+  String get payPendingBody =>
+      'Сверяем перевод с выпиской банка — обычно в течение нескольких часов, днём быстрее. Когда проверим, придёт уведомление; если не найдём перевод, скажем здесь же.';
+
+  @override
+  String get payPaidTitle => 'Оплата получена';
+
+  @override
+  String get payPaidBody =>
+      'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.';
+
+  @override
+  String get payNotFoundTitle => 'Не нашли перевод';
+
+  @override
+  String get payNotFoundBody =>
+      'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.';
+
+  @override
+  String payAdminNote(String note) {
+    return 'Комментарий: $note';
+  }
+
+  @override
+  String get payRefundDue =>
+      'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.';
+
+  @override
+  String get payRefunded => 'Деньги за эту долю вернули.';
+
+  @override
+  String get payNothing => 'У вас нет доли в этой брони.';
+
+  @override
+  String payMyShare(String price) {
+    return 'Оплатить свою долю · $price';
+  }
+
+  @override
+  String payMyPlace(String price) {
+    return 'Оплатить своё место · $price';
+  }
+
+  @override
+  String get payToBooking => 'Открыть бронь';
+
+  @override
+  String get bookingStatusAwaiting => 'проверяем оплату';
+
+  @override
+  String get shareOpenSeat => 'Свободное место';
+
+  @override
+  String get shareStatusOpen => 'Свободно';
+
+  @override
+  String get shareStatusPending => 'Проверяем оплату';
+
+  @override
+  String get shareStatusNotFound => 'Не нашли оплату';
+
+  @override
+  String get shareStatusRefundDue => 'Вернём деньги';
+
+  @override
+  String get shareStatusRefunded => 'Деньги вернули';
+
+  @override
+  String get errorSharePaid =>
+      'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.';
+
+  @override
+  String get errorDeadlinePassed => 'Срок оплаты уже прошёл.';
+
+  @override
+  String get shareUnpaid => 'Ждём оплату';
 
   @override
   String sharesLeft(int count) {
@@ -1124,7 +1433,7 @@ class LRu extends L {
       few: '$count часа',
       one: '$count час',
     );
-    return 'свободно $_temp0';
+    return 'Свободно $_temp0';
   }
 
   @override
@@ -1203,4 +1512,238 @@ class LRu extends L {
   @override
   String get dialerUnavailable =>
       'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.';
+
+  @override
+  String get bookingStateCollectingTitle => 'Собираем оплату';
+
+  @override
+  String bookingStateCollectingBody(String when) {
+    return 'Все доли нужно оплатить до $when. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.';
+  }
+
+  @override
+  String get bookingStateAwaitingBody =>
+      'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.';
+
+  @override
+  String get bookingStateConfirmedTitle => 'Бронь подтверждена';
+
+  @override
+  String bookingStateConfirmedBody(String when) {
+    return 'Время за вами: $when.';
+  }
+
+  @override
+  String get bookingStateExpiredTitle => 'Не собрали вовремя';
+
+  @override
+  String get bookingStateExpiredBody =>
+      'Доли не оплатили до срока, поэтому бронь снята.';
+
+  @override
+  String get bookingStateCancelledTitle => 'Бронь отменена';
+
+  @override
+  String get bookingStateRefundDue => 'Деньги вернём в течение 1 рабочего дня.';
+
+  @override
+  String get bookingStateRefunded => 'Деньги вернули.';
+
+  @override
+  String get bookingStateNoMoney => 'Оплат не было, возвращать нечего.';
+
+  @override
+  String takeShareButton(String price) {
+    return 'Занять место · $price';
+  }
+
+  @override
+  String get takeShareNoPlaces => 'Свободных мест в этой брони нет.';
+
+  @override
+  String get takeShareClosed => 'Места в этой брони больше не раздают.';
+
+  @override
+  String joinGamePaid(String price) {
+    return 'Присоединиться · $price';
+  }
+
+  @override
+  String get adminPaymentsTitle => 'Оплаты';
+
+  @override
+  String get adminPaymentsMenu => 'Проверить переводы и вернуть деньги';
+
+  @override
+  String get adminTabCheck => 'Проверить';
+
+  @override
+  String get adminTabRefund => 'Вернуть';
+
+  @override
+  String get adminEmptyCheck => 'Проверять нечего: все «Я оплатил» разобраны.';
+
+  @override
+  String get adminEmptyRefund => 'Возвращать никому не нужно.';
+
+  @override
+  String adminPayer(String name) {
+    return 'В банке: $name';
+  }
+
+  @override
+  String adminClaimed(String when) {
+    return 'Нажал «Я оплатил»: $when';
+  }
+
+  @override
+  String adminDeadline(String when) {
+    return 'Срок сбора: $when';
+  }
+
+  @override
+  String adminGameAt(String venue, String when) {
+    return '$venue · $when';
+  }
+
+  @override
+  String get adminFound => 'Нашёл перевод';
+
+  @override
+  String get adminNotFound => 'Не нашёл';
+
+  @override
+  String get adminRefunded => 'Деньги вернул';
+
+  @override
+  String get adminConfirmTitle => 'Подтвердить оплату?';
+
+  @override
+  String adminConfirmMessage(String name, String amount, String code) {
+    return '$name, $amount, код $code. Доля станет оплаченной.';
+  }
+
+  @override
+  String get adminRejectTitle => 'Почему не нашли перевод?';
+
+  @override
+  String get adminRejectHint => 'Причину увидит игрок на экране оплаты.';
+
+  @override
+  String get adminRejectAmount => 'Сумма не совпадает';
+
+  @override
+  String get adminRejectCode => 'Нет кода в комментарии';
+
+  @override
+  String get adminRejectMissing => 'Перевода нет в выписке';
+
+  @override
+  String get adminRefundTitle => 'Деньги вернули?';
+
+  @override
+  String adminRefundMessage(String name, String amount) {
+    return '$name, $amount. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.';
+  }
+
+  @override
+  String get adminMarked => 'Отмечено';
+
+  @override
+  String get adminPhoneCopied => 'Номер скопирован';
+
+  @override
+  String get adminOnly => 'Этот раздел только для администратора оплат.';
+
+  @override
+  String get adminOnlyHint =>
+      'Здесь владелец сервиса проверяет переводы и возвращает деньги.';
+
+  @override
+  String get adminEmptyTitle => 'Всё разобрано';
+
+  @override
+  String get bookingStateYouDidNotPay =>
+      'Вы не платили за это место, возвращать нечего.';
+
+  @override
+  String get bookAgain => 'Забронировать заново';
+
+  @override
+  String get deleteAccount => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountQuestion => 'Удалить аккаунт?';
+
+  @override
+  String get deleteAccountMessage =>
+      'Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.';
+
+  @override
+  String get deleteAccountConfirm => 'Удалить навсегда';
+
+  @override
+  String get mapFailed => 'Карта не загрузилась. Список клубов ниже работает.';
+
+  @override
+  String get loadFailed => 'Не удалось загрузить данные. Проверьте интернет.';
+
+  @override
+  String get requestWaiting => 'Заявка отправлена';
+
+  @override
+  String get withdrawRequest => 'Отозвать заявку';
+
+  @override
+  String get withdrawRequestQuestion => 'Отозвать заявку?';
+
+  @override
+  String get withdrawRequestMessage =>
+      'Организатор её больше не увидит. Подать заявку снова можно в любой момент, пока есть места.';
+
+  @override
+  String get withdrawConfirm => 'Отозвать';
+
+  @override
+  String get keepRequest => 'Оставить';
+
+  @override
+  String get requestWithdrawn => 'Заявка отозвана';
+
+  @override
+  String get gameRequests => 'Заявки';
+
+  @override
+  String get requestApprove => 'Принять';
+
+  @override
+  String get requestReject => 'Отклонить';
+
+  @override
+  String get requestApproved => 'Игрок принят в игру';
+
+  @override
+  String get requestRejected => 'Заявка отклонена';
+
+  @override
+  String gamesOnDate(String date) {
+    return 'Игры $date';
+  }
+
+  @override
+  String get cancelGame => 'Отменить игру';
+
+  @override
+  String get cancelGameQuestion => 'Отменить игру?';
+
+  @override
+  String cancelGameMessage(String venue, String date, String time) {
+    return '$venue, $date, $time. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.';
+  }
+
+  @override
+  String get gameCancelled => 'Игра отменена';
+
+  @override
+  String get keepGame => 'Не отменять';
 }

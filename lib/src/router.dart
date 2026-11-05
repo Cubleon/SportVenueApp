@@ -11,7 +11,7 @@ import 'models/sport_venue_models.dart';
 import 'screens/auth_screens.dart';
 import 'screens/email_auth_screens.dart';
 import 'screens/booking_screens.dart';
-import 'screens/create_game_screen.dart';
+import 'screens/booking_success_screen.dart';
 import 'screens/games_screens.dart';
 import 'screens/history_screen.dart';
 import 'screens/main_shell.dart';
@@ -21,6 +21,9 @@ import 'screens/moderator_dashboard_screen.dart';
 import 'screens/venue_submissions_screen.dart';
 import 'screens/club_name_setup_screen.dart';
 import 'screens/profile_edit_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/payment_admin_screen.dart';
+import 'screens/share_payment_screen.dart';
 import 'screens/sport_selection_screen.dart';
 import 'screens/venue_screen.dart';
 import 'theme/app_icons.dart';
@@ -49,9 +52,17 @@ abstract final class Routes {
   static const bookings = '/bookings';
   static const myGames = '/my-games';
   static const history = '/history';
-  static String create({DateTime? date}) => date == null
-      ? '/create'
-      : '/create?date=${date.toIso8601String().substring(0, 10)}';
+  static const notifications = '/notifications';
+
+  /// A new booking, or with [game] a new game: the same screen, opened on
+  /// «Для своих» or «Нужны игроки».
+  static String create({DateTime? date, bool game = false}) {
+    final query = [
+      if (date != null) 'date=${date.toIso8601String().substring(0, 10)}',
+      if (game) 'game=1',
+    ];
+    return query.isEmpty ? '/create' : '/create?${query.join('&')}';
+  }
 
   static String game(String id) => '/game/$id';
   static String venue(String id, {DateTime? date}) =>
@@ -66,20 +77,46 @@ abstract final class Routes {
       : '$path?date=${date.toIso8601String().substring(0, 10)}';
 
   static String booking(String id) => '/booking/$id';
+
+  /// The payments admin's queue: transfers to check, money to return.
+  static const adminPayments = '/admin/payments';
+
+  /// Paying the reader's share of a booking. [created] says the booking
+  /// was made a moment ago, which the screen opens by saying so.
+  /// The screen that says a booking was just made.
+  static String created(String id) => '/booking/$id/created';
+
+  static String pay(String id, {bool created = false}) =>
+      '/booking/$id/pay${created ? '?new=1' : ''}';
 }
+
+/// The site links are shared on, set at build time with
+/// `--dart-define=SHARE_BASE_URL=https://example.ru`. Empty until the
+/// product has a domain.
+const String _shareBaseUrl = String.fromEnvironment('SHARE_BASE_URL');
 
 /// A link to somewhere in the app, ready to be pasted into a chat.
 ///
-/// The router keeps the hash strategy, which is what makes the app work on
-/// any static host without server rewrites — so the shareable form of a
-/// location is this page's own URL with the location in its fragment.
-/// Off the web there is no such address until a universal-link domain is
-/// configured, and [canShareLinks] is false rather than handing anyone a
-/// `file://` link that goes nowhere.
-bool get canShareLinks => kIsWeb;
+/// With a domain set, the link is that domain plus the location as a path
+/// (`https://example.ru/game/g7`): the form universal links and app links
+/// open the app with, and the one a phone can share at all. Without one,
+/// the web build shares its own URL with the location in the fragment — the
+/// router keeps the hash strategy so the app runs on any static host — and
+/// the phone apps have no address to give, so [canShareLinks] is false
+/// rather than handing anyone a `file://` link that goes nowhere.
+bool get canShareLinks => kIsWeb || _shareBaseUrl.isNotEmpty;
 
 String shareLink(String location) =>
-    Uri.base.replace(fragment: location).toString();
+    shareLinkFor(location, base: _shareBaseUrl, page: Uri.base);
+
+/// [shareLink] with its inputs spelled out, for tests.
+String shareLinkFor(String location, {required String base, Uri? page}) {
+  if (base.isNotEmpty) {
+    final root = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    return '$root$location';
+  }
+  return (page ?? Uri.base).replace(fragment: location).toString();
+}
 
 /// What the app was asked for before it was ready to answer.
 ///
@@ -228,7 +265,7 @@ GoRouter buildRouter({
       return null;
     },
     routes: [
-      GoRoute(
+      appRoute(
         path: Routes.splash,
         builder: (context, state) => SplashScreen(
           onFinished: () async {
@@ -263,7 +300,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.signIn,
         builder: (context, state) {
           boot.loginAccountType =
@@ -366,6 +403,10 @@ GoRouter buildRouter({
                 : null,
             onContinue: (phone) async {
               final l10n = context.l10n;
+              if (controller.isDemo) {
+                controller.signInDemo(phone: phone);
+                return null;
+              }
               try {
                 await controller.startPhoneVerification(
                   phone,
@@ -382,7 +423,7 @@ GoRouter buildRouter({
           );
         },
       ),
-      GoRoute(
+      appRoute(
         path: Routes.email,
         builder: (context, state) => EmailSignInScreen(
           onBack: () {
@@ -391,6 +432,10 @@ GoRouter buildRouter({
           },
           onContinue: (email) async {
             final l10n = context.l10n;
+            if (controller.isDemo) {
+              controller.signInDemo(email: email);
+              return null;
+            }
             try {
               await controller.startEmailVerification(
                 email,
@@ -404,7 +449,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.emailCode,
         builder: (context, state) => EmailVerificationScreen(
           email: controller.email,
@@ -419,7 +464,7 @@ GoRouter buildRouter({
           codeAccepted: () => controller.emailCodeAccepted,
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.call,
         builder: (context, state) => CallVerificationScreen(
           phone: boot.pendingPhone,
@@ -433,7 +478,7 @@ GoRouter buildRouter({
           ),
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.profileSetup,
         builder: (context, state) => ProfileEditScreen(
           controller: controller,
@@ -452,7 +497,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.onboarding,
         builder: (context, state) => SportSelectionScreen(
           sports: controller.sports,
@@ -472,7 +517,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.clubNameSetup,
         builder: (context, state) => ClubNameSetupScreen(
           initialName: controller.clubName ?? '',
@@ -494,7 +539,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.clubDashboard,
         builder: (context, state) => ClubDashboardScreen(
           api: controller.apiClient!,
@@ -506,7 +551,7 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.moderatorDashboard,
         builder: (context, state) => ModeratorDashboardScreen(
           api: controller.apiClient!,
@@ -518,12 +563,12 @@ GoRouter buildRouter({
           },
         ),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.venueSubmissions,
         builder: (context, state) =>
             VenueSubmissionsScreen(controller: controller),
       ),
-      GoRoute(
+      appRoute(
         path: Routes.home,
         builder: (context, state) => MainShell(
           controller: controller,
@@ -538,23 +583,54 @@ GoRouter buildRouter({
   );
 }
 
+/// A route whose screen opens with the app's own transition and can be
+/// swiped back from the left edge.
+///
+/// go_router picks the kind of page by looking for a `MaterialApp` above it,
+/// but it looks for the one in `material_ui`, and this app's `MaterialApp`
+/// is Flutter's own. Not finding it, go_router took the app for a bare
+/// `WidgetsApp` and built every screen as a page with no transition at all:
+/// screens snapped into place, and the swipe back had nothing to live on.
+/// Building the page here does not depend on that guess.
+GoRoute appRoute({
+  required String path,
+  required GoRouterWidgetBuilder builder,
+  List<RouteBase> routes = const [],
+}) {
+  return GoRoute(
+    path: path,
+    routes: routes,
+    pageBuilder: (context, state) => MaterialPage<void>(
+      key: state.pageKey,
+      name: state.name ?? state.matchedLocation,
+      arguments: state.pathParameters,
+      restorationId: state.pageKey.value,
+      child: builder(context, state),
+    ),
+  );
+}
+
 /// The screens that open over the shell, as routes.
 ///
 /// Shared with the widget tests, which push these same locations: one route
 /// table means a test cannot pass against a path the app does not have.
 List<RouteBase> shellRoutes(AppController controller) => [
-  GoRoute(
+  appRoute(
     path: 'game/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
-      final game = controller.games.where((item) => item.id == id).firstOrNull;
-      if (game == null) {
-        return _NotFound(what: context.l10n.gameNotFound);
-      }
-      return GameDetailScreen(controller: controller, game: game);
+      // A friend's link: the game may not be in the feed this phone has.
+      return _OpenByLink<Game>(
+        key: ValueKey('open-game-$id'),
+        title: context.l10n.game,
+        missing: context.l10n.gameNotFound,
+        known: () => controller.gameById(id),
+        load: () => controller.openGame(id),
+        found: (game) => GameDetailScreen(controller: controller, game: game),
+      );
     },
   ),
-  GoRoute(
+  appRoute(
     path: 'venue/:id',
     builder: (context, state) {
       final venue = _venueById(controller, state);
@@ -568,7 +644,7 @@ List<RouteBase> shellRoutes(AppController controller) => [
       );
     },
     routes: [
-      GoRoute(
+      appRoute(
         path: 'book',
         builder: (context, state) {
           final venue = _venueById(controller, state);
@@ -587,25 +663,67 @@ List<RouteBase> shellRoutes(AppController controller) => [
       ),
     ],
   ),
-  GoRoute(
+  appRoute(
     path: 'booking/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
-      final booking = controller.bookings
-          .where((item) => item.id == id)
-          .firstOrNull;
-      if (booking == null) {
-        return _NotFound(what: context.l10n.bookingNotFound);
-      }
-      return BookingDetailsScreen(controller: controller, booking: booking);
+      // An invite to pay a share: the booking is usually someone else's,
+      // so it is fetched by its id rather than looked up in «Мои брони».
+      return _OpenByLink<Booking>(
+        key: ValueKey('open-booking-$id'),
+        title: context.l10n.bookingDetails,
+        missing: context.l10n.bookingNotFound,
+        known: () => controller.bookingById(id),
+        load: () => controller.openBooking(id),
+        found: (booking) =>
+            BookingDetailsScreen(controller: controller, booking: booking),
+      );
     },
+    routes: [
+      appRoute(
+        path: 'created',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          if (controller.bookingById(id) == null) {
+            return _NotFound(what: context.l10n.bookingNotFound);
+          }
+          return BookingSuccessScreen(controller: controller, bookingId: id);
+        },
+      ),
+      appRoute(
+        path: 'pay',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          if (controller.bookingById(id) == null) {
+            return _NotFound(what: context.l10n.bookingNotFound);
+          }
+          return SharePaymentScreen(
+            controller: controller,
+            bookingId: id,
+            justCreated: state.uri.queryParameters['new'] == '1',
+          );
+        },
+      ),
+    ],
   ),
-  GoRoute(
+  appRoute(
+    path: 'admin/payments',
+    builder: (context, state) => controller.isPaymentAdmin
+        ? PaymentAdminScreen(controller: controller)
+        : _NotFound(
+            what: context.l10n.adminOnly,
+            hint: context.l10n.adminOnlyHint,
+          ),
+  ),
+  appRoute(
     path: 'bookings',
-    builder: (context, state) =>
-        HistoryScreen(controller: controller, focus: HistoryFocus.bookings),
+    builder: (context, state) => HistoryScreen(
+      controller: controller,
+      focus: HistoryFocus.bookings,
+      onFindVenues: () => openSearchTab(context),
+    ),
   ),
-  GoRoute(
+  appRoute(
     path: 'my-games',
     builder: (context, state) => HistoryScreen(
       controller: controller,
@@ -613,16 +731,21 @@ List<RouteBase> shellRoutes(AppController controller) => [
       onFindGames: () => openGamesTab(context),
     ),
   ),
-  GoRoute(
+  appRoute(
     path: 'history',
     builder: (context, state) =>
         HistoryScreen(controller: controller, focus: HistoryFocus.all),
   ),
-  GoRoute(
+  appRoute(
+    path: 'notifications',
+    builder: (context, state) => NotificationsScreen(controller: controller),
+  ),
+  appRoute(
     path: 'create',
-    builder: (context, state) => CreateGameScreen(
+    builder: (context, state) => BookingScreen(
       controller: controller,
-      date: DateTime.tryParse(state.uri.queryParameters['date'] ?? ''),
+      date: _dateOf(state),
+      findPlayers: state.uri.queryParameters['game'] == '1',
     ),
   ),
 ];
@@ -641,27 +764,193 @@ void openGamesTab(BuildContext context) {
   context.go(Routes.home);
 }
 
-/// What a link to something that is gone, or not loaded yet, arrives at.
-class _NotFound extends StatelessWidget {
-  const _NotFound({required this.what});
+/// The same for the clubs: the search tab, with its map and list.
+void openSearchTab(BuildContext context) {
+  MainShell.requestedTab.value = 1;
+  context.go(Routes.home);
+}
 
-  final String what;
+/// Opens what a link points at: at once when this phone already has it,
+/// after asking the server when it does not.
+///
+/// Before it, a link to a friend's booking always ended at «Бронь не
+/// найдена»: the route only looked in the reader's own list.
+class _OpenByLink<T extends Object> extends StatefulWidget {
+  const _OpenByLink({
+    super.key,
+    required this.title,
+    required this.missing,
+    required this.known,
+    required this.load,
+    required this.found,
+  });
+
+  final String title;
+  final String missing;
+  final T? Function() known;
+  final Future<T?> Function() load;
+  final Widget Function(T value) found;
+
+  @override
+  State<_OpenByLink<T>> createState() => _OpenByLinkState<T>();
+}
+
+class _OpenByLinkState<T extends Object> extends State<_OpenByLink<T>> {
+  late Future<T?> _loading;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  void _start() {
+    // Asked even when the thing is known, so what is shown is fresh; a
+    // failure then is not worth an error, so it is marked as handled.
+    _loading = widget.load()..ignore();
+  }
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(Routes.home);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // The spinner, the error and the screen it was waiting for replace one
+    // another the way screens do, rather than snapping.
+    return RiseFadeSwitcher(child: _view(context));
+  }
+
+  Widget _view(BuildContext context) {
+    final known = widget.known();
+    if (known != null) {
+      return KeyedSubtree(
+        key: const ValueKey('link-found'),
+        child: widget.found(known),
+      );
+    }
+    return FutureBuilder<T?>(
+      future: _loading,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _LinkWaiting(
+            key: const ValueKey('link-waiting'),
+            title: widget.title,
+            onBack: _back,
+          );
+        }
+        final error = snapshot.error;
+        if (error != null) {
+          return _LinkWaiting(
+            key: const ValueKey('link-failed'),
+            title: widget.title,
+            onBack: _back,
+            failure: RetryNotice(
+              key: const ValueKey('link-retry'),
+              message: errorText(context, error),
+              onRetry: () => setState(_start),
+            ),
+          );
+        }
+        final value = snapshot.data;
+        if (value == null) {
+          return _NotFound(
+            key: const ValueKey('link-missing'),
+            what: widget.missing,
+          );
+        }
+        return KeyedSubtree(
+          key: const ValueKey('link-found'),
+          child: widget.found(value),
+        );
+      },
+    );
+  }
+}
+
+/// The screen a link stands on while it loads, or after it could not.
+class _LinkWaiting extends StatelessWidget {
+  const _LinkWaiting({
+    super.key,
+    required this.title,
+    required this.onBack,
+    this.failure,
+  });
+
+  final String title;
+  final VoidCallback onBack;
+  final Widget? failure;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: EmptyState(
-              icon: AppIcons.searchX,
-              title: what,
-              description: context.l10n.notFoundHint,
-              actionLabel: context.l10n.toHome,
-              onAction: () => context.go(Routes.home),
+        child: Column(
+          children: [
+            ScreenTitleBar(title: title, onBack: onBack),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child:
+                      failure ??
+                      const CircularProgressIndicator(
+                        key: ValueKey('link-loading'),
+                      ),
+                ),
+              ),
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// What a link to something that is gone, or not loaded yet, arrives at.
+class _NotFound extends StatelessWidget {
+  const _NotFound({super.key, required this.what, this.hint});
+
+  final String what;
+
+  /// Why it is not here. A missing booking is a stale link; a screen the
+  /// reader may not open is not, and saying so sent them looking for one.
+  final String? hint;
+
+  @override
+  Widget build(BuildContext context) {
+    // Laid out like every other inner screen — a title bar with the way
+    // back, the card under it. Centred on its own, the card stretched to
+    // the full height of the page and there was no back button at all.
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            ScreenTitleBar(
+              title: '',
+              onBack: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(Routes.home);
+                }
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: EmptyState(
+                icon: AppIcons.searchX,
+                title: what,
+                description: hint ?? context.l10n.notFoundHint,
+                actionLabel: context.l10n.toHome,
+                onAction: () => context.go(Routes.home),
+              ),
+            ),
+          ],
         ),
       ),
     );

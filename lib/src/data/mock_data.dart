@@ -27,7 +27,7 @@ class MockData {
   static const venues = <Venue>[
     Venue(
       id: 'luzhniki',
-      name: 'футбольный центр лужники',
+      name: 'футбольный центр Лужники',
       address: 'ул. Лужники, 24',
       sportIds: ['football', 'basketball'],
       pricePerHour: 1600,
@@ -94,6 +94,17 @@ class MockData {
       amenities: ['открытый', 'душевые', 'парковка'],
     ),
   ];
+
+  /// What the server will send while there is no bank account yet: a
+  /// payment that is visibly not real, so nobody sends money to it.
+  static const paymentInfo = PaymentInfo(
+    method: 'test',
+    sbpLink: 'https://qr.nspk.ru/demo',
+    qrPayload: 'https://qr.nspk.ru/demo',
+    recipientName: 'ИП (тестовые реквизиты)',
+    bankName: 'тестовый банк',
+    commentHint: 'Укажите код доли в комментарии к переводу',
+  );
 
   static List<TimeSlot> timeSlots() {
     return const [
@@ -234,35 +245,139 @@ class MockData {
       ),
       statusCode: 'collecting_shares',
       createdAt: now,
-      // Two of the four have paid, so the demo can show what a half-collected
-      // booking looks like rather than only that one exists.
+      // One of each state a split booking passes through on its way to
+      // being collected, so the demo shows them all: the reader has paid,
+      // one friend says they have and waits for the check, one has taken a
+      // place and not paid, and one place is still free.
+      myShareId: 'share-demo-1',
       shares: const [
         BookingShare(
-          id: 'me',
+          id: 'share-demo-1',
+          userId: 'me',
           name: 'Вы',
           initial: 'В',
-          isPaid: true,
+          status: ShareStatus.paid,
+          amount: 525,
+          code: 'SV-4821',
           isCurrentUser: true,
         ),
         BookingShare(
-          id: 'orlov',
+          id: 'share-demo-2',
+          userId: 'orlov',
           name: 'Максим Орлов',
           initial: 'М',
-          isPaid: true,
+          status: ShareStatus.pendingConfirmation,
+          amount: 525,
+          code: 'SV-4822',
         ),
         BookingShare(
-          id: 'fedorov',
+          id: 'share-demo-3',
+          userId: 'fedorov',
           name: 'Даниил Фёдоров',
           initial: 'Д',
-          isPaid: false,
+          status: ShareStatus.unpaid,
+          amount: 525,
+          code: 'SV-4823',
         ),
         BookingShare(
-          id: 'volkova',
-          name: 'Ника Волкова',
-          initial: 'Н',
-          isPaid: false,
+          id: 'share-demo-4',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 525,
+          code: 'SV-4824',
         ),
       ],
     );
   }
+
+  /// A friend's booking, reachable only by its link: what the demo shows
+  /// someone who follows an invite. Orlov has paid, Fedorov has taken a
+  /// place, two places are free.
+  static Booking friendBooking(DateTime now) {
+    final date = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 2));
+    return Booking(
+      id: 'booking-friend',
+      draft: BookingDraft(
+        venue: venues.first,
+        date: date,
+        durationMinutes: 90,
+        startHour: 19,
+        players: 4,
+        mode: PaymentMode.split,
+      ),
+      statusCode: 'collecting_shares',
+      createdAt: now,
+      organizerId: 'orlov',
+      shares: const [
+        BookingShare(
+          id: 'share-friend-1',
+          userId: 'orlov',
+          name: 'Максим Орлов',
+          initial: 'М',
+          status: ShareStatus.paid,
+          amount: 600,
+        ),
+        BookingShare(
+          id: 'share-friend-2',
+          userId: 'fedorov',
+          name: 'Даниил Фёдоров',
+          initial: 'Д',
+          status: ShareStatus.unpaid,
+          amount: 600,
+        ),
+        BookingShare(
+          id: 'share-friend-3',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 600,
+          code: 'SV-4831',
+        ),
+        BookingShare(
+          id: 'share-friend-4',
+          name: '',
+          initial: '',
+          status: ShareStatus.open,
+          amount: 600,
+          code: 'SV-4832',
+        ),
+      ],
+    );
+  }
+
+  /// What the bell holds in the demo: one of each thing worth knowing.
+  static List<AppNotification> notifications(DateTime now) => [
+    AppNotification(
+      id: 'note-1',
+      kind: NotificationKind.payReminder,
+      title: 'Осталось оплатить 3 доли',
+      body:
+          'Академия спорта, завтра 20:00. Если не собрать до 18:00, бронь '
+          'снимется.',
+      createdAt: now.subtract(const Duration(minutes: 40)),
+      bookingId: 'booking-demo',
+    ),
+    AppNotification(
+      id: 'note-2',
+      kind: NotificationKind.shareConfirmed,
+      title: 'Ваша доля подтверждена',
+      body: 'Администратор нашёл перевод 525\u00A0₽.',
+      createdAt: now.subtract(const Duration(hours: 3)),
+      bookingId: 'booking-demo',
+    ),
+    AppNotification(
+      id: 'note-3',
+      kind: NotificationKind.requestApproved,
+      title: 'Вас взяли в игру',
+      body: 'Максим Орлов одобрил заявку: футбол, Лужники, завтра 19:00.',
+      createdAt: now.subtract(const Duration(days: 1, hours: 2)),
+      read: true,
+      gameId: 'game-1',
+    ),
+  ];
 }

@@ -12,8 +12,8 @@ import 'package:sport_venue_app/src/data/api_client.dart';
 import 'package:sport_venue_app/src/data/app_controller.dart';
 import 'package:sport_venue_app/src/data/session_store.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
+import 'package:sport_venue_app/src/router.dart';
 import 'package:sport_venue_app/src/screens/moderator_dashboard_screen.dart';
-import 'package:sport_venue_app/src/screens/main_shell.dart';
 import 'package:sport_venue_app/src/screens/venue_screen.dart';
 import 'package:sport_venue_app/src/screens/venue_submissions_screen.dart';
 import 'package:sport_venue_app/src/theme/app_theme.dart';
@@ -299,16 +299,35 @@ void main() {
     expect(controller.bookableVenues, isEmpty);
   });
 
-  testWidgets('create menu fits a small screen with the public venue action', (
+  testWidgets('unified creation opens public submissions on a small screen', (
     tester,
   ) async {
-    final demo = AppController();
+    final demo = AppController.demo()..signInDemo();
     addTearDown(demo.dispose);
-    await _pump(tester, MainShell(controller: demo, onLogout: () {}));
+    final boot = AppBoot()
+      ..ready = true
+      ..onboarded = true;
+    final router = buildRouter(
+      controller: demo,
+      boot: boot,
+      restoring: Future.value(true),
+    );
+    addTearDown(router.dispose);
+    _phone(tester);
     tester.view.physicalSize = const Size(320, 640);
-    await tester.pump();
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
+        routerConfig: router,
+      ),
+    );
+    await tester.pumpAndSettle();
     await _tap(tester, find.byKey(const ValueKey('create-fab')));
     expect(find.text('Добавить площадку'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('add-public-venue')));
+    expect(find.byType(VenueSubmissionsScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

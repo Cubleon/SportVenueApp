@@ -49,9 +49,7 @@ class PlayerScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: ScreenTitleBar(
                     title: context.l10n.player,
-                    leading: BackCircleButton(
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
+                    onBack: () => Navigator.of(context).pop(),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -71,7 +69,6 @@ class PlayerScreen extends StatelessWidget {
                             child: Text(
                               player.initial,
                               style: context.text.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
                                 color: context.colors.onAccent,
                               ),
                             ),
@@ -83,9 +80,7 @@ class PlayerScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   player.name,
-                                  style: context.text.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: context.text.titleMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -159,8 +154,6 @@ class PlayerScreen extends StatelessWidget {
     final parts = <String>[
       if (isOrganizer) context.l10n.playerOrganizer,
       if (player.status == 'pending') context.l10n.playerPending,
-      if (player.hasRating)
-        context.l10n.rating(player.rating.toStringAsFixed(1)),
     ];
     return parts.isEmpty ? context.l10n.player : parts.join(' · ');
   }

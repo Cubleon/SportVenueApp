@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,7 +31,6 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onCommit,
     required this.ink,
     required this.muted,
-    required this.dim,
     required this.faint,
     required this.borderStrong,
     required this.border,
@@ -76,7 +76,6 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color ink;
   final Color muted;
-  final Color dim;
 
   /// Hairlines and disabled marks only — it fails as text.
   final Color faint;
@@ -112,8 +111,8 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// Contrast, measured against both grounds this palette uses — cards and
   /// the tinted page: ink 17.9:1 / 15.9:1, muted 5.3:1 / 4.7:1, both clear
-  /// AA for body text. dim clears 3:1 only, so it is for icons, hints and
-  /// disabled marks, never for a sentence.
+  /// AA for body text. One grey for everything secondary: a second, «dim»,
+  /// differed from muted by a shade nobody could see.
   static const light = AppColors(
     brightness: Brightness.light,
     bg: Color(0xFFEBF2F7),
@@ -128,7 +127,6 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFFFFFFFF),
     ink: Color(0xFF15171C),
     muted: Color(0xFF616C7A),
-    dim: Color(0xFF5F6B7A),
     faint: Color(0xFFD5DDE5),
     borderStrong: Color(0xFF7E8A99),
     border: Color(0xFFE3EAF0),
@@ -142,7 +140,7 @@ class AppColors extends ThemeExtension<AppColors> {
   );
 
   /// The same palette read in the dark: ink 16.4:1 on the page and 14.4:1 on
-  /// a card, muted 7.6 / 6.7, dim 5.2 / 4.5. The accent had to move — the
+  /// a card, muted 7.6 / 6.7. The accent had to move — the
   /// light theme's indigo cannot both carry white text and be legible as
   /// text on a dark page, so the dark theme lightens the fill and writes on
   /// it in near-black: 5.7:1 on the button, 5.9:1 as a link on the page.
@@ -160,7 +158,6 @@ class AppColors extends ThemeExtension<AppColors> {
     onCommit: Color(0xFF12141F),
     ink: Color(0xFFEDF1F7),
     muted: Color(0xFF9BA7B8),
-    dim: Color(0xFF8E9BAC),
     faint: Color(0xFF333C4A),
     borderStrong: Color(0xFF6C7A8A),
     border: Color(0xFF262E3B),
@@ -280,12 +277,10 @@ class AppTheme {
   /// The heading over a block of content: «Организатор», «Условия отмены».
   /// Three screens had written the same thing out by hand, each with the
   /// tracking of capitals on words that were not capitals.
-  static TextStyle sectionLabel(BuildContext context) =>
-      context.text.labelLarge!.copyWith(
-        color: context.colors.muted,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.1,
-      );
+  static TextStyle sectionLabel(BuildContext context) => context
+      .text
+      .labelLarge!
+      .copyWith(color: context.colors.muted, letterSpacing: 0.1);
 
   static TextStyle _face(TextStyle? style) =>
       (style ?? const TextStyle()).copyWith(fontFamily: fontFamily);
@@ -323,21 +318,40 @@ class AppTheme {
           letterSpacing: -0.5,
         ),
       ),
+      // Seven sizes, each with its own weight, so a screen picks a role and
+      // not a size and a weight: 22 hand-made pairs had grown up across the
+      // screens. Body text is 15, not 14 or 12 — the money and the deadlines
+      // are read on the move — and 12 is the floor, for labels only.
       titleLarge: _face(
         base.titleLarge?.copyWith(
+          fontSize: 20,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
         ),
       ),
-      titleMedium: _face(base.titleMedium),
-      titleSmall: _face(base.titleSmall),
-      bodyLarge: _face(base.bodyLarge),
-      bodyMedium: _face(base.bodyMedium),
-      bodySmall: _face(base.bodySmall),
-      labelLarge: _face(base.labelLarge),
-      labelMedium: _face(base.labelMedium),
+      titleMedium: _face(
+        base.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+      ),
+      titleSmall: _face(
+        base.titleSmall?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
+      bodyLarge: _face(
+        base.bodyLarge?.copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+      ),
+      bodyMedium: _face(
+        base.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+      ),
+      bodySmall: _face(
+        base.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w400),
+      ),
+      labelLarge: _face(
+        base.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+      labelMedium: _face(
+        base.labelMedium?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
       labelSmall: _face(
-        base.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w600),
+        base.labelSmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -406,6 +420,22 @@ class AppTheme {
       // the page and 6.1:1 on a card.
       focusColor: colors.accent.withValues(alpha: 0.16),
       dividerColor: colors.border,
+      // One way of arriving on a new screen everywhere: a short fade with a
+      // small rise, and the same swipe from the left edge to go back. The
+      // platform defaults differed by device — a zoom on Android, a sideways
+      // slide on iPhone, nothing at all on desktop browsers — so the same tap
+      // felt different depending on where the app was opened. The swipe
+      // back, which came only with Apple's slide, is now part of this one.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _RiseFadeTransitions(),
+          TargetPlatform.fuchsia: _RiseFadeTransitions(),
+          TargetPlatform.linux: _RiseFadeTransitions(),
+          TargetPlatform.windows: _RiseFadeTransitions(),
+          TargetPlatform.macOS: _RiseFadeTransitions(),
+          TargetPlatform.iOS: _RiseFadeTransitions(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -422,7 +452,7 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: colors.accent,
           textStyle: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -434,7 +464,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surface,
-        hintStyle: textTheme.bodyLarge?.copyWith(color: colors.dim),
+        hintStyle: textTheme.bodyLarge?.copyWith(color: colors.muted),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
@@ -468,6 +498,202 @@ extension TextThemeX on BuildContext {
   /// test harness, a preview — still paints.
   AppColors get colors =>
       Theme.of(this).extension<AppColors>() ?? AppColors.light;
+}
+
+/// The new screen fades in while rising a few pixels; the one it covers
+/// dims a little underneath, so the eye follows the one that arrived.
+/// Leaving runs the same curve backwards.
+///
+/// A swipe from the left edge takes the screen back the way it came: while
+/// the finger is down the screen follows it to the right with the one
+/// beneath showing through, and letting go past halfway, or with a flick,
+/// finishes the way back. With «уменьшение движения» on, screens simply
+/// swap; the swipe still moves the screen, since that is the reader's own
+/// hand and not an animation.
+class _RiseFadeTransitions extends PageTransitionsBuilder {
+  const _RiseFadeTransitions();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    final incoming = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    final covered = CurvedAnimation(
+      parent: secondaryAnimation,
+      curve: Curves.easeOutCubic,
+    );
+    final arriving = still
+        ? child
+        : FadeTransition(
+            opacity: incoming,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.03),
+                end: Offset.zero,
+              ).animate(incoming),
+              child: child,
+            ),
+          );
+    // Following the finger: straight along, no curve, so the screen stays
+    // under it. The same animation drives both, and at rest they are the
+    // same picture, so switching between them shows no seam.
+    final swiped = SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    );
+    return FadeTransition(
+      opacity: still
+          ? kAlwaysCompleteAnimation
+          : Tween<double>(begin: 1, end: 0.85).animate(covered),
+      child: _BackSwipe(
+        route: route,
+        child: AnimatedBuilder(
+          animation: animation,
+          // Held through the end of the swipe: the screen finishes leaving
+          // the way it was being pulled. A screen beneath has its animation
+          // complete, where the slide and the fade are the same picture.
+          builder: (context, _) =>
+              (route.navigator?.userGestureInProgress ?? false)
+              ? swiped
+              : arriving,
+        ),
+      ),
+    );
+  }
+}
+
+/// The strip along the left edge that takes a swipe back. Touch only: a
+/// mouse dragging from the edge of a browser window is selecting, not
+/// leaving.
+class _BackSwipe extends StatefulWidget {
+  const _BackSwipe({required this.route, required this.child});
+
+  final PageRoute<dynamic> route;
+  final Widget child;
+
+  @override
+  State<_BackSwipe> createState() => _BackSwipeState();
+}
+
+class _BackSwipeState extends State<_BackSwipe> {
+  /// As wide as Apple's, plus whatever the screen's own edge takes.
+  static const _edge = 20.0;
+
+  /// A flick this fast, in screen widths per second, decides on its own.
+  static const _flick = 1.0;
+
+  late final HorizontalDragGestureRecognizer _recognizer;
+  bool _dragging = false;
+  double _progress = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _recognizer =
+        HorizontalDragGestureRecognizer(
+            debugOwner: this,
+            supportedDevices: const {PointerDeviceKind.touch},
+          )
+          ..onStart = _start
+          ..onUpdate = _update
+          ..onEnd = _end
+          ..onCancel = _cancel;
+  }
+
+  @override
+  void dispose() {
+    _recognizer.dispose();
+    if (_dragging) {
+      final navigator = widget.route.navigator;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (navigator?.mounted ?? false) {
+          navigator!.didStopUserGesture();
+        }
+      });
+    }
+    super.dispose();
+  }
+
+  /// The strip only competes for a touch when there is somewhere to go
+  /// back to. Otherwise it would win horizontal drags it then ignores —
+  /// a list that scrolls sideways from the edge of the first screen.
+  void _down(PointerDownEvent event) {
+    final route = widget.route;
+    if (route.isCurrent && route.popGestureEnabled) {
+      _recognizer.addPointer(event);
+    }
+  }
+
+  void _start(DragStartDetails details) {
+    _dragging = true;
+    _progress = 1;
+    widget.route.handleStartBackGesture(progress: _progress);
+  }
+
+  void _update(DragUpdateDetails details) {
+    if (!_dragging) {
+      return;
+    }
+    final width = context.size?.width ?? 1;
+    _progress = (_progress - (details.primaryDelta ?? 0) / width).clamp(0, 1);
+    widget.route.handleUpdateBackGestureProgress(progress: _progress);
+  }
+
+  void _end(DragEndDetails details) {
+    if (!_dragging) {
+      return;
+    }
+    _dragging = false;
+    final width = context.size?.width ?? 1;
+    final velocity = details.velocity.pixelsPerSecond.dx / width;
+    final back = velocity.abs() >= _flick ? velocity > 0 : _progress < 0.5;
+    if (back) {
+      widget.route.handleCommitBackGesture();
+    } else {
+      widget.route.handleCancelBackGesture();
+    }
+  }
+
+  void _cancel() {
+    if (!_dragging) {
+      return;
+    }
+    _dragging = false;
+    widget.route.handleCancelBackGesture();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inset = MediaQuery.paddingOf(context).left;
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        widget.child,
+        PositionedDirectional(
+          start: 0,
+          top: 0,
+          bottom: 0,
+          width: _edge + inset,
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: _down,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 extension MotionX on BuildContext {

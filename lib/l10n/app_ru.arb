@@ -1,6 +1,7 @@
 {
   "@@locale": "ru",
   "appTitle": "SportVenue",
+  "addPublicVenue": "Добавить площадку",
   "playerAccount": "Я игрок",
   "clubAccount": "Я клуб",
   "invalidClubCredentials": "Неверный логин или пароль",
@@ -26,8 +27,11 @@
   "summaryTime": "Время",
   "summaryVenue": "Площадка",
   "summaryPlayers": "Игроки",
+  "summaryShares": "Доли",
+  "sharesTimesPrice": "{count} по {price}",
+  "@sharesTimesPrice": {"placeholders": {"count": {"type": "int"}, "price": {"type": "String"}}},
   "summaryTotal": "Итого",
-  "summaryYourShare": "Ваша часть",
+  "summaryYourShare": "Ваша доля",
   "back": "Назад",
   "cancel": "Отмена",
   "venueAddressDistance": "{address} · {km} км",
@@ -68,6 +72,8 @@
   },
   "loading": "считаем…",
   "freeLabel": "Свободно",
+  "freeHoursUnknown": "нет данных",
+  "freeHoursFailed": "Не удалось узнать свободные часы",
   "durationShorter": "Короче",
   "durationLonger": "Дольше",
   "hoursAndHalf": "{hours},5 часа",
@@ -102,7 +108,13 @@
   "@hoursCount": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "invitePlayers": "Позвать игроков — скопировать ссылку",
+  "invitePlayers": "Позвать игроков по ссылке",
+  "remindToPay": "Напомнить об оплате",
+  "payReminderText": "Напоминание: оплатите свою долю {amount} — {venue}, {when}.",
+  "@payReminderText": {"placeholders": {"amount": {"type": "String"}, "venue": {"type": "String"}, "when": {"type": "String"}}},
+  "payReminderDeadline": "Срок — {deadline}, иначе бронь снимется.",
+  "@payReminderDeadline": {"placeholders": {"deadline": {"type": "String"}}},
+  "payReminderCopied": "Напоминание скопировано — отправьте его в чат игроков",
   "linkCopied": "Ссылка скопирована",
   "perHourSuffix": "/час",
   "pricePerHour": "{price}/час",
@@ -148,7 +160,13 @@
   },
   "city": "Москва",
   "notifications": "Уведомления",
+  "profileOpen": "Открыть профиль",
   "noNotifications": "Уведомлений пока нет",
+  "todayShort": "сегодня",
+  "noNotificationsHint": "Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.",
+  "notificationNew": "Новое",
+  "notificationsUnread": "{count, plural, one{Уведомления: {count} новое} few{Уведомления: {count} новых} many{Уведомления: {count} новых} other{Уведомления: {count} новых}}",
+  "@notificationsUnread": {"placeholders": {"count": {"type": "int"}}},
   "searchPlaceholder": "Найти площадку или игру",
   "upcomingBooking": "Предстоящая бронь",
   "seeAll": "Все",
@@ -182,14 +200,18 @@
   "logoutMessage": "Брони и игры останутся на месте — чтобы вернуться к ним, придётся снова подтвердить номер телефона.",
   "logoutConfirm": "Выйти",
   "logoutCancel": "Остаться",
-  "statBookings": "Броней",
-  "statMyGames": "Моих игр",
-  "statSports": "Видов спорта",
+  "statBookings": "{count, plural, one{Бронь} few{Брони} many{Броней} other{Брони}}",
+  "@statBookings": {"placeholders": {"count": {"type": "int"}}},
+  "statMyGames": "{count, plural, one{Моя игра} few{Мои игры} many{Моих игр} other{Моих игр}}",
+  "@statMyGames": {"placeholders": {"count": {"type": "int"}}},
+  "statSports": "{count, plural, one{Вид спорта} few{Вида спорта} many{Видов спорта} other{Видов спорта}}",
+  "@statSports": {"placeholders": {"count": {"type": "int"}}},
   "historyEmpty": "Здесь появятся ваши брони и игры",
   "historyEmptyTitle": "Пока пусто",
   "noBookingsTitle": "Броней пока нет",
   "noGamesTitle": "Игр пока нет",
   "findGame": "Найти игру",
+  "findVenue": "Найти площадку",
   "bookingsSection": "Брони",
   "gamesSection": "Игры",
   "historySummary": "{bookings, plural, one{{bookings} бронь} few{{bookings} брони} other{{bookings} броней}} · {games, plural, one{{games} игра} few{{games} игры} other{{games} игр}}",
@@ -217,7 +239,7 @@
   },
   "reset": "Сбросить",
   "search": "Поиск",
-  "searchSubtitle": "Москва · openfreemap",
+  "searchSubtitle": "Клубы на карте · Москва",
   "centreOnMoscow": "Центр Москвы",
   "allFilter": "Все",
   "mapLoading": "Карта загружается",
@@ -225,6 +247,8 @@
   "clearSearch": "Очистить поиск",
   "noVenuesForSport": "Площадок этого вида нет",
   "noVenuesForSportHint": "В Москве пока нет клубов для этого вида спорта.",
+  "noClubsYet": "Клубов пока нет",
+  "noClubsYetHint": "Мы подключаем клубы Москвы. Скоро здесь появится, где поиграть.",
   "noVenuesForQueryHint": "По запросу «{query}» ничего не нашлось. Проверьте написание или сбросьте фильтры.",
   "@noVenuesForQueryHint": {
     "placeholders": { "query": { "type": "String" } }
@@ -233,6 +257,15 @@
   "skipSplash": "Пропустить заставку",
   "signInTitle": "Войти или\nзарегистрироваться",
   "signInWithEmail": "Войти по почте",
+  "addToCalendar": "В календарь",
+  "openRoute": "Маршрут",
+  "calendarBookingTitle": "Игра · {venue}",
+  "@calendarBookingTitle": {"placeholders": {"venue": {"type": "String"}}},
+  "calendarGameTitle": "{sport} · {venue}",
+  "@calendarGameTitle": {"placeholders": {"sport": {"type": "String"}, "venue": {"type": "String"}}},
+  "linkOpenFailed": "Не получилось открыть. Попробуйте ещё раз.",
+  "callHint": "Подтвердим номер звонком — вводить код не нужно.",
+  "requestPendingHint": "Организатор ответит здесь и в уведомлениях. Платить не нужно, пока заявку не одобрят.",
   "emailSignInTitle": "Вход по коду из письма",
   "emailSignInHint": "Введите вашу электронную почту. Мы отправим шестизначный код для входа.",
   "emailLabel": "Электронная почта",
@@ -260,6 +293,15 @@
   "sportKind": "Вид спорта",
   "venueStep": "Площадка",
   "noVenuesForChosenSport": "Для выбранного спорта площадок пока нет",
+  "chooseVenue": "Выберите площадку",
+  "venuesToChoose": "{count, plural, one{{count} площадка рядом} few{{count} площадки рядом} many{{count} площадок рядом} other{{count} площадки рядом}}",
+  "@venuesToChoose": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "moreVenues": "ещё {count}",
   "@moreVenues": {
     "placeholders": {
@@ -279,7 +321,9 @@
   "approveManually": "Одобрять вручную",
   "approveManuallyHint": "Вы будете подтверждать каждого игрока",
   "participantFilter": "Кто может играть",
-  "participantFilterHint": "Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».",
+  "participantFilterHint": "Игру увидят все, а вступить смогут только выбранные. Это для женских или мужских составов — в остальных случаях оставьте «Любой».",
+  "genderOnlyMen": "только мужчины",
+  "genderOnlyWomen": "только женщины",
   "genderAny": "Любой",
   "genderMen": "Мужчины",
   "genderWomen": "Женщины",
@@ -289,9 +333,22 @@
   "pickSportAndVenue": "Выберите вид спорта и площадку",
   "gameCreated": "Игра создана",
   "booking": "Бронирование",
+  "newGame": "Новая игра",
+  "modeOwn": "Для своих",
+  "modeOwnHint": "бронь и доли",
+  "modeGame": "Нужны игроки",
+  "modeGameHint": "открытая игра",
+  "createGameShare": "Создать игру · доля {price}",
+  "@createGameShare": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "timeStep": "Время",
   "playersStep": "Игроки",
-  "paySharePrice": "Оплатить свою часть · {price}",
+  "paySharePrice": "Оплатить свою долю · {price}",
   "@paySharePrice": {
     "placeholders": {
       "price": {
@@ -319,19 +376,24 @@
   },
   "goBack": "Вернуться назад",
   "bookingCreated": "Бронь создана",
-  "bookingCreatedShares": "Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.",
+  "bookingCreatedShares": "Позовите игроков: им осталось оплатить {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}}. Если за 2 часа до начала оплачены не все доли, бронь отменится, а деньги вернутся.",
   "@bookingCreatedShares": {
     "placeholders": { "count": { "type": "int" } }
   },
   "bookingCreatedFull": "Площадка ваша целиком — искать игроков не нужно.",
   "openBooking": "Открыть бронь",
   "bookingSuccessDone": "Готово",
+  "successHeld": "Время за вами до {when}",
+  "@successHeld": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "successFullBody": "Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.",
   "bookingDetails": "Бронь",
   "statusLabel": "Статус",
   "onlyOrganizerCancels": "Отменить бронь может только организатор",
   "cancelBooking": "Отменить бронь",
   "cancelBookingQuestion": "Отменить бронь?",
-  "cancelBookingMessage": "{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.",
+  "cancelBookingMessage": "{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги вернутся в течение 1 рабочего дня.",
   "@cancelBookingMessage": {
     "placeholders": {
       "venue": {
@@ -348,11 +410,11 @@
   "keepBooking": "Оставить",
   "bookingCancelled": "Бронь отменена",
   "howPaymentWorks": "Как это работает",
-  "payShareTitle": "Своя часть · {price}",
+  "payShareTitle": "Своя доля · {price}",
   "@payShareTitle": {
     "placeholders": { "price": { "type": "String" } }
   },
-  "payShareExplainer": "Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.",
+  "payShareExplainer": "Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется, а деньги возвращаются в течение 1 рабочего дня.",
   "@payShareExplainer": {
     "placeholders": {
       "others": { "type": "int" },
@@ -365,8 +427,8 @@
   },
   "payFullExplainer": "Площадка ваша сразу, искать игроков не нужно.",
   "cancellationTerms": "Условия отмены",
-  "cancellationTermAuto": "Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически",
-  "cancellationTermRefund": "Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней",
+  "cancellationTermAuto": "Если за 2 часа до начала оплачены не все доли, бронь отменяется автоматически",
+  "cancellationTermRefund": "Если бронь отменена, деньги возвращаются в течение 1 рабочего дня",
   "removePlayer": "Убрать игрока",
   "addPlayer": "Добавить игрока",
   "playersCount": "{count, plural, one{{count} игрок} few{{count} игрока} other{{count} игроков}}",
@@ -380,7 +442,7 @@
   "unknownSport": "Спорт",
   "games": "Игры",
   "gamesSubtitle": "открытые игры, куда можно вписаться",
-  "youAreIn": "вы в игре",
+  "youAreIn": "Вы в игре",
   "nothingMatchesFilters": "Под фильтры ничего не подошло",
   "nothingMatchesFiltersHint": "Игры есть, но не в этом виде спорта или не в это время.",
   "showAllGames": "Показать все игры",
@@ -445,23 +507,23 @@
       }
     }
   },
-  "freeSlot": "свободно",
+  "freeSlot": "Свободно",
   "openGame": "Открытая игра",
   "approvalGame": "Игра по одобрению",
   "closedGame": "Закрытая игра",
   "retry": "Повторить",
   "noFreeSlots": "На эту дату свободных слотов нет",
-  "errorNetwork": "сервер недоступен — проверьте, что он запущен",
-  "errorInvalidResponse": "сервер вернул неожиданный ответ",
-  "errorSessionExpired": "сессия истекла — войдите снова",
-  "errorSlotTaken": "этот слот уже занят, выберите другое время",
-  "errorGameFull": "в игре больше нет свободных мест",
-  "errorCancelNotOrganizer": "отменить бронь может только организатор",
-  "errorBadPhone": "проверьте номер телефона",
+  "errorNetwork": "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.",
+  "errorInvalidResponse": "Что-то пошло не так на нашей стороне. Попробуйте ещё раз чуть позже.",
+  "errorSessionExpired": "Вход устарел — войдите снова.",
+  "errorSlotTaken": "Это время уже заняли. Выберите другое.",
+  "errorGameFull": "В игре больше нет свободных мест.",
+  "errorCancelNotOrganizer": "Отменить бронь может только организатор.",
+  "errorBadPhone": "Проверьте номер телефона.",
   "errorChallengeExpired": "Время проверки истекло — получите новый номер для звонка",
   "errorTooManyAttempts": "Подождите минуту перед новой попыткой",
-  "errorTimeout": "сервер не ответил вовремя",
-  "errorUnknown": "не удалось выполнить запрос",
+  "errorTimeout": "Сервер долго не отвечает. Попробуйте ещё раз.",
+  "errorUnknown": "Не получилось. Попробуйте ещё раз.",
   "bookingStatusCollecting": "ожидает участников",
   "bookingStatusConfirmed": "подтверждена",
   "bookingStatusCancelled": "отменена",
@@ -478,8 +540,60 @@
     }
   },
   "sharesTitle": "Оплата долей",
-  "sharePaid": "оплачено",
-  "shareUnpaid": "ждём оплату",
+  "sharePaid": "Оплачено",
+  "paymentScreenTitle": "Оплата доли",
+  "payYourShare": "Ваша доля",
+  "payRecipient": "Получатель: {name}, {bank}",
+  "@payRecipient": {
+    "placeholders": { "name": { "type": "String" }, "bank": { "type": "String" } }
+  },
+  "payTestBanner": "Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.",
+  "payCodeLabel": "Код доли",
+  "payCodeHint": "Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.",
+  "payCopyCode": "Скопировать",
+  "payCodeCopied": "Код скопирован",
+  "payViaBank": "Оплатить через банк",
+  "payBankFailed": "Не получилось открыть банк. Отсканируйте QR с другого телефона.",
+  "payQrHint": "Отсканируйте камерой телефона или в приложении банка",
+  "payQrShow": "Показать QR для другого устройства",
+  "payQrHide": "Скрыть QR",
+  "payIPaid": "Я оплатил",
+  "payDeadline": "Все доли нужно оплатить до {when}",
+  "@payDeadline": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "payPendingTitle": "Проверяем оплату",
+  "payPendingBody": "Сверяем перевод с выпиской банка — обычно в течение нескольких часов, днём быстрее. Когда проверим, придёт уведомление; если не найдём перевод, скажем здесь же.",
+  "payPaidTitle": "Оплата получена",
+  "payPaidBody": "Ваша доля оплачена. Бронь подтвердится, когда оплатят все.",
+  "payNotFoundTitle": "Не нашли перевод",
+  "payNotFoundBody": "Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.",
+  "payAdminNote": "Комментарий: {note}",
+  "@payAdminNote": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "payRefundDue": "Бронь отменена. Деньги вернутся в течение 1 рабочего дня.",
+  "payRefunded": "Деньги за эту долю вернули.",
+  "payNothing": "У вас нет доли в этой брони.",
+  "payMyShare": "Оплатить свою долю · {price}",
+  "@payMyShare": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payMyPlace": "Оплатить своё место · {price}",
+  "@payMyPlace": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "payToBooking": "Открыть бронь",
+  "bookingStatusAwaiting": "проверяем оплату",
+  "shareOpenSeat": "Свободное место",
+  "shareStatusOpen": "Свободно",
+  "shareStatusPending": "Проверяем оплату",
+  "shareStatusNotFound": "Не нашли оплату",
+  "shareStatusRefundDue": "Вернём деньги",
+  "shareStatusRefunded": "Деньги вернули",
+  "errorSharePaid": "Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.",
+  "errorDeadlinePassed": "Срок оплаты уже прошёл.",
+  "shareUnpaid": "Ждём оплату",
   "sharesLeft": "{count, plural, one{осталась {count} доля} few{осталось {count} доли} other{осталось {count} долей}}",
   "@sharesLeft": {
     "placeholders": {
@@ -588,7 +702,7 @@
       }
     }
   },
-  "freeHoursToday": "свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
+  "freeHoursToday": "Свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}",
   "@freeHoursToday": {
     "description": "Сколько часов свободно у площадки в выбранный день",
     "placeholders": {
@@ -664,5 +778,109 @@
   "checkCall": "Я уже позвонил — проверить",
   "restartCall": "Получить новый номер",
   "changePhone": "Изменить свой номер",
-  "dialerUnavailable": "Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона."
+  "dialerUnavailable": "Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.",
+  "bookingStateCollectingTitle": "Собираем оплату",
+  "bookingStateCollectingBody": "Все доли нужно оплатить до {when}. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.",
+  "@bookingStateCollectingBody": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "bookingStateAwaitingBody": "Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.",
+  "bookingStateConfirmedTitle": "Бронь подтверждена",
+  "bookingStateConfirmedBody": "Время за вами: {when}.",
+  "@bookingStateConfirmedBody": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "bookingStateExpiredTitle": "Не собрали вовремя",
+  "bookingStateExpiredBody": "Доли не оплатили до срока, поэтому бронь снята.",
+  "bookingStateCancelledTitle": "Бронь отменена",
+  "bookingStateRefundDue": "Деньги вернём в течение 1 рабочего дня.",
+  "bookingStateRefunded": "Деньги вернули.",
+  "bookingStateNoMoney": "Оплат не было, возвращать нечего.",
+  "takeShareButton": "Занять место · {price}",
+  "@takeShareButton": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "takeShareNoPlaces": "Свободных мест в этой брони нет.",
+  "takeShareClosed": "Места в этой брони больше не раздают.",
+  "joinGamePaid": "Присоединиться · {price}",
+  "@joinGamePaid": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "adminPaymentsTitle": "Оплаты",
+  "adminPaymentsMenu": "Проверить переводы и вернуть деньги",
+  "adminTabCheck": "Проверить",
+  "adminTabRefund": "Вернуть",
+  "adminEmptyCheck": "Проверять нечего: все «Я оплатил» разобраны.",
+  "adminEmptyRefund": "Возвращать никому не нужно.",
+  "adminPayer": "В банке: {name}",
+  "@adminPayer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "adminClaimed": "Нажал «Я оплатил»: {when}",
+  "@adminClaimed": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "adminDeadline": "Срок сбора: {when}",
+  "@adminDeadline": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "adminGameAt": "{venue} · {when}",
+  "@adminGameAt": {
+    "placeholders": { "venue": { "type": "String" }, "when": { "type": "String" } }
+  },
+  "adminFound": "Нашёл перевод",
+  "adminNotFound": "Не нашёл",
+  "adminRefunded": "Деньги вернул",
+  "adminConfirmTitle": "Подтвердить оплату?",
+  "adminConfirmMessage": "{name}, {amount}, код {code}. Доля станет оплаченной.",
+  "@adminConfirmMessage": {
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" }, "code": { "type": "String" } }
+  },
+  "adminRejectTitle": "Почему не нашли перевод?",
+  "adminRejectHint": "Причину увидит игрок на экране оплаты.",
+  "adminRejectAmount": "Сумма не совпадает",
+  "adminRejectCode": "Нет кода в комментарии",
+  "adminRejectMissing": "Перевода нет в выписке",
+  "adminRefundTitle": "Деньги вернули?",
+  "adminRefundMessage": "{name}, {amount}. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.",
+  "@adminRefundMessage": {
+    "placeholders": { "name": { "type": "String" }, "amount": { "type": "String" } }
+  },
+  "adminMarked": "Отмечено",
+  "adminPhoneCopied": "Номер скопирован",
+  "adminOnly": "Этот раздел только для администратора оплат.",
+  "adminOnlyHint": "Здесь владелец сервиса проверяет переводы и возвращает деньги.",
+  "adminEmptyTitle": "Всё разобрано",
+  "bookingStateYouDidNotPay": "Вы не платили за это место, возвращать нечего.",
+  "bookAgain": "Забронировать заново",
+  "deleteAccount": "Удалить аккаунт",
+  "deleteAccountQuestion": "Удалить аккаунт?",
+  "deleteAccountMessage": "Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.",
+  "deleteAccountConfirm": "Удалить навсегда",
+  "mapFailed": "Карта не загрузилась. Список клубов ниже работает.",
+  "loadFailed": "Не удалось загрузить данные. Проверьте интернет.",
+  "requestWaiting": "Заявка отправлена",
+  "withdrawRequest": "Отозвать заявку",
+  "withdrawRequestQuestion": "Отозвать заявку?",
+  "withdrawRequestMessage": "Организатор её больше не увидит. Подать заявку снова можно в любой момент, пока есть места.",
+  "withdrawConfirm": "Отозвать",
+  "keepRequest": "Оставить",
+  "requestWithdrawn": "Заявка отозвана",
+  "gameRequests": "Заявки",
+  "requestApprove": "Принять",
+  "requestReject": "Отклонить",
+  "requestApproved": "Игрок принят в игру",
+  "requestRejected": "Заявка отклонена",
+  "gamesOnDate": "Игры {date}",
+  "@gamesOnDate": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "cancelGame": "Отменить игру",
+  "cancelGameQuestion": "Отменить игру?",
+  "cancelGameMessage": "{venue}, {date}, {time}. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.",
+  "@cancelGameMessage": {
+    "placeholders": { "venue": { "type": "String" }, "date": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "gameCancelled": "Игра отменена",
+  "keepGame": "Не отменять"
 }

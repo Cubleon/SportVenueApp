@@ -8,6 +8,182 @@ enum GenderFilter { any, men, women }
 
 enum PaymentMode { full, split }
 
+/// How the places in a game are paid for.
+///
+/// A paid game always stands on a booking, and its places are that
+/// booking's shares: joining is taking a share, and the booking's deadline
+/// is the game's. A free game, on an open court, has no booking at all.
+enum GamePayment {
+  /// Every player pays their own share.
+  shares,
+
+  /// The organiser pays for the whole slot; joining costs nothing.
+  organizer,
+
+  /// An open court: no booking, no money.
+  free;
+
+  static GamePayment fromCode(Object? code) => switch (code) {
+    'organizer' => GamePayment.organizer,
+    'free' => GamePayment.free,
+    _ => GamePayment.shares,
+  };
+}
+
+/// Where one share of a booking stands.
+///
+/// The player's button only puts a share in the queue; it becomes paid when
+/// the payments admin has found the transfer in the bank, and later when
+/// the bank says so itself. The codes are the server's.
+enum ShareStatus {
+  /// A place nobody has taken yet.
+  open('open'),
+
+  /// Taken, and no money yet.
+  unpaid('unpaid'),
+
+  /// The player says they have paid; the admin has not checked yet.
+  pendingConfirmation('pending_confirmation'),
+
+  /// The admin found the transfer.
+  paid('paid'),
+
+  /// The admin looked and did not find it.
+  notFound('not_found'),
+
+  /// The booking fell through and this share had money, or a claim of it.
+  refundDue('refund_due'),
+
+  /// The money went back.
+  refunded('refunded');
+
+  const ShareStatus(this.code);
+
+  final String code;
+
+  /// Money has arrived, or may have: the shares a cancellation must refund.
+  bool get holdsMoney => this == paid || this == pendingConfirmation;
+
+  /// Reads the server's word. A server that predates statuses sends only
+  /// `is_paid`; a word this build does not know is read as not paid, which
+  /// is the safer mistake.
+  static ShareStatus fromJson(Map<String, dynamic> json) {
+    final code = (json['status'] as String? ?? '').toLowerCase();
+    for (final status in values) {
+      if (status.code == code) {
+        return status;
+      }
+    }
+    return json['is_paid'] == true ? paid : unpaid;
+  }
+}
+
+/// The amounts a booking's total splits into, in whole roubles, adding up
+/// to the total exactly: every share gets the floor, and the roubles left
+/// over go one each to the first shares. 1700 over three is 567, 567, 566.
+List<int> splitIntoShares(int total, int count) {
+  if (count <= 0) {
+    return const [];
+  }
+  final base = total ~/ count;
+  final rest = total - base * count;
+  return [for (var i = 0; i < count; i++) base + (i < rest ? 1 : 0)];
+}
+
+/// Where the money for a share goes, as the server tells it.
+///
+/// It lives on the server rather than in the build, so a new bank or a new
+/// QR does not wait for a release in the stores.
+class PaymentInfo {
+  const PaymentInfo({
+    required this.method,
+    required this.sbpLink,
+    required this.qrPayload,
+    required this.recipientName,
+    required this.bankName,
+    this.commentHint,
+  });
+
+  factory PaymentInfo.fromJson(Map<String, dynamic> json) {
+    return PaymentInfo(
+      method: _requiredString(json, 'method'),
+      sbpLink: _requiredString(json, 'sbp_link'),
+      qrPayload: _requiredString(json, 'qr_payload'),
+      recipientName: _requiredString(json, 'recipient_name'),
+      bankName: _requiredString(json, 'bank_name'),
+      commentHint: _optionalString(json, 'comment_hint'),
+    );
+  }
+
+  /// `sbp_static` for real money; `test` while there is no account yet, so
+  /// the screen can say the payment is not real.
+  final String method;
+  final String sbpLink;
+  final String qrPayload;
+  final String recipientName;
+  final String bankName;
+  final String? commentHint;
+
+  bool get isTest => method == 'test';
+}
+
+/// One share waiting for the payments admin: everything needed to find the
+/// transfer in a bank statement without opening the booking.
+class PaymentQueueItem {
+  const PaymentQueueItem({
+    required this.shareId,
+    required this.bookingId,
+    required this.code,
+    required this.amount,
+    required this.status,
+    required this.userName,
+    required this.venueName,
+    required this.startsAt,
+    required this.deadlineAt,
+    this.payerName,
+    this.phone,
+    this.claimedAt,
+    this.note,
+  });
+
+  factory PaymentQueueItem.fromJson(Map<String, dynamic> json) {
+    final user = _requiredMap(json, 'user');
+    final booking = _requiredMap(json, 'booking');
+    final venue = _requiredMap(json, 'venue');
+    return PaymentQueueItem(
+      shareId: _requiredString(json, 'share_id'),
+      bookingId: _requiredString(booking, 'id'),
+      code: _requiredString(json, 'code'),
+      amount: _requiredInt(json, 'amount'),
+      status: ShareStatus.fromJson(json),
+      userName: _optionalString(user, 'name') ?? 'Игрок',
+      phone: _optionalString(user, 'phone'),
+      venueName: _requiredString(venue, 'name'),
+      startsAt: _wallClock(_requiredDateTime(json, 'starts_at')),
+      deadlineAt: _wallClock(_requiredDateTime(booking, 'deadline_at')),
+      payerName: _optionalString(json, 'payer_name'),
+      claimedAt: _optionalDateTime(json, 'claimed_at'),
+      note: _optionalString(json, 'note'),
+    );
+  }
+
+  final String shareId;
+  final String bookingId;
+  final String code;
+  final int amount;
+  final ShareStatus status;
+  final String userName;
+  final String? phone;
+
+  /// The sender's name as the player says the bank shows it.
+  final String? payerName;
+  final String venueName;
+  final DateTime startsAt;
+  final DateTime deadlineAt;
+  final DateTime? claimedAt;
+  final String? note;
+}
+
 class Sport {
   const Sport({
     required this.id,
@@ -244,7 +420,41 @@ class Booking {
     this.statusCode = 'confirmed',
     this.organizerId,
     this.shares = const [],
+    this.deadlineAt,
+    this.gameId,
+    this.myShareId,
   });
+
+  /// When the shares must all be paid: two hours before the start, unless
+  /// the server says otherwise.
+  final DateTime? deadlineAt;
+
+  /// The game this booking carries, when it carries one.
+  final String? gameId;
+
+  /// The share that belongs to the reader, if any.
+  final String? myShareId;
+
+  DateTime get deadline =>
+      deadlineAt ?? startsAt.subtract(const Duration(hours: 2));
+
+  BookingShare? get myShare {
+    final id = myShareId;
+    for (final share in shares) {
+      if (share.isCurrentUser && (id == null || share.id == id)) {
+        return share;
+      }
+    }
+    return null;
+  }
+
+  /// Shares with no owner yet: places still free to take.
+  int get openShares => shares.where((share) => share.isOpen).length;
+
+  /// Shares someone else still has to pay for: free places included, the
+  /// reader's own left out. This is what "позовите игроков" is about.
+  int get othersUnpaid =>
+      shares.where((share) => !share.isCurrentUser && !share.isPaid).length;
 
   final String id;
   final BookingDraft draft;
@@ -276,12 +486,22 @@ class Booking {
           draft.startMinute,
         );
 
+  /// Past the deadline with every share claimed, while the admin is still
+  /// checking some of the transfers.
+  bool get isAwaitingConfirmation => statusCode == 'awaiting_confirmation';
+
   bool get isActive => switch (statusCode) {
-    'collecting_shares' || 'confirmed' => true,
+    'collecting_shares' || 'awaiting_confirmation' || 'confirmed' => true,
     _ => false,
   };
 
-  Booking copyWith({String? statusCode, List<BookingShare>? shares}) {
+  Booking copyWith({
+    String? statusCode,
+    List<BookingShare>? shares,
+    String? gameId,
+    String? myShareId,
+    bool clearMyShare = false,
+  }) {
     return Booking(
       id: id,
       draft: draft,
@@ -289,6 +509,9 @@ class Booking {
       statusCode: statusCode ?? this.statusCode,
       organizerId: organizerId,
       shares: shares ?? this.shares,
+      deadlineAt: deadlineAt,
+      gameId: gameId ?? this.gameId,
+      myShareId: clearMyShare ? null : myShareId ?? this.myShareId,
     );
   }
 
@@ -338,6 +561,12 @@ class Booking {
               .toList(),
         _ => const [],
       },
+      deadlineAt: switch (_optionalDateTime(json, 'deadline_at')) {
+        final DateTime at => _wallClock(at),
+        null => null,
+      },
+      gameId: _optionalString(json, 'game_id'),
+      myShareId: _optionalString(json, 'my_share_id'),
     );
   }
 }
@@ -365,6 +594,19 @@ class Participant {
   final bool isCurrentUser;
 
   bool get hasRating => rating > 0;
+
+  /// Asked to join a game «по одобрению» and not answered yet. Not a player
+  /// until the organiser says so: no seat, no share.
+  bool get isPending => status == 'pending';
+
+  Participant withStatus(String next) => Participant(
+    id: id,
+    name: name,
+    initial: initial,
+    rating: rating,
+    status: next,
+    isCurrentUser: isCurrentUser,
+  );
 
   /// Whether this is the same player as [other], by id where there is one.
   bool sameAs(Participant other) {
@@ -399,8 +641,15 @@ class BookingShare {
   const BookingShare({
     required this.name,
     required this.initial,
-    required this.isPaid,
+    required this.status,
     this.id,
+    this.userId,
+    this.amount,
+    this.code,
+    this.claimedAt,
+    this.confirmedAt,
+    this.refundedAt,
+    this.note,
     this.isCurrentUser = false,
   });
 
@@ -408,28 +657,87 @@ class BookingShare {
     Map<String, dynamic> json, {
     required String? currentUserId,
   }) {
+    final userId = json['user_id'] as String?;
     final name = json['name'] as String?;
-    final status = (json['status'] as String? ?? '').toLowerCase();
     final initial = json['initial'] as String?;
-    final resolved = name == null || name.trim().isEmpty ? 'Игрок' : name;
+    final status = ShareStatus.fromJson(json);
+    // A free place has nobody's name on it; the screen says what it is.
+    final resolved = name == null || name.trim().isEmpty
+        ? (status == ShareStatus.open ? '' : 'Игрок')
+        : name;
     return BookingShare(
-      id: json['user_id'] as String?,
+      // Servers that predate share ids keyed the share by its player.
+      id: json['id'] as String? ?? userId,
+      userId: userId,
       name: resolved,
-      initial: initial == null || initial.isEmpty
-          ? resolved.characters.first.toUpperCase()
-          : initial,
-      // Anything the server does not call paid is treated as not yet paid:
-      // saying a share is outstanding when it is not is the safer mistake.
-      isPaid: status == 'paid' || json['is_paid'] == true,
-      isCurrentUser: json['user_id'] == currentUserId,
+      initial: initial != null && initial.isNotEmpty
+          ? initial
+          : resolved.isEmpty
+          ? ''
+          : resolved.characters.first.toUpperCase(),
+      status: status,
+      amount: _optionalInt(json, 'amount'),
+      code: _optionalString(json, 'code'),
+      claimedAt: _optionalDateTime(json, 'claimed_at'),
+      confirmedAt: _optionalDateTime(json, 'confirmed_at'),
+      refundedAt: _optionalDateTime(json, 'refunded_at'),
+      note: _optionalString(json, 'note'),
+      // A free place has no owner, and no owner is not the reader even
+      // when the reader's id is unknown too.
+      isCurrentUser: userId != null && userId == currentUserId,
     );
   }
 
   final String? id;
+  final String? userId;
   final String name;
   final String initial;
-  final bool isPaid;
+  final ShareStatus status;
+
+  /// In whole roubles. Null from a server that does not split the total.
+  final int? amount;
+
+  /// What the player writes in the transfer's comment, so the admin can
+  /// find it in the statement. Only its owner, the organiser and the admin
+  /// are sent it.
+  final String? code;
+  final DateTime? claimedAt;
+  final DateTime? confirmedAt;
+  final DateTime? refundedAt;
+
+  /// The admin's word on a share they could not find, or on a refund.
+  final String? note;
   final bool isCurrentUser;
+
+  bool get isPaid => status == ShareStatus.paid;
+  bool get isOpen => status == ShareStatus.open;
+
+  BookingShare copyWith({
+    ShareStatus? status,
+    String? userId,
+    String? name,
+    String? initial,
+    DateTime? claimedAt,
+    DateTime? confirmedAt,
+    DateTime? refundedAt,
+    String? note,
+    bool? isCurrentUser,
+  }) {
+    return BookingShare(
+      id: id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      initial: initial ?? this.initial,
+      status: status ?? this.status,
+      amount: amount,
+      code: code,
+      claimedAt: claimedAt ?? this.claimedAt,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      refundedAt: refundedAt ?? this.refundedAt,
+      note: note ?? this.note,
+      isCurrentUser: isCurrentUser ?? this.isCurrentUser,
+    );
+  }
 }
 
 class Game {
@@ -450,6 +758,10 @@ class Game {
     this.apiStartsAt,
     this.level,
     this.format,
+    this.payment = GamePayment.shares,
+    this.bookingId,
+    this.myShare,
+    this.deadlineAt,
   });
 
   final String id;
@@ -475,22 +787,54 @@ class Game {
   /// organiser's words.
   final String? format;
 
+  /// How its places are paid for.
+  final GamePayment payment;
+
+  /// The booking the game stands on. Null for a free game on an open court.
+  final String? bookingId;
+
+  /// The reader's share of that booking: what they owe, and where it stands.
+  final BookingShare? myShare;
+
+  /// When every share must be paid, or the game is called off.
+  final DateTime? deadlineAt;
+
+  DateTime get deadline =>
+      deadlineAt ?? startsAt.subtract(const Duration(hours: 2));
+
   /// The moment play begins, which is what a countdown needs — the date and
   /// the hour are stored apart.
   DateTime get startsAt => venue.scheduleManaged && apiStartsAt != null
       ? apiStartsAt!.toLocal()
       : DateTime(date.year, date.month, date.day, startHour, startMinute);
 
-  int get freePlaces => capacity - participants.length;
+  /// Who is playing: everyone in the list except requests still waiting.
+  List<Participant> get players =>
+      participants.where((player) => !player.isPending).toList();
+
+  /// Requests the organiser has not answered yet.
+  List<Participant> get requests =>
+      participants.where((player) => player.isPending).toList();
+
+  /// The reader has a seat, as opposed to a request.
+  bool get readerPlays => players.any((player) => player.isCurrentUser);
+
+  /// The reader has asked to join and is waiting for the organiser.
+  bool get readerRequested => requests.any((player) => player.isCurrentUser);
+
+  int get freePlaces => capacity - players.length;
 
   bool get isFull => freePlaces <= 0;
 
   String get timeRange => _timeRange(startHour, startMinute, durationMinutes);
 
+  /// Everything but [myShare], which [withMyShare] sets: it has to be
+  /// clearable, and a null here means "keep".
   Game copyWith({
     List<Participant>? participants,
     GameType? type,
     GenderFilter? genderFilter,
+    String? bookingId,
   }) {
     return Game(
       id: id,
@@ -507,6 +851,38 @@ class Game {
       genderFilter: genderFilter ?? this.genderFilter,
       organizer: organizer,
       participants: participants ?? this.participants,
+      // These were left behind before, so a game lost its level and format
+      // the first time anyone joined it.
+      level: level,
+      format: format,
+      payment: payment,
+      bookingId: bookingId ?? this.bookingId,
+      myShare: myShare,
+      deadlineAt: deadlineAt,
+    );
+  }
+
+  /// The same game with the reader's share replaced, or removed.
+  Game withMyShare(BookingShare? share) {
+    return Game(
+      id: id,
+      sportId: sportId,
+      venue: venue,
+      date: date,
+      startHour: startHour,
+      durationMinutes: durationMinutes,
+      capacity: capacity,
+      pricePerPerson: pricePerPerson,
+      type: type,
+      genderFilter: genderFilter,
+      organizer: organizer,
+      participants: participants,
+      level: level,
+      format: format,
+      payment: payment,
+      bookingId: bookingId,
+      myShare: share,
+      deadlineAt: deadlineAt,
     );
   }
 
@@ -551,6 +927,19 @@ class Game {
       participants: participants,
       level: _optionalString(json, 'level'),
       format: _optionalString(json, 'format'),
+      payment: GamePayment.fromCode(json['payment']),
+      bookingId: _optionalString(json, 'booking_id'),
+      myShare: switch (json['my_share']) {
+        final Map<String, dynamic> row => BookingShare.fromJson(
+          row,
+          currentUserId: currentUserId,
+        ),
+        _ => null,
+      },
+      deadlineAt: switch (_optionalDateTime(json, 'deadline_at')) {
+        final DateTime at => _wallClock(at),
+        null => null,
+      },
     );
   }
 }
@@ -566,7 +955,7 @@ String _clockLabel(int minutes) {
 
 String _timeRange(int hour, int minute, int durationMinutes) {
   final start = hour * 60 + minute;
-  return '${_clockLabel(start)} - ${_clockLabel(start + durationMinutes)}';
+  return '${_clockLabel(start)}–${_clockLabel(start + durationMinutes)}';
 }
 
 Map<String, dynamic> _requiredMap(Map<String, dynamic> json, String key) {
@@ -666,6 +1055,95 @@ bool _requiredBool(Map<String, dynamic> json, String key) {
     return value;
   }
   throw FormatException('Expected "$key" to be a boolean.');
+}
+
+/// What an in-app notice is about. Decides its mark; the words come from
+/// the server, which knows the club, the date and who did what.
+enum NotificationKind {
+  requestApproved,
+  requestRejected,
+  newRequest,
+  gameCancelled,
+  bookingCancelled,
+  payReminder,
+  shareConfirmed,
+  refunded,
+  other;
+
+  static NotificationKind fromCode(String? code) => switch (code) {
+    'request_approved' => requestApproved,
+    'request_rejected' => requestRejected,
+    'new_request' => newRequest,
+    'game_cancelled' => gameCancelled,
+    'booking_cancelled' => bookingCancelled,
+    'pay_reminder' => payReminder,
+    'share_confirmed' => shareConfirmed,
+    'refunded' => refunded,
+    _ => other,
+  };
+}
+
+/// One line under the bell: something that happened to the reader's game
+/// or booking while they were not looking.
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.body,
+    required this.createdAt,
+    this.read = false,
+    this.bookingId,
+    this.gameId,
+  });
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
+      id: _requiredString(json, 'id'),
+      kind: NotificationKind.fromCode(_optionalString(json, 'type')),
+      title: _requiredString(json, 'title'),
+      body: _optionalString(json, 'body') ?? '',
+      createdAt: _wallClock(_requiredDateTime(json, 'created_at')),
+      read: json['read_at'] != null,
+      bookingId: _optionalString(json, 'booking_id'),
+      gameId: _optionalString(json, 'game_id'),
+    );
+  }
+
+  final String id;
+  final NotificationKind kind;
+  final String title;
+  final String body;
+  final DateTime createdAt;
+  final bool read;
+
+  /// Where tapping it leads: the game if there is one, else the booking.
+  final String? bookingId;
+  final String? gameId;
+
+  AppNotification asRead() => AppNotification(
+    id: id,
+    kind: kind,
+    title: title,
+    body: body,
+    createdAt: createdAt,
+    read: true,
+    bookingId: bookingId,
+    gameId: gameId,
+  );
+}
+
+DateTime? _optionalDateTime(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  return value is String ? DateTime.tryParse(value) : null;
+}
+
+/// The server keeps Moscow hours as UTC wall-clock values, and the app reads
+/// every start that way (see `TimeSlot.fromJson`). A deadline is read the
+/// same way, or it would land three hours off the start it belongs to.
+DateTime _wallClock(DateTime value) {
+  final utc = value.toUtc();
+  return DateTime(utc.year, utc.month, utc.day, utc.hour, utc.minute);
 }
 
 DateTime _requiredDateTime(Map<String, dynamic> json, String key) {

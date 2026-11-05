@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import 'sport_selection_screen.dart';
 import 'profile_edit_screen.dart';
 import '../widgets/pull_to_refresh.dart';
+import '../labels.dart';
 import '../router.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/sky_header.dart';
@@ -146,25 +147,50 @@ class ProfileScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: controller.selectedSports
                           .map(
-                            (sport) => SelectableChip(
+                            (sport) => InfoTag(
                               label: sport.name.capitalized,
-                              selected: true,
-                              color: AppTheme.sportGround(sport.id).last,
+                              dot: AppTheme.sportGround(sport.id).last,
                             ),
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _Stats(controller: controller),
-                    const SizedBox(height: 18),
-                    _MenuItem(
-                      icon: AppIcons.history,
-                      title: context.l10n.history,
-                      subtitle: context.l10n.historySummary(
-                        controller.activeBookings.length,
-                        _myGamesCount(controller),
+                    const SizedBox(height: 16),
+                    // One card for the rows that lead somewhere, with a
+                    // hairline between them, as a settings list is drawn.
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          _MenuItem(
+                            icon: AppIcons.history,
+                            title: context.l10n.history,
+                            subtitle: context.l10n.historySummary(
+                              controller.activeBookings.length,
+                              _myGamesCount(controller),
+                            ),
+                            onTap: () => context.go(Routes.history),
+                          ),
+                          // Only the owner of the service checks transfers; to
+                          // everyone else the row would lead to a locked door.
+                          if (controller.isPaymentAdmin) ...[
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              indent: 16,
+                              color: context.colors.border,
+                            ),
+                            _MenuItem(
+                              key: const ValueKey('profile-admin-payments'),
+                              icon: AppIcons.checkCircle,
+                              title: context.l10n.adminPaymentsTitle,
+                              subtitle: context.l10n.adminPaymentsMenu,
+                              onTap: () => context.go(Routes.adminPayments),
+                            ),
+                          ],
+                        ],
                       ),
-                      onTap: () => context.go(Routes.history),
                     ),
                     const SizedBox(height: 12),
                     _MenuItem(
@@ -185,6 +211,18 @@ class ProfileScreen extends StatelessWidget {
                       label: context.l10n.logout,
                       tone: ButtonTone.neutral,
                       onPressed: () => _confirmLogout(context, onLogout),
+                    ),
+                    const SizedBox(height: 8),
+                    // The stores ask for it, and a person is owed it: leaving
+                    // for good is possible from inside the app.
+                    TextButton(
+                      key: const ValueKey('delete-account'),
+                      onPressed: () =>
+                          _confirmDelete(context, controller, onLogout),
+                      style: TextButton.styleFrom(
+                        foregroundColor: context.colors.danger,
+                      ),
+                      child: Text(context.l10n.deleteAccount),
                     ),
                   ],
                 ),
@@ -224,6 +262,30 @@ Future<void> _confirmLogout(BuildContext context, VoidCallback onLogout) async {
   }
 }
 
+Future<void> _confirmDelete(
+  BuildContext context,
+  AppController controller,
+  VoidCallback onLogout,
+) async {
+  final confirmed = await confirmAction(
+    context,
+    title: context.l10n.deleteAccountQuestion,
+    message: context.l10n.deleteAccountMessage,
+    confirmLabel: context.l10n.deleteAccountConfirm,
+  );
+  if (!confirmed || !context.mounted) {
+    return;
+  }
+  try {
+    await controller.deleteAccount();
+    onLogout();
+  } catch (error) {
+    if (context.mounted) {
+      showAppSnack(context, errorText(context, error), tone: SnackTone.failed);
+    }
+  }
+}
+
 /// Games this reader is actually in.
 ///
 /// The line under «История» used to count every game in the city, so the
@@ -241,23 +303,32 @@ class _Stats extends StatelessWidget {
   Widget build(BuildContext context) {
     final games = _myGamesCount(controller);
 
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+    // On the page, not in a card of its own: five white cards of one weight
+    // in a row left the eye nothing to hold on to.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(
             child: _Stat(
               value: '${controller.activeBookings.length}',
-              label: context.l10n.statBookings,
+              // Agreed with the number above it: «1 Броней» read as written
+              // by a machine.
+              label: context.l10n.statBookings(
+                controller.activeBookings.length,
+              ),
             ),
           ),
           Expanded(
-            child: _Stat(value: '$games', label: context.l10n.statMyGames),
+            child: _Stat(
+              value: '$games',
+              label: context.l10n.statMyGames(games),
+            ),
           ),
           Expanded(
             child: _Stat(
               value: '${controller.selectedSports.length}',
-              label: context.l10n.statSports,
+              label: context.l10n.statSports(controller.selectedSports.length),
             ),
           ),
         ],
@@ -312,10 +383,7 @@ class _Stat extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.text.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.4,
-          ),
+          style: context.text.headlineSmall?.copyWith(letterSpacing: -0.4),
         ),
         const SizedBox(height: 2),
         Text(
@@ -331,6 +399,7 @@ class _Stat extends StatelessWidget {
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -344,18 +413,18 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppCard(
-        onTap: onTap,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 46,
+              width: context.scaled(44),
+              height: context.scaled(44),
               decoration: BoxDecoration(
-                color: context.colors.accent.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(13),
+                color: context.colors.accentSoft,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: context.colors.accent),
             ),
@@ -364,12 +433,7 @@ class _MenuItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text(title, style: context.text.titleSmall),
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
@@ -380,7 +444,7 @@ class _MenuItem extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(AppIcons.chevronRight, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.muted),
           ],
         ),
       ),

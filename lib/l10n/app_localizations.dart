@@ -99,6 +99,12 @@ abstract class L {
   /// **'SportVenue'**
   String get appTitle;
 
+  /// No description provided for @addPublicVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить площадку'**
+  String get addPublicVenue;
+
   /// No description provided for @playerAccount.
   ///
   /// In ru, this message translates to:
@@ -231,6 +237,18 @@ abstract class L {
   /// **'Игроки'**
   String get summaryPlayers;
 
+  /// No description provided for @summaryShares.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доли'**
+  String get summaryShares;
+
+  /// No description provided for @sharesTimesPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} по {price}'**
+  String sharesTimesPrice(int count, String price);
+
   /// No description provided for @summaryTotal.
   ///
   /// In ru, this message translates to:
@@ -240,7 +258,7 @@ abstract class L {
   /// No description provided for @summaryYourShare.
   ///
   /// In ru, this message translates to:
-  /// **'Ваша часть'**
+  /// **'Ваша доля'**
   String get summaryYourShare;
 
   /// No description provided for @back.
@@ -369,6 +387,18 @@ abstract class L {
   /// **'Свободно'**
   String get freeLabel;
 
+  /// No description provided for @freeHoursUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'нет данных'**
+  String get freeHoursUnknown;
+
+  /// No description provided for @freeHoursFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось узнать свободные часы'**
+  String get freeHoursFailed;
+
   /// No description provided for @durationShorter.
   ///
   /// In ru, this message translates to:
@@ -468,8 +498,32 @@ abstract class L {
   /// No description provided for @invitePlayers.
   ///
   /// In ru, this message translates to:
-  /// **'Позвать игроков — скопировать ссылку'**
+  /// **'Позвать игроков по ссылке'**
   String get invitePlayers;
+
+  /// No description provided for @remindToPay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напомнить об оплате'**
+  String get remindToPay;
+
+  /// No description provided for @payReminderText.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминание: оплатите свою долю {amount} — {venue}, {when}.'**
+  String payReminderText(String amount, String venue, String when);
+
+  /// No description provided for @payReminderDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок — {deadline}, иначе бронь снимется.'**
+  String payReminderDeadline(String deadline);
+
+  /// No description provided for @payReminderCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминание скопировано — отправьте его в чат игроков'**
+  String get payReminderCopied;
 
   /// No description provided for @linkCopied.
   ///
@@ -555,11 +609,41 @@ abstract class L {
   /// **'Уведомления'**
   String get notifications;
 
+  /// No description provided for @profileOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть профиль'**
+  String get profileOpen;
+
   /// No description provided for @noNotifications.
   ///
   /// In ru, this message translates to:
   /// **'Уведомлений пока нет'**
   String get noNotifications;
+
+  /// No description provided for @todayShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'сегодня'**
+  String get todayShort;
+
+  /// No description provided for @noNotificationsHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь появится, когда вас возьмут в игру, подтвердят оплату или игру отменят.'**
+  String get noNotificationsHint;
+
+  /// No description provided for @notificationNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новое'**
+  String get notificationNew;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{Уведомления: {count} новое} few{Уведомления: {count} новых} many{Уведомления: {count} новых} other{Уведомления: {count} новых}}'**
+  String notificationsUnread(int count);
 
   /// No description provided for @searchPlaceholder.
   ///
@@ -762,20 +846,20 @@ abstract class L {
   /// No description provided for @statBookings.
   ///
   /// In ru, this message translates to:
-  /// **'Броней'**
-  String get statBookings;
+  /// **'{count, plural, one{Бронь} few{Брони} many{Броней} other{Брони}}'**
+  String statBookings(int count);
 
   /// No description provided for @statMyGames.
   ///
   /// In ru, this message translates to:
-  /// **'Моих игр'**
-  String get statMyGames;
+  /// **'{count, plural, one{Моя игра} few{Мои игры} many{Моих игр} other{Моих игр}}'**
+  String statMyGames(int count);
 
   /// No description provided for @statSports.
   ///
   /// In ru, this message translates to:
-  /// **'Видов спорта'**
-  String get statSports;
+  /// **'{count, plural, one{Вид спорта} few{Вида спорта} many{Видов спорта} other{Видов спорта}}'**
+  String statSports(int count);
 
   /// No description provided for @historyEmpty.
   ///
@@ -806,6 +890,12 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Найти игру'**
   String get findGame;
+
+  /// No description provided for @findVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти площадку'**
+  String get findVenue;
 
   /// No description provided for @bookingsSection.
   ///
@@ -870,7 +960,7 @@ abstract class L {
   /// No description provided for @searchSubtitle.
   ///
   /// In ru, this message translates to:
-  /// **'Москва · openfreemap'**
+  /// **'Клубы на карте · Москва'**
   String get searchSubtitle;
 
   /// No description provided for @centreOnMoscow.
@@ -915,6 +1005,18 @@ abstract class L {
   /// **'В Москве пока нет клубов для этого вида спорта.'**
   String get noVenuesForSportHint;
 
+  /// No description provided for @noClubsYet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клубов пока нет'**
+  String get noClubsYet;
+
+  /// No description provided for @noClubsYetHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мы подключаем клубы Москвы. Скоро здесь появится, где поиграть.'**
+  String get noClubsYetHint;
+
   /// No description provided for @noVenuesForQueryHint.
   ///
   /// In ru, this message translates to:
@@ -944,6 +1046,48 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Войти по почте'**
   String get signInWithEmail;
+
+  /// No description provided for @addToCalendar.
+  ///
+  /// In ru, this message translates to:
+  /// **'В календарь'**
+  String get addToCalendar;
+
+  /// No description provided for @openRoute.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут'**
+  String get openRoute;
+
+  /// No description provided for @calendarBookingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра · {venue}'**
+  String calendarBookingTitle(String venue);
+
+  /// No description provided for @calendarGameTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'{sport} · {venue}'**
+  String calendarGameTitle(String sport, String venue);
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось открыть. Попробуйте ещё раз.'**
+  String get linkOpenFailed;
+
+  /// No description provided for @callHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердим номер звонком — вводить код не нужно.'**
+  String get callHint;
+
+  /// No description provided for @requestPendingHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Организатор ответит здесь и в уведомлениях. Платить не нужно, пока заявку не одобрят.'**
+  String get requestPendingHint;
 
   /// No description provided for @emailSignInTitle.
   ///
@@ -1089,6 +1233,18 @@ abstract class L {
   /// **'Для выбранного спорта площадок пока нет'**
   String get noVenuesForChosenSport;
 
+  /// No description provided for @chooseVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите площадку'**
+  String get chooseVenue;
+
+  /// No description provided for @venuesToChoose.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} площадка рядом} few{{count} площадки рядом} many{{count} площадок рядом} other{{count} площадки рядом}}'**
+  String venuesToChoose(int count);
+
   /// No description provided for @moreVenues.
   ///
   /// In ru, this message translates to:
@@ -1164,8 +1320,20 @@ abstract class L {
   /// No description provided for @participantFilterHint.
   ///
   /// In ru, this message translates to:
-  /// **'Ограничение по полу имеет смысл для женских или мужских составов. В остальных случаях оставьте «Любой».'**
+  /// **'Игру увидят все, а вступить смогут только выбранные. Это для женских или мужских составов — в остальных случаях оставьте «Любой».'**
   String get participantFilterHint;
+
+  /// No description provided for @genderOnlyMen.
+  ///
+  /// In ru, this message translates to:
+  /// **'только мужчины'**
+  String get genderOnlyMen;
+
+  /// No description provided for @genderOnlyWomen.
+  ///
+  /// In ru, this message translates to:
+  /// **'только женщины'**
+  String get genderOnlyWomen;
 
   /// No description provided for @genderAny.
   ///
@@ -1221,6 +1389,42 @@ abstract class L {
   /// **'Бронирование'**
   String get booking;
 
+  /// No description provided for @newGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая игра'**
+  String get newGame;
+
+  /// No description provided for @modeOwn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Для своих'**
+  String get modeOwn;
+
+  /// No description provided for @modeOwnHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'бронь и доли'**
+  String get modeOwnHint;
+
+  /// No description provided for @modeGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нужны игроки'**
+  String get modeGame;
+
+  /// No description provided for @modeGameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'открытая игра'**
+  String get modeGameHint;
+
+  /// No description provided for @createGameShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать игру · доля {price}'**
+  String createGameShare(String price);
+
   /// No description provided for @timeStep.
   ///
   /// In ru, this message translates to:
@@ -1236,7 +1440,7 @@ abstract class L {
   /// No description provided for @paySharePrice.
   ///
   /// In ru, this message translates to:
-  /// **'Оплатить свою часть · {price}'**
+  /// **'Оплатить свою долю · {price}'**
   String paySharePrice(String price);
 
   /// No description provided for @payFullPrice.
@@ -1278,7 +1482,7 @@ abstract class L {
   /// No description provided for @bookingCreatedShares.
   ///
   /// In ru, this message translates to:
-  /// **'Ваша часть оплачена. Осталось собрать {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}} — позовите игроков до начала.'**
+  /// **'Позовите игроков: им осталось оплатить {count, plural, one{{count} долю} few{{count} доли} other{{count} долей}}. Если за 2 часа до начала оплачены не все доли, бронь отменится, а деньги вернутся.'**
   String bookingCreatedShares(int count);
 
   /// No description provided for @bookingCreatedFull.
@@ -1298,6 +1502,18 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Готово'**
   String get bookingSuccessDone;
+
+  /// No description provided for @successHeld.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время за вами до {when}'**
+  String successHeld(String when);
+
+  /// No description provided for @successFullBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатите бронь до этого срока, и площадка ваша. Не успеете — бронь отменится.'**
+  String get successFullBody;
 
   /// No description provided for @bookingDetails.
   ///
@@ -1332,7 +1548,7 @@ abstract class L {
   /// No description provided for @cancelBookingMessage.
   ///
   /// In ru, this message translates to:
-  /// **'{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги придут на счёт в течение 3 дней.'**
+  /// **'{venue}, {date}, {time}. Место освободится для других, вернуть его не получится. Деньги вернутся в течение 1 рабочего дня.'**
   String cancelBookingMessage(String venue, String date, String time);
 
   /// No description provided for @keepBooking.
@@ -1356,13 +1572,13 @@ abstract class L {
   /// No description provided for @payShareTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Своя часть · {price}'**
+  /// **'Своя доля · {price}'**
   String payShareTitle(String price);
 
   /// No description provided for @payShareExplainer.
   ///
   /// In ru, this message translates to:
-  /// **'Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется и деньги возвращаются.'**
+  /// **'Вы платите свою долю, остальные {others, plural, one{{others} долю} few{{others} доли} other{{others} долей}} оплачивают другие игроки — всего {total}. Если за 2 часа до начала доли не собраны, бронь отменяется, а деньги возвращаются в течение 1 рабочего дня.'**
   String payShareExplainer(int others, String total);
 
   /// No description provided for @payFullTitle.
@@ -1386,13 +1602,13 @@ abstract class L {
   /// No description provided for @cancellationTermAuto.
   ///
   /// In ru, this message translates to:
-  /// **'Если игра не набирает участников за 2 часа до начала, бронь отменяется автоматически'**
+  /// **'Если за 2 часа до начала оплачены не все доли, бронь отменяется автоматически'**
   String get cancellationTermAuto;
 
   /// No description provided for @cancellationTermRefund.
   ///
   /// In ru, this message translates to:
-  /// **'Если вы отменяете сами, средства возвращаются на счёт в течение 3 дней'**
+  /// **'Если бронь отменена, деньги возвращаются в течение 1 рабочего дня'**
   String get cancellationTermRefund;
 
   /// No description provided for @removePlayer.
@@ -1434,7 +1650,7 @@ abstract class L {
   /// No description provided for @youAreIn.
   ///
   /// In ru, this message translates to:
-  /// **'вы в игре'**
+  /// **'Вы в игре'**
   String get youAreIn;
 
   /// No description provided for @nothingMatchesFilters.
@@ -1602,7 +1818,7 @@ abstract class L {
   /// No description provided for @freeSlot.
   ///
   /// In ru, this message translates to:
-  /// **'свободно'**
+  /// **'Свободно'**
   String get freeSlot;
 
   /// No description provided for @openGame.
@@ -1638,43 +1854,43 @@ abstract class L {
   /// No description provided for @errorNetwork.
   ///
   /// In ru, this message translates to:
-  /// **'сервер недоступен — проверьте, что он запущен'**
+  /// **'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.'**
   String get errorNetwork;
 
   /// No description provided for @errorInvalidResponse.
   ///
   /// In ru, this message translates to:
-  /// **'сервер вернул неожиданный ответ'**
+  /// **'Что-то пошло не так на нашей стороне. Попробуйте ещё раз чуть позже.'**
   String get errorInvalidResponse;
 
   /// No description provided for @errorSessionExpired.
   ///
   /// In ru, this message translates to:
-  /// **'сессия истекла — войдите снова'**
+  /// **'Вход устарел — войдите снова.'**
   String get errorSessionExpired;
 
   /// No description provided for @errorSlotTaken.
   ///
   /// In ru, this message translates to:
-  /// **'этот слот уже занят, выберите другое время'**
+  /// **'Это время уже заняли. Выберите другое.'**
   String get errorSlotTaken;
 
   /// No description provided for @errorGameFull.
   ///
   /// In ru, this message translates to:
-  /// **'в игре больше нет свободных мест'**
+  /// **'В игре больше нет свободных мест.'**
   String get errorGameFull;
 
   /// No description provided for @errorCancelNotOrganizer.
   ///
   /// In ru, this message translates to:
-  /// **'отменить бронь может только организатор'**
+  /// **'Отменить бронь может только организатор.'**
   String get errorCancelNotOrganizer;
 
   /// No description provided for @errorBadPhone.
   ///
   /// In ru, this message translates to:
-  /// **'проверьте номер телефона'**
+  /// **'Проверьте номер телефона.'**
   String get errorBadPhone;
 
   /// No description provided for @errorChallengeExpired.
@@ -1692,13 +1908,13 @@ abstract class L {
   /// No description provided for @errorTimeout.
   ///
   /// In ru, this message translates to:
-  /// **'сервер не ответил вовремя'**
+  /// **'Сервер долго не отвечает. Попробуйте ещё раз.'**
   String get errorTimeout;
 
   /// No description provided for @errorUnknown.
   ///
   /// In ru, this message translates to:
-  /// **'не удалось выполнить запрос'**
+  /// **'Не получилось. Попробуйте ещё раз.'**
   String get errorUnknown;
 
   /// No description provided for @bookingStatusCollecting.
@@ -1740,13 +1956,235 @@ abstract class L {
   /// No description provided for @sharePaid.
   ///
   /// In ru, this message translates to:
-  /// **'оплачено'**
+  /// **'Оплачено'**
   String get sharePaid;
+
+  /// No description provided for @paymentScreenTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата доли'**
+  String get paymentScreenTitle;
+
+  /// No description provided for @payYourShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваша доля'**
+  String get payYourShare;
+
+  /// No description provided for @payRecipient.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получатель: {name}, {bank}'**
+  String payRecipient(String name, String bank);
+
+  /// No description provided for @payTestBanner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тестовая оплата: счёт ещё не открыт, деньги не отправляйте.'**
+  String get payTestBanner;
+
+  /// No description provided for @payCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код доли'**
+  String get payCodeLabel;
+
+  /// No description provided for @payCodeHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставьте код в комментарий к переводу: по нему мы найдём вашу оплату.'**
+  String get payCodeHint;
+
+  /// No description provided for @payCopyCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать'**
+  String get payCopyCode;
+
+  /// No description provided for @payCodeCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код скопирован'**
+  String get payCodeCopied;
+
+  /// No description provided for @payViaBank.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить через банк'**
+  String get payViaBank;
+
+  /// No description provided for @payBankFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось открыть банк. Отсканируйте QR с другого телефона.'**
+  String get payBankFailed;
+
+  /// No description provided for @payQrHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отсканируйте камерой телефона или в приложении банка'**
+  String get payQrHint;
+
+  /// No description provided for @payQrShow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать QR для другого устройства'**
+  String get payQrShow;
+
+  /// No description provided for @payQrHide.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть QR'**
+  String get payQrHide;
+
+  /// No description provided for @payIPaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я оплатил'**
+  String get payIPaid;
+
+  /// No description provided for @payDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все доли нужно оплатить до {when}'**
+  String payDeadline(String when);
+
+  /// No description provided for @payPendingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверяем оплату'**
+  String get payPendingTitle;
+
+  /// No description provided for @payPendingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сверяем перевод с выпиской банка — обычно в течение нескольких часов, днём быстрее. Когда проверим, придёт уведомление; если не найдём перевод, скажем здесь же.'**
+  String get payPendingBody;
+
+  /// No description provided for @payPaidTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата получена'**
+  String get payPaidTitle;
+
+  /// No description provided for @payPaidBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваша доля оплачена. Бронь подтвердится, когда оплатят все.'**
+  String get payPaidBody;
+
+  /// No description provided for @payNotFoundTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не нашли перевод'**
+  String get payNotFoundTitle;
+
+  /// No description provided for @payNotFoundBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте сумму и код в комментарии и нажмите «Я оплатил» ещё раз.'**
+  String get payNotFoundBody;
+
+  /// No description provided for @payAdminNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Комментарий: {note}'**
+  String payAdminNote(String note);
+
+  /// No description provided for @payRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь отменена. Деньги вернутся в течение 1 рабочего дня.'**
+  String get payRefundDue;
+
+  /// No description provided for @payRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги за эту долю вернули.'**
+  String get payRefunded;
+
+  /// No description provided for @payNothing.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас нет доли в этой брони.'**
+  String get payNothing;
+
+  /// No description provided for @payMyShare.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить свою долю · {price}'**
+  String payMyShare(String price);
+
+  /// No description provided for @payMyPlace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплатить своё место · {price}'**
+  String payMyPlace(String price);
+
+  /// No description provided for @payToBooking.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть бронь'**
+  String get payToBooking;
+
+  /// No description provided for @bookingStatusAwaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'проверяем оплату'**
+  String get bookingStatusAwaiting;
+
+  /// No description provided for @shareOpenSeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободное место'**
+  String get shareOpenSeat;
+
+  /// No description provided for @shareStatusOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободно'**
+  String get shareStatusOpen;
+
+  /// No description provided for @shareStatusPending.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверяем оплату'**
+  String get shareStatusPending;
+
+  /// No description provided for @shareStatusNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не нашли оплату'**
+  String get shareStatusNotFound;
+
+  /// No description provided for @shareStatusRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернём деньги'**
+  String get shareStatusRefundDue;
+
+  /// No description provided for @shareStatusRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернули'**
+  String get shareStatusRefunded;
+
+  /// No description provided for @errorSharePaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Место уже оплачено. Выйти можно, только если организатор отменит бронь — тогда деньги вернутся.'**
+  String get errorSharePaid;
+
+  /// No description provided for @errorDeadlinePassed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок оплаты уже прошёл.'**
+  String get errorDeadlinePassed;
 
   /// No description provided for @shareUnpaid.
   ///
   /// In ru, this message translates to:
-  /// **'ждём оплату'**
+  /// **'Ждём оплату'**
   String get shareUnpaid;
 
   /// No description provided for @sharesLeft.
@@ -1866,7 +2304,7 @@ abstract class L {
   /// Сколько часов свободно у площадки в выбранный день
   ///
   /// In ru, this message translates to:
-  /// **'свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
+  /// **'Свободно {count, plural, one{{count} час} few{{count} часа} other{{count} часов}}'**
   String freeHoursToday(int count);
 
   /// Кнопка на главной и заголовок экрана с бронями
@@ -1988,6 +2426,414 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Не удалось открыть приложение для звонков. Наберите указанный номер вручную с вашего телефона.'**
   String get dialerUnavailable;
+
+  /// No description provided for @bookingStateCollectingTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собираем оплату'**
+  String get bookingStateCollectingTitle;
+
+  /// No description provided for @bookingStateCollectingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все доли нужно оплатить до {when}. Если не успеть, бронь снимется, а деньги вернутся в течение 1 рабочего дня.'**
+  String bookingStateCollectingBody(String when);
+
+  /// No description provided for @bookingStateAwaitingBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сверяем переводы с выпиской банка. Бронь подтвердится, когда найдём все.'**
+  String get bookingStateAwaitingBody;
+
+  /// No description provided for @bookingStateConfirmedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь подтверждена'**
+  String get bookingStateConfirmedTitle;
+
+  /// No description provided for @bookingStateConfirmedBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время за вами: {when}.'**
+  String bookingStateConfirmedBody(String when);
+
+  /// No description provided for @bookingStateExpiredTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не собрали вовремя'**
+  String get bookingStateExpiredTitle;
+
+  /// No description provided for @bookingStateExpiredBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доли не оплатили до срока, поэтому бронь снята.'**
+  String get bookingStateExpiredBody;
+
+  /// No description provided for @bookingStateCancelledTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бронь отменена'**
+  String get bookingStateCancelledTitle;
+
+  /// No description provided for @bookingStateRefundDue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернём в течение 1 рабочего дня.'**
+  String get bookingStateRefundDue;
+
+  /// No description provided for @bookingStateRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернули.'**
+  String get bookingStateRefunded;
+
+  /// No description provided for @bookingStateNoMoney.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплат не было, возвращать нечего.'**
+  String get bookingStateNoMoney;
+
+  /// No description provided for @takeShareButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Занять место · {price}'**
+  String takeShareButton(String price);
+
+  /// No description provided for @takeShareNoPlaces.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободных мест в этой брони нет.'**
+  String get takeShareNoPlaces;
+
+  /// No description provided for @takeShareClosed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Места в этой брони больше не раздают.'**
+  String get takeShareClosed;
+
+  /// No description provided for @joinGamePaid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Присоединиться · {price}'**
+  String joinGamePaid(String price);
+
+  /// No description provided for @adminPaymentsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплаты'**
+  String get adminPaymentsTitle;
+
+  /// No description provided for @adminPaymentsMenu.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить переводы и вернуть деньги'**
+  String get adminPaymentsMenu;
+
+  /// No description provided for @adminTabCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить'**
+  String get adminTabCheck;
+
+  /// No description provided for @adminTabRefund.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуть'**
+  String get adminTabRefund;
+
+  /// No description provided for @adminEmptyCheck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверять нечего: все «Я оплатил» разобраны.'**
+  String get adminEmptyCheck;
+
+  /// No description provided for @adminEmptyRefund.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возвращать никому не нужно.'**
+  String get adminEmptyRefund;
+
+  /// No description provided for @adminPayer.
+  ///
+  /// In ru, this message translates to:
+  /// **'В банке: {name}'**
+  String adminPayer(String name);
+
+  /// No description provided for @adminClaimed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нажал «Я оплатил»: {when}'**
+  String adminClaimed(String when);
+
+  /// No description provided for @adminDeadline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок сбора: {when}'**
+  String adminDeadline(String when);
+
+  /// No description provided for @adminGameAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'{venue} · {when}'**
+  String adminGameAt(String venue, String when);
+
+  /// No description provided for @adminFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нашёл перевод'**
+  String get adminFound;
+
+  /// No description provided for @adminNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не нашёл'**
+  String get adminNotFound;
+
+  /// No description provided for @adminRefunded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернул'**
+  String get adminRefunded;
+
+  /// No description provided for @adminConfirmTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердить оплату?'**
+  String get adminConfirmTitle;
+
+  /// No description provided for @adminConfirmMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name}, {amount}, код {code}. Доля станет оплаченной.'**
+  String adminConfirmMessage(String name, String amount, String code);
+
+  /// No description provided for @adminRejectTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Почему не нашли перевод?'**
+  String get adminRejectTitle;
+
+  /// No description provided for @adminRejectHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Причину увидит игрок на экране оплаты.'**
+  String get adminRejectHint;
+
+  /// No description provided for @adminRejectAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма не совпадает'**
+  String get adminRejectAmount;
+
+  /// No description provided for @adminRejectCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет кода в комментарии'**
+  String get adminRejectCode;
+
+  /// No description provided for @adminRejectMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевода нет в выписке'**
+  String get adminRejectMissing;
+
+  /// No description provided for @adminRefundTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деньги вернули?'**
+  String get adminRefundTitle;
+
+  /// No description provided for @adminRefundMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name}, {amount}. Сначала верните возвратом по операции СБП в банке, потом отметьте здесь.'**
+  String adminRefundMessage(String name, String amount);
+
+  /// No description provided for @adminMarked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмечено'**
+  String get adminMarked;
+
+  /// No description provided for @adminPhoneCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер скопирован'**
+  String get adminPhoneCopied;
+
+  /// No description provided for @adminOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот раздел только для администратора оплат.'**
+  String get adminOnly;
+
+  /// No description provided for @adminOnlyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь владелец сервиса проверяет переводы и возвращает деньги.'**
+  String get adminOnlyHint;
+
+  /// No description provided for @adminEmptyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё разобрано'**
+  String get adminEmptyTitle;
+
+  /// No description provided for @bookingStateYouDidNotPay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы не платили за это место, возвращать нечего.'**
+  String get bookingStateYouDidNotPay;
+
+  /// No description provided for @bookAgain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забронировать заново'**
+  String get bookAgain;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить аккаунт?'**
+  String get deleteAccountQuestion;
+
+  /// No description provided for @deleteAccountMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя, телефон и почта удалятся. Неоплаченные места в будущих бронях освободятся, а деньги за оплаченные вернём в течение 1 рабочего дня. Отменить удаление нельзя.'**
+  String get deleteAccountMessage;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить навсегда'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @mapFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карта не загрузилась. Список клубов ниже работает.'**
+  String get mapFailed;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить данные. Проверьте интернет.'**
+  String get loadFailed;
+
+  /// No description provided for @requestWaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отправлена'**
+  String get requestWaiting;
+
+  /// No description provided for @withdrawRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать заявку'**
+  String get withdrawRequest;
+
+  /// No description provided for @withdrawRequestQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать заявку?'**
+  String get withdrawRequestQuestion;
+
+  /// No description provided for @withdrawRequestMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Организатор её больше не увидит. Подать заявку снова можно в любой момент, пока есть места.'**
+  String get withdrawRequestMessage;
+
+  /// No description provided for @withdrawConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отозвать'**
+  String get withdrawConfirm;
+
+  /// No description provided for @keepRequest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить'**
+  String get keepRequest;
+
+  /// No description provided for @requestWithdrawn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отозвана'**
+  String get requestWithdrawn;
+
+  /// No description provided for @gameRequests.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявки'**
+  String get gameRequests;
+
+  /// No description provided for @requestApprove.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять'**
+  String get requestApprove;
+
+  /// No description provided for @requestReject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить'**
+  String get requestReject;
+
+  /// No description provided for @requestApproved.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игрок принят в игру'**
+  String get requestApproved;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отклонена'**
+  String get requestRejected;
+
+  /// No description provided for @gamesOnDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игры {date}'**
+  String gamesOnDate(String date);
+
+  /// No description provided for @cancelGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить игру'**
+  String get cancelGame;
+
+  /// No description provided for @cancelGameQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить игру?'**
+  String get cancelGameQuestion;
+
+  /// No description provided for @cancelGameMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'{venue}, {date}, {time}. Бронь под игрой отменится, игроки получат уведомление, а деньги вернутся всем, кто платил, в течение 1 рабочего дня.'**
+  String cancelGameMessage(String venue, String date, String time);
+
+  /// No description provided for @gameCancelled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игра отменена'**
+  String get gameCancelled;
+
+  /// No description provided for @keepGame.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не отменять'**
+  String get keepGame;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

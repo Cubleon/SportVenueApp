@@ -10,7 +10,6 @@ import 'package:sport_venue_app/src/data/formatters.dart';
 import 'package:sport_venue_app/src/data/mock_data.dart';
 import 'package:sport_venue_app/src/models/sport_venue_models.dart';
 import 'package:sport_venue_app/src/screens/booking_screens.dart';
-import 'package:sport_venue_app/src/screens/create_game_screen.dart';
 import 'package:sport_venue_app/src/screens/games_screens.dart';
 import 'package:sport_venue_app/src/screens/history_screen.dart';
 import 'package:sport_venue_app/src/screens/home_screen.dart';
@@ -111,6 +110,38 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('the demo build opens on the app and lets anyone back in', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController.demo(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(SportVenueApp(controller: controller));
+    await tester.pump(const Duration(milliseconds: 2700));
+    await tester.pumpAndSettle();
+
+    // Straight past the phone field: there is no call to wait for.
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+
+    controller.logout();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('phone-field')), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('phone-field')),
+      '9000000000',
+    );
+    await tester.tap(find.textContaining('Согласен'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('registration-continue')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Позвоните для входа'), findsNothing);
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+    expect(controller.isSignedIn, isTrue);
+  });
+
   testWidgets('sport selection lets a reader say "anything"', (tester) async {
     _setPhoneSize(tester);
     Set<String>? saved;
@@ -159,17 +190,21 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('₽400'), findsWidgets);
+      // The page opens on a club and a day and nothing else; the price and
+      // the players appear once there is an hour to price.
+      expect(find.byKey(const ValueKey('players-plus')), findsNothing);
+      await _answerBookingSteps(tester, day: fixedNow);
+
+      expect(find.textContaining('400\u00A0₽'), findsWidgets);
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('players-plus')),
         250,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, -220));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('players-plus')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('₽320'), findsWidgets);
+      expect(find.textContaining('320\u00A0₽'), findsWidgets);
 
       await tester.tap(find.byKey(const ValueKey('pay-share')));
       await tester.pumpAndSettle();
@@ -212,11 +247,33 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('1 игра'), findsOneWidget);
+    // The page itself, not the date strip or the sports row inside it.
+    final page = find
+        .descendant(
+          of: find.byKey(const ValueKey('home-screen')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    // And the game the header counts is on the page, not only counted.
+    await tester.scrollUntilVisible(
+      find.byKey(ValueKey('home-game-${game.id}')),
+      200,
+      scrollable: page,
+    );
+    expect(
+      find.text('Игры ${AppFormatters.dateShort(game.date)}'),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
+      200,
+      scrollable: page,
+    );
     expect(
       find.text('Свободно ${AppFormatters.dateShort(game.date)}'),
       findsOneWidget,
     );
-    expect(find.text('1 игра'), findsOneWidget);
   });
 
   testWidgets('the home survives the reader doubling the text', (tester) async {
@@ -279,11 +336,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.bookings.length, before + 1);
     expect(find.text('Бронь создана'), findsOneWidget);
-    expect(find.textContaining('Осталось собрать'), findsOneWidget);
+    // No money has moved yet, so the screen does not say any has; it says
+    // what the others still owe and what happens if they do not pay.
+    expect(find.textContaining('им осталось оплатить 3 доли'), findsOneWidget);
+    expect(find.textContaining('Ваша доля оплачена'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('open-created-booking')));
+    // Said with a screen of its own: what is held until when, and the way
+    // on to paying the reader's share.
+    expect(find.byKey(const ValueKey('success-mark')), findsOneWidget);
+    expect(find.byKey(const ValueKey('success-held')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('success-pay')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('cancel-booking')), findsOneWidget);
+    expect(find.byKey(const ValueKey('pay-code')), findsOneWidget);
+    expect(find.byKey(const ValueKey('claim-paid')), findsOneWidget);
   });
 
   testWidgets('the keyboard can reach the tabs', (tester) async {
@@ -349,9 +415,17 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
+    // The length of the game is asked after the day, because it decides
+    // which hours are still whole.
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('venue-option-luzhniki')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey(_dayKey(fixedNow))));
     await tester.pumpAndSettle();
 
     // Two hours to start with, and half an hour either way — the old three
@@ -360,7 +434,10 @@ void main() {
 
     // Scrolled into the middle of the screen: the pinned «Создать игру» bar
     // floats over the foot of the list and swallows taps aimed under it.
-    await tester.drag(find.byType(ListView).first, const Offset(0, -260));
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, -260),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('duration-plus')));
@@ -449,6 +526,9 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('venue-book')));
     await tester.pumpAndSettle();
+    // Booking asks the day and the hour before it asks for money.
+    expect(find.byKey(const ValueKey('pay-share')), findsNothing);
+    await _answerBookingSteps(tester, day: fixedNow);
     expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
   });
 
@@ -569,6 +649,11 @@ void main() {
     expect(find.text('Бронь'), findsOneWidget);
     expect(find.byKey(const ValueKey('confirm-payment')), findsNothing);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('cancel-booking')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
     await tester.pumpAndSettle();
 
@@ -579,6 +664,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.upcomingBookings, isNotEmpty);
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('cancel-booking')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const ValueKey('cancel-booking')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('confirm-yes')));
@@ -629,20 +719,54 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
-    // The hours belong to the chosen club, so the button waits for them.
+    // The steps arrive one at a time, and the button with the last of them.
     await tester.pumpAndSettle();
-    expect(find.text('20:00'), findsOneWidget);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsNothing);
+    await _answerCreateSteps(tester, day: fixedNow);
 
     await tester.tap(find.byKey(const ValueKey('create-game-submit')));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
 
     expect(controller.games.length, before + 1);
-    // The organiser is in their own game, so it offers the way out.
-    expect(find.byKey(const ValueKey('detail-leave-game')), findsOneWidget);
+    // The organiser holds the booking: no «Выйти», which the server would
+    // refuse. Their own share is to pay, and cancelling lives on the
+    // booking's screen.
+    expect(find.byKey(const ValueKey('detail-leave-game')), findsNothing);
+    expect(find.byKey(const ValueKey('detail-pay-share')), findsOneWidget);
+    expect(find.byKey(const ValueKey('detail-open-booking')), findsOneWidget);
+  });
+
+  testWidgets('an account can be deleted from the profile', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    controller.isSignedIn = true;
+    var loggedOut = false;
+
+    await tester.pumpWidget(
+      _Harness(
+        child: ProfileScreen(
+          controller: controller,
+          onLogout: () => loggedOut = true,
+        ),
+      ),
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('delete-account')),
+      200,
+    );
+    await tester.tap(find.byKey(const ValueKey('delete-account')));
+    await tester.pumpAndSettle();
+    expect(find.text('Удалить аккаунт?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+    await tester.pumpAndSettle();
+
+    expect(controller.isSignedIn, isFalse);
+    expect(loggedOut, isTrue);
   });
 
   testWidgets('signing out asks first, and the avatar never shows a digit', (
@@ -689,7 +813,10 @@ void main() {
   testWidgets('a place in a game can be given back', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
-    final game = controller.games.first;
+    // An open game: one «по одобрению» takes a request, not a place.
+    final game = controller.games.firstWhere(
+      (item) => item.type == GameType.open,
+    );
 
     await tester.pumpWidget(
       _Harness(
@@ -734,6 +861,152 @@ void main() {
     expect(find.byKey(const ValueKey('detail-join-game')), findsOneWidget);
   });
 
+  testWidgets('one screen books for friends or opens a game', (tester) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: BookingScreen(
+          controller: controller,
+          venue: MockData.venues.first,
+        ),
+      ),
+    );
+    await _answerBookingSteps(tester, day: fixedNow);
+    expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsNothing);
+
+    // The answers so far stay: the switch only changes what is made of them.
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, 2000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mode-game')));
+    await tester.pumpAndSettle();
+    expect(find.text('Новая игра'), findsOneWidget);
+    expect(find.byKey(const ValueKey('pay-share')), findsNothing);
+    expect(find.byKey(const ValueKey('create-game-submit')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('mode-own')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pay-share')), findsOneWidget);
+  });
+
+  testWidgets('a filled-in game reads aloud and survives large text', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final semantics = tester.ensureSemantics();
+    final controller = AppController(now: fixedNow);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        textScale: 1.6,
+        child: BookingScreen(controller: controller, findPlayers: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('venue-option-luzhniki')));
+    await tester.pumpAndSettle();
+    // Large text pushes the days below the fold too.
+    await tester.ensureVisible(find.byKey(ValueKey(_dayKey(fixedNow))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey(_dayKey(fixedNow))));
+    await tester.pumpAndSettle();
+    // Large text pushes the hours below the fold, where they are not built.
+    final freeHour = find.byWidgetPredicate(
+      (widget) => widget is TimeTile && widget.available,
+    );
+    for (var i = 0; i < 10 && freeHour.evaluate().isEmpty; i++) {
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+    }
+    await tester.ensureVisible(freeHour.first);
+    await tester.pumpAndSettle();
+    await tester.tap(freeHour.first);
+    await tester.pumpAndSettle();
+    // The game's own steps, which only appear once the hour is picked.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('create-approve-manually')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
+    expect(
+      tester.getSemantics(
+        find.byKey(const ValueKey('create-approve-manually')),
+      ),
+      matchesSemantics(
+        label: 'Одобрять вручную\nВы будете подтверждать каждого игрока',
+        hasToggledState: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
+    );
+
+    await tester.drag(
+      find.byType(CustomScrollView).first,
+      const Offset(0, 4000),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('mode-game'))),
+      matchesSemantics(
+        label: 'Нужны игроки\nоткрытая игра',
+        isButton: true,
+        isSelected: true,
+        hasSelectedState: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('a new booking with no clubs says why, not an empty list', (
+    tester,
+  ) async {
+    _setPhoneSize(tester);
+    final controller = AppController(now: fixedNow)..venues = [];
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _Harness(
+        controller: controller,
+        child: BookingScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('create-venue-empty')), findsNothing);
+    expect(find.byKey(const ValueKey('create-no-venues')), findsOneWidget);
+
+    // The server did not answer: the step offers to ask again.
+    controller.loadFailed = true;
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('create-load-failed')), findsOneWidget);
+    expect(find.text('Повторить'), findsOneWidget);
+  });
+
   testWidgets('booking can change club without starting over', (tester) async {
     _setPhoneSize(tester);
     final controller = AppController(now: fixedNow);
@@ -746,8 +1019,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
-    expect(find.textContaining('₽400'), findsWidgets);
+    await _answerBookingSteps(tester, day: fixedNow);
+    expect(find.textContaining('400\u00A0₽'), findsWidgets);
 
     await tester.tap(find.byKey(const ValueKey('booking-venue-field')));
     await tester.pumpAndSettle();
@@ -760,8 +1033,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // A different club costs differently, and the summary follows it.
-    expect(find.textContaining('₽400'), findsNothing);
-    expect(find.textContaining('₽550'), findsWidgets);
+    expect(find.textContaining('400\u00A0₽'), findsNothing);
+    expect(find.textContaining('550\u00A0₽'), findsWidgets);
   });
 
   testWidgets('the club picker searches, and picking one changes the step', (
@@ -773,13 +1046,14 @@ void main() {
     await tester.pumpWidget(
       _Harness(
         controller: controller,
-        child: CreateGameScreen(controller: controller),
+        child: BookingScreen(controller: controller, findPlayers: true),
       ),
     );
     await tester.pumpAndSettle();
 
-    // The step shows one club, not the whole catalogue.
-    final field = find.byKey(const ValueKey('create-venue-field'));
+    // Nothing is chosen for the reader: the step asks, and the catalogue
+    // lives in the sheet it opens.
+    final field = find.byKey(const ValueKey('create-venue-empty'));
     expect(field, findsOneWidget);
     expect(find.text('Арена север'), findsNothing);
 
@@ -792,8 +1066,6 @@ void main() {
       'север',
     );
     await tester.pumpAndSettle();
-    // The field underneath still names the current club, so the check is on
-    // the options inside the sheet.
     expect(find.byKey(const ValueKey('venue-option-luzhniki')), findsNothing);
     expect(find.byKey(const ValueKey('venue-option-north')), findsOneWidget);
 
@@ -870,6 +1142,50 @@ List<String> _recordHaptics() {
         .setMockMethodCallHandler(SystemChannels.platform, null),
   );
   return felt;
+}
+
+String _dayKey(DateTime day) => 'day-${day.toIso8601String().substring(0, 10)}';
+
+/// Taps the first hour the club will actually take.
+///
+/// Which hours are free belongs to the club and the day, so a fixed one
+/// would make these tests depend on the mock calendar staying still.
+Future<void> _pickFreeHour(WidgetTester tester) async {
+  final tile = find
+      .byWidgetPredicate((widget) => widget is TimeTile && widget.available)
+      .first;
+  await tester.ensureVisible(tile);
+  await tester.pumpAndSettle();
+  await tester.tap(tile);
+  await tester.pumpAndSettle();
+}
+
+/// Answers the two steps the booking screen opens with — the day, then the
+/// hour — which is what brings the steps below them onto the page.
+Future<void> _answerBookingSteps(
+  WidgetTester tester, {
+  required DateTime day,
+}) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(_dayKey(day))));
+  await tester.pumpAndSettle();
+  await _pickFreeHour(tester);
+}
+
+/// The same for creating a game, which asks for a club first.
+Future<void> _answerCreateSteps(
+  WidgetTester tester, {
+  required DateTime day,
+  String venueKey = 'venue-option-luzhniki',
+}) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('create-venue-empty')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(venueKey)));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey(_dayKey(day))));
+  await tester.pumpAndSettle();
+  await _pickFreeHour(tester);
 }
 
 void _setPhoneSize(WidgetTester tester) {

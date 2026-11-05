@@ -1,3 +1,13 @@
+/// Whether clubs show stars and review counts. Off until the reviews are our
+/// own: the ones there now come from catalogues whose terms forbid reuse, and
+/// a club with no reviews of ours has no rating to show.
+const bool kShowClubRatings = false;
+
+/// Whether distances are measured from the reader. Until the app asks for a
+/// location they are measured from the centre of Moscow, so they are not
+/// shown and not filtered by.
+const bool kDistanceFromReader = false;
+
 class AppFormatters {
   const AppFormatters._();
 
@@ -11,6 +21,30 @@ class AppFormatters {
     'суббота',
     'воскресенье',
   ];
+  static const _monthsNominative = [
+    'январь',
+    'февраль',
+    'март',
+    'апрель',
+    'май',
+    'июнь',
+    'июль',
+    'август',
+    'сентябрь',
+    'октябрь',
+    'ноябрь',
+    'декабрь',
+  ];
+
+  /// The months a run of days covers: «октябрь», or «октябрь – ноябрь» when
+  /// it crosses into the next one. Above a strip of dates the genitive of one
+  /// month («октября») named only half of it and read as a broken sentence.
+  static String monthSpan(DateTime first, DateTime last) {
+    final a = _monthsNominative[first.month - 1];
+    final b = _monthsNominative[last.month - 1];
+    return first.month == last.month ? a : '$a – $b';
+  }
+
   static const _months = [
     'января',
     'февраля',
@@ -40,8 +74,38 @@ class AppFormatters {
     return '${weekdayShort(date)} ${date.day} ${_months[date.month - 1].substring(0, 3)}';
   }
 
-  static String dateFull(DateTime date) {
-    return '${_fullWeekdays[date.weekday - 1]}, ${date.day} ${_months[date.month - 1]} ${date.year}';
+  /// A day and an hour, the way the rest of the app writes a deadline:
+  /// «пт 30 окт, 18:00».
+  static String moment(DateTime value) {
+    final hours = value.hour.toString().padLeft(2, '0');
+    final minutes = value.minute.toString().padLeft(2, '0');
+    return '${dateShort(value)}, $hours:$minutes';
+  }
+
+  /// «суббота, 31 октября». The year only when it is not this one: a game
+  /// next Saturday does not need «2026» to be told apart from anything.
+  static String dateFull(DateTime date, {DateTime? now}) {
+    final today = now ?? DateTime.now();
+    final base =
+        '${_fullWeekdays[date.weekday - 1]}, ${date.day} ${_months[date.month - 1]}';
+    return date.year == today.year ? base : '$base ${date.year}';
+  }
+
+  /// How long ago, the way a messenger says it: «только что», «40 мин
+  /// назад», «3 ч назад», «вчера в 10:41», then the date.
+  static String ago(DateTime value, {DateTime? now}) {
+    final current = now ?? DateTime.now();
+    final gap = current.difference(value);
+    final hours = value.hour.toString().padLeft(2, '0');
+    final minutes = value.minute.toString().padLeft(2, '0');
+    if (gap.inMinutes < 1) return 'только что';
+    if (gap.inMinutes < 60) return '${gap.inMinutes} мин назад';
+    final today = DateTime(current.year, current.month, current.day);
+    if (!value.isBefore(today)) return '${gap.inHours} ч назад';
+    if (!value.isBefore(today.subtract(const Duration(days: 1)))) {
+      return 'вчера в $hours:$minutes';
+    }
+    return moment(value);
   }
 
   static String money(int value) {
@@ -51,11 +115,19 @@ class AppFormatters {
       final left = text.length - i;
       buffer.write(text[i]);
       if (left > 1 && left % 3 == 1) {
-        buffer.write(' ');
+        buffer.write(_nbsp);
       }
     }
-    return '₽${buffer.toString()}';
+    // The way Russian writes money: the sign after the number, and spaces a
+    // line cannot break at, so «1» and «600 ₽» never land on two lines.
+    return '${buffer.toString()}$_nbsp₽';
   }
+
+  static const _nbsp = '\u00A0';
+
+  /// A number with one decimal the Russian way: «4,8», not «4.8».
+  static String decimal(double value) =>
+      value.toStringAsFixed(1).replaceAll('.', ',');
 
   static String phone(String digits) {
     final onlyDigits = digits.replaceAll(RegExp(r'\D'), '');

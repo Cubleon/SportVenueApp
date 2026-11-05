@@ -518,6 +518,11 @@ Future<void> _pump(
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  if (finder.hitTestable().evaluate().isEmpty) {
+    await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
+    await tester.pumpAndSettle();
+  }
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }

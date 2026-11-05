@@ -1,5 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:flutter/material.dart';
 import '../theme/app_icons.dart';
 
@@ -42,10 +46,7 @@ class AppLogo extends StatelessWidget {
         const SizedBox(height: 16),
         RichText(
           text: TextSpan(
-            style: context.text.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-            ),
+            style: context.text.headlineSmall?.copyWith(letterSpacing: -0.3),
             children: [
               const TextSpan(text: 'sport'),
               TextSpan(
@@ -193,7 +194,7 @@ class PrimaryButton extends StatelessWidget {
             ButtonTone.danger => context.colors.danger,
           };
     final foreground = !enabled
-        ? context.colors.dim
+        ? context.colors.muted
         : switch (tone) {
             ButtonTone.accent => context.colors.onAccent,
             ButtonTone.neutral => context.colors.ink,
@@ -256,9 +257,10 @@ class PrimaryButton extends StatelessWidget {
                         maxLines: 2,
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
+                        // Bold, so the one thing to press reads before the
+                        // words around it.
                         style: context.text.titleSmall?.copyWith(
                           color: foreground,
-                          fontWeight: FontWeight.w600,
                           letterSpacing: -0.05,
                           height: 1.15,
                         ),
@@ -268,6 +270,44 @@ class PrimaryButton extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+}
+
+/// A step that is not there until the one before it has been answered.
+///
+/// A form that shows everything at once asks the reader to hold the whole
+/// thing in their head before they have decided anything. Each block waits
+/// for its turn and arrives in place rather than appearing under the thumb.
+class RevealStep extends StatelessWidget {
+  const RevealStep({super.key, required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: context.motion(const Duration(milliseconds: 260)),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: visible
+          ? TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: 1),
+              duration: context.motion(const Duration(milliseconds: 240)),
+              curve: Curves.easeOut,
+              child: child,
+              builder: (context, t, child) => Opacity(
+                opacity: t,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - t) * 10),
+                  child: child,
+                ),
+              ),
+            )
+          // Full width even when empty, so the column it sits in does not
+          // change shape as steps arrive.
+          : const SizedBox(width: double.infinity),
     );
   }
 }
@@ -445,10 +485,7 @@ class SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: context.text.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.15,
-              ),
+              style: context.text.titleMedium?.copyWith(letterSpacing: -0.15),
             ),
           ),
           if (action != null)
@@ -465,34 +502,60 @@ class SportBadge extends StatelessWidget {
   final Sport sport;
   final bool compact;
 
+  /// The sport as an [InfoTag]: its colour as a dot before its name.
+  @override
+  Widget build(BuildContext context) => InfoTag(
+    label: sport.name.capitalized,
+    dot: AppTheme.sportGround(sport.id).last,
+  );
+}
+
+/// A small word on a card: what a club has, how much is free, which sport.
+///
+/// One look for all of them. The club screen alone had three — full-colour
+/// sport chips, outlined amenity chips with a tick, pale tags — so nothing
+/// said which of them mattered.
+class InfoTag extends StatelessWidget {
+  const InfoTag({super.key, required this.label, this.dot, this.live = false});
+
+  final String label;
+
+  /// A sport's colour, as a dot before the word: the colour stays the sport's
+  /// mark without turning the chip into a block of paint.
+  final Color? dot;
+
+  /// The one fact on the card that answers the reader's question — free
+  /// hours on the chosen day — set in the accent.
+  final bool live;
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
-      height: compact ? 26 : 30,
-      padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: context.colors.surfaceRaised,
-        borderRadius: BorderRadius.circular(99),
+        color: live ? colors.accentSoft : colors.surfaceRaised,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // A dot in the sport's own colour. The emoji that used to sit here
-          // was clip art, and the colour says the same thing without it.
-          Container(
-            width: compact ? 6 : 7,
-            height: compact ? 6 : 7,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.sportGround(sport.id).last,
+          if (dot != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            sport.name.capitalized,
-            style: context.text.labelSmall?.copyWith(
-              color: context.colors.muted,
-              fontWeight: FontWeight.w700,
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.labelSmall?.copyWith(
+                color: live ? colors.accent : colors.ink,
+              ),
             ),
           ),
         ],
@@ -544,9 +607,12 @@ class SelectableChip extends StatelessWidget {
                   ? (color ?? context.colors.accent)
                   : context.colors.surface,
               borderRadius: BorderRadius.circular(99),
+              // A hairline, not the strong outline of a secondary button:
+              // «Вечер» and «Отменить бронь» were drawn the same way, so a
+              // filter could not be told from an action.
               border: selected
                   ? null
-                  : Border.all(color: context.colors.borderStrong, width: 1),
+                  : Border.all(color: context.colors.border, width: 1),
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -561,8 +627,7 @@ class SelectableChip extends StatelessWidget {
                           ? (color == null
                                 ? context.colors.onAccent
                                 : Colors.white)
-                          : context.colors.muted,
-                      fontWeight: FontWeight.w600,
+                          : context.colors.ink,
                     ),
                   ),
                 ],
@@ -632,10 +697,15 @@ class VenueHero extends StatelessWidget {
     required this.venue,
     this.height = 116,
     this.flies = true,
+    this.sportId,
   });
 
   final Venue venue;
   final double height;
+
+  /// The sport to draw, when the club has several and one has been chosen.
+  /// Otherwise the club's first.
+  final String? sportId;
 
   /// Whether this one takes part in the flight between screens. Two pictures
   /// of the same club on one screen would both claim the tag and Flutter
@@ -651,7 +721,7 @@ class VenueHero extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
-      child: SportSurface(sportId: primarySportId(venue)),
+      child: SportSurface(sportId: primarySportId(venue, filterId: sportId)),
     );
     return flies ? Hero(tag: venueHeroTag(venue), child: picture) : picture;
   }
@@ -670,7 +740,7 @@ class BookingSummaryRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: summaryRowsDivided(context, [
         SummaryRow(
           label: context.l10n.summaryDate,
           value: AppFormatters.dateFull(draft.date),
@@ -680,9 +750,18 @@ class BookingSummaryRows extends StatelessWidget {
           label: context.l10n.summaryVenue,
           value: draft.venue.name.capitalized,
         ),
+        // What the reader is weighing here is money: four shares at 525,
+        // not «Игроки 4».
         SummaryRow(
-          label: context.l10n.summaryPlayers,
-          value: '${draft.players}',
+          label: draft.mode == PaymentMode.split
+              ? context.l10n.summaryShares
+              : context.l10n.summaryPlayers,
+          value: draft.mode == PaymentMode.split
+              ? context.l10n.sharesTimesPrice(
+                  draft.players,
+                  AppFormatters.money(draft.sharePrice),
+                )
+              : '${draft.players}',
         ),
         SummaryRow(
           label: context.l10n.summaryTotal,
@@ -694,10 +773,20 @@ class BookingSummaryRows extends StatelessWidget {
           value: AppFormatters.money(draft.sharePrice),
           accent: true,
         ),
-      ],
+      ]),
     );
   }
 }
+
+/// Summary rows with a hairline between them. The label sits at one edge
+/// and the value at the other, and without a line the eye had a long way to
+/// travel across white to pair them.
+List<Widget> summaryRowsDivided(BuildContext context, List<Widget> rows) => [
+  for (final (i, row) in rows.indexed) ...[
+    if (i > 0) Divider(height: 1, thickness: 1, color: context.colors.border),
+    row,
+  ],
+];
 
 class SummaryRow extends StatelessWidget {
   const SummaryRow({
@@ -717,40 +806,42 @@ class SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Both boxes are tight, three parts to seven. Anything loose here
-          // keeps the width it does not use, and a row packs from the left,
-          // so the leftover lands after the value: the shorter the label, the
-          // further from the edge its value stops. That is what made a column
-          // of values look hand-placed — "Дата" left its value 38 pixels
-          // short of where "Стоимость" left its own.
-          Expanded(
-            flex: 3,
-            child: Text(
-              label,
-              style: context.text.bodySmall?.copyWith(
-                color: context.colors.muted,
-                fontWeight: FontWeight.w600,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The label takes the width it needs, up to a ceiling, and the
+            // value takes all the rest, right-aligned, so every value stops at
+            // the same edge. A fixed three-to-seven split did that too, but
+            // left the label a third of the row: «Стоимость с человека» broke
+            // over two lines beside a value four characters long.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.5),
+              child: Text(
+                label,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 7,
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: context.text.bodyMedium?.copyWith(
-                color: accent ? context.colors.accent : context.colors.ink,
-                fontWeight: highlight || accent
-                    ? FontWeight.w700
-                    : FontWeight.w700,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: context.text.bodyMedium?.copyWith(
+                  // Emphasis is weight, not colour: blue is kept for what
+                  // can be tapped, and a price is not a link.
+                  color: context.colors.ink,
+                  fontWeight: highlight || accent
+                      ? FontWeight.w700
+                      : FontWeight.w700,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -790,7 +881,6 @@ void showAppSnack(
         message,
         style: context.text.bodyMedium?.copyWith(
           color: context.colors.onCommit,
-          fontWeight: FontWeight.w500,
         ),
       ),
       behavior: SnackBarBehavior.floating,
@@ -802,51 +892,80 @@ void showAppSnack(
   );
 }
 
+/// The one header every inner screen uses: a way back on the left, a small
+/// title in the middle, and room on the right for what the screen offers.
+///
+/// Before it there were two kinds of header (a large title on the left and
+/// a small one in the middle) and five hand-made copies of the second, each
+/// with its own spacing. One widget keeps them the same.
 class ScreenTitleBar extends StatelessWidget {
   const ScreenTitleBar({
     super.key,
     required this.title,
     this.subtitle,
-    this.leading,
+    this.onBack,
     this.trailing,
+    this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 12),
   });
 
   final String title;
   final String? subtitle;
 
-  /// Before the title. Where a way back belongs: every other screen in the
-  /// app puts it there, and a thumb reaches the left corner.
-  final Widget? leading;
+  /// Shows the round back button. Every inner screen has one, on the left,
+  /// where a thumb reaches it.
+  final VoidCallback? onBack;
 
-  /// After the title. For what the screen does, not for leaving it.
+  /// After the title. For what the screen does, not for leaving it. Keep it
+  /// to one round button, so the title stays centred.
   final Widget? trailing;
+
+  /// Screens whose list already pads its children pass [EdgeInsets.zero].
+  final EdgeInsetsGeometry padding;
+
+  /// The width of a round button, kept empty on a side that has none so the
+  /// title sits in the middle of the screen, not of the space left over.
+  static const double _sideWidth = 48;
 
   @override
   Widget build(BuildContext context) {
+    final back = onBack;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      padding: padding,
       child: Row(
         children: [
-          ?leading,
-          if (leading != null) const SizedBox(width: 12),
+          SizedBox(
+            width: _sideWidth,
+            child: back == null ? null : BackCircleButton(onTap: back),
+          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: context.text.headlineSmall),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
+            child: Semantics(
+              header: true,
+              child: Column(
+                children: [
                   Text(
-                    subtitle!,
-                    style: context.text.bodySmall?.copyWith(
-                      color: context.colors.muted,
-                    ),
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleMedium,
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.colors.muted,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-          ?trailing,
+          SizedBox(width: _sideWidth, child: trailing),
         ],
       ),
     );
@@ -871,29 +990,17 @@ class PinnedActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bar = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 28,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                context.colors.bg.withValues(alpha: 0),
-                context.colors.bg,
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          color: context.colors.bg,
-          padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
-          child: child,
-        ),
-      ],
+    // A solid ground with a hairline, not a fade: through a 28-point fade
+    // the outline of the button scrolling underneath showed as a stray arc
+    // above the bar, which read as a layout fault.
+    final bar = Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: context.colors.bg,
+        border: Border(top: BorderSide(color: context.colors.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: child,
     );
     return onHeight == null
         ? bar
@@ -978,14 +1085,12 @@ class BookingRow extends StatelessWidget {
                 Text(
                   AppFormatters.weekdayShort(booking.draft.date),
                   style: context.text.labelSmall?.copyWith(
-                    color: over ? context.colors.dim : context.colors.accent,
-                    fontWeight: FontWeight.w700,
+                    color: over ? context.colors.muted : context.colors.accent,
                   ),
                 ),
                 Text(
                   '${booking.draft.date.day}',
                   style: context.text.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
                     color: over ? context.colors.muted : null,
                   ),
                 ),
@@ -1005,7 +1110,6 @@ class BookingRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
                           color: over ? context.colors.muted : null,
                         ),
                       ),
@@ -1034,7 +1138,7 @@ class BookingRow extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            Icon(AppIcons.chevronRight, color: context.colors.dim),
+            Icon(AppIcons.chevronRight, color: context.colors.muted),
         ],
       ),
     );
@@ -1058,11 +1162,46 @@ class StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: context.text.labelSmall?.copyWith(
-          color: context.colors.danger,
-          fontWeight: FontWeight.w700,
+        style: context.text.labelSmall?.copyWith(color: context.colors.danger),
+      ),
+    );
+  }
+}
+
+/// Swaps one view for another the way a new screen arrives: the new one
+/// fades in rising a little, the old one fades out. For changes that are
+/// not a new screen but read as one — a tab, or a link that finishes
+/// loading — so they do not snap.
+///
+/// Give each view its own key; a child with the same key is only rebuilt,
+/// not swapped.
+class RiseFadeSwitcher extends StatelessWidget {
+  const RiseFadeSwitcher({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 240),
+  });
+
+  final Widget child;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: context.motion(duration),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
         ),
       ),
+      child: child,
     );
   }
 }
@@ -1082,6 +1221,37 @@ class BackCircleButton extends StatelessWidget {
       style: IconButton.styleFrom(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.ink,
+      ),
+    );
+  }
+}
+
+/// Something the screen could not load, said once, with a way to ask again.
+///
+/// Without it a failed request looked like one still in progress: a count
+/// that read «считаем…» and placeholders that shimmered for ever.
+class RetryNotice extends StatelessWidget {
+  const RetryNotice({super.key, required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              message,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.muted,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+        ],
       ),
     );
   }
@@ -1127,9 +1297,7 @@ class EmptyState extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: context.text.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: context.text.titleSmall,
           ),
           const SizedBox(height: 6),
           Text(
@@ -1247,7 +1415,10 @@ class DateStrip extends StatelessWidget {
   });
 
   final DateTime now;
-  final DateTime selected;
+
+  /// The chosen day, or null while the reader has not chosen one. Nothing is
+  /// highlighted then, so the strip asks a question instead of answering it.
+  final DateTime? selected;
   final ValueChanged<DateTime> onSelect;
   final int days;
 
@@ -1262,8 +1433,13 @@ class DateStrip extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            AppFormatters.monthGenitive(selected),
-            style: context.text.labelSmall?.copyWith(color: context.colors.dim),
+            AppFormatters.monthSpan(
+              DateTime(now.year, now.month, now.day),
+              DateTime(now.year, now.month, now.day + days - 1),
+            ),
+            style: context.text.labelSmall?.copyWith(
+              color: context.colors.muted,
+            ),
           ),
         ),
         SizedBox(
@@ -1273,8 +1449,10 @@ class DateStrip extends StatelessWidget {
             itemBuilder: (context, index) {
               final date = start.add(Duration(days: index));
               return _DayCard(
+                key: ValueKey('day-${date.toIso8601String().substring(0, 10)}'),
                 date: date,
-                isSelected: DateUtils.isSameDay(date, selected),
+                isSelected:
+                    selected != null && DateUtils.isSameDay(date, selected),
                 isToday: index == 0,
                 onTap: withSelectionFeedback(() => onSelect(date)),
               );
@@ -1293,6 +1471,7 @@ class DateStrip extends StatelessWidget {
 /// lands on first.
 class _DayCard extends StatelessWidget {
   const _DayCard({
+    super.key,
     required this.date,
     required this.isSelected,
     required this.isToday,
@@ -1332,8 +1511,7 @@ class _DayCard extends StatelessWidget {
                 style: context.text.labelSmall?.copyWith(
                   color: isSelected
                       ? colors.onAccent.withValues(alpha: 0.85)
-                      : colors.dim,
-                  fontWeight: FontWeight.w600,
+                      : colors.muted,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1398,9 +1576,7 @@ class DurationPicker extends StatelessWidget {
         Expanded(
           child: Text(
             durationText(context, value),
-            style: context.text.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: context.text.titleLarge,
           ),
         ),
         StepperButton(
@@ -1453,7 +1629,7 @@ class StepperButton extends StatelessWidget {
             : context.colors.surfaceRaised,
         disabledBackgroundColor: context.colors.surfaceRaised,
         foregroundColor: context.colors.onAccent,
-        disabledForegroundColor: context.colors.dim,
+        disabledForegroundColor: context.colors.muted,
       ),
     );
   }
@@ -1512,9 +1688,8 @@ class TimeTile extends StatelessWidget {
                     ? context.colors.onAccent
                     : available
                     ? context.colors.ink
-                    : context.colors.dim,
+                    : context.colors.muted,
                 decoration: available ? null : TextDecoration.lineThrough,
-                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -1605,16 +1780,11 @@ class VenueRow extends StatelessWidget {
                     venue.name.capitalized,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: context.text.titleSmall,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    context.l10n.venueAddressDistance(
-                      venue.address,
-                      venue.distanceKm.toStringAsFixed(1),
-                    ),
+                    venue.address,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.text.bodySmall?.copyWith(
@@ -1624,22 +1794,19 @@ class VenueRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      if (!venue.isPublic)
+                      if (kShowClubRatings && !venue.isPublic) ...[
                         Icon(
                           AppIcons.star,
                           size: 15,
                           color: context.colors.ink,
                         ),
-                      const SizedBox(width: 3),
-                      Text(
-                        venue.isPublic
-                            ? 'Общественная'
-                            : venue.rating.toStringAsFixed(1),
-                        style: context.text.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                        const SizedBox(width: 3),
+                        Text(
+                          AppFormatters.decimal(venue.rating),
+                          style: context.text.labelMedium,
                         ),
-                      ),
-                      const SizedBox(width: 10),
+                        const SizedBox(width: 10),
+                      ],
                       Text(
                         venue.isPublic
                             ? 'Бесплатно'
@@ -1647,8 +1814,7 @@ class VenueRow extends StatelessWidget {
                                 AppFormatters.money(venue.pricePerHour),
                               ),
                         style: context.text.labelMedium?.copyWith(
-                          color: context.colors.accent,
-                          fontWeight: FontWeight.w700,
+                          color: context.colors.ink,
                         ),
                       ),
                     ],
@@ -1656,10 +1822,131 @@ class VenueRow extends StatelessWidget {
                 ],
               ),
             ),
-            trailing ?? Icon(AppIcons.chevronRight, color: context.colors.dim),
+            trailing ??
+                Icon(AppIcons.chevronRight, color: context.colors.muted),
           ],
         ),
       ),
     );
   }
+}
+
+/// «В календарь» and «Маршрут» side by side, under a booking or a game.
+///
+/// Booking services put both right after the booking is made: a game in the
+/// calendar is not forgotten, and the way to the club is one tap.
+class PlanActions extends StatelessWidget {
+  const PlanActions({
+    super.key,
+    required this.title,
+    required this.start,
+    required this.durationMinutes,
+    required this.venue,
+  });
+
+  final String title;
+  final DateTime start;
+  final int durationMinutes;
+  final Venue venue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: PrimaryButton(
+            key: const ValueKey('add-to-calendar'),
+            label: context.l10n.addToCalendar,
+            icon: AppIcons.calendarDays,
+            tone: ButtonTone.neutral,
+            onPressed: () => _addToCalendar(context),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: PrimaryButton(
+            key: const ValueKey('open-route'),
+            label: context.l10n.openRoute,
+            icon: AppIcons.mapPin,
+            tone: ButtonTone.neutral,
+            onPressed: () => _openRoute(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  DateTime get _end => start.add(Duration(minutes: durationMinutes));
+
+  Future<void> _addToCalendar(BuildContext context) async {
+    final failed = context.l10n.linkOpenFailed;
+    final location = '${venue.name.capitalized}, ${venue.address}';
+    try {
+      if (kIsWeb) {
+        // No system calendar to hand an event to in a browser: Google
+        // Calendar's new-event page, filled in, is the nearest thing.
+        await launchUrl(
+          googleCalendarLink(title, start, _end, location),
+          mode: LaunchMode.externalApplication,
+        );
+        return;
+      }
+      final added = await Add2Calendar.addEvent2Cal(
+        Event(
+          title: title,
+          location: location,
+          startDate: start,
+          endDate: _end,
+        ),
+      );
+      if (!added && context.mounted) {
+        showAppSnack(context, failed, tone: SnackTone.failed);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        showAppSnack(context, failed, tone: SnackTone.failed);
+      }
+    }
+  }
+
+  Future<void> _openRoute(BuildContext context) async {
+    final failed = context.l10n.linkOpenFailed;
+    final opened = await launchUrl(
+      routeLink(venue),
+      mode: LaunchMode.externalApplication,
+    ).catchError((_) => false);
+    if (!opened && context.mounted) {
+      showAppSnack(context, failed, tone: SnackTone.failed);
+    }
+  }
+}
+
+/// A route to the club in Yandex Maps: the app if it is installed, the site
+/// if not.
+Uri routeLink(Venue venue) => Uri.https('yandex.ru', '/maps/', {
+  'rtext': '~${venue.latitude},${venue.longitude}',
+  'rtt': 'auto',
+});
+
+/// Google Calendar's new-event page with the event filled in. Times are
+/// Moscow wall-clock, the way the app keeps them.
+Uri googleCalendarLink(
+  String title,
+  DateTime start,
+  DateTime end,
+  String location,
+) {
+  String stamp(DateTime t) =>
+      '${t.year.toString().padLeft(4, '0')}'
+      '${t.month.toString().padLeft(2, '0')}'
+      '${t.day.toString().padLeft(2, '0')}T'
+      '${t.hour.toString().padLeft(2, '0')}'
+      '${t.minute.toString().padLeft(2, '0')}00';
+  return Uri.https('calendar.google.com', '/calendar/render', {
+    'action': 'TEMPLATE',
+    'text': title,
+    'dates': '${stamp(start)}/${stamp(end)}',
+    'ctz': 'Europe/Moscow',
+    'location': location,
+  });
 }

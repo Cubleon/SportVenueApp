@@ -155,9 +155,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 Expanded(
                   child: Text(
                     context.l10n.filtersTitle,
-                    style: context.text.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: context.text.headlineSmall,
                   ),
                 ),
                 if (!_draft.isEmpty)
@@ -194,14 +192,17 @@ class _FilterSheetState extends State<_FilterSheet> {
               ),
               const SizedBox(height: 4),
             ],
-            if (_maxDistance > 0) ...[
+            // No distance filter while distance is measured from the centre
+            // of Moscow, not from the reader: «до 3 км» from the Kremlin is not
+            // a question anyone has.
+            if (kDistanceFromReader && _maxDistance > 0) ...[
               _SliderBlock(
                 title: context.l10n.filterDistance,
                 value: _draft.maxDistanceKm == null
                     ? context.l10n.filterAnyDistance
                     : context.l10n.upTo(
                         context.l10n.distanceKm(
-                          _draft.maxDistanceKm!.toStringAsFixed(1),
+                          AppFormatters.decimal(_draft.maxDistanceKm!),
                         ),
                       ),
                 slider: Slider(
@@ -284,7 +285,7 @@ class _SliderBlock extends StatelessWidget {
             Text(
               value,
               style: context.text.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

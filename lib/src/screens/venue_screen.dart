@@ -40,6 +40,11 @@ class _VenueScreenState extends State<VenueScreen> {
   /// Free hours on [_day], or null while they are being counted.
   int? _freeHours;
 
+  /// Set when the count could not be had. The row used to say «считаем…»
+  /// for ever when the network dropped, which reads as an app still
+  /// thinking rather than one that has given up and can be asked again.
+  bool _freeHoursFailed = false;
+
   DateTime get _day => widget.date ?? DateUtils.dateOnly(widget.controller.now);
 
   @override
@@ -49,17 +54,27 @@ class _VenueScreenState extends State<VenueScreen> {
   }
 
   Future<void> _loadFreeHours() async {
-    final slots = await widget.controller.loadSlots(
-      venue: widget.venue,
-      day: _day,
-      durationMinutes: 60,
-    );
-    if (!mounted) {
-      return;
+    if (_freeHoursFailed) {
+      setState(() => _freeHoursFailed = false);
     }
-    setState(() {
-      _freeHours = slots.where((slot) => slot.isAvailable).length;
-    });
+    try {
+      final slots = await widget.controller.loadSlots(
+        venue: widget.venue,
+        day: _day,
+        durationMinutes: 60,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _freeHours = slots.where((slot) => slot.isAvailable).length;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _freeHoursFailed = true);
+    }
   }
 
   Sport? _sportOf(String id) {
@@ -106,29 +121,26 @@ class _VenueScreenState extends State<VenueScreen> {
                   const SizedBox(height: 12),
                   VenueHero(
                     venue: venue,
-                    height: context.scaled(168, max: 1.2),
+                    // A picture of the ground, the same for every club of a
+                    // sport: worth a strip, not a fifth of the screen.
+                    height: context.scaled(120, max: 1.2),
                   ),
                   const SizedBox(height: 18),
                   Text(
                     venue.name.capitalized,
-                    style: context.text.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: context.text.headlineSmall,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    context.l10n.venueAddressDistance(
-                      venue.address,
-                      venue.distanceKm.toStringAsFixed(1),
-                    ),
+                    venue.address,
                     style: context.text.bodyMedium?.copyWith(
                       color: colors.muted,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  if (!venue.isPublic) _RatingRow(venue: venue),
-                  if (venue.isPublic)
-                    const Text('Общественная площадка · Бесплатно'),
+                  if (kShowClubRatings && !venue.isPublic) ...[
+                    const SizedBox(height: 14),
+                    _RatingRow(venue: venue),
+                  ],
                   if (venue.description.isNotEmpty) ...[
                     const SizedBox(height: 18),
                     Text(
@@ -147,10 +159,9 @@ class _VenueScreenState extends State<VenueScreen> {
                       runSpacing: 8,
                       children: [
                         for (final id in venue.sportIds)
-                          SelectableChip(
+                          InfoTag(
                             label: _sportOf(id)?.name.capitalized ?? id,
-                            selected: true,
-                            color: AppTheme.sportGround(id).last,
+                            dot: AppTheme.sportGround(id).last,
                           ),
                       ],
                     ),
@@ -164,7 +175,7 @@ class _VenueScreenState extends State<VenueScreen> {
                       runSpacing: 8,
                       children: [
                         for (final amenity in venue.amenities)
-                          _Amenity(label: amenity),
+                          _Amenity(label: amenity.capitalized),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -174,6 +185,8 @@ class _VenueScreenState extends State<VenueScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Text('Общественная площадка · Бесплатно'),
+                          const SizedBox(height: 10),
                           const Text('Свободный доступ без бронирования'),
                           const SizedBox(height: 10),
                           Text(
@@ -188,26 +201,29 @@ class _VenueScreenState extends State<VenueScreen> {
                   if (!venue.isPublic)
                     AppCard(
                       child: Column(
-                        children: [
+                        children: summaryRowsDivided(context, [
                           SummaryRow(
                             label: context.l10n.price,
                             value: context.l10n.pricePerHour(
                               AppFormatters.money(venue.pricePerHour),
                             ),
                           ),
-                          const SizedBox(height: 10),
                           // The day goes in the value, not the label: as a
                           // label it wraps to two lines against rows that are
                           // one, and the column stops looking like a column.
                           SummaryRow(
                             label: context.l10n.freeLabel,
-                            value: _freeHours == null
+                            value: _freeHoursFailed
+                                ? context.l10n.freeHoursUnknown
+                                : _freeHours == null
                                 ? context.l10n.loading
                                 : '${context.l10n.hoursCount(_freeHours!)} · '
                                       '${AppFormatters.dateShort(_day)}',
-                            accent: _freeHours != null && _freeHours! > 0,
+                            accent:
+                                !_freeHoursFailed &&
+                                _freeHours != null &&
+                                _freeHours! > 0,
                           ),
-                          const SizedBox(height: 10),
                           SummaryRow(
                             label: context.l10n.venueCapacity,
                             value: context.l10n.capacityRange(
@@ -215,9 +231,17 @@ class _VenueScreenState extends State<VenueScreen> {
                               venue.capacityMax,
                             ),
                           ),
-                        ],
+                        ]),
                       ),
                     ),
+                  if (_freeHoursFailed) ...[
+                    const SizedBox(height: 12),
+                    RetryNotice(
+                      key: const ValueKey('venue-free-hours-failed'),
+                      message: context.l10n.freeHoursFailed,
+                      onRetry: _loadFreeHours,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -248,9 +272,9 @@ class _RatingRow extends StatelessWidget {
     final reviews = venue.reviewCount;
     return Semantics(
       label: reviews == null
-          ? context.l10n.ratingOnly(venue.rating.toStringAsFixed(1))
+          ? context.l10n.ratingOnly(AppFormatters.decimal(venue.rating))
           : context.l10n.ratingWithReviews(
-              venue.rating.toStringAsFixed(1),
+              AppFormatters.decimal(venue.rating),
               reviews,
             ),
       child: ExcludeSemantics(
@@ -259,10 +283,8 @@ class _RatingRow extends StatelessWidget {
             Icon(AppIcons.star, size: 17, color: context.colors.ink),
             const SizedBox(width: 6),
             Text(
-              venue.rating.toStringAsFixed(1),
-              style: AppTheme.numeric(
-                context.text.titleMedium,
-              ).copyWith(fontWeight: FontWeight.w800),
+              AppFormatters.decimal(venue.rating),
+              style: AppTheme.numeric(context.text.titleMedium).copyWith(),
             ),
             if (reviews != null) ...[
               const SizedBox(width: 8),
@@ -297,27 +319,5 @@ class _Amenity extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: context.colors.borderStrong),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(AppIcons.check, size: 15, color: context.colors.success),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: context.text.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => InfoTag(label: label);
 }

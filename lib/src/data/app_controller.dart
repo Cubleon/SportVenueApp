@@ -15,6 +15,8 @@ enum AppErrorKind {
   sessionExpired,
   slotTaken,
   gameFull,
+  sharePaid,
+  deadlinePassed,
   cancelNotOrganizer,
   badPhone,
   badEmail,
@@ -47,14 +49,30 @@ class AppController extends ChangeNotifier {
     );
   }
 
+  /// The demo build: no server, the fixtures as data, and a way in that
+  /// asks for nothing.
+  ///
+  /// The demo used to be made by editing [SportVenueApp] to build a plain
+  /// controller and editing it back after the build. Once sign-in became a
+  /// real phone call there was no way in without a server at all, so the
+  /// demo stopped at the phone field. A build flag chooses this instead,
+  /// and only a build made with it has the door.
+  factory AppController.demo({DateTime? now}) {
+    return AppController._(now: now, isDemo: true);
+  }
+
   AppController._({
     DateTime? now,
     this._api,
     this._closeApiOnDispose = false,
     this._session = const NoSessionStore(),
+    this.isDemo = false,
   }) : _now = now ?? DateTime.now() {
     sports = List<Sport>.from(MockData.sports);
-    venues = List<Venue>.from(MockData.venues);
+    // Clubs come from the server when there is one. The fixtures used to
+    // stay in place until the first load succeeded, so a launch without a
+    // connection showed four made-up clubs as if they were real.
+    venues = _api == null ? List<Venue>.from(MockData.venues) : [];
     selectedSportIds = {'football', 'padel', 'tennis'};
 
     // Unit and widget tests use the controller without a transport. The
@@ -63,7 +81,11 @@ class AppController extends ChangeNotifier {
     if (_api == null) {
       games = MockData.games(_now);
       bookings = [MockData.initialBooking(_now)];
+      notifications = MockData.notifications(_now);
     }
+    // The demo shows the admin's side too: whoever is shown the pilot is
+    // shown both ends of a payment.
+    isPaymentAdmin = isDemo;
   }
 
   factory AppController.connected({
@@ -93,6 +115,9 @@ class AppController extends ChangeNotifier {
   final bool _closeApiOnDispose;
   final SessionStore _session;
 
+  /// Whether this is the demo build, which signs in without a server.
+  final bool isDemo;
+
   String phone = '';
   String email = '';
   String? userId;
@@ -103,6 +128,16 @@ class AppController extends ChangeNotifier {
   String? clubName;
   bool isSignedIn = false;
   AccountType accountType = AccountType.player;
+
+  /// Whether the reader checks transfers and makes refunds. Only the
+  /// owner of the service, on the pilot; the server says who.
+  bool isPaymentAdmin = false;
+
+  /// Where shares are paid to, once asked for. See [loadPaymentInfo].
+  PaymentInfo? paymentInfo;
+
+  /// The next share code the fixtures hand out. The server makes its own.
+  int _nextShareCode = 5101;
   Set<String> selectedSportIds = {};
   List<Sport> sports = [];
   List<Venue> venues = [];
@@ -171,7 +206,11 @@ class AppController extends ChangeNotifier {
   }
 
   bool canCancelBooking(Booking booking) {
-    return _api == null || (userId != null && booking.organizerId == userId);
+    if (_api == null) {
+      // The demo's own bookings carry no organiser; a friend's does.
+      return booking.organizerId == null || booking.organizerId == userId;
+    }
+    return userId != null && booking.organizerId == userId;
   }
 
   Sport sportById(String id) {
@@ -370,6 +409,21 @@ class AppController extends ChangeNotifier {
     return PhoneCallStatus.confirmed;
   }
 
+  /// Signs in the demo build with whatever was typed, and asks for no call
+  /// and no code: there is nobody on the other end to confirm them.
+  ///
+  /// Refused outside the demo build, so the real app cannot be walked into
+  /// without the server saying yes.
+  void signInDemo({String phone = '', String email = ''}) {
+    if (!isDemo) {
+      throw StateError('Demo sign-in exists only in the demo build');
+    }
+    this.phone = phone;
+    this.email = email.trim().toLowerCase();
+    isSignedIn = true;
+    notifyListeners();
+  }
+
   bool get emailCodeAccepted => _confirmedEmailChallengeId != null;
 
   Future<ApiEmailChallenge> startEmailVerification(
@@ -483,6 +537,7 @@ class AppController extends ChangeNotifier {
     _applyProfileName(user);
     phone = user['phone'] as String? ?? '';
     email = user['email'] as String? ?? '';
+    isPaymentAdmin = user['is_payment_admin'] == true;
     selectedSportIds = nextSelectedIds;
     bookings = bookingRows
         .map(
@@ -502,6 +557,44 @@ class AppController extends ChangeNotifier {
           ),
         )
         .toList();
+    // Notices ride along but are not allowed to fail the load: a server that
+    // does not have them yet would otherwise keep the whole app empty.
+    unawaited(loadNotifications());
+  }
+
+  /// What the bell holds, newest first.
+  List<AppNotification> notifications = [];
+
+  int get unreadNotifications =>
+      notifications.where((note) => !note.read).length;
+
+  Future<void> loadNotifications() async {
+    final api = _api;
+    if (api == null) {
+      return;
+    }
+    try {
+      final rows = await api.listNotifications();
+      notifications = rows.map(AppNotification.fromJson).toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      notifyListeners();
+    } catch (_) {
+      // Not worth a word: the bell simply stays as it was.
+    }
+  }
+
+  /// Everything under the bell has been seen. Marked here first, so the dot
+  /// goes at once; the server is told after, and a failure there only means
+  /// the dot comes back on the next load.
+  Future<void> markNotificationsRead() async {
+    if (unreadNotifications == 0) {
+      return;
+    }
+    notifications = [for (final note in notifications) note.asRead()];
+    notifyListeners();
+    try {
+      await _api?.markNotificationsRead();
+    } catch (_) {}
   }
 
   /// Saves the sports the reader says they play.
@@ -624,16 +717,7 @@ class AppController extends ChangeNotifier {
   Future<Booking> addBooking(BookingDraft draft) async {
     final api = _api;
     if (api == null) {
-      final statusCode = draft.mode == PaymentMode.split
-          ? 'collecting_shares'
-          : 'confirmed';
-      final booking = Booking(
-        id: 'booking-${bookings.length + 1}',
-        draft: draft,
-        statusCode: statusCode,
-        organizerId: userId,
-        createdAt: _now,
-      );
+      final booking = _fixtureBooking(draft);
       bookings = [booking, ...bookings];
       notifyListeners();
       return booking;
@@ -672,42 +756,53 @@ class AppController extends ChangeNotifier {
   Future<Booking> cancelBooking(Booking booking) async {
     final api = _api;
     final updated = api == null
-        ? booking.copyWith(statusCode: 'cancelled')
+        ? _withRefunds(booking, statusCode: 'cancelled')
         : _bookingFromJson(
             await api.cancelBooking(booking.id),
             venueCatalog: venues,
             currentUserId: userId,
           );
 
-    bookings = [
-      for (final item in bookings)
-        if (item.id == updated.id) updated else item,
-    ];
-    notifyListeners();
+    // Notifies once, by itself.
+    _replaceBooking(updated);
     return updated;
   }
 
   Future<bool> joinGame(Game game) async {
-    if (game.isFull || game.participants.any((p) => p.isCurrentUser)) {
+    if (game.isFull ||
+        gameIsOff(game) ||
+        game.participants.any((p) => p.isCurrentUser)) {
       return false;
     }
 
     final api = _api;
     if (api == null) {
+      // Joining a paid game is taking one of its booking's shares. The
+      // fixtures' own games were made before bookings carried them, so they
+      // still let anyone in for nothing.
+      // A game «по одобрению» takes a request, not a seat: no share until
+      // the organiser says yes.
+      final approval = game.type == GameType.approval;
+      final share = approval || game.bookingId == null
+          ? null
+          : _takeOpenShare(game.bookingId!);
       games = [
         for (final item in games)
           if (item.id == game.id)
-            item.copyWith(
-              participants: [
-                ...item.participants,
-                const Participant(
-                  name: 'Вы',
-                  initial: 'В',
-                  rating: 4.7,
-                  isCurrentUser: true,
-                ),
-              ],
-            )
+            item
+                .copyWith(
+                  participants: [
+                    ...item.participants,
+                    Participant(
+                      name: 'Вы',
+                      initial: 'В',
+                      rating: 4.7,
+                      status: approval ? 'pending' : 'joined',
+                      isCurrentUser: true,
+                    ),
+                  ],
+                )
+                .withMyShare(share ?? item.myShare)
           else
             item,
       ];
@@ -726,7 +821,73 @@ class AppController extends ChangeNotifier {
         if (item.id == updated.id) updated else item,
     ];
     notifyListeners();
+    // Joining took a share of the booking; the payment screen reads the
+    // booking, so it is fetched now rather than on the next refresh.
+    final bookingId = updated.bookingId;
+    if (bookingId != null && updated.myShare != null) {
+      try {
+        await openBooking(bookingId);
+      } on Object {
+        // The game is joined either way; paying waits for the next look.
+      }
+    }
     return true;
+  }
+
+  /// The organiser lets a request in. Joining a paid game takes a share, so
+  /// the player then pays as anyone else does.
+  Future<void> approveParticipant(Game game, Participant player) =>
+      _answerRequest(game, player, approve: true);
+
+  /// The organiser turns a request down.
+  Future<void> rejectParticipant(Game game, Participant player) =>
+      _answerRequest(game, player, approve: false);
+
+  Future<void> _answerRequest(
+    Game game,
+    Participant player, {
+    required bool approve,
+  }) async {
+    final api = _api;
+    if (api == null) {
+      if (!game.organizer.isCurrentUser) {
+        throw _refusal('organizer only', 403);
+      }
+      games = [
+        for (final item in games)
+          if (item.id == game.id)
+            item.copyWith(
+              participants: [
+                for (final other in item.participants)
+                  if (!other.sameAs(player))
+                    other
+                  else if (approve)
+                    other.withStatus('joined'),
+              ],
+            )
+          else
+            item,
+      ];
+      notifyListeners();
+      return;
+    }
+    final id = player.id;
+    if (id == null) {
+      throw _refusal('participant has no id', 409);
+    }
+    final row = approve
+        ? await api.approveGameParticipant(game.id, id)
+        : await api.rejectGameParticipant(game.id, id);
+    final updated = _gameFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
+    games = [
+      for (final item in games)
+        if (item.id == updated.id) updated else item,
+    ];
+    notifyListeners();
   }
 
   /// Gives up a place in a game. Answers false when there was none to give.
@@ -737,14 +898,21 @@ class AppController extends ChangeNotifier {
 
     final api = _api;
     if (api == null) {
+      final bookingId = game.bookingId;
+      if (bookingId != null) {
+        // Throws, as the server answers, when the place has been paid for.
+        _releaseMyShare(bookingId);
+      }
       games = [
         for (final item in games)
           if (item.id == game.id)
-            item.copyWith(
-              participants: item.participants
-                  .where((player) => !player.isCurrentUser)
-                  .toList(),
-            )
+            item
+                .copyWith(
+                  participants: item.participants
+                      .where((player) => !player.isCurrentUser)
+                      .toList(),
+                )
+                .withMyShare(null)
           else
             item,
       ];
@@ -777,9 +945,14 @@ class AppController extends ChangeNotifier {
     required int capacity,
     required GameType type,
     required GenderFilter genderFilter,
+    GamePayment payment = GamePayment.shares,
   }) async {
     final api = _api;
     if (api == null) {
+      if (payment == GamePayment.free) {
+        // Open courts come later; the server will refuse this too.
+        throw StateError('Free games need an open court');
+      }
       final draft = BookingDraft(
         venue: venue,
         date: date,
@@ -788,10 +961,20 @@ class AppController extends ChangeNotifier {
         startMinute: startMinute,
         apiStartsAt: apiStartsAt,
         players: capacity,
-        mode: PaymentMode.split,
+        mode: payment == GamePayment.organizer
+            ? PaymentMode.full
+            : PaymentMode.split,
       );
+      final gameId = 'game-${games.length + 1}';
+      // A paid game stands on a booking, and its places are the booking's
+      // shares: the organiser holds the first one from the start.
+      final booking = _fixtureBooking(draft, gameId: gameId);
       final game = Game(
-        id: 'game-${games.length + 1}',
+        id: gameId,
+        payment: payment,
+        bookingId: booking.id,
+        myShare: booking.myShare,
+        deadlineAt: booking.deadline,
         sportId: sportId,
         venue: venue,
         date: date,
@@ -800,7 +983,9 @@ class AppController extends ChangeNotifier {
         apiStartsAt: apiStartsAt,
         durationMinutes: durationMinutes,
         capacity: capacity,
-        pricePerPerson: draft.sharePrice,
+        pricePerPerson: payment == GamePayment.organizer
+            ? 0
+            : booking.shares.first.amount ?? draft.sharePrice,
         type: type,
         genderFilter: genderFilter,
         organizer: const Participant(
@@ -819,6 +1004,7 @@ class AppController extends ChangeNotifier {
         ],
       );
       games = [game, ...games];
+      bookings = [booking, ...bookings];
       notifyListeners();
       return game;
     }
@@ -844,6 +1030,7 @@ class AppController extends ChangeNotifier {
       capacity: capacity,
       gameType: type.name,
       genderFilter: genderFilter.name,
+      payment: payment.name,
     );
     final game = _gameFromJson(
       row,
@@ -855,6 +1042,570 @@ class AppController extends ChangeNotifier {
     return game;
   }
 
+  /// Bookings opened by a link that the reader has no place in yet. Kept
+  /// apart so a friend's booking does not show up under «Мои брони» until
+  /// the reader takes a place in it.
+  final Map<String, Booking> _linkedBookings = {};
+
+  /// The booking with this id: the reader's own, or one opened by a link.
+  Booking? bookingById(String id) =>
+      bookings.where((booking) => booking.id == id).firstOrNull ??
+      _linkedBookings[id];
+
+  /// Whether the booking under this game has fallen through or been
+  /// cancelled. Known only when this phone has the booking; the server
+  /// takes such games off the feed by itself.
+  bool gameIsOff(Game game) {
+    final id = game.bookingId;
+    final booking = id == null ? null : bookingById(id);
+    return booking != null && !booking.isActive;
+  }
+
+  /// Games someone can still join: what the feeds show. A game that is off
+  /// stays visible only to the people in it, who need to know.
+  bool gameIsListed(Game game) =>
+      !gameIsOff(game) ||
+      game.participants.any((player) => player.isCurrentUser);
+
+  /// The game with this id, if it is loaded.
+  Game? gameById(String id) => games.where((game) => game.id == id).firstOrNull;
+
+  /// Finds a booking that may not be the reader's: what a link from a
+  /// friend arrives at. Asks the server even when the booking is known, so
+  /// the shares shown are the current ones; a known booking survives a
+  /// failed request. Null when there is no such booking.
+  Future<Booking?> openBooking(String id) async {
+    final known = bookingById(id);
+    final api = _api;
+    if (api == null) {
+      if (known != null) {
+        return known;
+      }
+      final linked = MockData.friendBooking(_now);
+      if (linked.id != id) {
+        return null;
+      }
+      _linkedBookings[id] = linked;
+      notifyListeners();
+      return linked;
+    }
+    try {
+      final booking = _bookingFromJson(
+        await api.getBooking(id),
+        venueCatalog: venues,
+        currentUserId: userId,
+      );
+      final mine =
+          bookings.any((item) => item.id == id) ||
+          booking.myShare != null ||
+          (userId != null && booking.organizerId == userId);
+      if (mine) {
+        _replaceBooking(booking);
+      } else {
+        _linkedBookings[id] = booking;
+        notifyListeners();
+      }
+      return booking;
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return null;
+      }
+      if (known != null) {
+        return known;
+      }
+      rethrow;
+    }
+  }
+
+  /// Finds a game by its id, the way [openBooking] finds a booking, and the
+  /// booking under it as well, so the game screen can say where it stands.
+  Future<Game?> openGame(String id) async {
+    final known = gameById(id);
+    final api = _api;
+    if (api == null) {
+      return known;
+    }
+    final Game game;
+    try {
+      game = _gameFromJson(
+        await api.getGame(id),
+        venueCatalog: venues,
+        currentUserId: userId,
+      );
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return null;
+      }
+      if (known != null) {
+        return known;
+      }
+      rethrow;
+    }
+    games = known == null
+        ? [game, ...games]
+        : [for (final item in games) item.id == id ? game : item];
+    notifyListeners();
+    final bookingId = game.bookingId;
+    if (bookingId != null) {
+      // The status card is a nicety on this screen; the game opens without it.
+      try {
+        await openBooking(bookingId);
+      } on Object {
+        // Nothing to say: the card simply does not appear.
+      }
+    }
+    return gameById(id);
+  }
+
+  /// Takes a free place in a split booking: what following an invite link
+  /// to a booking ends in.
+  Future<Booking> takeShare(Booking booking) async {
+    final api = _api;
+    if (api == null) {
+      _refuseAfterDeadline(booking);
+      _takeOpenShare(booking.id);
+      return bookingById(booking.id)!;
+    }
+    return _storeBooking(await api.joinBookingShare(booking.id));
+  }
+
+  /// Gives back the reader's place while nothing has been paid for it.
+  Future<Booking> releaseShare(Booking booking) async {
+    final api = _api;
+    if (api == null) {
+      _releaseMyShare(booking.id);
+      return bookingById(booking.id)!;
+    }
+    final share = booking.myShare;
+    if (share?.id == null) {
+      throw _refusal('not in booking', 409);
+    }
+    return _storeBooking(await api.releaseShare(booking.id, share!.id!));
+  }
+
+  /// «Я оплатил»: the reader says the transfer has gone, and the share joins
+  /// the admin's queue. Nothing is paid until the admin finds it.
+  ///
+  /// [payerName] is the sender's name as the reader's bank shows it.
+  Future<Booking> claimSharePaid(
+    Booking booking,
+    BookingShare share, {
+    String? payerName,
+  }) async {
+    final name = payerName?.trim();
+    final api = _api;
+    if (api == null) {
+      _refuseAfterDeadline(booking);
+      if (!share.isCurrentUser) {
+        throw _refusal('not your share', 403);
+      }
+      if (share.status != ShareStatus.unpaid &&
+          share.status != ShareStatus.notFound) {
+        throw _refusal('share is not awaiting payment', 409);
+      }
+      return _updateShare(
+        share.id!,
+        (item) => item.copyWith(
+          status: ShareStatus.pendingConfirmation,
+          claimedAt: _now,
+        ),
+      );
+    }
+    return _storeBooking(
+      await api.claimSharePaid(
+        booking.id,
+        share.id!,
+        payerName: name == null || name.isEmpty ? null : name,
+      ),
+    );
+  }
+
+  /// Where shares are paid to. The fixtures answer with test details that
+  /// say plainly they are not real.
+  Future<PaymentInfo> loadPaymentInfo() async {
+    final api = _api;
+    final info = api == null
+        ? MockData.paymentInfo
+        : PaymentInfo.fromJson(await api.getPaymentInfo());
+    paymentInfo = info;
+    return info;
+  }
+
+  /// One of the admin's lists: shares to check (`pendingConfirmation`) or
+  /// refunds to make (`refundDue`), the most urgent first.
+  Future<List<PaymentQueueItem>> loadPaymentQueue(ShareStatus status) async {
+    final api = _api;
+    if (api != null) {
+      final rows = await api.listAdminShares(status: status.code);
+      return rows.map(PaymentQueueItem.fromJson).toList();
+    }
+    final items = <PaymentQueueItem>[
+      for (final booking in bookings)
+        for (final share in booking.shares)
+          if (share.status == status && share.id != null)
+            PaymentQueueItem(
+              shareId: share.id!,
+              bookingId: booking.id,
+              code: share.code ?? '',
+              amount: share.amount ?? booking.draft.sharePrice,
+              status: share.status,
+              userName: share.name,
+              venueName: booking.draft.venue.name,
+              startsAt: booking.startsAt,
+              deadlineAt: booking.deadline,
+              claimedAt: share.claimedAt,
+              note: share.note,
+            ),
+    ];
+    // The queue goes by what runs out first; refunds by what has waited
+    // longest, which the deadline stands in for.
+    items.sort((left, right) => left.deadlineAt.compareTo(right.deadlineAt));
+    return items;
+  }
+
+  /// The admin found the transfer. A share nobody pressed «Я оплатил» for
+  /// can be confirmed too: people pay and forget the button.
+  Future<void> confirmShare(String shareId) => _adminAction(
+    shareId,
+    allowed: const {
+      ShareStatus.unpaid,
+      ShareStatus.pendingConfirmation,
+      ShareStatus.notFound,
+    },
+    apply: (share) =>
+        share.copyWith(status: ShareStatus.paid, confirmedAt: _now),
+    remote: (api) => api.confirmShare(shareId),
+  );
+
+  /// The admin looked and did not find it. [note] is shown to the player.
+  Future<void> rejectShare(String shareId, {String? note}) => _adminAction(
+    shareId,
+    allowed: const {ShareStatus.pendingConfirmation},
+    apply: (share) => share.copyWith(status: ShareStatus.notFound, note: note),
+    remote: (api) => api.rejectShare(shareId, note: note),
+  );
+
+  /// The money went back to the player.
+  Future<void> markShareRefunded(String shareId, {String? note}) =>
+      _adminAction(
+        shareId,
+        allowed: const {ShareStatus.refundDue},
+        apply: (share) => share.copyWith(
+          status: ShareStatus.refunded,
+          refundedAt: _now,
+          note: note,
+        ),
+        remote: (api) => api.markShareRefunded(shareId, note: note),
+      );
+
+  /// What the server's clock does to bookings, done by the fixtures: at the
+  /// deadline a booking is confirmed, waits for the admin, or falls through
+  /// with its money owed back. A connected app leaves this to the server.
+  void applyDeadlines([DateTime? at]) {
+    if (_api != null) {
+      return;
+    }
+    final moment = at ?? _now;
+    var changed = false;
+    final next = <Booking>[];
+    for (final booking in bookings) {
+      final settled = _atDeadline(booking, moment);
+      changed = changed || !identical(settled, booking);
+      next.add(settled);
+    }
+    if (!changed) {
+      return;
+    }
+    bookings = next;
+    for (final booking in next) {
+      _syncGame(booking);
+    }
+    notifyListeners();
+  }
+
+  /// Deletes the account and signs out. Places nobody paid for are given
+  /// back; money already sent is owed back, which the server takes care of.
+  Future<void> deleteAccount() async {
+    final api = _api;
+    if (api != null) {
+      await api.deleteMe();
+    }
+    logout();
+  }
+
+  Future<void> _adminAction(
+    String shareId, {
+    required Set<ShareStatus> allowed,
+    required BookingShare Function(BookingShare share) apply,
+    required Future<ApiJsonObject> Function(SportVenueApiClient api) remote,
+  }) async {
+    if (!isPaymentAdmin) {
+      throw _refusal('payments admin only', 403);
+    }
+    final api = _api;
+    if (api != null) {
+      final row = await remote(api);
+      // The server answers with the booking; one the reader does not hold
+      // is the admin's business, not the reader's list.
+      if (row['time_slot'] is Map &&
+          bookings.any((booking) => booking.id == row['id'])) {
+        _storeBooking(row);
+      }
+      return;
+    }
+    final share = _shareById(shareId);
+    if (share == null) {
+      throw _refusal('share not found', 404);
+    }
+    if (!allowed.contains(share.status)) {
+      throw _refusal('share is ${share.status.code}', 409);
+    }
+    _updateShare(shareId, apply);
+  }
+
+  /// A new booking as the server will make it: every place a share of the
+  /// total, the reader holding the first one, the rest free to take.
+  Booking _fixtureBooking(BookingDraft draft, {String? gameId}) {
+    final id = 'booking-${bookings.length + 1}';
+    final amounts = draft.mode == PaymentMode.split
+        ? splitIntoShares(draft.totalPrice, draft.players)
+        : [draft.totalPrice];
+    final shares = [
+      for (var i = 0; i < amounts.length; i++)
+        BookingShare(
+          id: '$id-share-${i + 1}',
+          userId: i == 0 ? (userId ?? 'me') : null,
+          name: i == 0 ? 'Вы' : '',
+          initial: i == 0 ? 'В' : '',
+          status: i == 0 ? ShareStatus.unpaid : ShareStatus.open,
+          amount: amounts.elementAt(i),
+          code: 'SV-${_nextShareCode++}',
+          isCurrentUser: i == 0,
+        ),
+    ];
+    return Booking(
+      id: id,
+      draft: draft.copyWith(
+        quotedTotalPrice: draft.totalPrice,
+        quotedSharePrice: amounts.first,
+      ),
+      statusCode: 'collecting_shares',
+      organizerId: userId,
+      createdAt: _now,
+      shares: shares,
+      gameId: gameId,
+      myShareId: shares.first.id,
+    );
+  }
+
+  /// The booking in a final state, with every share that holds money, or a
+  /// claim of it, owed back.
+  Booking _withRefunds(Booking booking, {required String statusCode}) {
+    return booking.copyWith(
+      statusCode: statusCode,
+      shares: [
+        for (final share in booking.shares)
+          share.status.holdsMoney
+              ? share.copyWith(status: ShareStatus.refundDue)
+              : share,
+      ],
+    );
+  }
+
+  Booking _atDeadline(Booking booking, DateTime moment) {
+    if (booking.shares.isEmpty) {
+      return booking;
+    }
+    if (booking.isCollectingShares && !moment.isBefore(booking.deadline)) {
+      final missing = booking.shares.any(
+        (share) =>
+            share.status == ShareStatus.open ||
+            share.status == ShareStatus.unpaid ||
+            share.status == ShareStatus.notFound,
+      );
+      if (missing) {
+        return _withRefunds(booking, statusCode: 'expired');
+      }
+      final waiting = booking.shares.any(
+        (share) => share.status == ShareStatus.pendingConfirmation,
+      );
+      return booking.copyWith(
+        statusCode: waiting ? 'awaiting_confirmation' : 'confirmed',
+      );
+    }
+    final lastCall = booking.startsAt.subtract(const Duration(hours: 1));
+    if (booking.isAwaitingConfirmation && !moment.isBefore(lastCall)) {
+      return _withRefunds(booking, statusCode: 'expired');
+    }
+    return booking;
+  }
+
+  /// What a change to one share does to its booking: paid in full is
+  /// confirmed at once, and a booking waiting on the admin falls through
+  /// the moment one of its transfers is not found.
+  Booking _settle(Booking booking) {
+    final allPaid =
+        booking.shares.isNotEmpty &&
+        booking.shares.every((share) => share.isPaid);
+    if ((booking.isCollectingShares || booking.isAwaitingConfirmation) &&
+        allPaid) {
+      return booking.copyWith(statusCode: 'confirmed');
+    }
+    if (booking.isAwaitingConfirmation &&
+        booking.shares.any((share) => share.status == ShareStatus.notFound)) {
+      return _withRefunds(booking, statusCode: 'expired');
+    }
+    return booking;
+  }
+
+  BookingShare? _shareById(String shareId) {
+    for (final booking in bookings) {
+      for (final share in booking.shares) {
+        if (share.id == shareId) {
+          return share;
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Changes one share wherever it is, settles its booking, and answers
+  /// with the booking as it now stands.
+  Booking _updateShare(
+    String shareId,
+    BookingShare Function(BookingShare share) change,
+  ) {
+    final booking = bookings.firstWhere(
+      (item) => item.shares.any((share) => share.id == shareId),
+    );
+    final updated = _settle(
+      booking.copyWith(
+        shares: [
+          for (final share in booking.shares)
+            share.id == shareId ? change(share) : share,
+        ],
+      ),
+    );
+    _replaceBooking(updated);
+    return updated;
+  }
+
+  BookingShare _takeOpenShare(String bookingId) {
+    final booking = bookingById(bookingId);
+    if (booking == null) {
+      throw _refusal('booking not found', 404);
+    }
+    if (booking.myShare != null) {
+      throw _refusal('already in booking', 409);
+    }
+    if (!bookings.any((item) => item.id == bookingId)) {
+      // Taking a place makes a friend's booking the reader's own.
+      _replaceBooking(booking);
+    }
+    final open = booking.shares
+        .where((share) => share.isOpen && share.id != null)
+        .firstOrNull;
+    if (open == null) {
+      throw _refusal('no open shares', 409);
+    }
+    final updated = _updateShare(
+      open.id!,
+      (share) => BookingShare(
+        id: share.id,
+        userId: userId ?? 'me',
+        name: 'Вы',
+        initial: 'В',
+        status: ShareStatus.unpaid,
+        amount: share.amount,
+        code: share.code,
+        isCurrentUser: true,
+      ),
+    );
+    final mine = updated.copyWith(myShareId: open.id);
+    _replaceBooking(mine);
+    return mine.myShare!;
+  }
+
+  void _releaseMyShare(String bookingId) {
+    final booking = bookingById(bookingId);
+    final share = booking?.myShare;
+    if (booking == null || share == null || share.id == null) {
+      return;
+    }
+    if (share.status.holdsMoney) {
+      throw _refusal('share is paid, cancel instead', 409);
+    }
+    // The first share is the organiser's, and an organiser who wants out
+    // cancels the booking: walking away would leave the others paying.
+    if (booking.shares.first.id == share.id) {
+      throw _refusal('organizer cancels the booking instead', 409);
+    }
+    final updated = _updateShare(
+      share.id!,
+      (item) => BookingShare(
+        id: item.id,
+        name: '',
+        initial: '',
+        status: ShareStatus.open,
+        amount: item.amount,
+        code: item.code,
+      ),
+    );
+    _replaceBooking(updated.copyWith(clearMyShare: true));
+  }
+
+  void _refuseAfterDeadline(Booking booking) {
+    if (!_now.isBefore(booking.deadline)) {
+      throw _refusal('deadline passed', 409);
+    }
+  }
+
+  /// The fixtures refuse in the server's own words, so the screens put both
+  /// into the same sentences.
+  ApiException _refusal(String message, int statusCode) {
+    return ApiException(
+      kind: ApiExceptionKind.http,
+      message: message,
+      statusCode: statusCode,
+    );
+  }
+
+  Booking _storeBooking(ApiJsonObject row) {
+    final booking = _bookingFromJson(
+      row,
+      venueCatalog: venues,
+      currentUserId: userId,
+    );
+    _replaceBooking(booking);
+    return booking;
+  }
+
+  /// Puts the booking in the list, and the reader's share of it into the
+  /// game it carries, so the two screens never disagree.
+  void _replaceBooking(Booking booking) {
+    _linkedBookings.remove(booking.id);
+    final known = bookings.any((item) => item.id == booking.id);
+    bookings = known
+        ? [
+            for (final item in bookings)
+              if (item.id == booking.id) booking else item,
+          ]
+        : [booking, ...bookings];
+    _syncGame(booking);
+    notifyListeners();
+  }
+
+  void _syncGame(Booking booking) {
+    final gameId = booking.gameId;
+    if (gameId == null) {
+      return;
+    }
+    games = [
+      for (final game in games)
+        if (game.id == gameId) game.withMyShare(booking.myShare) else game,
+    ];
+  }
+
   /// Picks up a session left by a previous run, if the device still has one
   /// and the server still honours it.
   ///
@@ -864,6 +1615,14 @@ class AppController extends ChangeNotifier {
   Future<bool> restoreSession() async {
     final api = _api;
     if (api == null) {
+      // The demo opens already signed in, the way a returning reader's
+      // phone does: whoever is shown the demo is shown the app, not the
+      // phone field. Signing out still leads back to it.
+      if (isDemo) {
+        isSignedIn = true;
+        notifyListeners();
+        return true;
+      }
       return false;
     }
     final tokens = await _session.read();
@@ -873,14 +1632,26 @@ class AppController extends ChangeNotifier {
     api.setTokens(tokens);
     try {
       await _loadRemoteState(api);
-    } catch (_) {
-      api.clearTokens();
-      return false;
+      loadFailed = false;
+    } catch (error) {
+      // Only the server saying the session is over ends it. No connection,
+      // a timeout or a server error used to wipe the stored session too,
+      // and a launch on the metro meant confirming the phone by call again.
+      if (kindOf(error) == AppErrorKind.sessionExpired) {
+        api.clearTokens();
+        return false;
+      }
+      loadFailed = true;
     }
     isSignedIn = true;
     notifyListeners();
     return true;
   }
+
+  /// Whether the last attempt to read the server's state failed, so what
+  /// the screens show is not the server's word. Cleared by a [refresh] that
+  /// goes through.
+  bool loadFailed = false;
 
   /// Re-reads everything the screens show. Pull-to-refresh calls this.
   ///
@@ -892,10 +1663,12 @@ class AppController extends ChangeNotifier {
       // Demo mode has no server to ask, but the gesture still has to
       // resolve — an indicator with nothing to wait for never leaves.
       await Future<void>.delayed(const Duration(milliseconds: 420));
+      applyDeadlines();
       notifyListeners();
       return;
     }
     await _loadRemoteState(api);
+    loadFailed = false;
     notifyListeners();
   }
 
@@ -914,6 +1687,11 @@ class AppController extends ChangeNotifier {
     clubName = null;
     isSignedIn = false;
     accountType = AccountType.player;
+    isPaymentAdmin = isDemo;
+    paymentInfo = null;
+    loadFailed = false;
+    notifications = _api == null ? MockData.notifications(_now) : [];
+    _linkedBookings.clear();
     selectedSportIds = {'football', 'padel', 'tennis'};
     if (_api == null) {
       bookings = [MockData.initialBooking(_now)];
@@ -966,8 +1744,15 @@ class AppController extends ChangeNotifier {
           message.contains('slot is locked')) {
         return AppErrorKind.slotTaken;
       }
-      if (message.contains('game is full')) {
+      if (message.contains('game is full') ||
+          message.contains('no open shares')) {
         return AppErrorKind.gameFull;
+      }
+      if (message.contains('share is paid')) {
+        return AppErrorKind.sharePaid;
+      }
+      if (message.contains('deadline passed')) {
+        return AppErrorKind.deadlinePassed;
       }
       if (message.contains('only organizer can cancel booking')) {
         return AppErrorKind.cancelNotOrganizer;

@@ -40,6 +40,44 @@ void main() {
       ]);
     },
   );
+
+  group('demo build', () {
+    test('opens signed in, on the fixtures', () async {
+      final controller = AppController.demo(now: DateTime(2026, 5, 24));
+      addTearDown(controller.dispose);
+
+      expect(await controller.restoreSession(), isTrue);
+      expect(controller.isSignedIn, isTrue);
+      expect(controller.isConnected, isFalse);
+      expect(controller.games, isNotEmpty);
+    });
+
+    test('signs back in after signing out, without a server', () {
+      final controller = AppController.demo(now: DateTime(2026, 5, 24));
+      addTearDown(controller.dispose);
+
+      controller.signInDemo(phone: '+79000000000');
+      controller.logout();
+      expect(controller.isSignedIn, isFalse);
+
+      controller.signInDemo(email: ' Demo@Example.com ');
+      expect(controller.isSignedIn, isTrue);
+      expect(controller.email, 'demo@example.com');
+    });
+
+    test('is not a way into the real app', () async {
+      final controller = AppController(now: DateTime(2026, 5, 24));
+      addTearDown(controller.dispose);
+
+      expect(controller.isDemo, isFalse);
+      expect(await controller.restoreSession(), isFalse);
+      expect(
+        () => controller.signInDemo(phone: '+79000000000'),
+        throwsStateError,
+      );
+      expect(controller.isSignedIn, isFalse);
+    });
+  });
 }
 
 Booking _booking({

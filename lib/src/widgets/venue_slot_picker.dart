@@ -35,11 +35,14 @@ class VenueSlotPicker extends StatefulWidget {
   final Venue venue;
   final DateTime date;
   final int durationMinutes;
-  final int selectedHour;
   final int selectedMinute;
 
-  /// Fires on a tap, and when a reload has to move the selection.
-  final ValueChanged<int> onHourChanged;
+  /// The hour the reader picked, or null while they have not.
+  final int? selectedHour;
+
+  /// Fires on a tap, and with null when a reload finds the picked hour has
+  /// been taken.
+  final ValueChanged<int?> onHourChanged;
 
   /// Includes the minute and exact API instant for published half-hour starts.
   final ValueChanged<TimeSlot>? onSlotChanged;
@@ -108,15 +111,19 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
         _slots = slots;
         _loading = false;
       });
-      final selected =
-          slots
-              .where((slot) => _isSelected(slot) && slot.isAvailable)
-              .firstOrNull ??
-          slots.where((slot) => slot.isAvailable).firstOrNull;
-      if (selected != null) {
-        _select(selected);
+      final picked = widget.selectedHour;
+      final stillFree =
+          picked != null &&
+          slots.any((slot) => _isSelected(slot) && slot.isAvailable);
+      // An hour that has gone is cleared, not quietly swapped for another
+      // one: the reader came back to a different booking than they left.
+      if (picked != null && !stillFree) {
+        widget.onHourChanged(null);
+      } else if (stillFree) {
+        // A new duration can change the price of the same published start.
+        widget.onSlotChanged?.call(slots.firstWhere(_isSelected));
       }
-      _reportReady(selected != null);
+      _reportReady(stillFree);
     } catch (error) {
       if (!mounted || generation != _loadGeneration) {
         return;
@@ -183,6 +190,11 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
       tiles: [
         for (final slot in _slots)
           TimeTile(
+            key: ValueKey(
+              slot.minute == 0
+                  ? 'slot-${slot.hour}'
+                  : 'slot-${slot.hour}-${slot.minute}',
+            ),
             label: slot.label,
             selected: _isSelected(slot),
             available: slot.isAvailable,

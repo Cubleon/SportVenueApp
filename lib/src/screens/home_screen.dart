@@ -11,6 +11,7 @@ import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pull_to_refresh.dart';
 import '../router.dart';
+import 'main_shell.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_filters.dart';
 import '../widgets/skeleton.dart';
@@ -59,6 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, int> _freeSlots = const {};
   int _slotsToken = 0;
 
+  /// Clubs whose free hours could not be had on [_date]. Their rows drop the
+  /// placeholder, which otherwise shimmered for ever after a network error,
+  /// and the list says once that the counts are missing.
+  Set<String> _slotsFailed = const {};
+
   /// How many bookings existed last time the free hours were counted.
   ///
   /// Coming back from a booking, the hours this club has left are one fewer
@@ -94,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _date = date;
       _freeSlots = const {};
+      _slotsFailed = const {};
     });
     widget.onDateChanged?.call(date);
     _loadSlots();
@@ -113,27 +120,48 @@ class _HomeScreenState extends State<HomeScreen> {
     final day = _date;
     final venues = widget.controller.venues;
     final counts = <String, int>{};
+    final failed = <String>{};
+    if (_slotsFailed.isNotEmpty) {
+      // Asking again: the rows go back to waiting, not to "no data".
+      setState(() => _slotsFailed = const {});
+    }
     for (var start = 0; start < venues.length; start += _slotBatch) {
       final batch = venues.skip(start).take(_slotBatch).toList();
       final answers = await Future.wait([
-        for (final venue in batch)
-          widget.controller.loadSlots(
-            venue: venue,
-            day: day,
-            durationMinutes: 60,
-          ),
+        for (final venue in batch) _countFree(venue, day),
       ]);
       // A newer day was asked for while this batch was in the air; its
       // answers are about yesterday's question.
       if (!mounted || token != _slotsToken) return;
       for (var i = 0; i < batch.length; i++) {
-        counts[batch[i].id] = answers[i]
-            .where((slot) => slot.isAvailable)
-            .length;
+        final count = answers[i];
+        if (count == null) {
+          failed.add(batch[i].id);
+        } else {
+          counts[batch[i].id] = count;
+        }
       }
     }
     if (!mounted || token != _slotsToken) return;
-    setState(() => _freeSlots = counts);
+    setState(() {
+      _freeSlots = counts;
+      _slotsFailed = failed;
+    });
+  }
+
+  /// One club's free hours, or null when they could not be had. Each club
+  /// answers for itself, so one that fails does not take the others with it.
+  Future<int?> _countFree(Venue venue, DateTime day) async {
+    try {
+      final slots = await widget.controller.loadSlots(
+        venue: venue,
+        day: day,
+        durationMinutes: 60,
+      );
+      return slots.where((slot) => slot.isAvailable).length;
+    } catch (_) {
+      return null;
+    }
   }
 
   bool _matches(String text) =>
@@ -151,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Game> get _games => widget.controller.games
       .where(
         (game) =>
+            widget.controller.gameIsListed(game) &&
             DateUtils.isSameDay(game.date, _date) &&
             (_sportId == 'all' || game.sportId == _sportId) &&
             (_matches(game.venue.name) || _matches(game.venue.address)),
@@ -241,11 +270,76 @@ class _HomeScreenState extends State<HomeScreen> {
                     onGames: () => context.go(Routes.myGames),
                   ),
                 ),
-                if (venues.isEmpty)
+                // The header counted the day's games and the page never
+                // showed them. The first few, soonest first, and the rest
+                // behind «Все».
+                if (games.isNotEmpty) ...[
                   SliverToBoxAdapter(
-                    child: _NothingFound(query: _query, onReset: _reset),
+                    child: SectionHeader(
+                      title: context.l10n.gamesOnDate(
+                        AppFormatters.dateShort(_date),
+                      ),
+                      action: games.length > _gamesShown
+                          ? context.l10n.seeAll
+                          : null,
+                      onAction: widget.onOpenGames,
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radius),
+                        child: ColoredBox(
+                          color: colors.surface,
+                          child: Column(
+                            children: [
+                              for (final (index, game)
+                                  in (games.toList()..sort(
+                                        (a, b) =>
+                                            a.startHour.compareTo(b.startHour),
+                                      ))
+                                      .take(_gamesShown)
+                                      .indexed)
+                                _GameRow(
+                                  game: game,
+                                  sport: widget.controller.sportById(
+                                    game.sportId,
+                                  ),
+                                  divided: index > 0,
+                                  onTap: () => context.go(Routes.game(game.id)),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                // Said once, above everything the server should have sent:
+                // the lists below are empty because nothing arrived, not
+                // because there is nothing.
+                if (widget.controller.loadFailed)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: RetryNotice(
+                        key: const ValueKey('home-load-failed'),
+                        message: context.l10n.loadFailed,
+                        onRetry: () =>
+                            refreshAndReport(context, widget.controller),
+                      ),
+                    ),
+                  ),
+                if (venues.isEmpty && !widget.controller.loadFailed)
+                  SliverToBoxAdapter(
+                    child: _NothingFound(
+                      query: _query,
+                      onReset: _reset,
+                      noClubs: widget.controller.venues.isEmpty,
+                    ),
                   )
-                else ...[
+                else if (venues.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: SectionHeader(
                       title: context.l10n.freeOnDate(
@@ -253,6 +347,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  if (_slotsFailed.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                        child: RetryNotice(
+                          key: const ValueKey('home-free-hours-failed'),
+                          message: context.l10n.freeHoursFailed,
+                          onRetry: _loadSlots,
+                        ),
+                      ),
+                    ),
                   // A list, not a carousel: three clubs read in less room
                   // than one and a half cards did, and nothing is hidden
                   // off the right edge.
@@ -270,6 +375,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   venue: venue,
                                   sportId: _sportOf(venue),
                                   freeSlots: _freeSlots[venue.id],
+                                  freeSlotsFailed: _slotsFailed.contains(
+                                    venue.id,
+                                  ),
                                   divided: index > 0,
                                   onTap: () => context.go(
                                     Routes.venue(venue.id, date: _date),
@@ -372,7 +480,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [colors.skyTop, colors.skyLow, colors.bg],
-          stops: const [0, 0.62, 1],
+          stops: const [0, 0.86, 1],
         ),
       ),
       child: Stack(
@@ -387,27 +495,27 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 SizedBox(height: context.scaled(22, max: 1.4)),
                 Row(
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Text(
                         context.l10n.whenToPlay,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.text.labelLarge?.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+                    // The month sits at the far end, on its own: next to the
+                    // title it read as one phrase, «Когда играете ноябрь».
                     const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        AppFormatters.monthGenitive(date),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                        style: context.text.labelLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.82),
-                        ),
+                    Text(
+                      AppFormatters.monthSpan(
+                        start,
+                        start.add(const Duration(days: _days - 1)),
+                      ),
+                      maxLines: 1,
+                      style: context.text.labelLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
                       ),
                     ),
                   ],
@@ -439,7 +547,8 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 SizedBox(height: context.scaled(14, max: 1.3)),
                 Text(
                   context.l10n.gamesCount(widget.gamesToday),
-                  textAlign: TextAlign.center,
+                  // Left, like every other line on the screen; centred, it
+                  // was the one line that did not line up with anything.
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.text.bodyMedium?.copyWith(
@@ -479,72 +588,120 @@ class _HeaderPill extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: context.scaled(42, max: 1.25),
-            height: context.scaled(42, max: 1.25),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.accent,
-            ),
-            child: Text(
-              controller.greetingName.characters.first.toUpperCase(),
-              style: context.text.titleMedium?.copyWith(
-                color: colors.onAccent,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
+          // The pill reads as a button, so it is one: it opens the profile,
+          // which is what the name and the face in it are about.
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+            child: Semantics(
+              button: true,
+              label: context.l10n.profileOpen,
+              child: InkWell(
+                key: const ValueKey('home-profile'),
+                borderRadius: BorderRadius.circular(99),
+                onTap: () => MainShell.requestedTab.value = 3,
+                child: Row(
                   children: [
-                    Icon(AppIcons.mapPin, size: 13, color: colors.dim),
-                    const SizedBox(width: 2),
-                    Flexible(
+                    Container(
+                      width: context.scaled(42, max: 1.25),
+                      height: context.scaled(42, max: 1.25),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.accent,
+                      ),
                       child: Text(
-                        context.l10n.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.text.labelSmall?.copyWith(
-                          color: colors.muted,
+                        controller.greetingName.characters.first.toUpperCase(),
+                        style: context.text.titleMedium?.copyWith(
+                          color: colors.onAccent,
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // The city as a plain word: with a pin beside it
+                          // it read as a city picker, and there is one city.
+                          Text(
+                            context.l10n.city,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.labelSmall?.copyWith(
+                              color: colors.muted,
+                            ),
+                          ),
+                          Text(
+                            controller.greetingName.capitalized,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.titleSmall,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  controller.greetingName.capitalized,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
           Semantics(
             button: true,
-            label: context.l10n.notifications,
-            child: Material(
-              color: colors.surfaceRaised,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () =>
-                    showAppSnack(context, context.l10n.noNotifications),
-                child: SizedBox(
-                  width: context.scaled(42, max: 1.25),
-                  height: context.scaled(42, max: 1.25),
-                  child: Icon(AppIcons.bell, size: 20, color: colors.ink),
+            label: controller.unreadNotifications == 0
+                ? context.l10n.notifications
+                : context.l10n.notificationsUnread(
+                    controller.unreadNotifications,
+                  ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Material(
+                  color: colors.surfaceRaised,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: const ValueKey('home-bell'),
+                    onTap: () => context.go(Routes.notifications),
+                    child: SizedBox(
+                      // 44, the smallest target a thumb is promised.
+                      width: context.scaled(44, max: 1.25),
+                      height: context.scaled(44, max: 1.25),
+                      child: Icon(AppIcons.bell, size: 20, color: colors.ink),
+                    ),
+                  ),
                 ),
-              ),
+                if (controller.unreadNotifications > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: ExcludeSemantics(
+                      child: Container(
+                        key: const ValueKey('home-bell-badge'),
+                        constraints: const BoxConstraints(minWidth: 18),
+                        height: 18,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: colors.accent,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: colors.surfaceRaised,
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          '${controller.unreadNotifications}',
+                          style: context.text.labelSmall?.copyWith(
+                            color: colors.onAccent,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -582,53 +739,45 @@ class _SkyDateCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: context.motion(const Duration(milliseconds: 180)),
           curve: Curves.easeOut,
-          width: context.scaled(selected ? 78 : 62, max: 1.3),
+          // One width for every day: the chosen one used to be wider, and
+          // the strip stepped.
+          width: context.scaled(64, max: 1.3),
           decoration: BoxDecoration(
+            // White in both themes: a dark card on the blue read as a hole.
             color: selected
-                ? colors.surface
+                ? Colors.white
                 : Colors.white.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: selected
-                  ? colors.surface
+                  ? Colors.white
                   : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // «сегодня» in words instead of a dot nobody could read.
               Text(
-                AppFormatters.weekdayShort(date),
+                isToday
+                    ? context.l10n.todayShort
+                    : AppFormatters.weekdayShort(date),
+                maxLines: 1,
                 style: context.text.labelSmall?.copyWith(
-                  color: selected ? colors.muted : Colors.white,
-                  fontWeight: FontWeight.w600,
+                  color: selected
+                      ? colors.skyTop.withValues(alpha: 0.7)
+                      : Colors.white,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 '${date.day}',
-                style:
-                    (selected
-                            ? context.text.headlineSmall
-                            : context.text.titleLarge)
-                        ?.copyWith(
-                          color: selected ? colors.accent : Colors.white,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.8,
-                          height: 1.1,
-                        ),
-              ),
-              if (isToday) ...[
-                const SizedBox(height: 4),
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: selected ? colors.accent : Colors.white,
-                  ),
+                style: context.text.titleLarge?.copyWith(
+                  color: selected ? colors.skyTop : Colors.white,
+                  letterSpacing: -0.8,
+                  height: 1.1,
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -666,7 +815,7 @@ class _SearchField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(AppIcons.search, size: 21, color: colors.dim),
+          Icon(AppIcons.search, size: 21, color: colors.muted),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -694,6 +843,25 @@ class _SearchField extends StatelessWidget {
               ),
             ),
           ),
+          // A typed name is cleared in one tap, not a character at a time.
+          if (controller.text.isNotEmpty)
+            Semantics(
+              button: true,
+              label: context.l10n.clearSearch,
+              child: InkWell(
+                key: const ValueKey('home-search-clear'),
+                onTap: () {
+                  controller.clear();
+                  onChanged('');
+                },
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(AppIcons.x, size: 20, color: colors.muted),
+                ),
+              ),
+            ),
           // Sliders again, now that there are filters behind them. The
           // icon meant filters and opened the map, which is the one thing
           // it could not be allowed to mean.
@@ -844,8 +1012,20 @@ class _CategoryTile extends StatelessWidget {
                     width: 2.5,
                   ),
                 ),
+                // «Все» is a filled tile like its neighbours — the app's own
+                // blue with a white mark — not a white frame with a blue
+                // icon in a row of pictures.
                 child: id == null
-                    ? Icon(AppIcons.layoutGrid, color: colors.accent)
+                    ? DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [colors.skyTop, colors.skyLow],
+                          ),
+                        ),
+                        child: Icon(AppIcons.layoutGrid, color: Colors.white),
+                      )
                     : SportSurface(sportId: id),
               ),
               const SizedBox(height: 7),
@@ -859,7 +1039,6 @@ class _CategoryTile extends StatelessWidget {
                             ? colors.accent
                             : AppTheme.sportGround(id).last)
                       : colors.muted,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -935,40 +1114,126 @@ class _MineCard extends StatelessWidget {
     return Pressable(
       child: AppCard(
         onTap: onTap,
-        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-        // The name of the thing leads, beside its mark; the number follows
-        // it. A card that opens «мои брони» is answering "what is this" long
-        // before "how many", and the count set large made the label read as
-        // its caption.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+        // One row: the mark, the name, the count, the way in. Two rows with
+        // a large grey number under the name made the card tall for one
+        // digit, and a grey «0» read as switched off.
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(icon, size: 20, color: colors.accent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(AppIcons.chevronRight, size: 16, color: colors.dim),
-              ],
+            Icon(icon, size: 20, color: colors.accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                // Two lines under a large system font: «Мои бр…» told
+                // nobody which card was which.
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.text.titleSmall,
+              ),
             ),
-            SizedBox(height: context.scaled(10, max: 1.3)),
+            const SizedBox(width: 6),
             Text(
               '$count',
               style: AppTheme.numeric(
-                context.text.titleLarge,
-              ).copyWith(color: colors.muted, fontWeight: FontWeight.w700),
+                context.text.titleSmall,
+              ).copyWith(color: colors.ink),
             ),
+            const SizedBox(width: 2),
+            Icon(AppIcons.chevronRight, size: 16, color: colors.muted),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How many of the day's games the home shows before «Все».
+const _gamesShown = 3;
+
+/// One game of the day, in the same row as the clubs below it: when, where,
+/// and whether there is room — or whether the reader is already in.
+class _GameRow extends StatelessWidget {
+  const _GameRow({
+    required this.game,
+    required this.sport,
+    required this.divided,
+    required this.onTap,
+  });
+
+  final Game game;
+  final Sport sport;
+  final bool divided;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = context.l10n;
+    final state = game.readerPlays
+        ? _Tag(label: l10n.youAreIn, tone: _TagTone.live)
+        : game.readerRequested
+        ? _Tag(label: l10n.requestWaiting)
+        : game.isFull
+        ? _Tag(label: l10n.gameFull)
+        : _Tag(label: l10n.freePlaces(game.freePlaces), tone: _TagTone.live);
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: ValueKey('home-game-${game.id}'),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            border: divided
+                ? Border(top: BorderSide(color: colors.border))
+                : null,
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: context.scaled(56, max: 1.2),
+                  height: context.scaled(56, max: 1.2),
+                  child: SportSurface(sportId: game.sportId),
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${game.timeRange} · ${sport.name.capitalized}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleSmall,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      game.venue.name.capitalized,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.labelSmall?.copyWith(
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        state,
+                        if (game.pricePerPerson > 0)
+                          _Tag(label: AppFormatters.money(game.pricePerPerson)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -982,6 +1247,7 @@ class _VenueRow extends StatelessWidget {
     required this.onTap,
     required this.divided,
     this.freeSlots,
+    this.freeSlotsFailed = false,
   });
 
   final Venue venue;
@@ -996,10 +1262,88 @@ class _VenueRow extends StatelessWidget {
   /// is still on its way.
   final int? freeSlots;
 
+  /// Whether the free hours could not be had, so the row stops waiting for
+  /// them; the list above says so once for every row.
+  final bool freeSlotsFailed;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final free = freeSlots;
+    // With a large system font the price column took a third of the row and
+    // left the name «Футбольны…» and the free-hours tag broken over two
+    // lines. Past a modest scale the price moves under the tags instead.
+    final roomy = MediaQuery.textScalerOf(context).scale(10) <= 11.5;
+    final price = Column(
+      crossAxisAlignment: roomy
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        // The unit rides with the number. Without it «1 600 ₽»
+        // reads as the price of a visit, and the search screen
+        // two taps away says «1 600 ₽/час» for the same club.
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: venue.isPublic
+                    ? 'Бесплатно'
+                    : AppFormatters.money(venue.pricePerHour),
+                // Lighter than the club's name beside it, so the two do not
+                // compete for the first look.
+                style: AppTheme.numeric(
+                  context.text.bodyMedium,
+                ).copyWith(fontWeight: FontWeight.w600),
+              ),
+              TextSpan(
+                text: venue.isPublic ? '' : context.l10n.perHourSuffix,
+                style: context.text.bodySmall?.copyWith(
+                  color: colors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.end,
+        ),
+        if (kShowClubRatings && !venue.isPublic) ...[
+          const SizedBox(height: 3),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(AppIcons.star, size: 13, color: colors.ink),
+              const SizedBox(width: 3),
+              Flexible(
+                // Written short, read long: a reader hears
+                // "4.8 · 128 отзывов", the row shows what fits.
+                child: Semantics(
+                  label: venue.reviewCount == null
+                      ? null
+                      : context.l10n.ratingWithReviews(
+                          AppFormatters.decimal(venue.rating),
+                          venue.reviewCount!,
+                        ),
+                  child: Text(
+                    venue.reviewCount == null
+                        ? AppFormatters.decimal(venue.rating)
+                        : '${AppFormatters.decimal(venue.rating)} · '
+                              '${venue.reviewCount}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: AppTheme.numeric(
+                      context.text.labelSmall,
+                    ).copyWith(color: colors.muted),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
 
     return Semantics(
       button: true,
@@ -1033,11 +1377,9 @@ class _VenueRow extends StatelessWidget {
                   children: [
                     Text(
                       venue.name.capitalized,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: context.text.titleSmall,
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1045,10 +1387,7 @@ class _VenueRow extends StatelessWidget {
                       // be compared down: «8.4 км» against «29 мин пешком»
                       // is not a comparison anyone can make in their head.
                       // Walking time, where it is plausible, is a tag below.
-                      context.l10n.venueAddressDistance(
-                        venue.address,
-                        venue.distanceKm.toStringAsFixed(1),
-                      ),
+                      venue.address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.text.labelSmall?.copyWith(
@@ -1071,101 +1410,29 @@ class _VenueRow extends StatelessWidget {
                             label: context.l10n.freeHoursToday(free),
                             tone: _TagTone.live,
                           )
-                        else
+                        else if (!freeSlotsFailed)
                           const Skeleton.line(width: 96, height: 18, radius: 6),
-                        // One more tag after the free-hours chip, and one
-                        // only: a second wraps the row onto a new line and
-                        // the list loses a club's worth of height per club.
-                        if (venue.distanceKm <= 2.5)
-                          _Tag(
-                            label: context.l10n.walkMinutes(
-                              AppFormatters.walkMinutes(venue.distanceKm),
-                            ),
-                          )
-                        else
-                          for (final amenity in venue.amenities.take(1))
-                            _Tag(label: amenity),
+                        // The free hours only. A second tag wrapped under the
+                        // first on most rows, so cards came out of different
+                        // heights; what the club has is on its own screen.
                       ],
                     ),
+                    if (!roomy) ...[const SizedBox(height: 8), price],
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              // Capped rather than flexible: a flexible column would split
-              // the row evenly with the name and clip it at the default text
-              // size, which is not where the pressure is.
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: context.scaled(98, max: 1.5),
+              if (roomy) ...[
+                const SizedBox(width: 10),
+                // Capped rather than flexible: a flexible column would split
+                // the row evenly with the name and clip it at the default
+                // text size, which is not where the pressure is.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: context.scaled(98, max: 1.5),
+                  ),
+                  child: price,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // The unit rides with the number. Without it «₽1 600»
-                    // reads as the price of a visit, and the search screen
-                    // two taps away says «₽1 600/час» for the same club.
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: venue.isPublic
-                                ? 'Бесплатно'
-                                : AppFormatters.money(venue.pricePerHour),
-                            style: AppTheme.numeric(
-                              context.text.titleMedium,
-                            ).copyWith(fontWeight: FontWeight.w900),
-                          ),
-                          TextSpan(
-                            text: venue.isPublic
-                                ? ''
-                                : context.l10n.perHourSuffix,
-                            style: context.text.bodySmall?.copyWith(
-                              color: colors.muted,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                    ),
-                    const SizedBox(height: 3),
-                    if (!venue.isPublic)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(AppIcons.star, size: 13, color: colors.ink),
-                          const SizedBox(width: 3),
-                          Flexible(
-                            // Written short, read long: a reader hears
-                            // "4.8 · 128 отзывов", the row shows what fits.
-                            child: Semantics(
-                              label: venue.reviewCount == null
-                                  ? null
-                                  : context.l10n.ratingWithReviews(
-                                      venue.rating.toStringAsFixed(1),
-                                      venue.reviewCount!,
-                                    ),
-                              child: Text(
-                                venue.reviewCount == null
-                                    ? venue.rating.toStringAsFixed(1)
-                                    : '${venue.rating.toStringAsFixed(1)} · '
-                                          '${venue.reviewCount}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
-                                style: AppTheme.numeric(
-                                  context.text.labelSmall,
-                                ).copyWith(color: colors.muted),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+              ],
             ],
           ),
         ),
@@ -1185,29 +1452,16 @@ class _Tag extends StatelessWidget {
   final _TagTone tone;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final live = tone == _TagTone.live;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: live ? colors.accentSoft : colors.bgAlt,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: context.text.labelSmall?.copyWith(
-          fontSize: 10.5,
-          color: live ? colors.accent : colors.muted,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      InfoTag(label: label, live: tone == _TagTone.live);
 }
 
 class _NothingFound extends StatelessWidget {
-  const _NothingFound({required this.query, required this.onReset});
+  const _NothingFound({
+    required this.query,
+    required this.onReset,
+    this.noClubs = false,
+  });
 
   /// What was typed, if anything. The message used to name a covering the
   /// reader had never filtered by — «В Москве пока нет клубов с этим
@@ -1215,8 +1469,24 @@ class _NothingFound extends StatelessWidget {
   final String query;
   final VoidCallback onReset;
 
+  /// No clubs at all, filter or not: the catalogue is still empty. Blaming
+  /// «этот вид спорта» under «Все» and offering a reset that changes nothing
+  /// is what a first reader would have seen on launch day.
+  final bool noClubs;
+
   @override
   Widget build(BuildContext context) {
+    if (noClubs) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+        child: EmptyState(
+          key: const ValueKey('home-no-clubs'),
+          icon: AppIcons.mapPinOff,
+          title: context.l10n.noClubsYet,
+          description: context.l10n.noClubsYetHint,
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: EmptyState(
