@@ -251,7 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     onOpenFilters: _openFilters,
                     filterCount: _filters.count,
                     gamesToday: games.length,
-                    venuesToday: venues.length,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -416,7 +415,6 @@ class _SkyHeader extends StatefulWidget {
     required this.onOpenFilters,
     required this.filterCount,
     required this.gamesToday,
-    required this.venuesToday,
   });
 
   final AppController controller;
@@ -427,7 +425,6 @@ class _SkyHeader extends StatefulWidget {
   final VoidCallback onOpenFilters;
   final int filterCount;
   final int gamesToday;
-  final int venuesToday;
 
   @override
   State<_SkyHeader> createState() => _SkyHeaderState();
@@ -549,8 +546,7 @@ class _SkyHeaderState extends State<_SkyHeader> {
                 ),
                 SizedBox(height: context.scaled(14, max: 1.3)),
                 Text(
-                  '${context.l10n.gamesCount(widget.gamesToday)} · '
-                  '${context.l10n.clubsNearby(widget.venuesToday)}',
+                  context.l10n.gamesCount(widget.gamesToday),
                   // Left, like every other line on the screen; centred, it
                   // was the one line that did not line up with anything.
                   maxLines: 1,
@@ -1290,7 +1286,9 @@ class _VenueRow extends StatelessWidget {
           TextSpan(
             children: [
               TextSpan(
-                text: AppFormatters.money(venue.pricePerHour),
+                text: venue.isPublic
+                    ? 'Бесплатно'
+                    : AppFormatters.money(venue.pricePerHour),
                 // Lighter than the club's name beside it, so the two do not
                 // compete for the first look.
                 style: AppTheme.numeric(
@@ -1298,7 +1296,7 @@ class _VenueRow extends StatelessWidget {
                 ).copyWith(fontWeight: FontWeight.w600),
               ),
               TextSpan(
-                text: context.l10n.perHourSuffix,
+                text: venue.isPublic ? '' : context.l10n.perHourSuffix,
                 style: context.text.bodySmall?.copyWith(
                   color: colors.muted,
                   fontWeight: FontWeight.w600,
@@ -1310,7 +1308,7 @@ class _VenueRow extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.end,
         ),
-        if (kShowClubRatings) ...[
+        if (kShowClubRatings && !venue.isPublic) ...[
           const SizedBox(height: 3),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1405,7 +1403,9 @@ class _VenueRow extends StatelessWidget {
                         // that changes with the calendar above. Until it
                         // lands it holds its own space, so the row does not
                         // jump when it does.
-                        if (free != null)
+                        if (venue.isPublic)
+                          const _Tag(label: 'Общественная')
+                        else if (free != null)
                           _Tag(
                             label: context.l10n.freeHoursToday(free),
                             tone: _TagTone.live,

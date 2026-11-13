@@ -27,12 +27,15 @@ class VenueSlotPicker extends StatefulWidget {
     required this.selectedHour,
     required this.onHourChanged,
     required this.onReadyChanged,
+    this.selectedMinute = 0,
+    this.onSlotChanged,
   });
 
   final AppController controller;
   final Venue venue;
   final DateTime date;
   final int durationMinutes;
+  final int selectedMinute;
 
   /// The hour the reader picked, or null while they have not.
   final int? selectedHour;
@@ -40,6 +43,9 @@ class VenueSlotPicker extends StatefulWidget {
   /// Fires on a tap, and with null when a reload finds the picked hour has
   /// been taken.
   final ValueChanged<int?> onHourChanged;
+
+  /// Includes the minute and exact API instant for published half-hour starts.
+  final ValueChanged<TimeSlot>? onSlotChanged;
 
   /// Whether the picked hour is one the club will actually take. The screen
   /// gates its own button on this rather than guessing.
@@ -53,6 +59,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
   List<TimeSlot> _slots = const [];
   bool _loading = true;
   Object? _error;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -76,14 +83,16 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
   /// [didUpdateWidget], where the screen above is already building and
   /// cannot be marked dirty again.
   void _reportReady(bool ready) {
+    final generation = _loadGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         widget.onReadyChanged(ready);
       }
     });
   }
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _error = null;
@@ -95,7 +104,7 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
         day: widget.date,
         durationMinutes: widget.durationMinutes,
       );
-      if (!mounted) {
+      if (!mounted || generation != _loadGeneration) {
         return;
       }
       setState(() {
@@ -105,15 +114,18 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
       final picked = widget.selectedHour;
       final stillFree =
           picked != null &&
-          slots.any((slot) => slot.hour == picked && slot.isAvailable);
+          slots.any((slot) => _isSelected(slot) && slot.isAvailable);
       // An hour that has gone is cleared, not quietly swapped for another
       // one: the reader came back to a different booking than they left.
       if (picked != null && !stillFree) {
         widget.onHourChanged(null);
+      } else if (stillFree) {
+        // A new duration can change the price of the same published start.
+        widget.onSlotChanged?.call(slots.firstWhere(_isSelected));
       }
       _reportReady(stillFree);
     } catch (error) {
-      if (!mounted) {
+      if (!mounted || generation != _loadGeneration) {
         return;
       }
       setState(() {
@@ -123,6 +135,14 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
       });
       _reportReady(false);
     }
+  }
+
+  bool _isSelected(TimeSlot slot) =>
+      slot.hour == widget.selectedHour && slot.minute == widget.selectedMinute;
+
+  void _select(TimeSlot slot) {
+    widget.onHourChanged(slot.hour);
+    widget.onSlotChanged?.call(slot);
   }
 
   @override
@@ -170,12 +190,16 @@ class _VenueSlotPickerState extends State<VenueSlotPicker> {
       tiles: [
         for (final slot in _slots)
           TimeTile(
-            key: ValueKey('slot-${slot.hour}'),
+            key: ValueKey(
+              slot.minute == 0
+                  ? 'slot-${slot.hour}'
+                  : 'slot-${slot.hour}-${slot.minute}',
+            ),
             label: slot.label,
-            selected: slot.hour == widget.selectedHour,
+            selected: _isSelected(slot),
             available: slot.isAvailable,
             onTap: () {
-              widget.onHourChanged(slot.hour);
+              _select(slot);
               _reportReady(true);
             },
           ),

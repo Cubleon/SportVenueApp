@@ -1,6 +1,14 @@
 {
   "@@locale": "ru",
   "appTitle": "SportVenue",
+  "addPublicVenue": "Добавить площадку",
+  "playerAccount": "Я игрок",
+  "clubAccount": "Я клуб",
+  "invalidClubCredentials": "Неверный логин или пароль",
+  "clubLoginTooManyAttempts": "Слишком много попыток входа. Попробуйте позже.",
+  "signInAsDeveloper": "Войти как разработчик",
+  "introduceYourself": "Давайте познакомимся",
+  "firstLoginNameHint": "Заполните ФИО перед первым входом. Эти данные сохранятся в вашем профиле.",
   "@appTitle": {
     "description": "Product name, as the OS task switcher shows it"
   },
@@ -45,6 +53,8 @@
   "toHome": "На главную",
   "shareGame": "Поделиться игрой",
   "shareVenue": "Поделиться клубом",
+  "closeVenuePreview": "Закрыть описание клуба",
+  "venueDetails": "Подробнее о клубе",
   "venueSports": "Виды спорта",
   "venueAmenities": "Что есть",
   "venueCapacity": "Сколько играет",
@@ -164,6 +174,20 @@
   "openGames": "Открытые игры",
   "noUpcomingBookings": "У вас пока нет предстоящих броней",
   "profile": "Профиль",
+  "personalData": "Личные данные",
+  "fillFullName": "Заполнить ФИО",
+  "editFullName": "Изменить ФИО",
+  "profileNameHint": "Укажите фамилию, имя и отчество",
+  "lastNameLabel": "Фамилия",
+  "firstNameLabel": "Имя",
+  "middleNameLabel": "Отчество",
+  "middleNameOptional": "Необязательно",
+  "lastNameRequired": "Введите фамилию",
+  "firstNameRequired": "Введите имя",
+  "nameTooLong": "Не больше 80 символов",
+  "saveProfile": "Сохранить",
+  "savingProfile": "Сохраняем…",
+  "profileNameSaved": "ФИО сохранено",
   "accountSportVenue": "Аккаунт SportVenue",
   "demoAccountSportVenue": "Демо-аккаунт SportVenue",
   "userSportVenue": "Пользователь SportVenue",
@@ -221,14 +245,6 @@
   "mapLoading": "Карта загружается",
   "searchFieldHint": "Клуб, площадка или район",
   "clearSearch": "Очистить поиск",
-  "clubsNearby": "{count, plural, one{{count} клуб} few{{count} клуба} other{{count} клубов}} рядом",
-  "@clubsNearby": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "noVenuesForSport": "Площадок этого вида нет",
   "noVenuesForSportHint": "В Москве пока нет клубов для этого вида спорта.",
   "noClubsYet": "Клубов пока нет",

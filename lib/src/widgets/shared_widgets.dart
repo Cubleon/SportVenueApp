@@ -1794,7 +1794,7 @@ class VenueRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      if (kShowClubRatings) ...[
+                      if (kShowClubRatings && !venue.isPublic) ...[
                         Icon(
                           AppIcons.star,
                           size: 15,
@@ -1808,9 +1808,11 @@ class VenueRow extends StatelessWidget {
                         const SizedBox(width: 10),
                       ],
                       Text(
-                        context.l10n.pricePerHour(
-                          AppFormatters.money(venue.pricePerHour),
-                        ),
+                        venue.isPublic
+                            ? 'Бесплатно'
+                            : context.l10n.pricePerHour(
+                                AppFormatters.money(venue.pricePerHour),
+                              ),
                         style: context.text.labelMedium?.copyWith(
                           color: context.colors.ink,
                         ),

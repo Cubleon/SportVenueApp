@@ -82,6 +82,9 @@ class _BookingScreenState extends State<BookingScreen> {
   /// with the pay button already live above it, so the screen could be paid
   /// for an hour nobody had chosen.
   int? _hour;
+  int _minute = 0;
+  DateTime? _apiStartsAt;
+  int? _quotedTotalPrice;
   late int _players = _venue == null
       ? 4
       : 4.clamp(_venue!.capacityMin, _venue!.capacityMax);
@@ -106,6 +109,9 @@ class _BookingScreenState extends State<BookingScreen> {
     date: _date!,
     durationMinutes: _duration,
     startHour: _hour!,
+    startMinute: _minute,
+    apiStartsAt: _apiStartsAt,
+    quotedTotalPrice: _quotedTotalPrice,
     players: _players,
     mode: PaymentMode.split,
   );
@@ -193,7 +199,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         ? ListenableBuilder(
                             listenable: widget.controller,
                             builder: (context, _) {
-                              final venues = widget.controller.venues;
+                              final venues = widget.controller.bookableVenues;
                               if (venues.isNotEmpty) {
                                 return _ChooseVenueRow(
                                   key: const ValueKey('create-venue-empty'),
@@ -238,6 +244,21 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ),
                 // A game is for one sport; a club with several asks which.
+                if (widget.venue == null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextButton.icon(
+                        key: const ValueKey('add-public-venue'),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(44, 44),
+                        ),
+                        icon: const Icon(AppIcons.plus),
+                        label: Text(l10n.addPublicVenue),
+                        onPressed: () => context.go(Routes.venueSubmissions),
+                      ),
+                    ),
+                  ),
                 if (_findPlayers && multiSport)
                   SliverToBoxAdapter(
                     child: _StepBlock(
@@ -272,6 +293,9 @@ class _BookingScreenState extends State<BookingScreen> {
                           // one that was picked on the old day is not a
                           // choice on this one.
                           _hour = null;
+                          _minute = 0;
+                          _apiStartsAt = null;
+                          _quotedTotalPrice = null;
                           _slotReady = false;
                         }),
                       ),
@@ -289,6 +313,8 @@ class _BookingScreenState extends State<BookingScreen> {
                         onChanged: (value) => setState(() {
                           _duration = value;
                           _durationTouched = true;
+                          _slotReady = false;
+                          _quotedTotalPrice = null;
                         }),
                       ),
                     ),
@@ -311,8 +337,20 @@ class _BookingScreenState extends State<BookingScreen> {
                               date: _date ?? widget.controller.now,
                               durationMinutes: _duration,
                               selectedHour: _hour,
-                              onHourChanged: (hour) =>
-                                  setState(() => _hour = hour),
+                              selectedMinute: _minute,
+                              onHourChanged: (hour) => setState(() {
+                                _hour = hour;
+                                if (hour == null) {
+                                  _apiStartsAt = null;
+                                  _quotedTotalPrice = null;
+                                }
+                              }),
+                              onSlotChanged: (slot) => setState(() {
+                                _hour = slot.hour;
+                                _minute = slot.minute;
+                                _apiStartsAt = slot.startsAt;
+                                _quotedTotalPrice = slot.price;
+                              }),
                               onReadyChanged: (ready) {
                                 if (ready != _slotReady) {
                                   setState(() => _slotReady = ready);
@@ -551,7 +589,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _pickVenue() async {
     final picked = await pickVenue(
       context,
-      venues: widget.controller.venues,
+      venues: widget.controller.bookableVenues,
       selected: _venue,
       sportOf: (venue) => _sportById(primarySportId(venue)),
     );
@@ -560,6 +598,9 @@ class _BookingScreenState extends State<BookingScreen> {
     }
     setState(() {
       _venue = picked;
+      _slotReady = false;
+      _apiStartsAt = null;
+      _quotedTotalPrice = null;
       // Clubs take different numbers of players; carrying a count the new
       // one will not accept would be rejected at payment.
       _players = _players.clamp(picked.capacityMin, picked.capacityMax);
@@ -586,6 +627,8 @@ class _BookingScreenState extends State<BookingScreen> {
         venue: venue,
         date: _date!,
         startHour: _hour!,
+        startMinute: _minute,
+        apiStartsAt: _apiStartsAt,
         durationMinutes: _duration,
         capacity: _players,
         type: _type,

@@ -595,7 +595,7 @@ class _ResultsSheet extends StatelessWidget {
                 child: Text(
                   venues.isEmpty && controller.venues.isNotEmpty
                       ? context.l10n.nothingFound
-                      : context.l10n.clubsNearby(venues.length),
+                      : context.l10n.venuesToChoose(venues.length),
                   style: context.text.titleSmall,
                 ),
               ),

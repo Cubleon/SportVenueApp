@@ -1,9 +1,9 @@
-# Builds the demo on every push to payments-pilot and publishes it to
+# Builds the demo on every push to master and publishes it to
 # GitHub Pages, so each step of the payments work can be opened by link,
 # from a phone, without installing anything.
 #
 # The built site is pushed to the gh-pages branch, which holds nothing but
-# the build. master and mikhail-ui are never touched.
+# the build. Application source stays on master.
 #
 # One-time setup: Settings → Pages → Source: «Deploy from a branch»,
 # branch gh-pages, folder / (root). The link is then
@@ -13,7 +13,7 @@ name: Demo preview
 
 on:
   push:
-    branches: [payments-pilot]
+    branches: [master]
   workflow_dispatch:
 
 # A newer push makes an older build pointless; only the latest is published.

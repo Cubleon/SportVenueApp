@@ -36,12 +36,35 @@ void main() {
     await _enter(tester, 'email-code-field', '012345');
     await tester.tap(find.byKey(const ValueKey('verify-email-code')));
     await tester.pumpAndSettle();
+    expect(find.text('Давайте познакомимся'), findsOneWidget);
+    await _enter(tester, 'profile-last-name', 'Иванова');
+    await _enter(tester, 'profile-first-name', 'Анна');
+    await _enter(tester, 'profile-middle-name', 'Сергеевна');
+    await tester.ensureVisible(find.byKey(const ValueKey('save-profile-name')));
+    await tester.tap(find.byKey(const ValueKey('save-profile-name')));
+    await tester.pumpAndSettle();
+    expect(controller.fullName, 'Иванова Анна Сергеевна');
     expect(find.text('Какой спорт?'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('sports-continue')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
     expect(controller.isSignedIn, isTrue);
     expect(controller.email, 'sportvenue@gmail.com');
+    controller.logout();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('email-sign-in')));
+    await tester.pumpAndSettle();
+    await _enter(tester, 'email-field', 'sportvenue@gmail.com');
+    await tester.tap(find.byKey(const ValueKey('email-consent-toggle')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('send-email-code')));
+    await tester.pumpAndSettle();
+    await _enter(tester, 'email-code-field', '012345');
+    await tester.tap(find.byKey(const ValueKey('verify-email-code')));
+    await tester.pumpAndSettle();
+    expect(find.text('Давайте познакомимся'), findsNothing);
+    expect(controller.fullName, 'Иванова Анна Сергеевна');
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
   });
 
   testWidgets('email validation and consent precede sending', (tester) async {
