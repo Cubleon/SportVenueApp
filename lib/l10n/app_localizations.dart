@@ -2834,6 +2834,1008 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Не отменять'**
   String get keepGame;
+
+  /// No description provided for @clubDashboardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кабинет клуба'**
+  String get clubDashboardTitle;
+
+  /// No description provided for @refresh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить'**
+  String get refresh;
+
+  /// No description provided for @clubDeletedReloadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удаление выполнено, но обновить кабинет не удалось.'**
+  String get clubDeletedReloadFailed;
+
+  /// No description provided for @clubLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить кабинет клуба.'**
+  String get clubLoadFailed;
+
+  /// No description provided for @deleteClubQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить клуб «{name}»?'**
+  String deleteClubQuestion(String name);
+
+  /// No description provided for @deleteVenueQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить площадку «{name}»?'**
+  String deleteVenueQuestion(String name);
+
+  /// No description provided for @deleteClubBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клуб и все его площадки исчезнут с карты. Опубликованное расписание будет скрыто. История бронирований сохранится. Аккаунт клуба останется.'**
+  String get deleteClubBody;
+
+  /// No description provided for @deleteVenueBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Площадка и её расписание больше не будут доступны для новых бронирований. История бронирований сохранится.'**
+  String get deleteVenueBody;
+
+  /// No description provided for @deleteAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить'**
+  String get deleteAction;
+
+  /// No description provided for @clubDeleteBlocked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя удалить клуб: есть предстоящие бронирования, игры или временные блокировки. Дождитесь их завершения.'**
+  String get clubDeleteBlocked;
+
+  /// No description provided for @venueDeleteBlocked.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нельзя удалить площадку: есть предстоящие бронирования, игры или временные блокировки. Дождитесь их завершения.'**
+  String get venueDeleteBlocked;
+
+  /// No description provided for @clubDeleteFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить клуб. Попробуйте ещё раз.'**
+  String get clubDeleteFailed;
+
+  /// No description provided for @venueDeleteFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось удалить площадку. Попробуйте ещё раз.'**
+  String get venueDeleteFailed;
+
+  /// No description provided for @clubOnMapTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш клуб на карте'**
+  String get clubOnMapTitle;
+
+  /// No description provided for @clubOnMapBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавьте клуб и его площадки, затем опубликуйте свободное время. Игроки увидят их на карте и смогут бронировать.'**
+  String get clubOnMapBody;
+
+  /// No description provided for @clubStartTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начнём с адреса'**
+  String get clubStartTitle;
+
+  /// No description provided for @clubStartBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите название, адрес и отметьте клуб на карте'**
+  String get clubStartBody;
+
+  /// No description provided for @addClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить клуб'**
+  String get addClub;
+
+  /// No description provided for @clubPicker.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клуб'**
+  String get clubPicker;
+
+  /// No description provided for @editClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать клуб'**
+  String get editClub;
+
+  /// No description provided for @deleteClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить клуб'**
+  String get deleteClub;
+
+  /// No description provided for @clubNeedsVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чтобы появиться в поиске, добавьте первую площадку'**
+  String get clubNeedsVenue;
+
+  /// No description provided for @clubVisible.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клуб доступен игрокам на карте'**
+  String get clubVisible;
+
+  /// No description provided for @clubVenuesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Спортивные площадки'**
+  String get clubVenuesTitle;
+
+  /// No description provided for @clubVenuesBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Для каждого корта, зала или поля — своё расписание'**
+  String get clubVenuesBody;
+
+  /// No description provided for @editVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать площадку'**
+  String get editVenue;
+
+  /// No description provided for @deleteVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить площадку'**
+  String get deleteVenue;
+
+  /// No description provided for @venuePriceCapacity.
+  ///
+  /// In ru, this message translates to:
+  /// **'{price}/час · до {count, plural, one{{count} игрока} other{{count} игроков}}'**
+  String venuePriceCapacity(String price, int count);
+
+  /// No description provided for @venueSchedule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расписание и свободное время'**
+  String get venueSchedule;
+
+  /// No description provided for @addVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить площадку'**
+  String get addVenue;
+
+  /// No description provided for @addAnotherClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить ещё один клуб'**
+  String get addAnotherClub;
+
+  /// No description provided for @clubSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить клуб. Попробуйте ещё раз.'**
+  String get clubSaveFailed;
+
+  /// No description provided for @newClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый клуб'**
+  String get newClub;
+
+  /// No description provided for @clubNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название клуба'**
+  String get clubNameLabel;
+
+  /// No description provided for @clubAddressLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Адрес'**
+  String get clubAddressLabel;
+
+  /// No description provided for @clubAddressHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Москва, улица и номер дома'**
+  String get clubAddressHint;
+
+  /// No description provided for @pickOnMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Указать на карте'**
+  String get pickOnMap;
+
+  /// No description provided for @changeMapPoint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить точку на карте'**
+  String get changeMapPoint;
+
+  /// No description provided for @clubLocationMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отметьте расположение клуба на карте'**
+  String get clubLocationMissing;
+
+  /// No description provided for @clubLocationHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроки увидят клуб в этой точке'**
+  String get clubLocationHint;
+
+  /// No description provided for @clubAboutLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'О клубе (необязательно)'**
+  String get clubAboutLabel;
+
+  /// No description provided for @saveClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить клуб'**
+  String get saveClub;
+
+  /// No description provided for @clubLocationTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расположение клуба'**
+  String get clubLocationTitle;
+
+  /// No description provided for @clubLocationBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приблизьте карту и нажмите на место, где находится вход в клуб'**
+  String get clubLocationBody;
+
+  /// No description provided for @confirmLocation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердить расположение'**
+  String get confirmLocation;
+
+  /// No description provided for @venueSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить площадку. Попробуйте ещё раз.'**
+  String get venueSaveFailed;
+
+  /// No description provided for @newVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая площадка'**
+  String get newVenue;
+
+  /// No description provided for @venueNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название площадки'**
+  String get venueNameLabel;
+
+  /// No description provided for @venueNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например, теннисный корт №1'**
+  String get venueNameHint;
+
+  /// No description provided for @venueSportsMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите хотя бы один вид спорта'**
+  String get venueSportsMissing;
+
+  /// No description provided for @playersFrom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроков от'**
+  String get playersFrom;
+
+  /// No description provided for @playersTo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Игроков до'**
+  String get playersTo;
+
+  /// No description provided for @lessThanMin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Меньше минимума'**
+  String get lessThanMin;
+
+  /// No description provided for @venueAboutLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Описание (необязательно)'**
+  String get venueAboutLabel;
+
+  /// No description provided for @venueAboutHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покрытие, оборудование и другие особенности'**
+  String get venueAboutHint;
+
+  /// No description provided for @saveVenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить площадку'**
+  String get saveVenue;
+
+  /// No description provided for @scheduleLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить расписание.'**
+  String get scheduleLoadFailed;
+
+  /// No description provided for @unpublishQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Снять время с публикации?'**
+  String get unpublishQuestion;
+
+  /// No description provided for @unpublishBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот промежуток больше не будет доступен для бронирования. Если на него уже есть бронь, снять публикацию не получится.'**
+  String get unpublishBody;
+
+  /// No description provided for @keepPublished.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить'**
+  String get keepPublished;
+
+  /// No description provided for @unpublish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Снять с публикации'**
+  String get unpublish;
+
+  /// No description provided for @unpublishBlocked.
+  ///
+  /// In ru, this message translates to:
+  /// **'На это время есть бронь или временная блокировка. Снять публикацию сейчас нельзя.'**
+  String get unpublishBlocked;
+
+  /// No description provided for @unpublishFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось снять публикацию. Попробуйте ещё раз.'**
+  String get unpublishFailed;
+
+  /// No description provided for @venueScheduleTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расписание площадки'**
+  String get venueScheduleTitle;
+
+  /// No description provided for @publishFreeTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Опубликовать свободное время'**
+  String get publishFreeTime;
+
+  /// No description provided for @scheduleBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Публикуйте только время, когда площадка свободна. Внутри этих промежутков игроки выбирают время и длительность бронирования.'**
+  String get scheduleBody;
+
+  /// No description provided for @moscowTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Московское время (UTC+3)'**
+  String get moscowTime;
+
+  /// No description provided for @scheduleEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободное время пока не опубликовано. Добавьте первый промежуток, чтобы открыть бронирование.'**
+  String get scheduleEmpty;
+
+  /// No description provided for @endBeforeStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Окончание должно быть позже начала'**
+  String get endBeforeStart;
+
+  /// No description provided for @windowTooShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Промежуток должен быть не короче 1 часа'**
+  String get windowTooShort;
+
+  /// No description provided for @pickFutureTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите время в будущем'**
+  String get pickFutureTime;
+
+  /// No description provided for @windowOverlaps.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это время пересекается с уже опубликованным промежутком. Выберите другое время.'**
+  String get windowOverlaps;
+
+  /// No description provided for @publishFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось опубликовать время. Попробуйте ещё раз.'**
+  String get publishFailed;
+
+  /// No description provided for @freeTimeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свободное время'**
+  String get freeTimeTitle;
+
+  /// No description provided for @freeTimeBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите дату и промежуток, доступный для бронирования'**
+  String get freeTimeBody;
+
+  /// No description provided for @windowStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начало'**
+  String get windowStart;
+
+  /// No description provided for @windowEnd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Окончание'**
+  String get windowEnd;
+
+  /// No description provided for @freeTimeNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Московское время (UTC+3). Шаг — 30 минут. Для нескольких дней добавьте отдельный промежуток на каждый день.'**
+  String get freeTimeNote;
+
+  /// No description provided for @publish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Опубликовать'**
+  String get publish;
+
+  /// No description provided for @close.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть'**
+  String get close;
+
+  /// No description provided for @deleting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удаляем'**
+  String get deleting;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заполните это поле'**
+  String get fieldRequired;
+
+  /// No description provided for @fieldMinLength.
+  ///
+  /// In ru, this message translates to:
+  /// **'Минимум {count, plural, one{{count} символ} few{{count} символа} other{{count} символов}}'**
+  String fieldMinLength(int count);
+
+  /// No description provided for @wholeNumberFromOne.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите целое число от 1'**
+  String get wholeNumberFromOne;
+
+  /// No description provided for @notMoreThan.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не больше {max}'**
+  String notMoreThan(int max);
+
+  /// No description provided for @sessionEnded.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сессия завершилась. Войдите в аккаунт снова.'**
+  String get sessionEnded;
+
+  /// No description provided for @noClubAccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'У этого аккаунта нет доступа к клубу'**
+  String get noClubAccess;
+
+  /// No description provided for @checkFields.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте заполненные поля и попробуйте ещё раз'**
+  String get checkFields;
+
+  /// No description provided for @checkConnection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте подключение к интернету.'**
+  String get checkConnection;
+
+  /// No description provided for @surfaceAsphalt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Асфальт'**
+  String get surfaceAsphalt;
+
+  /// No description provided for @surfaceRubber.
+  ///
+  /// In ru, this message translates to:
+  /// **'Резиновое покрытие'**
+  String get surfaceRubber;
+
+  /// No description provided for @surfaceArtificialGrass.
+  ///
+  /// In ru, this message translates to:
+  /// **'Искусственная трава'**
+  String get surfaceArtificialGrass;
+
+  /// No description provided for @surfaceGrass.
+  ///
+  /// In ru, this message translates to:
+  /// **'Газон'**
+  String get surfaceGrass;
+
+  /// No description provided for @surfaceSand.
+  ///
+  /// In ru, this message translates to:
+  /// **'Песок'**
+  String get surfaceSand;
+
+  /// No description provided for @surfaceOther.
+  ///
+  /// In ru, this message translates to:
+  /// **'Другое'**
+  String get surfaceOther;
+
+  /// No description provided for @surfaceUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не указано'**
+  String get surfaceUnknown;
+
+  /// No description provided for @submissionPending.
+  ///
+  /// In ru, this message translates to:
+  /// **'На модерации'**
+  String get submissionPending;
+
+  /// No description provided for @submissionApproved.
+  ///
+  /// In ru, this message translates to:
+  /// **'Одобрено · на карте'**
+  String get submissionApproved;
+
+  /// No description provided for @submissionRejected.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонено'**
+  String get submissionRejected;
+
+  /// No description provided for @showOnMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Посмотреть на карте'**
+  String get showOnMap;
+
+  /// No description provided for @surfaceLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Покрытие'**
+  String get surfaceLabel;
+
+  /// No description provided for @lightingLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Освещение'**
+  String get lightingLabel;
+
+  /// No description provided for @lightingYes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть'**
+  String get lightingYes;
+
+  /// No description provided for @lightingNo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет'**
+  String get lightingNo;
+
+  /// No description provided for @accessLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступ'**
+  String get accessLabel;
+
+  /// No description provided for @publicAccessValue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бесплатно, без бронирования'**
+  String get publicAccessValue;
+
+  /// No description provided for @submittedOn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлено {date}'**
+  String submittedOn(String date);
+
+  /// No description provided for @publicVenueTag.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общественная'**
+  String get publicVenueTag;
+
+  /// No description provided for @freeOfCharge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бесплатно'**
+  String get freeOfCharge;
+
+  /// No description provided for @publicVenues.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общественные площадки'**
+  String get publicVenues;
+
+  /// No description provided for @publicVenuesHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить площадку и проверить свои заявки'**
+  String get publicVenuesHint;
+
+  /// No description provided for @mySubmissionsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои заявки на площадки'**
+  String get mySubmissionsTitle;
+
+  /// No description provided for @submissionsLoadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить заявки'**
+  String get submissionsLoadFailed;
+
+  /// No description provided for @submissionNeedsServer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Для отправки заявки нужно подключение к серверу'**
+  String get submissionNeedsServer;
+
+  /// No description provided for @submissionSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отправлена на модерацию. После одобрения площадка появится на карте.'**
+  String get submissionSent;
+
+  /// No description provided for @addPublicVenueLong.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить общественную площадку'**
+  String get addPublicVenueLong;
+
+  /// No description provided for @publicVenueIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предложите бесплатную площадку во дворе, парке или другом общественном месте. Модератор проверит данные перед публикацией.'**
+  String get publicVenueIntro;
+
+  /// No description provided for @noSubmissionsYet.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы пока не отправляли заявки'**
+  String get noSubmissionsYet;
+
+  /// No description provided for @submissionCheckData.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте данные площадки и выбранные виды спорта'**
+  String get submissionCheckData;
+
+  /// No description provided for @submissionSendFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось отправить заявку. Данные сохранены в форме, попробуйте ещё раз.'**
+  String get submissionSendFailed;
+
+  /// No description provided for @publicVenueTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общественная площадка'**
+  String get publicVenueTitle;
+
+  /// No description provided for @publicVenueFormIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавьте бесплатную общественную площадку в Москве. Она появится на карте после проверки модератором.'**
+  String get publicVenueFormIntro;
+
+  /// No description provided for @enterVenueName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите название (минимум 2 символа)'**
+  String get enterVenueName;
+
+  /// No description provided for @enterAddress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите адрес'**
+  String get enterAddress;
+
+  /// No description provided for @markVenueOnMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отметьте площадку на карте'**
+  String get markVenueOnMap;
+
+  /// No description provided for @sportsUpToSix.
+  ///
+  /// In ru, this message translates to:
+  /// **'Виды спорта (до 6)'**
+  String get sportsUpToSix;
+
+  /// No description provided for @pickSurface.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите покрытие'**
+  String get pickSurface;
+
+  /// No description provided for @hasLighting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Есть освещение'**
+  String get hasLighting;
+
+  /// No description provided for @publicVenueAbout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Описание и как пройти (необязательно)'**
+  String get publicVenueAbout;
+
+  /// No description provided for @publicVenueConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это общественная площадка с бесплатным доступом, не принадлежащая спортивному клубу'**
+  String get publicVenueConfirm;
+
+  /// No description provided for @publicVenueConfirmMissing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердите, что площадка общественная и бесплатная'**
+  String get publicVenueConfirmMissing;
+
+  /// No description provided for @sendToModeration.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить на модерацию'**
+  String get sendToModeration;
+
+  /// No description provided for @venueLocationTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расположение площадки'**
+  String get venueLocationTitle;
+
+  /// No description provided for @venueLocationReadOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расположение площадки из заявки'**
+  String get venueLocationReadOnly;
+
+  /// No description provided for @venueLocationPick.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приблизьте карту и нажмите на место, где находится площадка'**
+  String get venueLocationPick;
+
+  /// No description provided for @closeMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть карту'**
+  String get closeMap;
+
+  /// No description provided for @wrongLoginOrPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный логин или пароль'**
+  String get wrongLoginOrPassword;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много попыток. Попробуйте позже.'**
+  String get tooManyAttempts;
+
+  /// No description provided for @moderatorSignIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход для модераторов'**
+  String get moderatorSignIn;
+
+  /// No description provided for @signInFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось войти. Попробуйте ещё раз.'**
+  String get signInFailed;
+
+  /// No description provided for @clubSignInTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход для клубов'**
+  String get clubSignInTitle;
+
+  /// No description provided for @moderationTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модерация площадок'**
+  String get moderationTitle;
+
+  /// No description provided for @manageYourClub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Управляйте своим клубом'**
+  String get manageYourClub;
+
+  /// No description provided for @loginPasswordHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите логин и пароль, которые вам выдали'**
+  String get loginPasswordHint;
+
+  /// No description provided for @loginLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Логин'**
+  String get loginLabel;
+
+  /// No description provided for @enterLogin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите логин'**
+  String get enterLogin;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль'**
+  String get passwordLabel;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть пароль'**
+  String get hidePassword;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать пароль'**
+  String get showPassword;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите пароль'**
+  String get enterPassword;
+
+  /// No description provided for @signingIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Входим…'**
+  String get signingIn;
+
+  /// No description provided for @signIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти'**
+  String get signIn;
+
+  /// No description provided for @clubNameSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить название. Попробуйте ещё раз.'**
+  String get clubNameSaveFailed;
+
+  /// No description provided for @signOutShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти'**
+  String get signOutShort;
+
+  /// No description provided for @clubNameQuestion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как называется ваш клуб?'**
+  String get clubNameQuestion;
+
+  /// No description provided for @clubNameBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите название клуба. Адрес, площадки и расписание добавим в личном кабинете.'**
+  String get clubNameBody;
+
+  /// No description provided for @clubNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например, Спортклуб «Арена»'**
+  String get clubNameHint;
+
+  /// No description provided for @enterClubName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите название клуба'**
+  String get enterClubName;
+
+  /// No description provided for @saving.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохраняем…'**
+  String get saving;
+
+  /// No description provided for @venueApproved.
+  ///
+  /// In ru, this message translates to:
+  /// **'Площадка одобрена и добавлена на карту'**
+  String get venueApproved;
+
+  /// No description provided for @submissionRejectedSnack.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка отклонена'**
+  String get submissionRejectedSnack;
+
+  /// No description provided for @submissionAlreadyReviewed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявка уже рассмотрена другим модератором'**
+  String get submissionAlreadyReviewed;
+
+  /// No description provided for @moderationQueueTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заявки на площадки'**
+  String get moderationQueueTitle;
+
+  /// No description provided for @noSubmissionsToReview.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет заявок на модерацию'**
+  String get noSubmissionsToReview;
+
+  /// No description provided for @reviewSaveFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить решение. Попробуйте ещё раз.'**
+  String get reviewSaveFailed;
+
+  /// No description provided for @approve.
+  ///
+  /// In ru, this message translates to:
+  /// **'Одобрить'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить'**
+  String get reject;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

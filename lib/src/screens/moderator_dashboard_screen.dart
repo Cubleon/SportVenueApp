@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/api_client.dart';
 import '../models/sport_venue_models.dart';
+import '../../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/venue_submission_details.dart';
@@ -55,7 +56,7 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
       if (!mounted || version != _loadVersion) return;
       setState(() {
         _loading = false;
-        _error = 'Не удалось загрузить заявки. Попробуйте ещё раз.';
+        _error = context.l10n.submissionsLoadFailed;
       });
     }
   }
@@ -77,8 +78,8 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
       showAppSnack(
         context,
         approve
-            ? 'Площадка одобрена и добавлена на карту.'
-            : 'Заявка отклонена.',
+            ? context.l10n.venueApproved
+            : context.l10n.submissionRejectedSnack,
       );
     } catch (error) {
       if (!mounted) return;
@@ -87,7 +88,7 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
           _submissions.removeWhere((row) => row['id'] == id);
           _busyId = null;
         });
-        showAppSnack(context, 'Заявка уже рассмотрена другим модератором.');
+        showAppSnack(context, context.l10n.submissionAlreadyReviewed);
       } else {
         setState(() {
           _busyId = null;
@@ -102,16 +103,16 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
     key: const ValueKey('moderator-dashboard'),
     appBar: AppBar(
       automaticallyImplyLeading: false,
-      title: const Text('Заявки на площадки'),
+      title: Text(context.l10n.moderationQueueTitle),
       actions: [
         IconButton(
-          tooltip: 'Обновить',
+          tooltip: context.l10n.refresh,
           onPressed: _loading || _busyId != null ? null : _load,
           icon: const Icon(Icons.refresh),
         ),
         IconButton(
           key: const ValueKey('moderator-logout'),
-          tooltip: 'Выйти',
+          tooltip: context.l10n.signOutShort,
           onPressed: _busyId != null ? null : widget.onLogout,
           icon: const Icon(Icons.logout),
         ),
@@ -125,17 +126,25 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
         children: [
           if (_loading) const Center(child: CircularProgressIndicator()),
           if (_error != null) ...[
-            Text(_error!, style: TextStyle(color: context.colors.error)),
-            TextButton(
-              onPressed: _busyId == null ? _load : null,
-              child: const Text('Обновить заявки'),
+            RetryNotice(
+              message: _error!,
+              onRetry: () {
+                if (_busyId == null) _load();
+              },
             ),
             const SizedBox(height: 16),
           ],
           if (!_loading && _error == null && _submissions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 48),
-              child: Center(child: Text('Нет заявок на модерацию')),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Center(
+                child: Text(
+                  context.l10n.noSubmissionsToReview,
+                  style: context.text.bodyMedium?.copyWith(
+                    color: context.colors.muted,
+                  ),
+                ),
+              ),
             ),
           if (!_loading)
             for (final row in _submissions)
@@ -155,32 +164,39 @@ class _ModeratorDashboardScreenState extends State<ModeratorDashboardScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Text(
-                            'Не удалось сохранить решение. Попробуйте ещё раз.',
-                            style: TextStyle(color: context.colors.error),
+                            context.l10n.reviewSaveFailed,
+                            style: context.text.bodySmall?.copyWith(
+                              color: context.colors.error,
+                            ),
                           ),
                         ),
                       if (_busyId == row['id'])
                         const Center(child: CircularProgressIndicator())
                       else
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
+                        // The app's own pair, as on the payments queue:
+                        // the decision filled, the refusal outlined.
+                        Row(
                           children: [
-                            FilledButton.icon(
-                              key: ValueKey('approve-${row['id']}'),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Одобрить'),
-                              onPressed: _busyId != null
-                                  ? null
-                                  : () => _review(row['id'] as String, true),
+                            Expanded(
+                              child: PrimaryButton(
+                                key: ValueKey('approve-${row['id']}'),
+                                label: context.l10n.approve,
+                                tone: ButtonTone.commit,
+                                onPressed: _busyId != null
+                                    ? null
+                                    : () => _review(row['id'] as String, true),
+                              ),
                             ),
-                            OutlinedButton.icon(
-                              key: ValueKey('reject-${row['id']}'),
-                              icon: const Icon(Icons.close),
-                              label: const Text('Отклонить'),
-                              onPressed: _busyId != null
-                                  ? null
-                                  : () => _review(row['id'] as String, false),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: PrimaryButton(
+                                key: ValueKey('reject-${row['id']}'),
+                                label: context.l10n.reject,
+                                tone: ButtonTone.neutral,
+                                onPressed: _busyId != null
+                                    ? null
+                                    : () => _review(row['id'] as String, false),
+                              ),
                             ),
                           ],
                         ),

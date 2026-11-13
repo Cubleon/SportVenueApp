@@ -217,8 +217,13 @@ class PrimaryButton extends StatelessWidget {
           // A white button on a white card is a paragraph. The outline is
           // what separates «Забронировать целиком» and «Отменить бронь»
           // from the cards they sit among.
+          // A disabled button keeps an outline: the pale fill alone sank
+          // into the page, and «Продолжить» on the sign-in screen read as
+          // missing rather than waiting for a phone number.
           side: neutral && enabled
               ? BorderSide(color: context.colors.borderStrong, width: 1.5)
+              : !enabled && !isLoading
+              ? BorderSide(color: context.colors.faint, width: 1.5)
               : BorderSide.none,
           shape: AppTheme.pill,
           elevation: 0,
@@ -1949,4 +1954,117 @@ Uri googleCalendarLink(
     'ctz': 'Europe/Moscow',
     'location': location,
   });
+}
+
+/// Two answers to one question, side by side, the chosen one filled: «Для
+/// своих / Нужны игроки» on a booking, «Я игрок / Я клуб» at sign-in. One
+/// drawing for both, so the app asks a two-way question one way.
+class TwoWaySwitch extends StatelessWidget {
+  const TwoWaySwitch({
+    super.key,
+    required this.second,
+    required this.onChanged,
+    required this.firstTitle,
+    required this.secondTitle,
+    this.firstHint,
+    this.secondHint,
+    this.firstKey,
+    this.secondKey,
+  });
+
+  /// Whether the second answer is the chosen one.
+  final bool second;
+
+  /// Null while the choice cannot be changed.
+  final ValueChanged<bool>? onChanged;
+  final String firstTitle;
+  final String secondTitle;
+  final String? firstHint;
+  final String? secondHint;
+  final Key? firstKey;
+  final Key? secondKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    Widget option({
+      required Key? key,
+      required bool value,
+      required String title,
+      required String? hint,
+    }) {
+      final selected = second == value;
+      final change = onChanged;
+      return Expanded(
+        child: Semantics(
+          button: true,
+          selected: selected,
+          child: TapTarget(
+            key: key,
+            radius: 12,
+            onTap: change == null
+                ? null
+                : withSelectionFeedback(() => change(value)),
+            child: AnimatedContainer(
+              duration: context.motion(const Duration(milliseconds: 160)),
+              constraints: const BoxConstraints(minHeight: 44),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+              decoration: BoxDecoration(
+                color: selected ? colors.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: context.text.titleSmall?.copyWith(
+                      color: selected ? colors.onAccent : colors.ink,
+                    ),
+                  ),
+                  if (hint != null)
+                    Text(
+                      hint,
+                      textAlign: TextAlign.center,
+                      style: context.text.labelSmall?.copyWith(
+                        color: selected
+                            ? colors.onAccent.withValues(alpha: 0.85)
+                            : colors.muted,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          option(
+            key: firstKey,
+            value: false,
+            title: firstTitle,
+            hint: firstHint,
+          ),
+          option(
+            key: secondKey,
+            value: true,
+            title: secondTitle,
+            hint: secondHint,
+          ),
+        ],
+      ),
+    );
+  }
 }

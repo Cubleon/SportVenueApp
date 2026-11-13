@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
 
+import '../../l10n/l10n.dart';
 import '../data/api_client.dart';
+import '../data/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -72,12 +74,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
         _loading = false;
         if (keepCurrentData) {
           _operationError = _apiError(
+            context.l10n,
             error,
-            'Удаление выполнено, но обновить кабинет не удалось.',
+            context.l10n.clubDeletedReloadFailed,
           );
           _retryOperation = () => _load(keepCurrentData: true);
         } else {
-          _error = _apiError(error, 'Не удалось загрузить кабинет клуба.');
+          _error = _apiError(context.l10n, error, context.l10n.clubLoadFailed);
         }
       });
     }
@@ -129,18 +132,18 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text(
-            isClub ? 'Удалить клуб «$name»?' : 'Удалить площадку «$name»?',
+            isClub
+                ? context.l10n.deleteClubQuestion(name)
+                : context.l10n.deleteVenueQuestion(name),
           ),
           content: Text(
-            isClub
-                ? 'Клуб и все его площадки исчезнут с карты. Опубликованное расписание будет скрыто. История бронирований сохранится. Аккаунт клуба останется.'
-                : 'Площадка и её расписание больше не будут доступны для новых бронирований. История бронирований сохранится.',
+            isClub ? context.l10n.deleteClubBody : context.l10n.deleteVenueBody,
           ),
           actions: [
             TextButton(
               key: const ValueKey('cancel-delete-managed'),
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Отмена'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               key: const ValueKey('confirm-delete-managed'),
@@ -148,7 +151,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                 foregroundColor: context.colors.error,
               ),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Удалить'),
+              child: Text(context.l10n.deleteAction),
             ),
           ],
         ),
@@ -180,10 +183,14 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        final noun = isClub ? 'клуб' : 'площадку';
+        final l10n = context.l10n;
         _operationError = error is ApiException && error.statusCode == 409
-            ? 'Нельзя удалить $noun: есть предстоящие бронирования, игры или временные блокировки. Дождитесь их завершения.'
-            : _apiError(error, 'Не удалось удалить $noun. Попробуйте ещё раз.');
+            ? (isClub ? l10n.clubDeleteBlocked : l10n.venueDeleteBlocked)
+            : _apiError(
+                l10n,
+                error,
+                isClub ? l10n.clubDeleteFailed : l10n.venueDeleteFailed,
+              );
         _retryOperation = () => _deleteManagedItem(item, isClub: isClub);
       });
     } finally {
@@ -207,16 +214,16 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
     return Scaffold(
       key: const ValueKey('club-dashboard'),
       appBar: AppBar(
-        title: const Text('Кабинет клуба'),
+        title: Text(context.l10n.clubDashboardTitle),
         actions: [
           IconButton(
-            tooltip: 'Обновить',
+            tooltip: context.l10n.refresh,
             onPressed: _loading || _managing ? null : _load,
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
             key: const ValueKey('club-logout'),
-            tooltip: 'Выйти из аккаунта',
+            tooltip: context.l10n.logout,
             onPressed: _managing ? null : widget.onLogout,
             icon: const Icon(Icons.logout_rounded),
           ),
@@ -231,10 +238,13 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 children: [
-                  Text('Ваш клуб на карте', style: context.text.headlineMedium),
+                  Text(
+                    context.l10n.clubOnMapTitle,
+                    style: context.text.headlineMedium,
+                  ),
                   const SizedBox(height: 10),
                   Text(
-                    'Добавьте клуб и его площадки, затем опубликуйте свободное время. Игроки увидят их на карте и смогут бронировать.',
+                    context.l10n.clubOnMapBody,
                     style: context.text.bodyMedium?.copyWith(
                       color: context.colors.muted,
                       height: 1.5,
@@ -265,7 +275,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                           TextButton(
                             key: const ValueKey('retry-managed-operation'),
                             onPressed: _managing ? null : _retryOperation,
-                            child: const Text('Повторить'),
+                            child: Text(context.l10n.retry),
                           ),
                         ],
                       ),
@@ -284,17 +294,20 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Начнём с адреса',
+                            context.l10n.clubStartTitle,
                             style: context.text.titleLarge,
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Укажите название, адрес и отметьте клуб на карте.',
+                          Text(
+                            context.l10n.clubStartBody,
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.muted,
+                            ),
                           ),
                           const SizedBox(height: 20),
                           PrimaryButton(
                             key: const ValueKey('create-first-club'),
-                            label: 'Добавить клуб',
+                            label: context.l10n.addClub,
                             icon: Icons.add_rounded,
                             onPressed: _managing ? null : _editClub,
                           ),
@@ -307,7 +320,9 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                         key: ValueKey('select-managed-club-$_selectedClubId'),
                         initialValue: _selectedClubId,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Клуб'),
+                        decoration: InputDecoration(
+                          labelText: context.l10n.clubPicker,
+                        ),
                         items: _clubs
                             .map(
                               (item) => DropdownMenuItem(
@@ -330,11 +345,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                             _CardHeading(
                               title: club['name'] as String,
                               onEdit: _managing ? null : () => _editClub(club),
-                              tooltip: 'Редактировать клуб',
+                              tooltip: context.l10n.editClub,
                               deleteKey: ValueKey(
                                 'delete-managed-club-${club['id']}',
                               ),
-                              deleteTooltip: 'Удалить клуб',
+                              deleteTooltip: context.l10n.deleteClub,
                               deleting: _deletingTarget == 'club:${club['id']}',
                               onDelete: _managing
                                   ? null
@@ -347,10 +362,10 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                               children: [
                                 Icon(
                                   Icons.location_on_outlined,
-                                  size: 20,
-                                  color: context.colors.accent,
+                                  size: 18,
+                                  color: context.colors.muted,
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(club['address'] as String),
                                 ),
@@ -370,8 +385,8 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                             const SizedBox(height: 12),
                             Text(
                               venues.isEmpty
-                                  ? 'Чтобы появиться в поиске, добавьте первую площадку.'
-                                  : 'Клуб доступен игрокам на карте.',
+                                  ? context.l10n.clubNeedsVenue
+                                  : context.l10n.clubVisible,
                               style: context.text.bodySmall?.copyWith(
                                 color: context.colors.accent,
                               ),
@@ -381,12 +396,12 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                       ),
                       const SizedBox(height: 28),
                       Text(
-                        'Спортивные площадки',
+                        context.l10n.clubVenuesTitle,
                         style: context.text.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Для каждого корта, зала или поля — своё расписание.',
+                        context.l10n.clubVenuesBody,
                         style: context.text.bodyMedium?.copyWith(
                           color: context.colors.muted,
                         ),
@@ -405,11 +420,11 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                                   onEdit: _managing
                                       ? null
                                       : () => _editVenue(club, venue),
-                                  tooltip: 'Редактировать площадку',
+                                  tooltip: context.l10n.editVenue,
                                   deleteKey: ValueKey(
                                     'delete-managed-venue-${venue['id']}',
                                   ),
-                                  deleteTooltip: 'Удалить площадку',
+                                  deleteTooltip: context.l10n.deleteVenue,
                                   deleting:
                                       _deletingTarget == 'venue:${venue['id']}',
                                   onDelete: _managing
@@ -433,15 +448,22 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
+                                // The same price as everywhere else in the
+                                // app: «2 500 ₽/час», not «2500 ₽ / час».
                                 Text(
-                                  '${venue['base_price_per_hour']} ₽ / час · до ${venue['capacity_max']} игроков',
-                                  style: context.text.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                  context.l10n.venuePriceCapacity(
+                                    AppFormatters.money(
+                                      venue['base_price_per_hour'] as int,
+                                    ),
+                                    venue['capacity_max'] as int,
+                                  ),
+                                  style: AppTheme.numeric(
+                                    context.text.bodyMedium,
                                   ),
                                 ),
                                 const SizedBox(height: 18),
                                 PrimaryButton(
-                                  label: 'Расписание и свободное время',
+                                  label: context.l10n.venueSchedule,
                                   icon: Icons.calendar_month_outlined,
                                   tone: ButtonTone.neutral,
                                   onPressed: _managing
@@ -461,7 +483,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                         ),
                       PrimaryButton(
                         key: const ValueKey('create-managed-venue'),
-                        label: 'Добавить площадку',
+                        label: context.l10n.addVenue,
                         icon: Icons.add_rounded,
                         onPressed: _managing ? null : () => _editVenue(club),
                       ),
@@ -470,7 +492,7 @@ class _ClubDashboardScreenState extends State<ClubDashboardScreen> {
                     TextButton.icon(
                       onPressed: _managing ? null : _editClub,
                       icon: const Icon(Icons.add_location_alt_outlined),
-                      label: const Text('Добавить ещё один клуб'),
+                      label: Text(context.l10n.addAnotherClub),
                     ),
                   ],
                 ],
@@ -549,10 +571,7 @@ class _ClubEditorState extends State<_ClubEditor> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = _apiError(
-          error,
-          'Не удалось сохранить клуб. Попробуйте ещё раз.',
-        );
+        _error = _apiError(context.l10n, error, context.l10n.clubSaveFailed);
       });
     }
   }
@@ -573,7 +592,7 @@ class _ClubEditorState extends State<_ClubEditor> {
 
   @override
   Widget build(BuildContext context) => _EditorFrame(
-    title: widget.club == null ? 'Новый клуб' : 'Редактировать клуб',
+    title: widget.club == null ? context.l10n.newClub : context.l10n.editClub,
     saving: _saving,
     child: Form(
       key: _formKey,
@@ -586,8 +605,11 @@ class _ClubEditorState extends State<_ClubEditor> {
             enabled: !_saving,
             maxLength: 160,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(labelText: 'Название клуба'),
-            validator: _required,
+            decoration: InputDecoration(
+              labelText: context.l10n.clubNameLabel,
+              counterText: '',
+            ),
+            validator: (value) => _required(context.l10n, value),
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -596,18 +618,19 @@ class _ClubEditorState extends State<_ClubEditor> {
             enabled: !_saving,
             maxLength: 240,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Адрес',
-              hintText: 'Москва, улица и номер дома',
+            decoration: InputDecoration(
+              labelText: context.l10n.clubAddressLabel,
+              hintText: context.l10n.clubAddressHint,
+              counterText: '',
             ),
-            validator: (value) => _required(value, minLength: 3),
+            validator: (value) => _required(context.l10n, value, minLength: 3),
           ),
           const SizedBox(height: 12),
           PrimaryButton(
             key: const ValueKey('club-select-location'),
             label: _point == null
-                ? 'Указать на карте'
-                : 'Изменить точку на карте',
+                ? context.l10n.pickOnMap
+                : context.l10n.changeMapPoint,
             icon: Icons.location_on_outlined,
             tone: ButtonTone.neutral,
             onPressed: _saving ? null : _selectLocation,
@@ -615,9 +638,9 @@ class _ClubEditorState extends State<_ClubEditor> {
           const SizedBox(height: 8),
           Text(
             _locationMissing
-                ? 'Отметьте расположение клуба на карте.'
+                ? context.l10n.clubLocationMissing
                 : _point == null
-                ? 'Игроки увидят клуб в этой точке.'
+                ? context.l10n.clubLocationHint
                 : '${_point!.lat.toStringAsFixed(6)}, ${_point!.lon.toStringAsFixed(6)}',
             style: context.text.bodySmall?.copyWith(
               color: _locationMissing
@@ -633,15 +656,16 @@ class _ClubEditorState extends State<_ClubEditor> {
             minLines: 3,
             maxLines: 5,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'О клубе (необязательно)',
+            decoration: InputDecoration(
+              labelText: context.l10n.clubAboutLabel,
+              counterText: '',
             ),
           ),
           if (_error != null) _InlineError(message: _error!),
           const SizedBox(height: 16),
           PrimaryButton(
             key: const ValueKey('save-managed-club'),
-            label: 'Сохранить клуб',
+            label: context.l10n.saveClub,
             isLoading: _saving,
             onPressed: _save,
           ),
@@ -665,14 +689,14 @@ class _LocationPickerState extends State<_LocationPicker> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Расположение клуба')),
+    appBar: AppBar(title: Text(context.l10n.clubLocationTitle)),
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           child: Text(
-            'Приблизьте карту и нажмите на место, где находится вход в клуб.',
+            context.l10n.clubLocationBody,
             style: context.text.bodyMedium,
           ),
         ),
@@ -704,7 +728,7 @@ class _LocationPickerState extends State<_LocationPicker> {
                         Icons.location_on,
                         size: 44,
                         color: context.colors.accent,
-                        semanticLabel: 'Расположение клуба',
+                        semanticLabel: context.l10n.clubLocationTitle,
                       ),
                     ),
                 ],
@@ -725,7 +749,7 @@ class _LocationPickerState extends State<_LocationPicker> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: PrimaryButton(
-              label: 'Подтвердить расположение',
+              label: context.l10n.confirmLocation,
               onPressed: _point == null
                   ? null
                   : () => Navigator.pop(context, _point),
@@ -817,17 +841,16 @@ class _VenueEditorState extends State<_VenueEditor> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = _apiError(
-          error,
-          'Не удалось сохранить площадку. Попробуйте ещё раз.',
-        );
+        _error = _apiError(context.l10n, error, context.l10n.venueSaveFailed);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) => _EditorFrame(
-    title: widget.venue == null ? 'Новая площадка' : 'Редактировать площадку',
+    title: widget.venue == null
+        ? context.l10n.newVenue
+        : context.l10n.editVenue,
     saving: _saving,
     child: Form(
       key: _formKey,
@@ -840,45 +863,51 @@ class _VenueEditorState extends State<_VenueEditor> {
             enabled: !_saving,
             maxLength: 160,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Название площадки',
-              hintText: 'Например, теннисный корт №1',
+            decoration: InputDecoration(
+              labelText: context.l10n.venueNameLabel,
+              hintText: context.l10n.venueNameHint,
+              counterText: '',
             ),
-            validator: _required,
+            validator: (value) => _required(context.l10n, value),
           ),
           const SizedBox(height: 12),
-          Text('Виды спорта', style: context.text.titleSmall),
+          Text(context.l10n.venueSports, style: context.text.titleSmall),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: widget.sports.map((sport) {
               final id = sport['id'] as String;
-              return FilterChip(
-                label: Text(sport['name'] as String),
+              // The app's own chip, as on every other screen that picks
+              // a sport.
+              return SelectableChip(
+                label: (sport['name'] as String).capitalized,
                 selected: _sportIds.contains(id),
-                onSelected: _saving
+                onTap: _saving
                     ? null
-                    : (selected) => setState(() {
-                        selected ? _sportIds.add(id) : _sportIds.remove(id);
+                    : () => setState(() {
+                        if (!_sportIds.remove(id)) {
+                          _sportIds.add(id);
+                        }
                         _sportsMissing = _sportIds.isEmpty;
                       }),
               );
             }).toList(),
           ),
           if (_sportsMissing)
-            const _InlineError(message: 'Выберите хотя бы один вид спорта.'),
+            _InlineError(message: context.l10n.venueSportsMissing),
           const SizedBox(height: 20),
           TextFormField(
             key: const ValueKey('managed-venue-price'),
             controller: _price,
             enabled: !_saving,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Цена за час',
+            decoration: InputDecoration(
+              labelText: context.l10n.filterPrice,
               suffixText: '₽',
             ),
-            validator: (value) => _positiveInteger(value, max: 1000000),
+            validator: (value) =>
+                _positiveInteger(context.l10n, value, max: 1000000),
           ),
           const SizedBox(height: 16),
           Row(
@@ -889,8 +918,11 @@ class _VenueEditorState extends State<_VenueEditor> {
                   controller: _min,
                   enabled: !_saving,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Игроков от'),
-                  validator: (value) => _positiveInteger(value, max: 30),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.playersFrom,
+                  ),
+                  validator: (value) =>
+                      _positiveInteger(context.l10n, value, max: 30),
                 ),
               ),
               const SizedBox(width: 12),
@@ -900,13 +932,19 @@ class _VenueEditorState extends State<_VenueEditor> {
                   controller: _max,
                   enabled: !_saving,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Игроков до'),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.playersTo,
+                  ),
                   validator: (value) {
-                    final error = _positiveInteger(value, max: 30);
+                    final error = _positiveInteger(
+                      context.l10n,
+                      value,
+                      max: 30,
+                    );
                     if (error != null) return error;
                     if (int.parse(value!.trim()) <
                         (int.tryParse(_min.text.trim()) ?? 1)) {
-                      return 'Меньше минимума';
+                      return context.l10n.lessThanMin;
                     }
                     return null;
                   },
@@ -922,16 +960,17 @@ class _VenueEditorState extends State<_VenueEditor> {
             minLines: 3,
             maxLines: 5,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Описание (необязательно)',
-              hintText: 'Покрытие, оборудование и другие особенности',
+            decoration: InputDecoration(
+              labelText: context.l10n.venueAboutLabel,
+              hintText: context.l10n.venueAboutHint,
+              counterText: '',
             ),
           ),
           if (_error != null) _InlineError(message: _error!),
           const SizedBox(height: 16),
           PrimaryButton(
             key: const ValueKey('save-managed-venue'),
-            label: 'Сохранить площадку',
+            label: context.l10n.saveVenue,
             isLoading: _saving,
             onPressed: _save,
           ),
@@ -985,7 +1024,11 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _apiError(error, 'Не удалось загрузить расписание.');
+        _error = _apiError(
+          context.l10n,
+          error,
+          context.l10n.scheduleLoadFailed,
+        );
       });
     }
   }
@@ -1003,18 +1046,16 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Снять время с публикации?'),
-        content: const Text(
-          'Этот промежуток больше не будет доступен для бронирования. Если на него уже есть бронь, снять публикацию не получится.',
-        ),
+        title: Text(context.l10n.unpublishQuestion),
+        content: Text(context.l10n.unpublishBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Оставить'),
+            child: Text(context.l10n.keepPublished),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Снять с публикации'),
+            child: Text(context.l10n.unpublish),
           ),
         ],
       ),
@@ -1029,11 +1070,8 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
     } catch (error) {
       if (!mounted) return;
       final message = error is ApiException && error.statusCode == 409
-          ? 'На это время есть бронь или временная блокировка. Снять публикацию сейчас нельзя.'
-          : _apiError(
-              error,
-              'Не удалось снять публикацию. Попробуйте ещё раз.',
-            );
+          ? context.l10n.unpublishBlocked
+          : _apiError(context.l10n, error, context.l10n.unpublishFailed);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
@@ -1045,10 +1083,10 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Расписание площадки'),
+      title: Text(context.l10n.venueScheduleTitle),
       actions: [
         IconButton(
-          tooltip: 'Обновить',
+          tooltip: context.l10n.refresh,
           onPressed: _loading || _deletingId != null ? null : _load,
           icon: const Icon(Icons.refresh_rounded),
         ),
@@ -1060,7 +1098,7 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: PrimaryButton(
           key: const ValueKey('publish-availability'),
-          label: 'Опубликовать свободное время',
+          label: context.l10n.publishFreeTime,
           icon: Icons.add_rounded,
           onPressed: _loading || _deletingId != null ? null : _publish,
         ),
@@ -1081,7 +1119,7 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Публикуйте только время, когда площадка свободна. Внутри этих промежутков игроки выбирают время и длительность бронирования.',
+                  context.l10n.scheduleBody,
                   style: context.text.bodyMedium?.copyWith(
                     color: context.colors.muted,
                     height: 1.5,
@@ -1089,18 +1127,18 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Московское время (UTC+3)',
+                  context.l10n.moscowTime,
                   style: context.text.bodySmall?.copyWith(
-                    color: context.colors.accent,
+                    color: context.colors.muted,
                   ),
                 ),
                 const SizedBox(height: 24),
                 if (_windows.isEmpty)
-                  const AppCard(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Text(
-                        'Свободное время пока не опубликовано. Добавьте первый промежуток, чтобы открыть бронирование.',
+                  AppCard(
+                    child: Text(
+                      context.l10n.scheduleEmpty,
+                      style: context.text.bodyMedium?.copyWith(
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
@@ -1121,8 +1159,10 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '${_timeLabel(_moscowTime(window['starts_at']))} — ${_windowEndLabel(window)}',
-                                  style: context.text.titleLarge,
+                                  '${_timeLabel(_moscowTime(window['starts_at']))}–${_windowEndLabel(window)}',
+                                  style: AppTheme.numeric(
+                                    context.text.titleLarge,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1139,10 +1179,11 @@ class _AvailabilityScreenState extends State<_AvailabilityScreen> {
                             )
                           else
                             IconButton(
-                              tooltip: 'Снять с публикации',
+                              tooltip: context.l10n.unpublish,
                               onPressed: _deletingId != null
                                   ? null
                                   : () => _delete(window),
+                              color: context.colors.muted,
                               icon: const Icon(Icons.delete_outline_rounded),
                             ),
                         ],
@@ -1175,11 +1216,11 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
   Future<void> _save() async {
     if (_saving) return;
     if (_endMinutes <= _startMinutes) {
-      setState(() => _error = 'Окончание должно быть позже начала.');
+      setState(() => _error = context.l10n.endBeforeStart);
       return;
     }
     if (_endMinutes - _startMinutes < 60) {
-      setState(() => _error = 'Промежуток должен быть не короче 1 часа.');
+      setState(() => _error = context.l10n.windowTooShort);
       return;
     }
     // Moscow has a fixed UTC+3 offset. Never use the device's timezone here.
@@ -1187,7 +1228,7 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
     final startsAt = midnight.add(Duration(minutes: _startMinutes - 180));
     final endsAt = midnight.add(Duration(minutes: _endMinutes - 180));
     if (!startsAt.isAfter(DateTime.now().toUtc())) {
-      setState(() => _error = 'Выберите время в будущем.');
+      setState(() => _error = context.l10n.pickFutureTime);
       return;
     }
     setState(() {
@@ -1206,11 +1247,8 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
       setState(() {
         _saving = false;
         _error = error is ApiException && error.statusCode == 409
-            ? 'Это время пересекается с уже опубликованным промежутком. Выберите другое время.'
-            : _apiError(
-                error,
-                'Не удалось опубликовать время. Попробуйте ещё раз.',
-              );
+            ? context.l10n.windowOverlaps
+            : _apiError(context.l10n, error, context.l10n.publishFailed);
       });
     }
   }
@@ -1228,24 +1266,23 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
 
   @override
   Widget build(BuildContext context) => _EditorFrame(
-    title: 'Свободное время',
+    title: context.l10n.freeTimeTitle,
     saving: _saving,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Выберите дату и промежуток, доступный для бронирования.',
+          context.l10n.freeTimeBody,
           style: context.text.bodyMedium?.copyWith(color: context.colors.muted),
         ),
         const SizedBox(height: 20),
-        OutlinedButton.icon(
+        // The app's neutral button, not Material's thin outline.
+        PrimaryButton(
           key: const ValueKey('availability-date'),
+          label: _dateLabel(_date),
+          icon: Icons.calendar_month_outlined,
+          tone: ButtonTone.neutral,
           onPressed: _saving ? null : _pickDate,
-          icon: const Icon(Icons.calendar_month_outlined),
-          label: Text(_dateLabel(_date)),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 18),
-          ),
         ),
         const SizedBox(height: 20),
         Row(
@@ -1254,7 +1291,7 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
             Expanded(
               child: _TimeDropdown(
                 key: const ValueKey('availability-start'),
-                label: 'Начало',
+                label: context.l10n.windowStart,
                 value: _startMinutes,
                 allowMidnightEnd: false,
                 onChanged: _saving
@@ -1266,7 +1303,7 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
             Expanded(
               child: _TimeDropdown(
                 key: const ValueKey('availability-end'),
-                label: 'Окончание',
+                label: context.l10n.windowEnd,
                 value: _endMinutes,
                 allowMidnightEnd: true,
                 onChanged: _saving
@@ -1278,14 +1315,14 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Московское время (UTC+3). Шаг — 30 минут. Для нескольких дней добавьте отдельный промежуток на каждый день.',
+          context.l10n.freeTimeNote,
           style: context.text.bodySmall?.copyWith(color: context.colors.muted),
         ),
         if (_error != null) _InlineError(message: _error!),
         const SizedBox(height: 24),
         PrimaryButton(
           key: const ValueKey('save-availability'),
-          label: 'Опубликовать',
+          label: context.l10n.publish,
           isLoading: _saving,
           onPressed: _save,
         ),
@@ -1361,7 +1398,7 @@ class _EditorFrame extends StatelessWidget {
               children: [
                 Expanded(child: Text(title, style: context.text.titleLarge)),
                 IconButton(
-                  tooltip: 'Закрыть',
+                  tooltip: context.l10n.close,
                   onPressed: saving ? null : () => Navigator.pop(context),
                   icon: const Icon(Icons.close_rounded),
                 ),
@@ -1402,6 +1439,7 @@ class _CardHeading extends StatelessWidget {
       IconButton(
         tooltip: tooltip,
         onPressed: onEdit,
+        color: context.colors.muted,
         icon: const Icon(Icons.edit_outlined),
       ),
       if (deleting)
@@ -1410,7 +1448,7 @@ class _CardHeading extends StatelessWidget {
           dimension: 48,
           child: Semantics(
             liveRegion: true,
-            label: 'Удаляем',
+            label: context.l10n.deleting,
             child: const Center(
               child: SizedBox.square(
                 dimension: 22,
@@ -1424,7 +1462,9 @@ class _CardHeading extends StatelessWidget {
           key: deleteKey,
           tooltip: deleteTooltip,
           onPressed: onDelete,
-          color: context.colors.error,
+          // Grey like its neighbour: red on every card shouted. The
+          // dialog that follows is where the danger is spelled out.
+          color: context.colors.muted,
           icon: const Icon(Icons.delete_outline_rounded),
         ),
     ],
@@ -1440,19 +1480,8 @@ class _LoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
     child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: retry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Повторить'),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      child: RetryNotice(message: message, onRetry: retry),
     ),
   );
 }
@@ -1483,38 +1512,40 @@ Future<T?> _showEditor<T>(BuildContext context, Widget child) =>
       isDismissible: false,
       enableDrag: false,
       constraints: const BoxConstraints(maxWidth: 680),
-      backgroundColor: context.colors.surface,
+      // The page ground, as the app's other sheets: fields are filled with
+      // the card colour, and on a card-coloured sheet they disappeared.
+      backgroundColor: context.colors.bg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => child,
     );
 
-String? _required(String? value, {int minLength = 2}) {
+String? _required(L l10n, String? value, {int minLength = 2}) {
   final text = value?.trim() ?? '';
-  if (text.isEmpty) return 'Заполните это поле';
-  if (text.length < minLength) return 'Минимум $minLength символа';
+  if (text.isEmpty) return l10n.fieldRequired;
+  if (text.length < minLength) return l10n.fieldMinLength(minLength);
   return null;
 }
 
-String? _positiveInteger(String? value, {required int max}) {
+String? _positiveInteger(L l10n, String? value, {required int max}) {
   final number = int.tryParse(value?.trim() ?? '');
-  if (number == null || number < 1) return 'Введите целое число от 1';
-  if (number > max) return 'Не больше $max';
+  if (number == null || number < 1) return l10n.wholeNumberFromOne;
+  if (number > max) return l10n.notMoreThan(max);
   return null;
 }
 
-String _apiError(Object error, String fallback) {
+String _apiError(L l10n, Object error, String fallback) {
   if (error is ApiException) {
     if (error.isUnauthorized) {
-      return 'Сессия завершилась. Войдите в аккаунт снова.';
+      return l10n.sessionEnded;
     }
-    if (error.statusCode == 403) return 'У этого аккаунта нет доступа к клубу.';
+    if (error.statusCode == 403) return l10n.noClubAccess;
     if (error.kind == ApiExceptionKind.network) {
-      return '$fallback Проверьте подключение к интернету.';
+      return '$fallback ${l10n.checkConnection}';
     }
     if (error.statusCode == 422) {
-      return 'Проверьте заполненные поля и попробуйте ещё раз.';
+      return l10n.checkFields;
     }
   }
   return fallback;
@@ -1525,8 +1556,9 @@ DateTime _moscowNow() => DateTime.now().toUtc().add(const Duration(hours: 3));
 DateTime _moscowTime(dynamic iso) =>
     DateTime.parse(iso as String).toUtc().add(const Duration(hours: 3));
 
+/// «пятница, 14 ноября», as the rest of the app writes a day.
 String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+    AppFormatters.dateFull(date, now: _moscowNow()).capitalized;
 
 String _timeLabel(DateTime time) =>
     '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -1539,5 +1571,5 @@ String _windowEndLabel(ApiJsonObject window) {
       start.day == end.day) {
     return _timeLabel(end);
   }
-  return '${_timeLabel(end)} (${_dateLabel(end)})';
+  return '${_timeLabel(end)} (${AppFormatters.dateShort(end)})';
 }

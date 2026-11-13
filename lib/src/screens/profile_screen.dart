@@ -189,15 +189,23 @@ class ProfileScreen extends StatelessWidget {
                               onTap: () => context.go(Routes.adminPayments),
                             ),
                           ],
+                          // In the same group as the rows beside it: on its
+                          // own under the card it read as left behind.
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            indent: 16,
+                            color: context.colors.border,
+                          ),
+                          _MenuItem(
+                            key: const ValueKey('profile-public-venues'),
+                            icon: AppIcons.plus,
+                            title: context.l10n.publicVenues,
+                            subtitle: context.l10n.publicVenuesHint,
+                            onTap: () => context.go(Routes.venueSubmissions),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _MenuItem(
-                      icon: AppIcons.plus,
-                      title: 'Общественные площадки',
-                      subtitle: 'Добавить площадку и проверить свои заявки',
-                      onTap: () => context.go(Routes.venueSubmissions),
                     ),
                     // Платежи, Уведомления and Поддержка stood here looking
                     // exactly like История — same card, same chevron promising a

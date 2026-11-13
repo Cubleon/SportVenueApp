@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -42,11 +43,12 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
       _busy = true;
       _error = null;
     });
+    final l10n = context.l10n;
     String? error;
     try {
       error = await widget.onLogin(_login.text.trim(), _password.text);
     } catch (_) {
-      error = 'Не удалось войти. Попробуйте ещё раз.';
+      error = l10n.signInFailed;
     }
     if (!mounted) return;
     setState(() {
@@ -62,17 +64,19 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
       key: ValueKey('$_prefix-login-screen'),
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'Назад',
+          tooltip: context.l10n.back,
           onPressed: _busy ? null : widget.onBack,
           icon: const BackButtonIcon(),
         ),
         title: Text(
-          widget.moderator ? 'Вход для модераторов' : 'Вход для клубов',
+          widget.moderator
+              ? context.l10n.moderatorSignIn
+              : context.l10n.clubSignInTitle,
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: AutofillGroup(
@@ -83,13 +87,13 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
                   const SizedBox(height: 32),
                   Text(
                     widget.moderator
-                        ? 'Модерация площадок'
-                        : 'Управляйте своим клубом',
+                        ? context.l10n.moderationTitle
+                        : context.l10n.manageYourClub,
                     style: context.text.headlineMedium,
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Введите логин и пароль, которые вам выдали.',
+                    context.l10n.loginPasswordHint,
                     style: context.text.bodyMedium?.copyWith(
                       color: context.colors.muted,
                       height: 1.5,
@@ -104,9 +108,12 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
                     enableSuggestions: false,
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.username],
-                    decoration: const InputDecoration(labelText: 'Логин'),
-                    validator: (value) =>
-                        (value?.trim() ?? '').isEmpty ? 'Введите логин' : null,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.loginLabel,
+                    ),
+                    validator: (value) => (value?.trim() ?? '').isEmpty
+                        ? context.l10n.enterLogin
+                        : null,
                     onChanged: (_) => setState(() => _error = null),
                   ),
                   const SizedBox(height: 16),
@@ -120,12 +127,12 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.password],
                     decoration: InputDecoration(
-                      labelText: 'Пароль',
+                      labelText: context.l10n.passwordLabel,
                       suffixIcon: IconButton(
                         key: ValueKey('$_prefix-password-visibility'),
                         tooltip: _passwordVisible
-                            ? 'Скрыть пароль'
-                            : 'Показать пароль',
+                            ? context.l10n.hidePassword
+                            : context.l10n.showPassword,
                         onPressed: _busy
                             ? null
                             : () => setState(
@@ -139,7 +146,7 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
                       ),
                     ),
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Введите пароль'
+                        ? context.l10n.enterPassword
                         : null,
                     onChanged: (_) => setState(() => _error = null),
                     onFieldSubmitted: (_) => _signIn(),
@@ -147,7 +154,7 @@ class _ClubLoginScreenState extends State<ClubLoginScreen> {
                   const SizedBox(height: 28),
                   PrimaryButton(
                     key: ValueKey('$_prefix-login-submit'),
-                    label: _busy ? 'Входим…' : 'Войти',
+                    label: _busy ? context.l10n.signingIn : context.l10n.signIn,
                     isLoading: _busy,
                     onPressed: _signIn,
                   ),

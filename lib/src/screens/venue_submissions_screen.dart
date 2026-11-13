@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
 
+import '../../l10n/l10n.dart';
 import '../data/api_client.dart';
 import '../data/app_controller.dart';
+import '../data/formatters.dart';
 import '../models/sport_venue_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_picker.dart';
@@ -35,8 +37,11 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
     });
     try {
       final api = widget.controller.apiClient;
-      if (api == null) throw StateError('Server connection required');
-      final rows = await api.listVenueSubmissions();
+      // The demo has no server and so no submissions: an empty list, not a
+      // red failure on a screen that has done nothing wrong.
+      final rows = api == null
+          ? <ApiJsonObject>[]
+          : await api.listVenueSubmissions();
       if (!mounted) return;
       setState(() {
         _submissions = rows;
@@ -46,7 +51,7 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Не удалось загрузить заявки. Попробуйте ещё раз.';
+        _error = context.l10n.submissionsLoadFailed;
       });
     }
   }
@@ -54,10 +59,7 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
   Future<void> _add() async {
     final api = widget.controller.apiClient;
     if (api == null) {
-      showAppSnack(
-        context,
-        'Для отправки заявки требуется подключение к серверу.',
-      );
+      showAppSnack(context, context.l10n.submissionNeedsServer);
       return;
     }
     final saved = await Navigator.of(context).push<bool>(
@@ -69,10 +71,7 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
       ),
     );
     if (!mounted || saved != true) return;
-    showAppSnack(
-      context,
-      'Заявка отправлена на модерацию. После одобрения площадка появится на карте.',
-    );
+    showAppSnack(context, context.l10n.submissionSent, tone: SnackTone.done);
     await _load();
   }
 
@@ -80,10 +79,10 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
   Widget build(BuildContext context) => Scaffold(
     key: const ValueKey('venue-submissions-screen'),
     appBar: AppBar(
-      title: const Text('Мои заявки на площадки'),
+      title: Text(context.l10n.mySubmissionsTitle),
       actions: [
         IconButton(
-          tooltip: 'Обновить',
+          tooltip: context.l10n.refresh,
           onPressed: _loading ? null : _load,
           icon: const Icon(Icons.refresh),
         ),
@@ -97,24 +96,36 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
         children: [
           PrimaryButton(
             key: const ValueKey('add-public-venue'),
-            label: 'Добавить общественную площадку',
+            label: context.l10n.addPublicVenueLong,
             icon: Icons.add_location_alt_outlined,
             onPressed: _add,
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Предложите бесплатную площадку во дворе, парке или другом общественном месте. Модератор проверит данные перед публикацией.',
+          Text(
+            context.l10n.publicVenueIntro,
+            style: context.text.bodyMedium?.copyWith(
+              color: context.colors.muted,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
           if (_loading) const Center(child: CircularProgressIndicator()),
-          if (_error != null) ...[
-            Text(_error!, style: TextStyle(color: context.colors.error)),
-            TextButton(onPressed: _load, child: const Text('Повторить')),
-          ],
+          if (_error != null)
+            RetryNotice(
+              key: const ValueKey('submissions-load-failed'),
+              message: _error!,
+              onRetry: _load,
+            ),
           if (!_loading && _error == null && _submissions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Text('Вы пока не отправляли заявки.'),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Text(
+                context.l10n.noSubmissionsYet,
+                textAlign: TextAlign.center,
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.colors.muted,
+                ),
+              ),
             ),
           if (!_loading && _error == null)
             for (final row in _submissions)
@@ -124,11 +135,11 @@ class _VenueSubmissionsScreenState extends State<VenueSubmissionsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        submissionStatusLabels[row['status']] ??
-                            row['status'] as String,
-                        style: context.text.titleSmall?.copyWith(
-                          color: context.colors.accent,
+                      // The same plaque a booking's status uses.
+                      InfoTag(
+                        label: submissionStatusLabel(
+                          context.l10n,
+                          row['status'] as String,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -229,15 +240,18 @@ class _PublicVenueSubmissionScreenState
       setState(() {
         _saving = false;
         _error = error is ApiException && error.statusCode == 422
-            ? 'Проверьте данные площадки и выбранные виды спорта.'
-            : 'Не удалось отправить заявку. Данные сохранены в форме, попробуйте ещё раз.';
+            ? context.l10n.submissionCheckData
+            : context.l10n.submissionSendFailed;
       });
     }
   }
 
   Widget _warning(String text) => Padding(
     padding: const EdgeInsets.only(top: 8),
-    child: Text(text, style: TextStyle(color: context.colors.error)),
+    child: Text(
+      text,
+      style: context.text.bodySmall?.copyWith(color: context.colors.error),
+    ),
   );
 
   @override
@@ -246,9 +260,9 @@ class _PublicVenueSubmissionScreenState
     child: Scaffold(
       key: const ValueKey('public-venue-form'),
       appBar: AppBar(
-        title: const Text('Общественная площадка'),
+        title: Text(context.l10n.publicVenueTitle),
         leading: IconButton(
-          tooltip: 'Назад',
+          tooltip: context.l10n.back,
           onPressed: _saving ? null : () => Navigator.pop(context),
           icon: const BackButtonIcon(),
         ),
@@ -260,8 +274,12 @@ class _PublicVenueSubmissionScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Добавьте бесплатную общественную площадку в Москве. Заявка появится на карте после проверки модератором.',
+              Text(
+                context.l10n.publicVenueFormIntro,
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.colors.muted,
+                  height: 1.45,
+                ),
               ),
               const SizedBox(height: 20),
               TextFormField(
@@ -270,11 +288,12 @@ class _PublicVenueSubmissionScreenState
                 enabled: !_saving,
                 maxLength: 160,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Название площадки',
+                decoration: InputDecoration(
+                  labelText: context.l10n.venueNameLabel,
+                  counterText: '',
                 ),
                 validator: (value) => (value?.trim().length ?? 0) < 2
-                    ? 'Введите название (минимум 2 символа)'
+                    ? context.l10n.enterVenueName
                     : null,
               ),
               const SizedBox(height: 12),
@@ -284,19 +303,21 @@ class _PublicVenueSubmissionScreenState
                 enabled: !_saving,
                 maxLength: 240,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Адрес',
-                  hintText: 'Москва, улица и номер дома',
+                decoration: InputDecoration(
+                  labelText: context.l10n.clubAddressLabel,
+                  hintText: context.l10n.clubAddressHint,
+                  counterText: '',
                 ),
-                validator: (value) =>
-                    (value?.trim().length ?? 0) < 3 ? 'Введите адрес' : null,
+                validator: (value) => (value?.trim().length ?? 0) < 3
+                    ? context.l10n.enterAddress
+                    : null,
               ),
               const SizedBox(height: 12),
               PrimaryButton(
                 key: const ValueKey('public-venue-location'),
                 label: _point == null
-                    ? 'Указать на карте'
-                    : 'Изменить точку на карте',
+                    ? context.l10n.pickOnMap
+                    : context.l10n.changeMapPoint,
                 tone: ButtonTone.neutral,
                 icon: Icons.location_on_outlined,
                 onPressed: _saving ? null : _location,
@@ -306,56 +327,66 @@ class _PublicVenueSubmissionScreenState
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     '${_point!.lat.toStringAsFixed(6)}, ${_point!.lon.toStringAsFixed(6)}',
+                    style: AppTheme.numeric(
+                      context.text.bodySmall,
+                    ).copyWith(color: context.colors.muted),
                   ),
                 ),
               if (_submitted && _point == null)
-                _warning('Отметьте площадку на карте.'),
+                _warning(context.l10n.markVenueOnMap),
               const SizedBox(height: 20),
-              Text('Виды спорта (до 6)', style: context.text.titleSmall),
+              Text(context.l10n.sportsUpToSix, style: context.text.titleSmall),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   for (final sport in widget.sports)
-                    FilterChip(
-                      label: Text(sport.name),
+                    // The app's own chip, as everywhere a sport is picked.
+                    SelectableChip(
+                      label: sport.name.capitalized,
                       selected: _sports.contains(sport.id),
-                      onSelected: _saving
+                      onTap: _saving
                           ? null
-                          : (selected) => setState(() {
-                              if (selected && _sports.length < 6) {
+                          : () => setState(() {
+                              if (!_sports.remove(sport.id) &&
+                                  _sports.length < 6) {
                                 _sports.add(sport.id);
                               }
-                              if (!selected) _sports.remove(sport.id);
                             }),
                     ),
                 ],
               ),
               if (_submitted && _sports.isEmpty)
-                _warning('Выберите хотя бы один вид спорта.'),
+                _warning(context.l10n.venueSportsMissing),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
                 key: const ValueKey('public-venue-surface'),
                 initialValue: _surface,
-                decoration: const InputDecoration(labelText: 'Покрытие'),
-                items: surfaceLabels.entries
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
+                decoration: InputDecoration(
+                  labelText: context.l10n.surfaceLabel,
+                ),
+                items: [
+                  for (final key in surfaceKeys)
+                    DropdownMenuItem(
+                      value: key,
+                      child: Text(surfaceLabel(context.l10n, key)),
+                    ),
+                ],
                 onChanged: _saving
                     ? null
                     : (value) => setState(() => _surface = value),
                 validator: (value) =>
-                    value == null ? 'Выберите покрытие' : null,
+                    value == null ? context.l10n.pickSurface : null,
               ),
-              SwitchListTile(
+              SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Есть освещение'),
+                activeThumbColor: context.colors.accent,
+                activeTrackColor: context.colors.accent.withValues(alpha: 0.28),
+                title: Text(
+                  context.l10n.hasLighting,
+                  style: context.text.bodyMedium,
+                ),
                 value: _lighting,
                 onChanged: _saving
                     ? null
@@ -368,16 +399,18 @@ class _PublicVenueSubmissionScreenState
                 maxLength: 5000,
                 minLines: 3,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Описание и как пройти (необязательно)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.publicVenueAbout,
+                  counterText: '',
                 ),
               ),
               CheckboxListTile(
                 key: const ValueKey('public-venue-confirm'),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text(
-                  'Это общественная площадка с бесплатным доступом, не принадлежащая спортивному клубу',
+                title: Text(
+                  context.l10n.publicVenueConfirm,
+                  style: context.text.bodyMedium,
                 ),
                 value: _publicConfirmed,
                 onChanged: _saving
@@ -386,14 +419,12 @@ class _PublicVenueSubmissionScreenState
                           setState(() => _publicConfirmed = value == true),
               ),
               if (_submitted && !_publicConfirmed)
-                _warning(
-                  'Подтвердите, что площадка общественная и бесплатная.',
-                ),
+                _warning(context.l10n.publicVenueConfirmMissing),
               if (_error != null) _warning(_error!),
               const SizedBox(height: 20),
               PrimaryButton(
                 key: const ValueKey('submit-public-venue'),
-                label: 'Отправить на модерацию',
+                label: context.l10n.sendToModeration,
                 isLoading: _saving,
                 onPressed: _save,
               ),

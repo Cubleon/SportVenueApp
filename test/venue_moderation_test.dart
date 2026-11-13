@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:sport_venue_app/src/widgets/shared_widgets.dart';
 import 'package:sport_venue_app/l10n/l10n.dart';
 import 'package:sport_venue_app/src/app.dart';
 import 'package:sport_venue_app/src/data/api_client.dart';
@@ -185,7 +186,7 @@ void main() {
       await tester.ensureVisible(approve);
       await tester.tap(approve);
       await tester.pump();
-      final reject = tester.widget<OutlinedButton>(
+      final reject = tester.widget<PrimaryButton>(
         find.byKey(const ValueKey('reject-second')),
       );
       expect(reject.onPressed, isNull);
@@ -218,7 +219,7 @@ void main() {
       await _tap(tester, find.byKey(const ValueKey('approve-first')));
       expect(find.text('Площадка в парке'), findsNothing);
       expect(
-        find.text('Заявка уже рассмотрена другим модератором.'),
+        find.text('Заявка уже рассмотрена другим модератором'),
         findsOneWidget,
       );
     },
@@ -237,13 +238,10 @@ void main() {
       ),
     );
     expect(find.text('Нет заявок на модерацию'), findsNothing);
-    expect(
-      find.text('Не удалось загрузить заявки. Попробуйте ещё раз.'),
-      findsOneWidget,
-    );
+    expect(find.text('Не удалось загрузить заявки'), findsOneWidget);
     fixture.loadFails = false;
     fixture.rows.clear();
-    await _tap(tester, find.text('Обновить заявки'));
+    await _tap(tester, find.text('Повторить'));
     expect(find.text('Нет заявок на модерацию'), findsOneWidget);
   });
 
@@ -258,10 +256,10 @@ void main() {
         ),
       );
       await _tap(tester, find.byKey(const ValueKey('submit-public-venue')));
-      expect(find.text('Отметьте площадку на карте.'), findsOneWidget);
-      expect(find.text('Выберите хотя бы один вид спорта.'), findsOneWidget);
+      expect(find.text('Отметьте площадку на карте'), findsOneWidget);
+      expect(find.text('Выберите хотя бы один вид спорта'), findsOneWidget);
       expect(
-        find.text('Подтвердите, что площадка общественная и бесплатная.'),
+        find.text('Подтвердите, что площадка общественная и бесплатная'),
         findsOneWidget,
       );
       expect(find.text('Выберите покрытие'), findsOneWidget);
@@ -277,7 +275,7 @@ void main() {
     fixture.rows[0]['status'] = 'approved';
     fixture.rows[1]['status'] = 'rejected';
     await _pump(tester, VenueSubmissionsScreen(controller: controller));
-    expect(find.text('Одобрено · На карте'), findsOneWidget);
+    expect(find.text('Одобрено · на карте'), findsOneWidget);
     expect(find.text('Отклонено'), findsOneWidget);
     expect(
       fixture.requests.last.url.path.endsWith('/venue-submissions'),
@@ -292,14 +290,13 @@ void main() {
     final venue = Venue.fromJson(_publicVenue);
     controller.venues = [venue];
     await _pump(tester, VenueScreen(controller: controller, venue: venue));
-    expect(find.text('Общественная площадка · Бесплатно'), findsOneWidget);
-    expect(find.text('Свободный доступ без бронирования'), findsOneWidget);
+    expect(find.text('Бесплатно, без бронирования'), findsOneWidget);
     expect(find.byKey(const ValueKey('venue-book')), findsNothing);
     expect(fixture.requests, isEmpty);
     expect(controller.bookableVenues, isEmpty);
   });
 
-  testWidgets('unified creation opens public submissions on a small screen', (
+  testWidgets('the profile opens public submissions on a small screen', (
     tester,
   ) async {
     final demo = AppController.demo()..signInDemo();
@@ -324,9 +321,19 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await _tap(tester, find.byKey(const ValueKey('create-fab')));
-    expect(find.text('Добавить площадку'), findsOneWidget);
-    await _tap(tester, find.byKey(const ValueKey('add-public-venue')));
+    // Proposing a public court lives in the profile, not inside a booking.
+    await _tap(tester, find.byKey(const ValueKey('nav-Профиль')));
+    final publicVenues = find.byKey(const ValueKey('profile-public-venues'));
+    await tester.scrollUntilVisible(
+      publicVenues,
+      120,
+      scrollable: find.byType(Scrollable).first,
+    );
+    // Clear of the tab bar, which floats over the foot of the page.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -160));
+    await tester.pumpAndSettle();
+    await tester.tap(publicVenues);
+    await tester.pumpAndSettle();
     expect(find.byType(VenueSubmissionsScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

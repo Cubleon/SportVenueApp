@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -42,11 +43,12 @@ class _ClubNameSetupScreenState extends State<ClubNameSetupScreen> {
       _saving = true;
       _error = null;
     });
+    final l10n = context.l10n;
     String? error;
     try {
       error = await widget.onContinue(name);
     } catch (_) {
-      error = 'Не удалось сохранить название. Попробуйте ещё раз.';
+      error = l10n.clubNameSaveFailed;
     }
     if (!mounted) return;
     setState(() {
@@ -66,13 +68,13 @@ class _ClubNameSetupScreenState extends State<ClubNameSetupScreen> {
           TextButton(
             key: const ValueKey('club-name-logout'),
             onPressed: _saving ? null : widget.onLogout,
-            child: const Text('Выйти'),
+            child: Text(context.l10n.signOutShort),
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -81,12 +83,12 @@ class _ClubNameSetupScreenState extends State<ClubNameSetupScreen> {
                 const Center(child: AppLogo(size: 64)),
                 const SizedBox(height: 32),
                 Text(
-                  'Как называется ваш клуб?',
+                  context.l10n.clubNameQuestion,
                   style: context.text.headlineMedium,
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Укажите название клуба. Адрес, площадки и расписание добавим в личном кабинете.',
+                  context.l10n.clubNameBody,
                   style: context.text.bodyMedium?.copyWith(
                     color: context.colors.muted,
                     height: 1.5,
@@ -100,16 +102,19 @@ class _ClubNameSetupScreenState extends State<ClubNameSetupScreen> {
                   maxLength: 160,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(
-                    labelText: 'Название клуба',
-                    hintText: 'Например, Спортклуб «Арена»',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.clubNameLabel,
+                    hintText: context.l10n.clubNameHint,
+                    counterText: '',
                   ),
                   validator: (value) {
                     final name = _normalize(value ?? '');
-                    if (name.isEmpty) return 'Введите название клуба';
-                    if (name.runes.length < 2) return 'Минимум 2 символа';
+                    if (name.isEmpty) return context.l10n.enterClubName;
+                    if (name.runes.length < 2) {
+                      return context.l10n.fieldMinLength(2);
+                    }
                     if (name.runes.length > 160) {
-                      return 'Не больше 160 символов';
+                      return context.l10n.notMoreThan(160);
                     }
                     return null;
                   },
@@ -119,7 +124,9 @@ class _ClubNameSetupScreenState extends State<ClubNameSetupScreen> {
                 const SizedBox(height: 24),
                 PrimaryButton(
                   key: const ValueKey('save-club-name'),
-                  label: _saving ? 'Сохраняем…' : 'Продолжить',
+                  label: _saving
+                      ? context.l10n.saving
+                      : context.l10n.continueLabel,
                   isLoading: _saving,
                   onPressed: _continue,
                 ),

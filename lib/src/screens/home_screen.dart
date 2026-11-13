@@ -1287,7 +1287,7 @@ class _VenueRow extends StatelessWidget {
             children: [
               TextSpan(
                 text: venue.isPublic
-                    ? 'Бесплатно'
+                    ? context.l10n.freeOfCharge
                     : AppFormatters.money(venue.pricePerHour),
                 // Lighter than the club's name beside it, so the two do not
                 // compete for the first look.
@@ -1404,7 +1404,7 @@ class _VenueRow extends StatelessWidget {
                         // lands it holds its own space, so the row does not
                         // jump when it does.
                         if (venue.isPublic)
-                          const _Tag(label: 'Общественная')
+                          _Tag(label: context.l10n.publicVenueTag)
                         else if (free != null)
                           _Tag(
                             label: context.l10n.freeHoursToday(free),

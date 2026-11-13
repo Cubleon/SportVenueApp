@@ -216,23 +216,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const Center(child: AppLogo(size: 52)),
               const SizedBox(height: 32),
               if (widget.onAccountTypeChanged != null) ...[
-                SegmentedButton<bool>(
+                // Drawn as the booking's «Для своих / Нужны игроки»: the
+                // app asks a two-way question one way.
+                TwoWaySwitch(
                   key: const ValueKey('account-type-selector'),
-                  segments: [
-                    ButtonSegment(
-                      value: false,
-                      label: Text(context.l10n.playerAccount),
-                    ),
-                    ButtonSegment(
-                      value: true,
-                      label: Text(context.l10n.clubAccount),
-                    ),
-                  ],
-                  selected: const {false},
-                  onSelectionChanged: _submitting
+                  second: false,
+                  firstTitle: context.l10n.playerAccount,
+                  secondTitle: context.l10n.clubAccount,
+                  onChanged: _submitting
                       ? null
-                      : (selection) =>
-                            widget.onAccountTypeChanged!(selection.single),
+                      : (club) {
+                          if (club) widget.onAccountTypeChanged!(true);
+                        },
                 ),
                 const SizedBox(height: 24),
               ],
@@ -377,12 +372,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   onPressed: _submitting ? null : widget.onEmail,
                 ),
               ],
+              // For the few who moderate: a quiet line at the foot, not a
+              // third action competing with the two a player needs.
               if (widget.onModeratorLogin != null) ...[
-                const SizedBox(height: 16),
-                TextButton(
-                  key: const ValueKey('moderator-sign-in'),
-                  onPressed: _submitting ? null : widget.onModeratorLogin,
-                  child: const Text('Вход для модераторов'),
+                const SizedBox(height: 24),
+                Center(
+                  child: TextButton(
+                    key: const ValueKey('moderator-sign-in'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: context.colors.muted,
+                      textStyle: context.text.bodySmall,
+                    ),
+                    onPressed: _submitting ? null : widget.onModeratorLogin,
+                    child: Text(context.l10n.moderatorSignIn),
+                  ),
                 ),
               ],
               if (widget.onDeveloperLogin != null) ...[

@@ -328,10 +328,10 @@ GoRouter buildRouter({
                 } catch (error) {
                   if (error is ApiException &&
                       (error.statusCode == 401 || error.statusCode == 422)) {
-                    return 'Неверный логин или пароль.';
+                    return l10n.wrongLoginOrPassword;
                   }
                   if (error is ApiException && error.statusCode == 429) {
-                    return 'Слишком много попыток. Попробуйте позже.';
+                    return l10n.tooManyAttempts;
                   }
                   return errorTextFor(l10n, error);
                 }

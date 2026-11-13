@@ -1746,4 +1746,564 @@ class LRu extends L {
 
   @override
   String get keepGame => 'Не отменять';
+
+  @override
+  String get clubDashboardTitle => 'Кабинет клуба';
+
+  @override
+  String get refresh => 'Обновить';
+
+  @override
+  String get clubDeletedReloadFailed =>
+      'Удаление выполнено, но обновить кабинет не удалось.';
+
+  @override
+  String get clubLoadFailed => 'Не удалось загрузить кабинет клуба.';
+
+  @override
+  String deleteClubQuestion(String name) {
+    return 'Удалить клуб «$name»?';
+  }
+
+  @override
+  String deleteVenueQuestion(String name) {
+    return 'Удалить площадку «$name»?';
+  }
+
+  @override
+  String get deleteClubBody =>
+      'Клуб и все его площадки исчезнут с карты. Опубликованное расписание будет скрыто. История бронирований сохранится. Аккаунт клуба останется.';
+
+  @override
+  String get deleteVenueBody =>
+      'Площадка и её расписание больше не будут доступны для новых бронирований. История бронирований сохранится.';
+
+  @override
+  String get deleteAction => 'Удалить';
+
+  @override
+  String get clubDeleteBlocked =>
+      'Нельзя удалить клуб: есть предстоящие бронирования, игры или временные блокировки. Дождитесь их завершения.';
+
+  @override
+  String get venueDeleteBlocked =>
+      'Нельзя удалить площадку: есть предстоящие бронирования, игры или временные блокировки. Дождитесь их завершения.';
+
+  @override
+  String get clubDeleteFailed => 'Не удалось удалить клуб. Попробуйте ещё раз.';
+
+  @override
+  String get venueDeleteFailed =>
+      'Не удалось удалить площадку. Попробуйте ещё раз.';
+
+  @override
+  String get clubOnMapTitle => 'Ваш клуб на карте';
+
+  @override
+  String get clubOnMapBody =>
+      'Добавьте клуб и его площадки, затем опубликуйте свободное время. Игроки увидят их на карте и смогут бронировать.';
+
+  @override
+  String get clubStartTitle => 'Начнём с адреса';
+
+  @override
+  String get clubStartBody =>
+      'Укажите название, адрес и отметьте клуб на карте';
+
+  @override
+  String get addClub => 'Добавить клуб';
+
+  @override
+  String get clubPicker => 'Клуб';
+
+  @override
+  String get editClub => 'Редактировать клуб';
+
+  @override
+  String get deleteClub => 'Удалить клуб';
+
+  @override
+  String get clubNeedsVenue =>
+      'Чтобы появиться в поиске, добавьте первую площадку';
+
+  @override
+  String get clubVisible => 'Клуб доступен игрокам на карте';
+
+  @override
+  String get clubVenuesTitle => 'Спортивные площадки';
+
+  @override
+  String get clubVenuesBody =>
+      'Для каждого корта, зала или поля — своё расписание';
+
+  @override
+  String get editVenue => 'Редактировать площадку';
+
+  @override
+  String get deleteVenue => 'Удалить площадку';
+
+  @override
+  String venuePriceCapacity(String price, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count игроков',
+      one: '$count игрока',
+    );
+    return '$price/час · до $_temp0';
+  }
+
+  @override
+  String get venueSchedule => 'Расписание и свободное время';
+
+  @override
+  String get addVenue => 'Добавить площадку';
+
+  @override
+  String get addAnotherClub => 'Добавить ещё один клуб';
+
+  @override
+  String get clubSaveFailed => 'Не удалось сохранить клуб. Попробуйте ещё раз.';
+
+  @override
+  String get newClub => 'Новый клуб';
+
+  @override
+  String get clubNameLabel => 'Название клуба';
+
+  @override
+  String get clubAddressLabel => 'Адрес';
+
+  @override
+  String get clubAddressHint => 'Москва, улица и номер дома';
+
+  @override
+  String get pickOnMap => 'Указать на карте';
+
+  @override
+  String get changeMapPoint => 'Изменить точку на карте';
+
+  @override
+  String get clubLocationMissing => 'Отметьте расположение клуба на карте';
+
+  @override
+  String get clubLocationHint => 'Игроки увидят клуб в этой точке';
+
+  @override
+  String get clubAboutLabel => 'О клубе (необязательно)';
+
+  @override
+  String get saveClub => 'Сохранить клуб';
+
+  @override
+  String get clubLocationTitle => 'Расположение клуба';
+
+  @override
+  String get clubLocationBody =>
+      'Приблизьте карту и нажмите на место, где находится вход в клуб';
+
+  @override
+  String get confirmLocation => 'Подтвердить расположение';
+
+  @override
+  String get venueSaveFailed =>
+      'Не удалось сохранить площадку. Попробуйте ещё раз.';
+
+  @override
+  String get newVenue => 'Новая площадка';
+
+  @override
+  String get venueNameLabel => 'Название площадки';
+
+  @override
+  String get venueNameHint => 'Например, теннисный корт №1';
+
+  @override
+  String get venueSportsMissing => 'Выберите хотя бы один вид спорта';
+
+  @override
+  String get playersFrom => 'Игроков от';
+
+  @override
+  String get playersTo => 'Игроков до';
+
+  @override
+  String get lessThanMin => 'Меньше минимума';
+
+  @override
+  String get venueAboutLabel => 'Описание (необязательно)';
+
+  @override
+  String get venueAboutHint => 'Покрытие, оборудование и другие особенности';
+
+  @override
+  String get saveVenue => 'Сохранить площадку';
+
+  @override
+  String get scheduleLoadFailed => 'Не удалось загрузить расписание.';
+
+  @override
+  String get unpublishQuestion => 'Снять время с публикации?';
+
+  @override
+  String get unpublishBody =>
+      'Этот промежуток больше не будет доступен для бронирования. Если на него уже есть бронь, снять публикацию не получится.';
+
+  @override
+  String get keepPublished => 'Оставить';
+
+  @override
+  String get unpublish => 'Снять с публикации';
+
+  @override
+  String get unpublishBlocked =>
+      'На это время есть бронь или временная блокировка. Снять публикацию сейчас нельзя.';
+
+  @override
+  String get unpublishFailed =>
+      'Не удалось снять публикацию. Попробуйте ещё раз.';
+
+  @override
+  String get venueScheduleTitle => 'Расписание площадки';
+
+  @override
+  String get publishFreeTime => 'Опубликовать свободное время';
+
+  @override
+  String get scheduleBody =>
+      'Публикуйте только время, когда площадка свободна. Внутри этих промежутков игроки выбирают время и длительность бронирования.';
+
+  @override
+  String get moscowTime => 'Московское время (UTC+3)';
+
+  @override
+  String get scheduleEmpty =>
+      'Свободное время пока не опубликовано. Добавьте первый промежуток, чтобы открыть бронирование.';
+
+  @override
+  String get endBeforeStart => 'Окончание должно быть позже начала';
+
+  @override
+  String get windowTooShort => 'Промежуток должен быть не короче 1 часа';
+
+  @override
+  String get pickFutureTime => 'Выберите время в будущем';
+
+  @override
+  String get windowOverlaps =>
+      'Это время пересекается с уже опубликованным промежутком. Выберите другое время.';
+
+  @override
+  String get publishFailed =>
+      'Не удалось опубликовать время. Попробуйте ещё раз.';
+
+  @override
+  String get freeTimeTitle => 'Свободное время';
+
+  @override
+  String get freeTimeBody =>
+      'Выберите дату и промежуток, доступный для бронирования';
+
+  @override
+  String get windowStart => 'Начало';
+
+  @override
+  String get windowEnd => 'Окончание';
+
+  @override
+  String get freeTimeNote =>
+      'Московское время (UTC+3). Шаг — 30 минут. Для нескольких дней добавьте отдельный промежуток на каждый день.';
+
+  @override
+  String get publish => 'Опубликовать';
+
+  @override
+  String get close => 'Закрыть';
+
+  @override
+  String get deleting => 'Удаляем';
+
+  @override
+  String get fieldRequired => 'Заполните это поле';
+
+  @override
+  String fieldMinLength(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count символов',
+      few: '$count символа',
+      one: '$count символ',
+    );
+    return 'Минимум $_temp0';
+  }
+
+  @override
+  String get wholeNumberFromOne => 'Введите целое число от 1';
+
+  @override
+  String notMoreThan(int max) {
+    return 'Не больше $max';
+  }
+
+  @override
+  String get sessionEnded => 'Сессия завершилась. Войдите в аккаунт снова.';
+
+  @override
+  String get noClubAccess => 'У этого аккаунта нет доступа к клубу';
+
+  @override
+  String get checkFields => 'Проверьте заполненные поля и попробуйте ещё раз';
+
+  @override
+  String get checkConnection => 'Проверьте подключение к интернету.';
+
+  @override
+  String get surfaceAsphalt => 'Асфальт';
+
+  @override
+  String get surfaceRubber => 'Резиновое покрытие';
+
+  @override
+  String get surfaceArtificialGrass => 'Искусственная трава';
+
+  @override
+  String get surfaceGrass => 'Газон';
+
+  @override
+  String get surfaceSand => 'Песок';
+
+  @override
+  String get surfaceOther => 'Другое';
+
+  @override
+  String get surfaceUnknown => 'Не указано';
+
+  @override
+  String get submissionPending => 'На модерации';
+
+  @override
+  String get submissionApproved => 'Одобрено · на карте';
+
+  @override
+  String get submissionRejected => 'Отклонено';
+
+  @override
+  String get showOnMap => 'Посмотреть на карте';
+
+  @override
+  String get surfaceLabel => 'Покрытие';
+
+  @override
+  String get lightingLabel => 'Освещение';
+
+  @override
+  String get lightingYes => 'Есть';
+
+  @override
+  String get lightingNo => 'Нет';
+
+  @override
+  String get accessLabel => 'Доступ';
+
+  @override
+  String get publicAccessValue => 'Бесплатно, без бронирования';
+
+  @override
+  String submittedOn(String date) {
+    return 'Отправлено $date';
+  }
+
+  @override
+  String get publicVenueTag => 'Общественная';
+
+  @override
+  String get freeOfCharge => 'Бесплатно';
+
+  @override
+  String get publicVenues => 'Общественные площадки';
+
+  @override
+  String get publicVenuesHint => 'Добавить площадку и проверить свои заявки';
+
+  @override
+  String get mySubmissionsTitle => 'Мои заявки на площадки';
+
+  @override
+  String get submissionsLoadFailed => 'Не удалось загрузить заявки';
+
+  @override
+  String get submissionNeedsServer =>
+      'Для отправки заявки нужно подключение к серверу';
+
+  @override
+  String get submissionSent =>
+      'Заявка отправлена на модерацию. После одобрения площадка появится на карте.';
+
+  @override
+  String get addPublicVenueLong => 'Добавить общественную площадку';
+
+  @override
+  String get publicVenueIntro =>
+      'Предложите бесплатную площадку во дворе, парке или другом общественном месте. Модератор проверит данные перед публикацией.';
+
+  @override
+  String get noSubmissionsYet => 'Вы пока не отправляли заявки';
+
+  @override
+  String get submissionCheckData =>
+      'Проверьте данные площадки и выбранные виды спорта';
+
+  @override
+  String get submissionSendFailed =>
+      'Не удалось отправить заявку. Данные сохранены в форме, попробуйте ещё раз.';
+
+  @override
+  String get publicVenueTitle => 'Общественная площадка';
+
+  @override
+  String get publicVenueFormIntro =>
+      'Добавьте бесплатную общественную площадку в Москве. Она появится на карте после проверки модератором.';
+
+  @override
+  String get enterVenueName => 'Введите название (минимум 2 символа)';
+
+  @override
+  String get enterAddress => 'Введите адрес';
+
+  @override
+  String get markVenueOnMap => 'Отметьте площадку на карте';
+
+  @override
+  String get sportsUpToSix => 'Виды спорта (до 6)';
+
+  @override
+  String get pickSurface => 'Выберите покрытие';
+
+  @override
+  String get hasLighting => 'Есть освещение';
+
+  @override
+  String get publicVenueAbout => 'Описание и как пройти (необязательно)';
+
+  @override
+  String get publicVenueConfirm =>
+      'Это общественная площадка с бесплатным доступом, не принадлежащая спортивному клубу';
+
+  @override
+  String get publicVenueConfirmMissing =>
+      'Подтвердите, что площадка общественная и бесплатная';
+
+  @override
+  String get sendToModeration => 'Отправить на модерацию';
+
+  @override
+  String get venueLocationTitle => 'Расположение площадки';
+
+  @override
+  String get venueLocationReadOnly => 'Расположение площадки из заявки';
+
+  @override
+  String get venueLocationPick =>
+      'Приблизьте карту и нажмите на место, где находится площадка';
+
+  @override
+  String get closeMap => 'Закрыть карту';
+
+  @override
+  String get wrongLoginOrPassword => 'Неверный логин или пароль';
+
+  @override
+  String get tooManyAttempts => 'Слишком много попыток. Попробуйте позже.';
+
+  @override
+  String get moderatorSignIn => 'Вход для модераторов';
+
+  @override
+  String get signInFailed => 'Не удалось войти. Попробуйте ещё раз.';
+
+  @override
+  String get clubSignInTitle => 'Вход для клубов';
+
+  @override
+  String get moderationTitle => 'Модерация площадок';
+
+  @override
+  String get manageYourClub => 'Управляйте своим клубом';
+
+  @override
+  String get loginPasswordHint => 'Введите логин и пароль, которые вам выдали';
+
+  @override
+  String get loginLabel => 'Логин';
+
+  @override
+  String get enterLogin => 'Введите логин';
+
+  @override
+  String get passwordLabel => 'Пароль';
+
+  @override
+  String get hidePassword => 'Скрыть пароль';
+
+  @override
+  String get showPassword => 'Показать пароль';
+
+  @override
+  String get enterPassword => 'Введите пароль';
+
+  @override
+  String get signingIn => 'Входим…';
+
+  @override
+  String get signIn => 'Войти';
+
+  @override
+  String get clubNameSaveFailed =>
+      'Не удалось сохранить название. Попробуйте ещё раз.';
+
+  @override
+  String get signOutShort => 'Выйти';
+
+  @override
+  String get clubNameQuestion => 'Как называется ваш клуб?';
+
+  @override
+  String get clubNameBody =>
+      'Укажите название клуба. Адрес, площадки и расписание добавим в личном кабинете.';
+
+  @override
+  String get clubNameHint => 'Например, Спортклуб «Арена»';
+
+  @override
+  String get enterClubName => 'Введите название клуба';
+
+  @override
+  String get saving => 'Сохраняем…';
+
+  @override
+  String get venueApproved => 'Площадка одобрена и добавлена на карту';
+
+  @override
+  String get submissionRejectedSnack => 'Заявка отклонена';
+
+  @override
+  String get submissionAlreadyReviewed =>
+      'Заявка уже рассмотрена другим модератором';
+
+  @override
+  String get moderationQueueTitle => 'Заявки на площадки';
+
+  @override
+  String get noSubmissionsToReview => 'Нет заявок на модерацию';
+
+  @override
+  String get reviewSaveFailed =>
+      'Не удалось сохранить решение. Попробуйте ещё раз.';
+
+  @override
+  String get approve => 'Одобрить';
+
+  @override
+  String get reject => 'Отклонить';
 }

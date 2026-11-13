@@ -106,7 +106,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Form(
               key: _formKey,
               child: AutofillGroup(
@@ -117,9 +117,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       widget.initialSetup
                           ? l10n.firstLoginNameHint
                           : l10n.profileNameHint,
-                      style: context.text.titleMedium,
+                      // An explanation under the title bar, set as the club
+                      // and sign-in screens set theirs: quiet, not a second
+                      // heading.
+                      style: context.text.bodyMedium?.copyWith(
+                        color: context.colors.muted,
+                        height: 1.45,
+                      ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     TextFormField(
                       key: const ValueKey('profile-last-name'),
                       controller: _lastName,
@@ -163,8 +169,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.middleName],
                       decoration: InputDecoration(
-                        labelText: l10n.middleNameLabel,
-                        helperText: l10n.middleNameOptional,
+                        labelText:
+                            '${l10n.middleNameLabel} '
+                            '(${l10n.middleNameOptional.toLowerCase()})',
                       ),
                       validator: _validate,
                       onFieldSubmitted: (_) => _save(),
@@ -179,11 +186,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           : l10n.saveProfile,
                       onPressed: _saving ? null : _save,
                     ),
-                    if (_saving)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
                     if (_error != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre/maplibre.dart' as maplibre;
 
+import '../../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 import 'shared_widgets.dart';
 
@@ -18,7 +19,7 @@ class _LocationPickerState extends State<LocationPicker> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Расположение площадки')),
+    appBar: AppBar(title: Text(context.l10n.venueLocationTitle)),
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -26,8 +27,9 @@ class _LocationPickerState extends State<LocationPicker> {
           padding: const EdgeInsets.all(20),
           child: Text(
             widget.readOnly
-                ? 'Расположение площадки из заявки.'
-                : 'Приблизьте карту и нажмите на место, где находится площадка.',
+                ? context.l10n.venueLocationReadOnly
+                : context.l10n.venueLocationPick,
+            style: context.text.bodyMedium,
           ),
         ),
         Expanded(
@@ -58,7 +60,7 @@ class _LocationPickerState extends State<LocationPicker> {
                         Icons.location_on,
                         size: 44,
                         color: context.colors.accent,
-                        semanticLabel: 'Расположение площадки',
+                        semanticLabel: context.l10n.venueLocationTitle,
                       ),
                     ),
                 ],
@@ -80,8 +82,8 @@ class _LocationPickerState extends State<LocationPicker> {
             padding: const EdgeInsets.all(20),
             child: PrimaryButton(
               label: widget.readOnly
-                  ? 'Закрыть карту'
-                  : 'Подтвердить расположение',
+                  ? context.l10n.closeMap
+                  : context.l10n.confirmLocation,
               onPressed: _point == null
                   ? null
                   : () => widget.readOnly

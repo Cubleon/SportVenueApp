@@ -180,22 +180,27 @@ class _VenueScreenState extends State<VenueScreen> {
                     ),
                     const SizedBox(height: 20),
                   ],
+                  // A public court in the same rows as a club's, so the
+                  // two cards read as one kind of thing.
                   if (venue.isPublic)
                     AppCard(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Общественная площадка · Бесплатно'),
-                          const SizedBox(height: 10),
-                          const Text('Свободный доступ без бронирования'),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Покрытие: ${surfaceLabels[venue.surface] ?? "Не указано"}',
+                        children: summaryRowsDivided(context, [
+                          SummaryRow(
+                            label: context.l10n.accessLabel,
+                            value: context.l10n.publicAccessValue,
                           ),
-                          Text(
-                            'Освещение: ${venue.hasLighting == true ? "Есть" : "Нет"}',
+                          SummaryRow(
+                            label: context.l10n.surfaceLabel,
+                            value: surfaceLabel(context.l10n, venue.surface),
                           ),
-                        ],
+                          SummaryRow(
+                            label: context.l10n.lightingLabel,
+                            value: venue.hasLighting == true
+                                ? context.l10n.lightingYes
+                                : context.l10n.lightingNo,
+                          ),
+                        ]),
                       ),
                     ),
                   if (!venue.isPublic)

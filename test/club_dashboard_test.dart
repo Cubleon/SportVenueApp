@@ -23,7 +23,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('create-first-club')));
     await _tap(tester, find.byKey(const ValueKey('save-managed-club')));
     expect(find.text('Заполните это поле'), findsNWidgets(2));
-    expect(find.text('Отметьте расположение клуба на карте.'), findsOneWidget);
+    expect(find.text('Отметьте расположение клуба на карте'), findsOneWidget);
     expect(
       fixture.requests.where((request) => request.method == 'POST'),
       isEmpty,
@@ -81,13 +81,13 @@ void main() {
     await _pump(tester, fixture);
     await _tap(tester, find.byKey(const ValueKey('create-managed-venue')));
     await _tap(tester, find.byKey(const ValueKey('save-managed-venue')));
-    expect(find.text('Выберите хотя бы один вид спорта.'), findsOneWidget);
+    expect(find.text('Выберите хотя бы один вид спорта'), findsOneWidget);
     expect(
       fixture.requests.where((request) => request.method == 'POST'),
       isEmpty,
     );
     await _enter(tester, 'managed-venue-name', 'Футбольное поле');
-    await _tap(tester, find.widgetWithText(FilterChip, 'Футбол'));
+    await _tap(tester, find.widgetWithText(SelectableChip, 'Футбол'));
     await _enter(tester, 'managed-venue-price', '3000');
     await _enter(tester, 'managed-venue-capacity', '31');
     await _tap(tester, find.byKey(const ValueKey('save-managed-venue')));
@@ -142,7 +142,7 @@ void main() {
       find.byKey(const ValueKey('availability-window-new')),
       findsOneWidget,
     );
-    expect(find.text('09:00 — 22:00'), findsOneWidget);
+    expect(find.text('09:00–22:00'), findsOneWidget);
   });
 
   testWidgets('availability shorter than a booking cannot be published', (
@@ -161,7 +161,7 @@ void main() {
     await _tap(tester, find.text('09:30').last);
     await _tap(tester, find.byKey(const ValueKey('save-availability')));
     expect(
-      find.text('Промежуток должен быть не короче 1 часа.'),
+      find.text('Промежуток должен быть не короче 1 часа'),
       findsOneWidget,
     );
     expect(

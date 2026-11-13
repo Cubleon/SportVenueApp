@@ -1294,7 +1294,6 @@ class _PlayerSlot extends StatelessWidget {
                     style: empty
                         ? context.text.bodyMedium?.copyWith(
                             color: context.colors.muted,
-                            fontStyle: FontStyle.italic,
                           )
                         : context.text.titleSmall,
                   ),

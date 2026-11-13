@@ -243,22 +243,10 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                   ),
                 ),
+                // Proposing a public court lives in the profile: under the
+                // club step of a booking it pulled the reader out of the
+                // booking they had just started.
                 // A game is for one sport; a club with several asks which.
-                if (widget.venue == null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: TextButton.icon(
-                        key: const ValueKey('add-public-venue'),
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(44, 44),
-                        ),
-                        icon: const Icon(AppIcons.plus),
-                        label: Text(l10n.addPublicVenue),
-                        onPressed: () => context.go(Routes.venueSubmissions),
-                      ),
-                    ),
-                  ),
                 if (_findPlayers && multiSport)
                   SliverToBoxAdapter(
                     child: _StepBlock(
@@ -661,81 +649,16 @@ class _ModeSwitch extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    Widget option({
-      required Key key,
-      required bool value,
-      required String title,
-      required String hint,
-    }) {
-      final selected = findPlayers == value;
-      return Expanded(
-        child: Semantics(
-          button: true,
-          selected: selected,
-          child: TapTarget(
-            key: key,
-            radius: 12,
-            onTap: withSelectionFeedback(() => onChanged(value)),
-            child: AnimatedContainer(
-              duration: context.motion(const Duration(milliseconds: 160)),
-              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
-              decoration: BoxDecoration(
-                color: selected ? colors.accent : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: context.text.titleSmall?.copyWith(
-                      color: selected ? colors.onAccent : colors.ink,
-                    ),
-                  ),
-                  Text(
-                    hint,
-                    textAlign: TextAlign.center,
-                    style: context.text.labelSmall?.copyWith(
-                      color: selected
-                          ? colors.onAccent.withValues(alpha: 0.85)
-                          : colors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          option(
-            key: const ValueKey('mode-own'),
-            value: false,
-            title: context.l10n.modeOwn,
-            hint: context.l10n.modeOwnHint,
-          ),
-          option(
-            key: const ValueKey('mode-game'),
-            value: true,
-            title: context.l10n.modeGame,
-            hint: context.l10n.modeGameHint,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => TwoWaySwitch(
+    second: findPlayers,
+    onChanged: onChanged,
+    firstKey: const ValueKey('mode-own'),
+    secondKey: const ValueKey('mode-game'),
+    firstTitle: context.l10n.modeOwn,
+    firstHint: context.l10n.modeOwnHint,
+    secondTitle: context.l10n.modeGame,
+    secondHint: context.l10n.modeGameHint,
+  );
 }
 
 /// The club step before it is answered: a row that looks like the row that
