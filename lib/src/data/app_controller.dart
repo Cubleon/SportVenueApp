@@ -7,6 +7,7 @@ import '../models/sport_venue_models.dart';
 import 'api_client.dart';
 import 'session_store.dart';
 import 'mock_data.dart';
+import 'open_places.dart';
 
 /// The kinds of failure the app has words for.
 enum AppErrorKind {
@@ -141,6 +142,13 @@ class AppController extends ChangeNotifier {
   Set<String> selectedSportIds = {};
   List<Sport> sports = [];
   List<Venue> venues = [];
+
+  /// Free public courts from the city's open data. Kept apart from [venues]
+  /// (the clubs): they are drawn on the search map and open as a venue, but
+  /// nobody books them, so pickers and the home screen never list them.
+  List<Venue> openPlaces = [];
+  Future<void>? _openPlacesLoad;
+  bool _disposed = false;
   List<Booking> bookings = [];
 
   /// The ones that are still going to happen.
@@ -211,6 +219,33 @@ class AppController extends ChangeNotifier {
       return booking.organizerId == null || booking.organizerId == userId;
     }
     return userId != null && booking.organizerId == userId;
+  }
+
+  /// Reads the bundled open-data courts once. A missing or broken file
+  /// leaves the map with the clubs alone rather than with an error.
+  Future<void> loadOpenPlaces() => _openPlacesLoad ??= _readOpenPlaces();
+
+  Future<void> _readOpenPlaces() async {
+    try {
+      final places = await OpenPlaces.load();
+      if (_disposed) return;
+      openPlaces = places;
+      notifyListeners();
+    } on Object {
+      // No file, or a broken one: the map keeps the clubs alone.
+    }
+  }
+
+  /// A club, or a public court from the open data.
+  Venue? venueById(String id) {
+    for (final venue in venues) {
+      if (venue.id == id) return venue;
+    }
+    if (!id.startsWith(OpenPlaces.idPrefix)) return null;
+    for (final place in openPlaces) {
+      if (place.id == id) return place;
+    }
+    return null;
   }
 
   Sport sportById(String id) {
@@ -1779,6 +1814,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     cancelClubLogin();
     cancelPhoneVerification();
     cancelEmailVerification();

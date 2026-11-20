@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../l10n/l10n.dart';
 import 'data/app_controller.dart';
 import 'data/api_client.dart';
+import 'data/open_places.dart';
 import 'labels.dart';
 import 'models/sport_venue_models.dart';
 import 'screens/auth_screens.dart';
@@ -633,6 +634,26 @@ List<RouteBase> shellRoutes(AppController controller) => [
   appRoute(
     path: 'venue/:id',
     builder: (context, state) {
+      final id = state.pathParameters['id']!;
+      // A free court from the city's data: the file is read on first need,
+      // so a shared link to one waits for it rather than saying not found.
+      if (id.startsWith(OpenPlaces.idPrefix)) {
+        return _OpenByLink<Venue>(
+          key: ValueKey('open-place-$id'),
+          title: context.l10n.venuePickerTitle,
+          missing: context.l10n.venueNotFound,
+          known: () => controller.venueById(id),
+          load: () async {
+            await controller.loadOpenPlaces();
+            return controller.venueById(id);
+          },
+          found: (venue) => VenueScreen(
+            controller: controller,
+            venue: venue,
+            date: _dateOf(state),
+          ),
+        );
+      }
       final venue = _venueById(controller, state);
       if (venue == null) {
         return _NotFound(what: context.l10n.venueNotFound);
@@ -750,10 +771,8 @@ List<RouteBase> shellRoutes(AppController controller) => [
   ),
 ];
 
-Venue? _venueById(AppController controller, GoRouterState state) => controller
-    .venues
-    .where((item) => item.id == state.pathParameters['id'])
-    .firstOrNull;
+Venue? _venueById(AppController controller, GoRouterState state) =>
+    controller.venueById(state.pathParameters['id']!);
 
 DateTime? _dateOf(GoRouterState state) =>
     DateTime.tryParse(state.uri.queryParameters['date'] ?? '');

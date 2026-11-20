@@ -2306,4 +2306,41 @@ class LRu extends L {
 
   @override
   String get reject => 'Отклонить';
+
+  @override
+  String mapClusterLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count площадки',
+      many: '$count площадок',
+      few: '$count площадки',
+      one: '$count площадка',
+    );
+    return '$_temp0, приблизить';
+  }
+
+  @override
+  String openPlacesInView(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count бесплатной площадки на карте',
+      many: '$count бесплатных площадок на карте',
+      few: '$count бесплатные площадки на карте',
+      one: '$count бесплатная площадка на карте',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get openPlacesNearestHint =>
+      'Показаны ближайшие к центру карты. Сдвиньте карту, чтобы увидеть другие.';
+
+  @override
+  String get openDataCredit =>
+      'Бесплатные площадки: Портал открытых данных Москвы';
+
+  @override
+  String get restrictedPlace => 'На территории школы';
 }

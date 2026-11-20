@@ -1067,5 +1067,24 @@
   "noSubmissionsToReview": "Нет заявок на модерацию",
   "reviewSaveFailed": "Не удалось сохранить решение. Попробуйте ещё раз.",
   "approve": "Одобрить",
-  "reject": "Отклонить"
+  "reject": "Отклонить",
+  "mapClusterLabel": "{count, plural, one{{count} площадка} few{{count} площадки} many{{count} площадок} other{{count} площадки}}, приблизить",
+  "@mapClusterLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openPlacesInView": "{count, plural, one{{count} бесплатная площадка на карте} few{{count} бесплатные площадки на карте} many{{count} бесплатных площадок на карте} other{{count} бесплатной площадки на карте}}",
+  "@openPlacesInView": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openPlacesNearestHint": "Показаны ближайшие к центру карты. Сдвиньте карту, чтобы увидеть другие.",
+  "openDataCredit": "Бесплатные площадки: Портал открытых данных Москвы",
+  "restrictedPlace": "На территории школы"
 }

@@ -242,6 +242,7 @@ class Venue {
     this.amenities = const [],
     this.scheduleManaged = false,
     this.isPublic = false,
+    this.isRestricted = false,
     this.surface,
     this.hasLighting,
   });
@@ -273,6 +274,10 @@ class Venue {
   /// retain their original UTC wall-clock schedule.
   final bool scheduleManaged;
   final bool isPublic;
+
+  /// A public court behind a fence: a school ground, open when the school
+  /// lets people in. Shown, but marked, so nobody walks there for nothing.
+  final bool isRestricted;
   final String? surface;
   final bool? hasLighting;
 

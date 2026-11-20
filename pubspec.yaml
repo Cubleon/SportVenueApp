@@ -70,6 +70,7 @@ flutter:
 
   assets:
     - assets/images/google_g.png
+    - assets/data/moscow_places.json
 
   fonts:
     - family: AppIcons

@@ -3836,6 +3836,36 @@ abstract class L {
   /// In ru, this message translates to:
   /// **'Отклонить'**
   String get reject;
+
+  /// No description provided for @mapClusterLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} площадка} few{{count} площадки} many{{count} площадок} other{{count} площадки}}, приблизить'**
+  String mapClusterLabel(int count);
+
+  /// No description provided for @openPlacesInView.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} бесплатная площадка на карте} few{{count} бесплатные площадки на карте} many{{count} бесплатных площадок на карте} other{{count} бесплатной площадки на карте}}'**
+  String openPlacesInView(int count);
+
+  /// No description provided for @openPlacesNearestHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показаны ближайшие к центру карты. Сдвиньте карту, чтобы увидеть другие.'**
+  String get openPlacesNearestHint;
+
+  /// No description provided for @openDataCredit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бесплатные площадки: Портал открытых данных Москвы'**
+  String get openDataCredit;
+
+  /// No description provided for @restrictedPlace.
+  ///
+  /// In ru, this message translates to:
+  /// **'На территории школы'**
+  String get restrictedPlace;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
