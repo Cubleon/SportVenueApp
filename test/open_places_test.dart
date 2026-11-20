@@ -7,9 +7,7 @@ import 'package:sport_venue_app/src/widgets/map_clusters.dart';
 /// The city's open data and the map that has to stay readable with it.
 void main() {
   test('the shipped file reads as free public courts in Moscow', () {
-    final places = OpenPlaces.parse(
-      File(OpenPlaces.asset).readAsStringSync(),
-    );
+    final places = OpenPlaces.parse(File(OpenPlaces.asset).readAsStringSync());
     expect(places.length, greaterThan(5000));
     final ids = places.map((place) => place.id).toSet();
     expect(ids.length, places.length, reason: 'every id is unique');
@@ -30,11 +28,7 @@ void main() {
 
   group('clusters', () {
     // Two courts across a road from each other, and one across the city.
-    final points = [
-      (55.7500, 37.6000),
-      (55.7502, 37.6003),
-      (55.6500, 37.7500),
-    ];
+    final points = [(55.7500, 37.6000), (55.7502, 37.6003), (55.6500, 37.7500)];
     List<MapCluster<(double, double)>> at(double zoom) => clusterPoints(
       points,
       latitude: (p) => p.$1,
